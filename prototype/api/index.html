@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Reference | knowledgelib.io — AI Knowledge Library</title>
+  <meta name="description" content="API documentation for knowledgelib.io. Query knowledge units via REST API or MCP server. Semantic search, raw markdown retrieval, and catalog browsing.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/api">
+  <meta name="ai:type" content="api_documentation">
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="landing">
+
+  <h1>API Reference</h1>
+  <p>Three ways to access knowledgelib.io programmatically: MCP server, REST API, or direct file access.</p>
+
+  <h2>Option 1: MCP Server (Recommended)</h2>
+  <p>The fastest path for Claude, Cursor, and any MCP-compatible client.</p>
+
+  <h3>Installation</h3>
+  <div class="install-block">npx knowledgelib-mcp</div>
+
+  <h3>Claude Desktop Configuration</h3>
+  <pre>{
+  "mcpServers": {
+    "knowledgelib": {
+      "command": "npx",
+      "args": ["knowledgelib-mcp"],
+      "env": {
+        "KNOWLEDGELIB_API_KEY": "your-api-key"
+      }
+    }
+  }
+}</pre>
+
+  <h3>Available Tools</h3>
+  <table>
+    <tr><th>Tool</th><th>Description</th><th>Parameters</th></tr>
+    <tr>
+      <td><code>query_knowledge</code></td>
+      <td>Semantic search across all knowledge units</td>
+      <td><code>query</code> (string), <code>domain</code> (optional), <code>limit</code> (default: 3)</td>
+    </tr>
+    <tr>
+      <td><code>get_unit</code></td>
+      <td>Retrieve a specific knowledge unit by ID</td>
+      <td><code>unit_id</code> (string)</td>
+    </tr>
+    <tr>
+      <td><code>list_domains</code></td>
+      <td>List all available domains and unit counts</td>
+      <td>None</td>
+    </tr>
+  </table>
+
+  <h2>Option 2: REST API</h2>
+  <p>Base URL: <code>https://knowledgelib.io/api/v1</code></p>
+
+  <h3>Authentication</h3>
+  <pre># Free tier: 1,000 queries/month, no key required for public endpoints
+# Paid tier: API key in header
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://knowledgelib.io/api/v1/query?q=best+earbuds+2026</pre>
+
+  <h3>Endpoints</h3>
+
+  <h4>GET /api/v1/query</h4>
+  <p>Semantic search across all knowledge units. Returns top matching units ranked by relevance.</p>
+  <pre># Request
+GET /api/v1/query?q=best+wireless+earbuds+under+150&limit=3&domain=consumer_electronics
+
+# Response
+{
+  "query": "best wireless earbuds under 150",
+  "results": [
+    {
+      "id": "consumer-electronics/audio/wireless-earbuds-under-150/2026",
+      "canonical_question": "What are the best wireless earbuds under $150 in 2026?",
+      "confidence": 0.88,
+      "last_verified": "2026-02-07",
+      "relevance_score": 0.97,
+      "url": "https://knowledgelib.io/consumer-electronics/audio/wireless-earbuds-under-150/2026",
+      "raw_md": "https://knowledgelib.io/api/v1/units/consumer-electronics/audio/wireless-earbuds-under-150/2026.md",
+      "token_estimate": 1800
+    }
+  ],
+  "total_results": 1,
+  "query_cost_tokens": 42
+}</pre>
+
+  <h4>GET /api/v1/units/{unit_id}.md</h4>
+  <p>Retrieve the raw markdown of a specific knowledge unit. This is the most token-efficient way to consume a unit.</p>
+  <pre># Request
+GET /api/v1/units/consumer-electronics/audio/wireless-earbuds-under-150/2026.md
+
+# Response: raw markdown with YAML frontmatter
+# Content-Type: text/markdown; charset=utf-8</pre>
+
+  <h4>GET /api/v1/units/{unit_id}.json</h4>
+  <p>Retrieve a knowledge unit as structured JSON (frontmatter parsed into fields, body as string).</p>
+  <pre># Response
+{
+  "id": "consumer-electronics/audio/wireless-earbuds-under-150/2026",
+  "metadata": {
+    "canonical_question": "What are the best wireless earbuds under $150 in 2026?",
+    "confidence": 0.88,
+    "last_verified": "2026-02-07",
+    "sources": [...],
+    ...
+  },
+  "body": "# Best Wireless Earbuds Under $150 (2026)\n\n## Summary\n..."
+}</pre>
+
+  <h4>GET /catalog.json</h4>
+  <p>Full catalog of all available knowledge units with metadata. No authentication required.</p>
+
+  <h4>GET /.well-known/ai-knowledge.json</h4>
+  <p>Discovery manifest describing the service, endpoints, and capabilities. No authentication required.</p>
+
+  <h2>Option 3: Direct Web Fetch</h2>
+  <p>Every knowledge unit has a public web page. AI agents using web search + web fetch can consume units directly:</p>
+  <ol>
+    <li>Web search finds the page (optimized for AI-style queries)</li>
+    <li>Fetch the page — the body IS the markdown knowledge unit</li>
+    <li>Optionally, read <code>&lt;meta name="ai:raw"&gt;</code> to get the raw .md URL</li>
+  </ol>
+  <p>This requires zero setup. Any AI agent with web search capability can use knowledgelib.io.</p>
+
+  <h2>Pricing</h2>
+  <p>Simple per-request pricing: <strong>$0.10 per query</strong>. Still a win — agents typically burn $0.50-$5.00 in compute to get the same answer from raw web.</p>
+  <table>
+    <tr><th>What you pay</th><th>What it replaces</th><th>Your saving</th></tr>
+    <tr><td>$0.10 / query</td><td>$0.50 - $5.00 in agent compute (3-5 web searches + parsing + reasoning)</td><td>5x - 50x cost reduction</td></tr>
+  </table>
+  <p>MCP server queries are billed the same way — every MCP tool call = one API request.</p>
+
+  <h2>OpenAPI Specification</h2>
+  <p>Full OpenAPI 3.0 spec available at: <code><a href="/api/v1/openapi.json">/api/v1/openapi.json</a></code></p>
+  <p>Compatible with LangChain, CrewAI, AutoGen, and any framework that supports OpenAPI tool definitions.</p>
+
+<footer>
+  <strong><a href="/">knowledgelib.io</a></strong> — AI Knowledge Library<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API</a> &middot; <a href="/catalog.json">Catalog</a><br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+</footer>
+
+</body>
+</html>
