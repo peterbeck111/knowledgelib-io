@@ -1,19 +1,16 @@
-const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
-const { PipelineLogger } = require('../db/pipeline_logger');
+const { PipelineLoggerRest } = require('../db/pipeline_logger_rest');
 
 /**
- * Reconciliation script for parallel card creation.
- *
- * Run this after all parallel Claude Code sessions have completed.
- * It regenerates catalog.json, sitemap.xml, and the index.html
- * knowledge units section from the database, and syncs tracker.md statistics.
- *
- * Usage: node knowledge_pipeline/reconcile.js
+ * REST API-based reconciliation script.
+ * Fallback for when direct DB connection is unavailable.
+ * Regenerates catalog.json, sitemap.xml, index.html units section, and syncs tracker.md.
  */
 
+const SUPABASE_URL = 'https://qkinqevfhachlykmwnzs.supabase.co';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PROTOTYPE_DIR = path.resolve(__dirname, '..', 'prototype');
 const TRACKER_PATH = path.resolve(__dirname, 'tracker.md');
 
@@ -33,81 +30,81 @@ function timer(label) {
 
 async function run() {
   const runTimer = timer('reconcile');
-
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
-  let logger;
+  const logger = new PipelineLoggerRest(SUPABASE_URL, SERVICE_KEY);
   let runId;
 
   try {
-    await client.connect();
-    console.log('Connected to Supabase PostgreSQL.\n');
+    runId = await logger.start('reconcile', { variant: 'rest' });
+    console.log('Fetching all active cards from Supabase REST API...\n');
 
-    logger = new PipelineLogger(client);
-    runId = await logger.start('reconcile');
-
-    // 1. Fetch all active cards from DB
+    // Fetch all cards (paginate if needed)
     const t1 = timer('fetch_cards');
-    const { rows: cards } = await client.query(`
-      SELECT id, category, subcategory, topic, version_tag,
-             canonical_question, aliases, confidence, source_count,
-             token_estimate, md_path, html_path, published_at,
-             updated_at, pop_index
-      FROM knowledge_cards
-      WHERE status = 'active'
-      ORDER BY id
-    `);
-    t1.done(`${cards.length} cards`);
+    let allCards = [];
+    let offset = 0;
+    const limit = 1000;
 
-    // 2. Fetch open feedback counts
+    while (true) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/knowledge_cards?status=eq.active&order=id&offset=${offset}&limit=${limit}`,
+        {
+          headers: {
+            'apikey': SERVICE_KEY,
+            'Authorization': 'Bearer ' + SERVICE_KEY,
+          },
+        }
+      );
+
+      if (res.status >= 400) {
+        throw new Error(`Fetch failed: ${res.status} ${await res.text()}`);
+      }
+
+      const cards = await res.json();
+      allCards = allCards.concat(cards);
+
+      if (cards.length < limit) break;
+      offset += limit;
+    }
+    t1.done(`${allCards.length} cards`);
+
+    // Fetch open feedback counts
     const t2a = timer('feedback');
-    const feedbackCounts = await fetchFeedbackCounts(client);
+    const feedbackCounts = await fetchFeedbackCounts();
     t2a.done(`${Object.keys(feedbackCounts).length} cards with open issues`);
 
-    // 3. Read frontmatter metadata from .md files
+    // Read frontmatter metadata from .md files
     const t2b = timer('frontmatter');
-    const frontmatterMap = readFrontmatterMetadata(cards);
+    const frontmatterMap = readFrontmatterMetadata(allCards);
     t2b.done(`${Object.keys(frontmatterMap).length} cards parsed`);
 
-    // 4. Regenerate catalog.json (with feedback counts + frontmatter metadata)
     const t2 = timer('catalog');
-    regenerateCatalog(cards, feedbackCounts, frontmatterMap);
+    regenerateCatalog(allCards, feedbackCounts, frontmatterMap);
     t2.done();
 
-    // 5. Regenerate sitemap.xml
     const t3 = timer('sitemap');
-    regenerateSitemap(cards);
+    regenerateSitemap(allCards);
     t3.done();
 
-    // 6. Regenerate index.html knowledge units section
     const t4 = timer('index');
-    regenerateIndex(cards);
+    regenerateIndex(allCards);
     t4.done();
 
-    // 7. Regenerate .well-known/ai-knowledge.json
     const t5 = timer('ai_knowledge');
-    regenerateAiKnowledge(cards, feedbackCounts);
+    regenerateAiKnowledge(allCards, feedbackCounts);
     t5.done();
 
-    // 8. Import popular agent suggestions into tracker.md
     const t6 = timer('suggestions');
-    const imported = await importSuggestionsToTracker(client);
+    const imported = await importSuggestionsToTracker();
     t6.done(imported > 0 ? `${imported} new topic(s) imported` : 'no new topics');
 
-    // 9. Sync tracker.md statistics
     const t7 = timer('tracker');
     syncTrackerStats();
     t7.done();
 
-    // 10. Clean up parallel temp files
     const t8 = timer('cleanup');
     cleanupTempFiles();
     t8.done();
 
-    // 11. Flag cards with critical open feedback
+    // Flag cards with critical/high open feedback
     const criticalCards = Object.entries(feedbackCounts)
       .filter(([, counts]) => counts.critical > 0)
       .map(([id, counts]) => `  ⚠ ${id}: ${counts.critical} critical, ${counts.open} total open`);
@@ -124,71 +121,56 @@ async function run() {
       highFeedbackCards.forEach(line => console.log(line));
     }
 
-    const totalMs = runTimer.done(`${cards.length} cards reconciled`);
+    const totalMs = runTimer.done(`${allCards.length} cards reconciled`);
     console.log(`\n=== Reconciliation Summary ===`);
-    console.log(`  Cards: ${cards.length}`);
+    console.log(`  Cards: ${allCards.length}`);
     console.log(`  Total time: ${totalMs}ms`);
     console.log(`  Timestamp: ${new Date().toISOString()}`);
 
     await logger.complete(runId, {
-      cards_affected: cards.length,
+      cards_affected: allCards.length,
       duration_ms: totalMs,
-      detail: { categories: [...new Set(cards.map(c => c.category))].length },
+      detail: { variant: 'rest', categories: [...new Set(allCards.map(c => c.category))].length },
     });
   } catch (err) {
     console.error(`Reconciliation failed at ${new Date().toISOString()}`);
     console.error(`  Error: ${err.message}`);
-    if (err.code) console.error(`  PG code: ${err.code}`);
-    if (err.detail) console.error(`  Detail: ${err.detail}`);
+    if (err.cause) console.error(`  Cause: ${err.cause}`);
     console.error(`  Stack: ${err.stack}`);
 
-    if (logger && runId) {
+    if (runId) {
       const elapsed = Date.now() - (runTimer._start || Date.now());
       await logger.fail(runId, err, { duration_ms: elapsed });
     }
 
     process.exit(1);
-  } finally {
-    await client.end();
   }
 }
 
 function regenerateCatalog(cards, feedbackCounts = {}, frontmatterMap = {}) {
   console.log('Regenerating catalog.json...');
 
-  // Build domains/subdomains structure
   const domainMap = {};
   for (const card of cards) {
     const domId = card.category;
     const subId = card.subcategory;
 
     if (!domainMap[domId]) {
-      domainMap[domId] = {
-        id: domId,
-        name: formatName(domId),
-        unit_count: 0,
-        subdomains: {}
-      };
+      domainMap[domId] = { id: domId, name: formatName(domId), unit_count: 0, subdomains: {} };
     }
     domainMap[domId].unit_count++;
 
     if (!domainMap[domId].subdomains[subId]) {
-      domainMap[domId].subdomains[subId] = {
-        id: subId,
-        name: formatName(subId),
-        unit_count: 0
-      };
+      domainMap[domId].subdomains[subId] = { id: subId, name: formatName(subId), unit_count: 0 };
     }
     domainMap[domId].subdomains[subId].unit_count++;
   }
 
-  // Convert subdomains from map to array
   const domains = Object.values(domainMap).map(d => ({
     ...d,
     subdomains: Object.values(d.subdomains)
   }));
 
-  // Build units array (enriched with frontmatter + feedback data)
   const units = cards.map(card => {
     const fm = frontmatterMap[card.id] || {};
     const fb = feedbackCounts[card.id] || { open: 0, critical: 0 };
@@ -235,7 +217,6 @@ function regenerateSitemap(cards) {
 
   const today = formatDate(new Date());
 
-  // Static entries
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
@@ -266,7 +247,6 @@ function regenerateSitemap(cards) {
   </url>
 `;
 
-  // Dynamic entries from DB
   for (const card of cards) {
     const lastmod = formatDate(card.updated_at);
     const changefreq = freshnessFromPopIndex(card.pop_index);
@@ -300,167 +280,6 @@ function regenerateSitemap(cards) {
   console.log(`  Written ${sitemapPath} (${cards.length} knowledge unit URLs)`);
 }
 
-async function importSuggestionsToTracker(client) {
-  console.log('Checking for popular agent suggestions...');
-
-  const MIN_OCCURRENCE = 3;
-
-  const { rows } = await client.query(`
-    SELECT id, question_text, domain_hint, occurrence_count
-    FROM discovered_questions
-    WHERE card_id IS NULL
-      AND status = 'pending'
-      AND is_new_card_candidate = TRUE
-      AND occurrence_count >= $1
-    ORDER BY occurrence_count DESC
-    LIMIT 20
-  `, [MIN_OCCURRENCE]);
-
-  if (rows.length === 0) {
-    console.log(`  No suggestions with >= ${MIN_OCCURRENCE} occurrences.`);
-    return 0;
-  }
-
-  if (!fs.existsSync(TRACKER_PATH)) {
-    console.log('  tracker.md not found, skipping suggestion import.');
-    return 0;
-  }
-
-  let tracker = fs.readFileSync(TRACKER_PATH, 'utf-8');
-  const trackerLower = tracker.toLowerCase();
-
-  // Find the last row number in the tracker
-  const rowNumbers = [];
-  const rowMatches = tracker.matchAll(/^\|\s*(\d+)\s*\|/gm);
-  for (const m of rowMatches) {
-    rowNumbers.push(parseInt(m[1], 10));
-  }
-  let nextRowNum = rowNumbers.length > 0 ? Math.max(...rowNumbers) + 1 : 1;
-
-  const today = formatDate(new Date());
-  let added = 0;
-
-  for (const row of rows) {
-    // Skip if question text is already in tracker (rough dedup)
-    const questionSnippet = row.question_text.toLowerCase().substring(0, 40);
-    if (trackerLower.includes(questionSnippet)) continue;
-
-    // Derive category/subcategory/topic from domain_hint or question text
-    const { category, subcategory, topic } = inferTopicSlug(row.question_text, row.domain_hint);
-
-    const newRow = `| ${nextRowNum} | pending | ${category} | ${subcategory} | ${topic} | ${row.question_text} | medium | agent-suggestions | ${today} |`;
-
-    // Append to the end of the tracker table
-    tracker = tracker.trimEnd() + '\n' + newRow + '\n';
-
-    // Mark the suggestion as approved in the DB
-    await client.query(
-      `UPDATE discovered_questions SET status = 'approved' WHERE id = $1`,
-      [row.id]
-    );
-
-    nextRowNum++;
-    added++;
-  }
-
-  if (added > 0) {
-    fs.writeFileSync(TRACKER_PATH, tracker);
-  }
-
-  console.log(`  Imported ${added} suggestion(s) to tracker.md (threshold: >= ${MIN_OCCURRENCE} occurrences).`);
-  return added;
-}
-
-/**
- * Infer category/subcategory/topic slugs from a question and optional domain hint.
- * Falls back to "uncategorized" when inference is ambiguous.
- */
-function inferTopicSlug(questionText, domainHint) {
-  let category = 'uncategorized';
-  let subcategory = 'general';
-
-  // Try to extract from domain_hint (e.g., "home", "consumer_electronics > audio")
-  if (domainHint) {
-    const parts = domainHint.replace(/_/g, '-').split(/\s*>\s*/);
-    if (parts[0]) category = parts[0].trim().toLowerCase();
-    if (parts[1]) subcategory = parts[1].trim().toLowerCase();
-  }
-
-  // Generate topic slug from question: take key nouns, kebab-case
-  const topic = questionText
-    .toLowerCase()
-    .replace(/what are the best\s*/i, '')
-    .replace(/in \d{4}\??/i, '')
-    .replace(/under \$?[\d,]+/i, (m) => 'under-' + m.replace(/[^\d]/g, ''))
-    .replace(/over \$?[\d,]+/i, (m) => 'over-' + m.replace(/[^\d]/g, ''))
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .substring(0, 60);
-
-  return { category, subcategory, topic: topic || 'unknown-topic' };
-}
-
-function syncTrackerStats() {
-  console.log('Syncing tracker.md statistics...');
-
-  if (!fs.existsSync(TRACKER_PATH)) {
-    console.log('  tracker.md not found, skipping.');
-    return;
-  }
-
-  let tracker = fs.readFileSync(TRACKER_PATH, 'utf-8');
-
-  // Count statuses from the table rows
-  const rows = tracker.match(/^\|.*\|$/gm) || [];
-  let pending = 0, inProgress = 0, done = 0, updated = 0, skipped = 0;
-
-  for (const row of rows) {
-    // Skip header and separator rows
-    if (row.includes('Status') || row.match(/^\|\s*-+/)) continue;
-
-    if (row.includes('| pending |')) pending++;
-    else if (row.includes('| in-progress |')) inProgress++;
-    else if (row.includes('| updated |')) updated++;
-    else if (row.includes('| done |')) done++;
-    else if (row.includes('| skipped |')) skipped++;
-  }
-
-  const completed = done + updated;
-  const total = pending + inProgress + completed + skipped;
-
-  // Replace statistics section
-  tracker = tracker.replace(
-    /## Statistics[\s\S]*?(?=\n## )/,
-    `## Statistics\n- Total discovered: ${total}\n- Pending: ${pending}\n- In progress: ${inProgress}\n- Completed: ${completed} (${updated} updated, ${done} legacy)\n- Skipped: ${skipped}\n\n`
-  );
-
-  fs.writeFileSync(TRACKER_PATH, tracker);
-  console.log(`  Stats: ${completed} completed (${updated} updated + ${done} legacy), ${pending} pending, ${inProgress} in-progress, ${skipped} skipped (${total} total)`);
-}
-
-function cleanupTempFiles() {
-  console.log('Cleaning up parallel temp files...');
-
-  const pipelineDir = path.resolve(__dirname);
-  const files = fs.readdirSync(pipelineDir);
-  let cleaned = 0;
-
-  for (const file of files) {
-    if (file.startsWith('card_data_') && file.endsWith('.json')) {
-      fs.unlinkSync(path.join(pipelineDir, file));
-      cleaned++;
-    }
-  }
-
-  console.log(`  Removed ${cleaned} temp file(s).`);
-}
-
-/**
- * Display configuration for index.html sections.
- * Order here determines display order. Groups map subcategories to display names.
- * Categories with `flat: true` render as a single <ul> without <h4> subcategory headers.
- */
 const INDEX_SECTIONS = [
   {
     category: 'consumer-electronics',
@@ -654,7 +473,6 @@ function regenerateIndex(cards) {
 
   let indexHtml = fs.readFileSync(indexPath, 'utf-8');
 
-  // Extract display title from each card's HTML <title> tag
   const cardData = cards.map(card => {
     const htmlFile = path.join(PROTOTYPE_DIR, card.html_path.replace(/^\//, ''));
     let title = formatName(card.topic) + ' (' + card.version_tag + ')';
@@ -671,7 +489,6 @@ function regenerateIndex(cards) {
     };
   });
 
-  // Build the HTML section
   let html = '';
   let categoryCount = 0;
 
@@ -700,7 +517,6 @@ function regenerateIndex(cards) {
         html += '  </ul>\n';
       }
 
-      // Catch any subcategories not listed in the groups config
       const knownSubs = section.groups.flatMap(g => g.subcategories);
       const uncategorized = sectionCards.filter(c => !knownSubs.includes(c.subcategory));
       if (uncategorized.length > 0) {
@@ -715,7 +531,6 @@ function regenerateIndex(cards) {
     html += '\n  </details>\n';
   }
 
-  // Catch any categories not in INDEX_SECTIONS
   const knownCats = INDEX_SECTIONS.map(s => s.category);
   const unknownCards = cardData.filter(c => !knownCats.includes(c.category));
   if (unknownCards.length > 0) {
@@ -733,7 +548,6 @@ function regenerateIndex(cards) {
     }
   }
 
-  // Replace the section between "Available Knowledge Units" and "Discovery Channels"
   const startMarker = /<h2[^>]*>Available Knowledge Units.*?<\/h2>/;
   const endMarker = '<h2>Discovery Channels';
 
@@ -754,12 +568,163 @@ function regenerateIndex(cards) {
   console.log(`  Written ${indexPath} (${cards.length} units across ${categoryCount} categories)`);
 }
 
+function cardLi(card) {
+  return `    <li><a href="${card.href}">${card.displayTitle}</a> <small>— ${card.conf.toFixed(2)} · ${card.source_count} src · ~${formatNumber(card.token_estimate)} tok</small></li>\n`;
+}
+
+async function importSuggestionsToTracker() {
+  console.log('Checking for popular agent suggestions...');
+
+  const MIN_OCCURRENCE = 3;
+
+  // Fetch popular pending suggestions via REST
+  const params = new URLSearchParams({
+    'card_id': 'is.null',
+    'is_new_card_candidate': 'eq.true',
+    'status': 'eq.pending',
+    'occurrence_count': `gte.${MIN_OCCURRENCE}`,
+    'order': 'occurrence_count.desc',
+    'limit': '20',
+    'select': 'id,question_text,domain_hint,occurrence_count',
+  });
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/discovered_questions?${params}`, {
+    headers: {
+      'apikey': SERVICE_KEY,
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+    },
+  });
+
+  if (!res.ok) {
+    console.log(`  Failed to fetch suggestions: ${res.status}`);
+    return 0;
+  }
+
+  const suggestions = await res.json();
+
+  if (suggestions.length === 0) {
+    console.log(`  No suggestions with >= ${MIN_OCCURRENCE} occurrences.`);
+    return 0;
+  }
+
+  if (!fs.existsSync(TRACKER_PATH)) {
+    console.log('  tracker.md not found, skipping suggestion import.');
+    return 0;
+  }
+
+  let tracker = fs.readFileSync(TRACKER_PATH, 'utf-8');
+  const trackerLower = tracker.toLowerCase();
+
+  // Find the last row number in the tracker
+  const rowNumbers = [];
+  const rowMatches = tracker.matchAll(/^\|\s*(\d+)\s*\|/gm);
+  for (const m of rowMatches) {
+    rowNumbers.push(parseInt(m[1], 10));
+  }
+  let nextRowNum = rowNumbers.length > 0 ? Math.max(...rowNumbers) + 1 : 1;
+
+  const today = formatDate(new Date());
+  let added = 0;
+
+  for (const row of suggestions) {
+    // Skip if question text is already in tracker (rough dedup)
+    const questionSnippet = row.question_text.toLowerCase().substring(0, 40);
+    if (trackerLower.includes(questionSnippet)) continue;
+
+    const { category, subcategory, topic } = inferTopicSlug(row.question_text, row.domain_hint);
+
+    const newRow = `| ${nextRowNum} | pending | ${category} | ${subcategory} | ${topic} | ${row.question_text} | medium | agent-suggestions | ${today} |`;
+
+    tracker = tracker.trimEnd() + '\n' + newRow + '\n';
+
+    // Mark suggestion as approved via REST
+    await fetch(`${SUPABASE_URL}/rest/v1/discovered_questions?id=eq.${row.id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ status: 'approved' }),
+    });
+
+    nextRowNum++;
+    added++;
+  }
+
+  if (added > 0) {
+    fs.writeFileSync(TRACKER_PATH, tracker);
+  }
+
+  console.log(`  Imported ${added} suggestion(s) to tracker.md (threshold: >= ${MIN_OCCURRENCE} occurrences).`);
+  return added;
+}
+
+function inferTopicSlug(questionText, domainHint) {
+  let category = 'uncategorized';
+  let subcategory = 'general';
+
+  if (domainHint) {
+    const parts = domainHint.replace(/_/g, '-').split(/\s*>\s*/);
+    if (parts[0]) category = parts[0].trim().toLowerCase();
+    if (parts[1]) subcategory = parts[1].trim().toLowerCase();
+  }
+
+  const topic = questionText
+    .toLowerCase()
+    .replace(/what are the best\s*/i, '')
+    .replace(/in \d{4}\??/i, '')
+    .replace(/under \$?[\d,]+/i, (m) => 'under-' + m.replace(/[^\d]/g, ''))
+    .replace(/over \$?[\d,]+/i, (m) => 'over-' + m.replace(/[^\d]/g, ''))
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .substring(0, 60);
+
+  return { category, subcategory, topic: topic || 'unknown-topic' };
+}
+
+function syncTrackerStats() {
+  console.log('Syncing tracker.md statistics...');
+
+  if (!fs.existsSync(TRACKER_PATH)) {
+    console.log('  tracker.md not found, skipping.');
+    return;
+  }
+
+  let tracker = fs.readFileSync(TRACKER_PATH, 'utf-8');
+
+  const rows = tracker.match(/^\|.*\|$/gm) || [];
+  let pending = 0, inProgress = 0, done = 0, updated = 0, skipped = 0;
+
+  for (const row of rows) {
+    if (row.includes('Status') || row.match(/^\|\s*-+/)) continue;
+
+    if (row.includes('| pending |')) pending++;
+    else if (row.includes('| in-progress |')) inProgress++;
+    else if (row.includes('| updated |')) updated++;
+    else if (row.includes('| done |')) done++;
+    else if (row.includes('| skipped |')) skipped++;
+  }
+
+  const completed = done + updated;
+  const total = pending + inProgress + completed + skipped;
+
+  tracker = tracker.replace(
+    /## Statistics[\s\S]*?(?=\n## )/,
+    `## Statistics\n- Total discovered: ${total}\n- Pending: ${pending}\n- In progress: ${inProgress}\n- Completed: ${completed} (${updated} updated, ${done} legacy)\n- Skipped: ${skipped}\n\n`
+  );
+
+  fs.writeFileSync(TRACKER_PATH, tracker);
+  console.log(`  Stats: ${completed} completed (${updated} updated + ${done} legacy), ${pending} pending, ${inProgress} in-progress, ${skipped} skipped (${total} total)`);
+}
+
 function regenerateAiKnowledge(cards, feedbackCounts = {}) {
   console.log('Regenerating .well-known/ai-knowledge.json...');
 
   const aiKnowledgePath = path.join(PROTOTYPE_DIR, '.well-known', 'ai-knowledge.json');
 
-  // Extract unique domains from cards, formatted with underscores
   const domains = [...new Set(cards.map(c => c.category))]
     .sort()
     .map(cat => cat.replace(/-/g, '_'));
@@ -773,31 +738,23 @@ function regenerateAiKnowledge(cards, feedbackCounts = {}) {
     agent_instructions: 'IMPORTANT: 1) Search first — call GET /api/v1/query?q=your+question to find pre-verified answers. 2) Use what you find — every unit is sourced and cited, ready to use in your work. 3) Suggest what is missing — if no good match, call POST /api/v1/suggest with {"question":"your question"}. 4) Report issues — if content is wrong or outdated, call POST /api/v1/feedback.',
     url: 'https://knowledgelib.io',
     api: 'https://knowledgelib.io/api/v1/query',
-    batch_api: 'https://knowledgelib.io/api/v1/batch',
-    health_api: 'https://knowledgelib.io/api/v1/health',
     catalog: 'https://knowledgelib.io/catalog.json',
     feedback_api: 'https://knowledgelib.io/api/v1/feedback',
-    suggest_api: 'https://knowledgelib.io/api/v1/suggest',
     mcp_install: 'npx knowledgelib-mcp',
     mcp_transport: 'stdio',
-    mcp_http: 'https://knowledgelib.io/mcp',
-    openapi: 'https://knowledgelib.io/api/v1/openapi.json',
-    openapi_gpt: 'https://knowledgelib.io/.well-known/openapi-gpt.json',
+    openapi_spec: 'https://knowledgelib.io/api/v1/openapi.json',
     format: 'markdown_with_yaml_frontmatter',
     content_type: 'text/markdown',
-    entity_types: ['product_comparison', 'software_reference', 'fact', 'concept', 'rule', 'erp_integration', 'assessment', 'benchmark', 'decision_framework', 'execution_recipe', 'agent_prompt'],
+    entity_types: ['product_comparison', 'software_reference', 'fact', 'concept', 'rule'],
     domains,
     unit_count: cards.length,
     open_issues: openIssueCount,
+    suggest_api: 'https://knowledgelib.io/api/v1/suggest',
     capabilities: {
       semantic_search: true,
-      batch_search: true,
       canonical_questions: true,
       alias_matching: true,
       confidence_scores: true,
-      quality_status: true,
-      content_previews: true,
-      related_units: true,
       source_provenance: true,
       freshness_tracking: true,
       temporal_validity: true,
@@ -807,22 +764,12 @@ function regenerateAiKnowledge(cards, feedbackCounts = {}) {
       versioning: true,
       question_suggestions: true,
       content_feedback: true,
-      etag_caching: true,
-      structured_errors: true,
-      correlation_ids: true,
     },
     filters: {
       domain: 'Filter by content domain (e.g., "consumer_electronics")',
       region: 'Filter by geographic region (e.g., "US", "EU", "global")',
       jurisdiction: 'Filter by regulatory jurisdiction (e.g., "US", "EU", "global")',
-      entity_type: 'Filter by knowledge unit type (e.g., "product_comparison", "concept", "agent_prompt")',
-    },
-    integrations: {
-      mcp_stdio: { install: 'npx knowledgelib-mcp', version: '1.3.0', tools: 6 },
-      mcp_http: { endpoint: 'https://knowledgelib.io/mcp', transport: 'streamable-http' },
-      openai_gpt: { actions_schema: 'https://knowledgelib.io/.well-known/openapi-gpt.json' },
-      langchain: { install: 'pip install langchain-knowledgelib', version: '0.2.0' },
-      n8n: { install: 'npm install n8n-nodes-knowledgelib', version: '0.2.0' },
+      entity_type: 'Filter by knowledge unit type (e.g., "product_comparison", "fact", "rule")',
     },
     access: {
       free_tier: true,
@@ -839,8 +786,21 @@ function regenerateAiKnowledge(cards, feedbackCounts = {}) {
   console.log(`  Written ${aiKnowledgePath} (${cards.length} units, ${domains.length} domains)`);
 }
 
-function cardLi(card) {
-  return `    <li><a href="${card.href}">${card.displayTitle}</a> <small>— ${card.conf.toFixed(2)} · ${card.source_count} src · ~${formatNumber(card.token_estimate)} tok</small></li>\n`;
+function cleanupTempFiles() {
+  console.log('Cleaning up parallel temp files...');
+
+  const pipelineDir = path.resolve(__dirname);
+  const files = fs.readdirSync(pipelineDir);
+  let cleaned = 0;
+
+  for (const file of files) {
+    if (file.startsWith('card_data_') && file.endsWith('.json')) {
+      fs.unlinkSync(path.join(pipelineDir, file));
+      cleaned++;
+    }
+  }
+
+  console.log(`  Removed ${cleaned} temp file(s).`);
 }
 
 function formatNumber(n) {
@@ -848,10 +808,7 @@ function formatNumber(n) {
 }
 
 function formatName(slug) {
-  return slug
-    .split('-')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 function freshnessFromPopIndex(popIndex) {
@@ -871,24 +828,33 @@ function formatDate(date) {
 }
 
 /**
- * Fetch open feedback counts per card from content_feedback table.
+ * Fetch open feedback counts per card via Supabase REST API.
  * Returns { [card_id]: { open: N, critical: N } }
  */
-async function fetchFeedbackCounts(client) {
+async function fetchFeedbackCounts() {
   const counts = {};
   try {
-    const { rows } = await client.query(`
-      SELECT card_id,
-             count(*) FILTER (WHERE status IN ('open', 'acknowledged')) AS open_count,
-             count(*) FILTER (WHERE severity = 'critical' AND status = 'open') AS critical_count
-      FROM content_feedback
-      GROUP BY card_id
-      HAVING count(*) FILTER (WHERE status IN ('open', 'acknowledged')) > 0
-    `);
+    // Use the content_feedback_summary view
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/content_feedback_summary?open_count=gt.0&select=card_id,open_count,critical_count`,
+      {
+        headers: {
+          'apikey': SERVICE_KEY,
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      console.log(`  content_feedback query skipped: ${res.status}`);
+      return counts;
+    }
+
+    const rows = await res.json();
     for (const row of rows) {
       counts[row.card_id] = {
-        open: parseInt(row.open_count, 10),
-        critical: parseInt(row.critical_count, 10),
+        open: parseInt(row.open_count, 10) || 0,
+        critical: parseInt(row.critical_count, 10) || 0,
       };
     }
   } catch (err) {
@@ -933,11 +899,10 @@ function readFrontmatterMetadata(cards) {
       let contentPreview = null;
       const bodyMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/);
       if (bodyMatch) {
-        // Strip markdown headings and leading whitespace, take first meaningful text
         const bodyText = bodyMatch[1]
-          .replace(/^#+\s+.*$/gm, '')  // remove headings
-          .replace(/^\s+/gm, '')       // trim leading whitespace per line
-          .replace(/\n+/g, ' ')        // collapse newlines
+          .replace(/^#+\s+.*$/gm, '')
+          .replace(/^\s+/gm, '')
+          .replace(/\n+/g, ' ')
           .trim();
         if (bodyText.length > 0) {
           contentPreview = bodyText.substring(0, 150);
@@ -945,7 +910,6 @@ function readFrontmatterMetadata(cards) {
         }
       }
 
-      // Extract related_kos (typed edges for knowledge graph traversal)
       const relatedKos = extractRelatedKos(fm);
 
       metadata[card.id] = {
@@ -973,19 +937,6 @@ function extractYamlValue(yamlText, key) {
   return match[1].trim().replace(/^["']|["']$/g, '');
 }
 
-/**
- * Extract related_kos from YAML frontmatter.
- * Format:
- *   related_kos:
- *     related_to:
- *       - id: "some/path"
- *         label: "Some Label"
- *     depends_on:
- *       - id: "other/path"
- *         label: "Other Label"
- *
- * Returns flat array: [{ type: "related_to", id: "...", label: "..." }, ...]
- */
 function extractRelatedKos(yamlText) {
   const results = [];
   const blockMatch = yamlText.match(/related_kos:\s*\n([\s\S]*?)(?=\n\w|\n---|\s*$)/);
