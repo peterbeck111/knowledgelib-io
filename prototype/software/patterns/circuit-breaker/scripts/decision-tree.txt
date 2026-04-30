@@ -1,0 +1,26 @@
+START: Should I add a circuit breaker?
+├── Is the call to a remote/network service?
+│   ├── NO → Do NOT use circuit breaker (local calls don't need it)
+│   └── YES ↓
+├── Can the downstream service experience sustained failures?
+│   ├── NO (transient only) → Use retry with backoff instead
+│   └── YES ↓
+├── Would repeated calls to a failing service cause harm?
+│   ├── NO → Simple timeout + retry may suffice
+│   └── YES ↓
+├── Do you need a fallback response?
+│   ├── YES → Circuit breaker + fallback function
+│   └── NO → Circuit breaker + fail-fast error
+│
+THRESHOLD TUNING:
+├── Is the service critical (payments, auth)?
+│   ├── YES → Conservative: failureThreshold=10, resetTimeout=60s
+│   └── NO ↓
+├── Is the service high-throughput (>100 req/s)?
+│   ├── YES → Use percentage-based: failureRateThreshold=50%, slidingWindow=100
+│   └── NO → Count-based: failureThreshold=5, resetTimeout=30s
+│
+RECOVERY STRATEGY:
+├── Does downstream have gradual warm-up needs?
+│   ├── YES → Gradual recovery: increase halfOpenRequests over time
+│   └── NO → Standard half-open: single probe request

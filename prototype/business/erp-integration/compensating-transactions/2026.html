@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Compensating Transactions for ERP Integration | knowledgelib.io</title>
+  <meta name="description" content="How to implement compensating transactions when saga rollback is not possible in ERPs.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/compensating-transactions/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Compensating Transactions for ERP Integration | knowledgelib.io">
+  <meta property="og:description" content="How to implement compensating transactions when saga rollback is not possible in ERPs. Per-ERP compensation capabilities, saga orchestration patterns, code examples, and compensation failure handling. 8 sources, all cited.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/compensating-transactions/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Compensating Transactions for ERP Integration | knowledgelib.io">
+  <meta name="twitter:description" content="How to implement compensating transactions when saga rollback is not possible in ERPs. Per-ERP compensation capabilities, saga orchestration patterns, code examples, and compensation failure handling.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.85">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/compensating-transactions">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you implement compensating transactions when saga rollback is not possible in ERPs?">
+  <meta name="ai:aliases" content="Compensating transactions for ERP integration saga failures; How to undo committed ERP transactions across distributed systems; ERP compensation patterns when rollback is impossible; Designing compensating actions for cross-ERP saga workflows">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/compensating-transactions/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-07">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Cross-ERP (Architecture Pattern); Salesforce (API v62.0); SAP S/4HANA (2408); Oracle NetSuite (2024.2); Microsoft Dynamics 365 Finance (10.0.40)">
+  <meta name="ai:inputs_needed" content="compensation_scope,erp_systems,failure_tolerance">
+  <meta name="ai:constraints" content="ERPs do NOT support distributed transactions (2PC) across system boundaries; Compensating transactions are semantic inverses NOT true rollbacks; Some ERP operations are inherently non-compensable; Compensation must be idempotent">
+  <meta name="ai:skip_this_unit_if" content="User needs strong ACID consistency within a single ERP → Use the ERP's native transaction support; User wants the Saga pattern overview → business/erp-integration/saga-pattern-erp-transactions/2026; User needs idempotency patterns → business/erp-integration/idempotency-erp-integrations/2026">
+  <meta name="ai:sections" content="tldr,system_profile,per_erp_compensation,compensation_design,decision_tree,quick_reference,step_by_step,code_examples,error_handling,anti_patterns,pitfalls,diagnostic_commands,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Compensating Transactions for ERP Integration",
+    "headline": "Compensating Transactions for ERP Integration",
+    "description": "Architecture pattern for implementing compensating transactions when saga rollback is not possible in ERPs. Covers per-ERP compensation capabilities (Salesforce undelete, SAP reversal documents, NetSuite void/reverse, D365 cancel/reverse), saga orchestration, compensation failure handling, and code examples.",
+    "keywords": ["compensating transactions", "saga pattern", "ERP integration", "distributed transactions", "Salesforce", "SAP S/4HANA", "NetSuite", "Dynamics 365", "rollback"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Cross-ERP architecture pattern — Salesforce, SAP, NetSuite, D365",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Compensating Transaction Pattern — Microsoft Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Saga Compensating Transactions — Temporal",
+        "url": "https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Saga Design Pattern — Microsoft Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/saga"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Document Reversal FB08 in SAP — Guru99",
+        "url": "https://www.guru99.com/how-to-perform-document-reversal.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Voiding, Deleting, or Closing Transactions — Oracle NetSuite Help",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N563543.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cancel vs. Reverse in Microsoft Dynamics 365 Business Central",
+        "url": "https://community.dynamics.com/blogs/post/?postid=52c84cd6-8317-ef11-989a-000d3ae2aa43"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Compensation Transaction Patterns — Orkes",
+        "url": "https://orkes.io/blog/compensation-transaction-patterns/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "undelete() — Salesforce SOAP API Developer Guide",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_undelete.htm"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Compensating Transactions for ERP Integration",
+    "description": "Architecture pattern reference for compensating transactions across ERP systems — per-ERP compensation capabilities, saga orchestration, compensation failure handling",
+    "keywords": ["compensating transactions", "saga pattern", "ERP integration", "distributed transactions"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Temporal Technologies"},
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Oracle"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Compensating Transactions for ERP Integration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you implement compensating transactions when saga rollback is not possible in ERPs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ERPs cannot participate in distributed transactions (2PC), so every multi-system workflow must use compensating transactions — new operations that semantically undo prior committed work — instead of database rollbacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Compensating transactions for ERP integration saga failures",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ERPs cannot participate in distributed transactions (2PC), so every multi-system workflow must use compensating transactions — new operations that semantically undo prior committed work — instead of database rollbacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to undo committed ERP transactions across distributed systems",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ERPs cannot participate in distributed transactions (2PC), so every multi-system workflow must use compensating transactions — new operations that semantically undo prior committed work — instead of database rollbacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ERP compensation patterns when rollback is impossible",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ERPs cannot participate in distributed transactions (2PC), so every multi-system workflow must use compensating transactions — new operations that semantically undo prior committed work — instead of database rollbacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Designing compensating actions for cross-ERP saga workflows",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ERPs cannot participate in distributed transactions (2PC), so every multi-system workflow must use compensating transactions — new operations that semantically undo prior committed work — instead of database rollbacks."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Compensating Transactions for ERP Integration</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you implement compensating transactions when saga rollback is not possible in ERPs?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/compensating-transactions/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-ERP (Architecture Pattern)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.85 out of 1">0.85</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> 2026-03-07</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: ERPs cannot participate in distributed transactions (2PC), so every multi-system workflow must use compensating transactions — new operations that semantically undo prior committed work — instead of database rollbacks.</li>
+    <li><strong>Key limit</strong>: Some ERP operations are non-compensable (emails sent, checks printed, goods shipped). Design your saga steps so non-compensable actions execute last.</li>
+    <li><strong>Watch out for</strong>: Compensation failures — if the compensating transaction itself fails, you need a dead letter queue and manual reconciliation process, not recursive compensation.</li>
+    <li><strong>Best for</strong>: Multi-ERP workflows (order-to-cash, procure-to-pay, hire-to-retire) where a failure at step N requires undoing steps 1 through N-1 across system boundaries.</li>
+    <li><strong>Pattern choice</strong>: Use saga orchestration (not choreography) when compensation logic is complex; use Temporal or AWS Step Functions as the orchestrator for durable execution guarantees.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This is a cross-system architecture pattern card covering compensating transaction design across major ERP platforms. It applies to any integration where two or more ERPs participate in a multi-step business process and true distributed transaction support (2PC/XA) is unavailable — which is virtually every cloud ERP integration scenario.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">Compensation Mechanism</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>CRM — opportunity/order source</td><td>Undelete, status reversal, credit memos</td><td>Outbound</td></tr>
+      <tr><td>SAP S/4HANA</td><td>ERP — financial/logistics master</td><td>Reversal documents (FB08), storno, cancellation</td><td>Inbound</td></tr>
+      <tr><td>Oracle NetSuite</td><td>ERP — mid-market financial</td><td>Void (transaction.void), reversing journals</td><td>Inbound</td></tr>
+      <tr><td>Microsoft Dynamics 365</td><td>ERP — finance and operations</td><td>Cancel, reverse, corrective posting</td><td>Inbound</td></tr>
+      <tr><td>Orchestrator (Temporal/Step Functions)</td><td>Saga coordinator</td><td>Compensation registry, retry, DLQ</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Per-ERP Compensation Capabilities -->
+  <section id="per-erp-compensation">
+  <h2>Per-ERP Compensation Capabilities</h2>
+
+  <h3>What Can and Cannot Be Reversed</h3>
+  <p>Understanding each ERP's reversal capabilities is the foundation of compensation design. Every ERP handles "undo" differently, and some operations simply cannot be reversed via API. [<a href="https://www.guru99.com/how-to-perform-document-reversal.html">src4</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N563543.html">src5</a>, <a href="https://community.dynamics.com/blogs/post/?postid=52c84cd6-8317-ef11-989a-000d3ae2aa43">src6</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_undelete.htm">src8</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Operation</th><th scope="col">Compensation Method</th><th scope="col">API Support</th><th scope="col">Limitations</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Salesforce</strong></td><td>Record create</td><td>Delete (soft) to Recycle Bin</td><td>REST DELETE /sobjects/{Object}/{Id}</td><td>Hard-deleted records cannot be recovered</td></tr>
+      <tr><td><strong>Salesforce</strong></td><td>Record delete (soft)</td><td>Undelete</td><td>SOAP undelete() or REST PATCH</td><td>15-day Recycle Bin retention limit</td></tr>
+      <tr><td><strong>Salesforce</strong></td><td>Opportunity close</td><td>Reopen (status change)</td><td>REST PATCH StageName</td><td>Dependent workflows may have already fired</td></tr>
+      <tr><td><strong>Salesforce</strong></td><td>Email send</td><td>Non-compensable</td><td>N/A</td><td>Cannot unsend — send a follow-up correction</td></tr>
+      <tr><td><strong>SAP</strong></td><td>FI document posting</td><td>Reversal document (FB08/BAPI)</td><td>BAPI_ACC_DOCUMENT_REV_POST</td><td>Original period must be open; reason code required</td></tr>
+      <tr><td><strong>SAP</strong></td><td>Goods receipt (MIGO)</td><td>Reversal movement type (102)</td><td>BAPI_GOODSMVT_CREATE / API_GOODSMVT_2</td><td>Partial quantity reversal supported</td></tr>
+      <tr><td><strong>SAP</strong></td><td>Customer payment</td><td>Reset clearing (FBRA) then reverse (FB08)</td><td>BAPI</td><td>Must reset clearing first — cannot skip</td></tr>
+      <tr><td><strong>SAP</strong></td><td>Billing document</td><td>Cancel billing (VF11) — creates offsetting doc</td><td>BAPI_BILLINGDOC_CANCEL</td><td>Original must not be cleared/settled</td></tr>
+      <tr><td><strong>NetSuite</strong></td><td>Invoice/payment</td><td>Void (creates reversing journal)</td><td>transaction.void() SuiteScript</td><td>Requires preference disabled for API use</td></tr>
+      <tr><td><strong>NetSuite</strong></td><td>Sales order</td><td>Close/cancel line items</td><td>SuiteTalk/REST</td><td>Fulfilled lines cannot be voided</td></tr>
+      <tr><td><strong>D365 Finance</strong></td><td>GL journal</td><td>Reverse transaction</td><td>OData: GeneralJournalEntries reversal</td><td>Creates offsetting entry, maintains audit trail</td></tr>
+      <tr><td><strong>D365 Finance</strong></td><td>Vendor payment</td><td>Reverse/void check</td><td>OData</td><td>Unapplies settlement automatically</td></tr>
+      <tr><td><strong>D365 Finance</strong></td><td>Purchase order receipt</td><td>Cancel product receipt</td><td>OData</td><td>Must cancel before invoice matching</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Compensation Design Patterns -->
+  <section id="compensation-design">
+  <h2>Compensation Design Patterns</h2>
+
+  <h3>Forward Recovery vs Backward Recovery</h3>
+  <p>There are two fundamental approaches to handling saga step failures. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction">src1</a>, <a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/saga">src3</a>]</p>
+  <p><strong>Backward recovery</strong> (compensating transactions): Undo completed steps in reverse order. Use when operations are reversible and the business process can be abandoned.</p>
+  <p><strong>Forward recovery</strong> (retry + continue): Retry the failed step until it succeeds. Use when the process must complete (e.g., payroll initiated, goods shipped).</p>
+  <pre><code>BACKWARD RECOVERY (Compensating Transactions)
+Step 1: Create Salesforce Opportunity    OK Committed
+Step 2: Create SAP Sales Order           OK Committed
+Step 3: Create NetSuite Invoice          FAILED
+  -&gt; Compensate Step 2: Cancel SAP Sales Order
+  -&gt; Compensate Step 1: Revert SF Opportunity to "Open"
+
+FORWARD RECOVERY (Retry + Continue)
+Step 1: Create Salesforce Opportunity    OK Committed
+Step 2: Create SAP Sales Order           OK Committed
+Step 3: Create NetSuite Invoice          FAILED
+  -&gt; Retry Step 3 with exponential backoff
+  -&gt; If retries exhausted: human escalation, do NOT undo Steps 1-2</code></pre>
+  <p><strong>Decision rule</strong>: If the process involves irrevocable side effects (payment captured, goods shipped, regulatory filing submitted), use forward recovery for steps after the irrevocable point. Use backward recovery for steps before it.</p>
+
+  <h3>Saga Orchestration for ERP Workflows</h3>
+  <p>Orchestration is strongly preferred over choreography for ERP compensation because: (1) ERP APIs have inconsistent event models, (2) compensation ordering requires centralized state, and (3) debugging cross-ERP failures requires a single audit trail. [<a href="https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas">src2</a>, <a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/saga">src3</a>, <a href="https://orkes.io/blog/compensation-transaction-patterns/">src7</a>]</p>
+  <pre><code>SAGA ORCHESTRATOR FLOW
+Orchestrator
+  |
+  +-- Step 1: CreateSalesforceOrder()
+  |     +-- onSuccess: record SF Order ID, register compensateStep1()
+  |     +-- onFailure: ABORT (nothing to compensate)
+  |
+  +-- Step 2: CreateSAPSalesOrder(sfOrderId)
+  |     +-- onSuccess: record SAP SO number, register compensateStep2()
+  |     +-- onFailure: COMPENSATE [Step 1]
+  |
+  +-- Step 3: CreateNetSuiteInvoice(sapSONumber)
+  |     +-- onSuccess: record NS Invoice ID, register compensateStep3()
+  |     +-- onFailure: COMPENSATE [Step 2, Step 1]
+  |
+  +-- Step 4: CapturePayment(nsInvoiceId)     NON-COMPENSABLE
+        +-- onSuccess: SAGA COMPLETE
+        +-- onFailure: COMPENSATE [Step 3, Step 2, Step 1]</code></pre>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — User needs to handle failures in multi-ERP workflows
++-- Is the failed operation within a single ERP?
+|   +-- YES -&gt; Use the ERP's native rollback (SAP LUW, SF trigger rollback)
+|   +-- NO -&gt; Distributed workflow, continue
++-- How many systems have already committed?
+|   +-- 0 -&gt; No compensation needed — just fail and retry
+|   +-- 1 -&gt; Simple bilateral compensation — reverse the one committed op
+|   +-- 2+ -&gt; Full saga with compensation registry
++-- Are all committed operations reversible via API?
+|   +-- YES -&gt; Backward recovery (compensating transactions)
+|   |   +-- &lt; 5 steps? -&gt; Inline compensation logic
+|   |   +-- &gt;= 5 steps? -&gt; Use Temporal or Step Functions orchestrator
+|   +-- PARTIALLY -&gt; Hybrid approach
+|   |   +-- Order steps: compensable first, non-compensable last
+|   |   +-- For compensable steps -&gt; backward recovery
+|   |   +-- For non-compensable steps -&gt; forward recovery (retry)
+|   +-- NO -&gt; Forward recovery only (retry failed step until success)
++-- What if compensation itself fails?
+|   +-- Financial/regulated -&gt; Dead letter queue + manual reconciliation
+|   +-- Best-effort -&gt; Log failure + alert + scheduled retry
+|   +-- Can retry indefinitely -&gt; Temporal durable execution
++-- Orchestration tool?
+    +-- Need durability guarantees -&gt; Temporal (code-first, replay-safe)
+    +-- AWS-native -&gt; Step Functions (state machine)
+    +-- iPaaS-based -&gt; MuleSoft/Boomi/Workato with error handlers
+    +-- Simple (&lt; 3 steps) -&gt; Custom code with compensation array</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <h3>Compensating Actions Per ERP Per Operation Type</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Operation</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">NetSuite</th><th scope="col">D365 Finance</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Create record</strong></td><td>DELETE (soft delete)</td><td>Reversal document</td><td>Void / Delete</td><td>Reverse posting</td></tr>
+      <tr><td><strong>Update record</strong></td><td>PATCH (restore old values)</td><td>Correction document</td><td>PATCH (restore)</td><td>Corrective posting</td></tr>
+      <tr><td><strong>Delete record</strong></td><td>undelete() (SOAP)</td><td>Re-post original</td><td>Restore from Recycle Bin</td><td>Re-create</td></tr>
+      <tr><td><strong>Post journal</strong></td><td>N/A (no GL)</td><td>FB08 reversal</td><td>Reversing journal</td><td>Reverse journal</td></tr>
+      <tr><td><strong>Post invoice</strong></td><td>Credit memo</td><td>Cancel billing (VF11)</td><td>Credit memo / Void</td><td>Credit note</td></tr>
+      <tr><td><strong>Process payment</strong></td><td>Refund object</td><td>Reset + reverse (FBRA+FB08)</td><td>Void / Refund</td><td>Void check / reverse</td></tr>
+      <tr><td><strong>Goods receipt</strong></td><td>N/A</td><td>Movement type 102</td><td>Item receipt reversal</td><td>Cancel product receipt</td></tr>
+      <tr><td><strong>Close period</strong></td><td>N/A</td><td>Non-compensable (reopen)</td><td>Non-compensable (reopen)</td><td>Non-compensable (reopen)</td></tr>
+      <tr><td><strong>Send email</strong></td><td>Non-compensable</td><td>Non-compensable</td><td>Non-compensable</td><td>Non-compensable</td></tr>
+      <tr><td><strong>Print/mail check</strong></td><td>Non-compensable</td><td>Non-compensable</td><td>Non-compensable</td><td>Non-compensable</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Design your compensation registry</h3>
+  <p>Before writing any saga code, map every step to its compensating action. Register the compensation BEFORE executing the step — this prevents orphaned state when an activity times out mid-execution. [<a href="https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas">src2</a>]</p>
+  <pre><code class="language-typescript">// Compensation registry pattern — register BEFORE execute
+interface SagaStep&lt;T&gt; {
+  name: string;
+  execute: () =&gt; Promise&lt;T&gt;;
+  compensate: (result: T) =&gt; Promise&lt;void&gt;;
+}
+
+class CompensationRegistry {
+  private completedSteps: Array&lt;{
+    name: string;
+    compensate: () =&gt; Promise&lt;void&gt;;
+  }&gt; = [];
+
+  async executeStep&lt;T&gt;(step: SagaStep&lt;T&gt;): Promise&lt;T&gt; {
+    const placeholder = { name: step.name, compensate: async () =&gt; {} };
+    this.completedSteps.unshift(placeholder);
+    const result = await step.execute();
+    placeholder.compensate = () =&gt; step.compensate(result);
+    return result;
+  }
+
+  async compensateAll(): Promise&lt;CompensationReport&gt; {
+    const report: CompensationReport = { succeeded: [], failed: [] };
+    for (const step of this.completedSteps) {
+      try {
+        await step.compensate();
+        report.succeeded.push(step.name);
+      } catch (err) {
+        report.failed.push({ name: step.name, error: err });
+      }
+    }
+    return report;
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: The registry should contain entries in reverse execution order.</p>
+
+  <h3>2. Define per-ERP compensating actions</h3>
+  <p>Each ERP has different API semantics for undoing operations. Define typed compensating action factories for each ERP. [<a href="https://www.guru99.com/how-to-perform-document-reversal.html">src4</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N563543.html">src5</a>, <a href="https://community.dynamics.com/blogs/post/?postid=52c84cd6-8317-ef11-989a-000d3ae2aa43">src6</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_undelete.htm">src8</a>]</p>
+  <pre><code class="language-typescript">// Salesforce compensation actions
+const salesforceCompensations = {
+  deleteRecord: (objectType: string, recordId: string) =&gt; async () =&gt; {
+    await sfClient.delete(`/sobjects/${objectType}/${recordId}`);
+  },
+  undeleteRecord: (recordId: string) =&gt; async () =&gt; {
+    await sfClient.soap('undelete', { ids: [recordId] });
+  },
+};
+
+// SAP S/4HANA compensation actions
+const sapCompensations = {
+  reverseDocument: (companyCode, docNumber, fiscalYear, reasonCode) =&gt; async () =&gt; {
+    await sapClient.call('BAPI_ACC_DOCUMENT_REV_POST', {
+      OBJECTKEY: docNumber, BUKRS: companyCode,
+      GJAHR: fiscalYear, REASON_REV: reasonCode,
+    });
+  },
+  reverseGoodsMovement: (materialDoc, year) =&gt; async () =&gt; {
+    await sapClient.post('/API_GOODSMVT_2/GoodsMovement', {
+      GoodsMovementType: '102', MaterialDocument: materialDoc,
+      MaterialDocumentYear: year,
+    });
+  },
+};
+
+// NetSuite compensation actions
+const netsuiteCompensations = {
+  voidTransaction: (transactionId, tranType) =&gt; async () =&gt; {
+    await nsClient.post('/transaction/void', {
+      id: transactionId, type: tranType,
+    });
+  },
+};
+
+// Dynamics 365 Finance compensation actions
+const d365Compensations = {
+  reverseJournal: (journalBatchNumber) =&gt; async () =&gt; {
+    await d365Client.post('/GeneralJournalEntries/reverse', {
+      JournalBatchNumber: journalBatchNumber,
+    });
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: Each compensating action should be independently testable.</p>
+
+  <h3>3. Wire the saga orchestrator</h3>
+  <p>Connect your steps and compensations in an orchestrator. [<a href="https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas">src2</a>, <a href="https://orkes.io/blog/compensation-transaction-patterns/">src7</a>]</p>
+  <pre><code class="language-typescript">async function orderToPaySaga(order: OrderRequest): Promise&lt;SagaResult&gt; {
+  const registry = new CompensationRegistry();
+  try {
+    const sfOppId = await registry.executeStep({
+      name: 'createSalesforceOpportunity',
+      execute: () =&gt; sfClient.createOpportunity(order),
+      compensate: (oppId) =&gt; salesforceCompensations.revertStatus(
+        'Opportunity', oppId, 'Prospecting')(),
+    });
+    const sapSONumber = await registry.executeStep({
+      name: 'createSAPSalesOrder',
+      execute: () =&gt; sapClient.createSalesOrder(order, sfOppId),
+      compensate: (soNumber) =&gt; sapCompensations.reverseDocument(
+        order.companyCode, soNumber, currentFiscalYear(), '01')(),
+    });
+    // Step 3, Step 4 (non-compensable last)...
+    return { status: 'completed', sfOppId, sapSONumber };
+  } catch (error) {
+    const report = await registry.compensateAll();
+    if (report.failed.length &gt; 0) {
+      await deadLetterQueue.publish({ sagaId: order.sagaId, compensationFailures: report.failed });
+    }
+    throw new SagaCompensationError(error, report);
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Test by injecting a failure at each step and confirming all prior steps are compensated.</p>
+
+  <h3>4. Handle compensation failures</h3>
+  <p>When a compensating transaction itself fails, route to a dead letter queue — do not recurse. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction">src1</a>, <a href="https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas">src2</a>]</p>
+  <pre><code class="language-typescript">class CompensationFailureHandler {
+  private maxRetries = 3;
+  async handleFailedCompensation(
+    sagaId: string, failedStep: string,
+    compensateAction: () =&gt; Promise&lt;void&gt;, attempt = 1
+  ): Promise&lt;void&gt; {
+    try {
+      await compensateAction();
+    } catch (error) {
+      if (attempt &lt; this.maxRetries) {
+        await sleep(Math.pow(2, attempt) * 1000);
+        return this.handleFailedCompensation(sagaId, failedStep, compensateAction, attempt + 1);
+      }
+      // Exhausted retries — dead letter queue
+      await this.dlq.publish({ sagaId, failedStep, attempts: attempt,
+        error: error.message, requiresManualIntervention: true });
+    }
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Confirm DLQ receives messages for steps that fail compensation after max retries.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Saga Orchestrator with Compensation Registry</h3>
+  <pre><code class="language-python"># Input:  List of saga steps with execute/compensate callables
+# Output: SagaResult with status and compensation report
+
+import asyncio
+from dataclasses import dataclass, field
+from typing import Any, Callable, Awaitable
+
+@dataclass
+class SagaStep:
+    name: str
+    execute: Callable[[], Awaitable[Any]]
+    compensate: Callable[[Any], Awaitable[None]]
+
+class SagaOrchestrator:
+    def __init__(self):
+        self._completed = []
+
+    async def run(self, steps):
+        results = {}
+        try:
+            for step in steps:
+                result = await step.execute()
+                self._completed.insert(0, (step.name, lambda r=result, s=step: s.compensate(r)))
+                results[step.name] = result
+            return {"status": "completed", "results": results}
+        except Exception as e:
+            report = await self._compensate_all()
+            return {"status": "compensated", "error": str(e), "report": report}
+
+    async def _compensate_all(self):
+        succeeded, failed = [], []
+        for name, comp_fn in self._completed:
+            try:
+                await comp_fn()
+                succeeded.append(name)
+            except Exception as e:
+                failed.append({"step": name, "error": str(e)})
+        return {"succeeded": succeeded, "failed": failed}</code></pre>
+
+  <h3>JavaScript/Node.js: Temporal Workflow with Compensation</h3>
+  <pre><code class="language-javascript">// Input:  Order details from upstream system
+// Output: Completed saga or compensated state with audit trail
+
+import { proxyActivities } from '@temporalio/workflow';
+
+const { createSFOpportunity, cancelSFOpportunity,
+        createSAPSalesOrder, reverseSAPDocument,
+        createNSInvoice, voidNSTransaction } = proxyActivities({
+  startToCloseTimeout: '30s',
+  retry: { maximumAttempts: 3 },
+});
+
+export async function orderToPayWorkflow(order) {
+  const compensations = [];
+  try {
+    compensations.unshift(() =&gt; cancelSFOpportunity(sfOppId));
+    const sfOppId = await createSFOpportunity(order);
+
+    compensations.unshift(() =&gt; reverseSAPDocument(sapSONum));
+    const sapSONum = await createSAPSalesOrder(order, sfOppId);
+
+    compensations.unshift(() =&gt; voidNSTransaction(nsInvId));
+    const nsInvId = await createNSInvoice(order, sapSONum);
+
+    return { status: 'completed', sfOppId, sapSONum, nsInvId };
+  } catch (err) {
+    for (const compensate of compensations) {
+      try { await compensate(); }
+      catch (compErr) { console.error('Compensation failed:', compErr.message); }
+    }
+    throw err;
+  }
+}</code></pre>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Scenarios</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Cause</th><th scope="col">Impact</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Compensation blocked by closed period</td><td>SAP/NetSuite fiscal period closed</td><td>Reversal document cannot be posted</td><td>Post reversal in current period with cross-period reference</td></tr>
+      <tr><td>Partial compensation success</td><td>Network timeout during compensation chain</td><td>System in inconsistent state across ERPs</td><td>DLQ + scheduled reconciliation job</td></tr>
+      <tr><td>Idempotency violation</td><td>Compensation executed twice due to retry</td><td>Double-reversal creates phantom transactions</td><td>Use idempotency keys per compensation action</td></tr>
+      <tr><td>Rate limit hit during compensation</td><td>Multiple compensations trigger ERP rate limiting</td><td>Remaining compensations delayed or blocked</td><td>Exponential backoff; space compensation calls</td></tr>
+      <tr><td>Record locked by another user</td><td>Concurrent ERP user editing same record</td><td>Compensation action fails with lock error</td><td>Retry with jitter (random delay 1-5s)</td></tr>
+      <tr><td>Non-compensable step already executed</td><td>Email sent, check printed, goods shipped</td><td>Cannot undo physical-world actions</td><td>Send correction notification; flag for manual handling</td></tr>
+      <tr><td>Recycle Bin expired (Salesforce)</td><td>15-day retention passed before compensation</td><td>Cannot undelete the record</td><td>Re-create the record from audit log</td></tr>
+      <tr><td>Authorization expired mid-compensation</td><td>Long-running saga outlives auth token</td><td>401 errors during compensation</td><td>Refresh token before each compensation step</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Compensation ordering matters</strong>: If Step 3 depends on Step 2's data, compensating Step 2 before Step 3 may fail. Always compensate in reverse execution order. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction">src1</a>]</li>
+    <li><strong>SAP period-end blocking</strong>: Reversal documents require open posting periods. Fix: <code>Post to current period with reason code indicating cross-period reversal</code>. [<a href="https://www.guru99.com/how-to-perform-document-reversal.html">src4</a>]</li>
+    <li><strong>NetSuite preference conflict</strong>: transaction.void() throws an error if "Void Using Reversing Journals" is enabled. Fix: <code>Create a reversing journal entry manually via SuiteScript</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N563543.html">src5</a>]</li>
+    <li><strong>Salesforce governor limits during compensation</strong>: A saga compensating 200+ records hits DML limits. Fix: <code>Batch compensations into groups of 150 or use Bulk API</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_undelete.htm">src8</a>]</li>
+    <li><strong>D365 settlement reversal dependency</strong>: Cannot reverse a vendor payment until settlement is first reversed. Fix: <code>Always unapply settlements before reversing payments</code>. [<a href="https://community.dynamics.com/blogs/post/?postid=52c84cd6-8317-ef11-989a-000d3ae2aa43">src6</a>]</li>
+    <li><strong>Temporal workflow timeout kills compensation</strong>: If workflow timeout is too short, compensation may be interrupted. Fix: <code>Set workflow timeouts generously or use child workflows for compensation</code>. [<a href="https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Ignoring compensation — assuming failures are rare</h3>
+  <pre><code class="language-typescript">// BAD — no compensation logic, relies on "it usually works"
+async function naiveOrderFlow(order) {
+  const sfId = await createSalesforceOpp(order);
+  const sapSO = await createSAPOrder(order, sfId);     // What if this fails?
+  const nsInv = await createNetSuiteInvoice(order, sapSO); // sfId is orphaned
+  return { sfId, sapSO, nsInv };
+}
+// Result: Salesforce has an Opportunity with no matching SAP order</code></pre>
+
+  <h3>Correct: Every step has a registered compensation</h3>
+  <pre><code class="language-typescript">// GOOD — every step has a compensating action
+async function compensatedOrderFlow(order) {
+  const registry = new CompensationRegistry();
+  try {
+    const sfId = await registry.executeStep({
+      name: 'sf_opp', execute: () =&gt; createSalesforceOpp(order),
+      compensate: (id) =&gt; deleteSalesforceOpp(id),
+    });
+    // ... remaining steps with compensation
+    return { sfId };
+  } catch (e) {
+    await registry.compensateAll();
+    throw e;
+  }
+}</code></pre>
+
+  <h3>Wrong: Assuming ERP API operations are idempotent</h3>
+  <pre><code class="language-typescript">// BAD — retrying compensation without idempotency key
+async function retryCompensation(action) {
+  for (let i = 0; i &lt; 3; i++) {
+    try { await action(); return; }
+    catch (e) { /* retry */ }
+  }
+}
+// Result: SAP creates 3 reversal documents for 1 original</code></pre>
+
+  <h3>Correct: Idempotent compensation with tracking</h3>
+  <pre><code class="language-typescript">// GOOD — idempotency key prevents duplicate compensations
+async function idempotentCompensation(sagaId, stepName, action) {
+  const key = `${sagaId}:${stepName}:compensate`;
+  const existing = await compensationLog.find(key);
+  if (existing?.status === 'completed') return;
+  await compensationLog.upsert(key, { status: 'in_progress' });
+  try {
+    await action();
+    await compensationLog.upsert(key, { status: 'completed' });
+  } catch (error) {
+    await compensationLog.upsert(key, { status: 'failed', error: error.message });
+    throw error;
+  }
+}</code></pre>
+
+  <h3>Wrong: Non-compensable steps early in the saga</h3>
+  <pre><code class="language-typescript">// BAD — payment captured at Step 2, but Step 3 can fail
+async function badStepOrdering(order) {
+  const sfId = await createSalesforceOpp(order);
+  const paymentId = await capturePayment(order);         // NON-COMPENSABLE
+  const sapSO = await createSAPOrder(order, sfId);       // If this fails...
+  // ...payment already captured but no SAP order. Refund takes 5-10 days.
+}</code></pre>
+
+  <h3>Correct: Non-compensable steps execute last</h3>
+  <pre><code class="language-typescript">// GOOD — non-compensable payment capture is the final step
+async function correctStepOrdering(order) {
+  const sfId = await createSalesforceOpp(order);         // compensable
+  const sapSO = await createSAPOrder(order, sfId);       // compensable
+  const nsInv = await createNetSuiteInvoice(order, sapSO); // compensable
+  const paymentId = await capturePayment(order);         // NON-COMPENSABLE (last)
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Audit trail for compensated transactions</strong>: Compensated transactions must leave a complete audit trail. SOX/IFRS mandate reversed financial transactions remain visible. Fix: <code>Log every compensation action with original transaction ID, timestamp, reason, and compensating transaction ID</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction">src1</a>]</li>
+    <li><strong>Assuming void and reverse are the same</strong>: In NetSuite, voiding removes GL impact entirely; reversing creates an offsetting journal. SOX compliance requires reversal, not void. Fix: <code>Use reversing journals for financial transactions in regulated environments</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N563543.html">src5</a>]</li>
+    <li><strong>Compensation timing assumptions</strong>: SAP reversals require open posting periods. If fiscal period closes between original posting and compensation, reversal is blocked. Fix: <code>Check period status before SAP reversals; if closed, post to current period with cross-period reason code</code>. [<a href="https://www.guru99.com/how-to-perform-document-reversal.html">src4</a>]</li>
+    <li><strong>Ignoring concurrent modifications</strong>: Between original operation and compensation, another user may have modified the record. Fix: <code>Use conditional updates (ETags, version fields, SystemModstamp) to detect concurrent modifications</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction">src1</a>]</li>
+    <li><strong>Not testing compensation paths</strong>: Teams test the happy path exhaustively but never test compensations. Fix: <code>Include compensation testing in CI — inject failures at each saga step</code>. [<a href="https://temporal.io/blog/compensating-actions-part-of-a-complete-breakfast-with-sagas">src2</a>]</li>
+    <li><strong>Recursive compensation</strong>: When compensation fails, some teams try to "compensate the compensation." Fix: <code>Cap at one compensation attempt per step. If compensation fails after retries, route to DLQ</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction">src1</a>, <a href="https://orkes.io/blog/compensation-transaction-patterns/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check SAP posting period status (must be open for reversals)
+curl -X GET "$SAP_BASE_URL/API_FISCALYEARPERIOD_SRV/FiscalYearPeriods?\
+$filter=FiscalYear eq '2026' and FiscalPeriod eq '03'" \
+  -H "Authorization: Bearer $SAP_TOKEN"
+
+# Salesforce: check if record is in Recycle Bin (available for undelete)
+curl "$SF_INSTANCE/services/data/v62.0/queryAll/?q=\
+SELECT+Id,IsDeleted+FROM+Opportunity+WHERE+Id='$OPP_ID'" \
+  -H "Authorization: Bearer $SF_TOKEN"
+
+# D365 Finance: check if journal can be reversed
+curl -X GET "$D365_BASE_URL/data/GeneralJournalEntries?\
+\$filter=JournalBatchNumber eq '$JOURNAL_BATCH'" \
+  -H "Authorization: Bearer $D365_TOKEN"
+
+# Check dead letter queue for failed compensations (AWS SQS example)
+aws sqs get-queue-attributes \
+  --queue-url "$DLQ_URL" \
+  --attribute-names ApproximateNumberOfMessages
+
+# Temporal: check workflow compensation status
+tctl workflow show -w "$SAGA_WORKFLOW_ID" -r "$RUN_ID"</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multi-ERP workflow with 3+ steps that must be consistent</td><td>Single-ERP operation with native transaction support</td><td>ERP's built-in transaction/rollback mechanism</td></tr>
+      <tr><td>Business process spans Salesforce + SAP + NetSuite + payment</td><td>Simple A-to-B sync between two systems</td><td>Direct API call with retry + dead letter queue</td></tr>
+      <tr><td>Regulatory requirement for complete audit trail of reversals</td><td>Read-only data extraction or reporting integration</td><td>CDC or batch export — no compensation needed</td></tr>
+      <tr><td>Operations are mostly reversible via ERP APIs</td><td>Most operations are non-compensable (email, physical shipment)</td><td>Forward recovery with retry until success</td></tr>
+      <tr><td>Failure rate is &gt;0.1% and manual cleanup is too expensive</td><td>Failure rate is negligible and manual fix is acceptable</td><td>Scheduled reconciliation job (cheaper to build)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">NetSuite</th><th scope="col">D365 Finance</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Record deletion reversal</strong></td><td>Undelete from Recycle Bin (15 days)</td><td>Re-post original document</td><td>Restore from Recycle Bin (limited)</td><td>Re-create record</td></tr>
+      <tr><td><strong>Financial reversal</strong></td><td>Credit memo (not true reversal)</td><td>Reversal document (FB08) — native</td><td>Void or reversing journal</td><td>Reverse transaction — native</td></tr>
+      <tr><td><strong>Reversal API support</strong></td><td>REST DELETE + SOAP undelete</td><td>BAPI + OData (comprehensive)</td><td>SuiteScript void() + REST</td><td>OData reversal endpoints</td></tr>
+      <tr><td><strong>Period dependency</strong></td><td>N/A (no fiscal periods in CRM)</td><td>Must be in open period</td><td>Must be in open period</td><td>Must be in open period</td></tr>
+      <tr><td><strong>Partial reversal</strong></td><td>Per-line-item possible</td><td>Partial quantity reversal (MIGO)</td><td>Per-line credit memo</td><td>Per-line corrective posting</td></tr>
+      <tr><td><strong>Reversal audit trail</strong></td><td>Recycle Bin + field history</td><td>Reversal document linked to original</td><td>Void memo on transaction</td><td>Reversing entry linked to original</td></tr>
+      <tr><td><strong>Bulk compensation</strong></td><td>Bulk API 2.0 delete</td><td>Mass reversal (F.80)</td><td>CSV import for mass void</td><td>Batch journal reversal</td></tr>
+      <tr><td><strong>Idempotent reversals</strong></td><td>No (must check status first)</td><td>No (must check if already reversed)</td><td>No (double-void throws error)</td><td>No (must check reversal status)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>ERPs update their reversal APIs with each release. SAP's API_GOODSMVT_2 replaced older BAPIs in 2023; always verify the current recommended API for your S/4HANA version.</li>
+    <li>NetSuite's transaction.void() behavior fundamentally changes based on a single account-level preference. Test in sandbox with the same preference settings as production.</li>
+    <li>Salesforce Recycle Bin has a 15-day retention limit and a 25x storage limit. High-volume orgs may hit the Recycle Bin limit, making undelete impossible.</li>
+    <li>Financial compensations in regulated industries (SOX, IFRS, GAAP) require specific reversal documentation. A simple API delete is not compliant — you must create offsetting entries with audit-linkable references.</li>
+    <li>Temporal and Step Functions provide durable execution guarantees, but they do not make ERP APIs themselves more reliable. The ERP is still the bottleneck.</li>
+    <li>Compensation timing is critical: the longer the delay between original operation and compensation, the higher the risk of concurrent modifications, period closings, and dependent downstream processes.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/saga-pattern-erp-transactions/2026" data-relationship="depends_on">Saga Pattern for ERP Distributed Transactions</a>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="depends_on">Idempotency Patterns for ERP Integrations</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Error Handling and Dead Letter Queues</a>
+    <a href="/business/erp-integration/change-data-capture-erp/2026" data-relationship="related_to">Change Data Capture for ERP</a>
+    <a href="/business/erp-integration/order-to-cash-integration/2026" data-relationship="solves">Order-to-Cash Integration</a>
+    <a href="/business/erp-integration/procure-to-pay-integration/2026" data-relationship="solves">Procure-to-Pay Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

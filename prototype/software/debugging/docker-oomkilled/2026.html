@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Diagnose and Fix Docker OOMKilled Errors | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to Docker OOMKilled diagnosis and fixes: 10 causes ranked, exit code 137 analysis, cgroups v1/v2, docker stats, JVM/Node memory tuning,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/docker-oomkilled/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Diagnose and Fix Docker OOMKilled Errors | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to Docker OOMKilled diagnosis and fixes: 10 causes ranked, exit code 137 analysis, cgroups v1/v2, docker stats, JVM/Node memory tuning, Compose memory config, 3 code examples, 4 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/docker-oomkilled/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Diagnose and Fix Docker OOMKilled Errors | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to Docker OOMKilled diagnosis and fixes: 10 causes ranked, exit code 137 analysis, cgroups v1/v2, docker stats, JVM/Node memory tuning, Compose memory config, 3 code examples, 4 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/docker_oomkilled">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I diagnose and fix Docker OOMKilled errors?">
+    <meta name="ai:aliases"
+        content="Docker OOMKilled; Docker exit code 137; Docker out of memory; Docker container killed OOM; Docker memory limit exceeded; Docker SIGKILL 137; Docker cgroup out of memory; Docker container OOM killer">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/docker-oomkilled/2026.md">
+    <meta name="ai:token_estimate" content="5800">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="runtime_environment,application_runtime,memory_limit_set">
+    <meta name="ai:constraints"
+        content="Never use --oom-kill-disable on cgroups v2 hosts (silently discarded in Docker 27+); JVM heap must be 70-80% of container memory limit; Docker Desktop VM allocation caps total container memory; Exit 137 does not always mean OOM — confirm with docker inspect; --kernel-memory discarded on cgroups v2; K8s 1.28+ cgroups v2 OOM kills ALL processes in cgroup">
+    <meta name="ai:skip_this_unit_if"
+        content="Exit 137 but OOMKilled is false -> Check for docker kill or stop timeout; Kubernetes pod OOMKilled -> software/debugging/kubernetes-crashloopbackoff/2026; App slow but not crashing -> CPU or I/O profiling">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Diagnose and Fix Docker OOMKilled Errors",
+    "headline": "How to Diagnose and Fix Docker OOMKilled Errors",
+    "description": "Complete debugging guide for Docker OOMKilled covering cgroups v1/v2, memory limits, JVM/Node tuning, docker stats monitoring, memory leak detection, and Docker Engine 27+ behavioral changes.",
+    "keywords": ["Docker OOMKilled", "exit code 137", "OOM killer", "docker stats", "memory limit", "cgroups", "container memory", "cgroups v2", "Docker Engine 27"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Docker Engine 20.10+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Docker — Resource constraints", "url": "https://docs.docker.com/engine/containers/resource_constraints/" },
+      { "@type": "WebPage", "name": "Docker — docker stats", "url": "https://docs.docker.com/reference/cli/docker/container/stats/" },
+      { "@type": "WebPage", "name": "Docker — docker inspect", "url": "https://docs.docker.com/reference/cli/docker/inspect/" },
+      { "@type": "WebPage", "name": "StackState — Exit Code 137", "url": "https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/" },
+      { "@type": "WebPage", "name": "Netdata — Diagnosing Linux cgroups v2 Memory Throttling", "url": "https://www.netdata.cloud/academy/diagnosing-linux-cgroups/" },
+      { "@type": "WebPage", "name": "Linux Kernel — cgroups v2", "url": "https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html" },
+      { "@type": "WebPage", "name": "Docker Engine v27 Release Notes", "url": "https://docs.docker.com/engine/release-notes/27/" },
+      { "@type": "WebPage", "name": "Complete Guide to Docker Resource Limits", "url": "https://eastondev.com/blog/en/posts/dev/20251218-docker-resource-limits-guide/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Diagnose and Fix Docker OOMKilled Errors",
+    "description": "Structured reference for Docker OOMKilled diagnosis with exit code analysis, cgroup v1/v2 memory investigation, runtime memory tuning, and Docker Engine 27+ behavioral changes.",
+    "keywords": ["Docker", "OOMKilled", "memory", "cgroups", "exit code 137", "cgroups v2"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Docker Inc."},
+      {"@type": "Organization", "name": "Linux Foundation"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Diagnose and Fix Docker OOMKilled Errors" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I diagnose and fix Docker OOMKilled errors?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: OOMKilled means the Linux kernel's OOM killer terminated your container because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 = 128 + SIGKILL (signal 9). Check docker inspect --format='{{.State.OOMKilled}}' -- if true, the container was killed for memory, not manually stopped."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker OOMKilled",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: OOMKilled means the Linux kernel's OOM killer terminated your container because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 = 128 + SIGKILL (signal 9). Check docker inspect --format='{{.State.OOMKilled}}' -- if true, the container was killed for memory, not manually stopped."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker exit code 137",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: OOMKilled means the Linux kernel's OOM killer terminated your container because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 = 128 + SIGKILL (signal 9). Check docker inspect --format='{{.State.OOMKilled}}' -- if true, the container was killed for memory, not manually stopped."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker out of memory",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: OOMKilled means the Linux kernel's OOM killer terminated your container because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 = 128 + SIGKILL (signal 9). Check docker inspect --format='{{.State.OOMKilled}}' -- if true, the container was killed for memory, not manually stopped."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker container killed OOM",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: OOMKilled means the Linux kernel's OOM killer terminated your container because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 = 128 + SIGKILL (signal 9). Check docker inspect --format='{{.State.OOMKilled}}' -- if true, the container was killed for memory, not manually stopped."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker memory limit exceeded",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: OOMKilled means the Linux kernel's OOM killer terminated your container because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 = 128 + SIGKILL (signal 9). Check docker inspect --format='{{.State.OOMKilled}}' -- if true, the container was killed for memory, not manually stopped."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Diagnose and Fix Docker OOMKilled Errors</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I diagnose and fix Docker OOMKilled errors?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/docker-oomkilled/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: OOMKilled means the Linux kernel's OOM killer terminated your container
+                because it exceeded its memory limit (cgroup-enforced) or the host ran out of memory. Exit code 137 =
+                128 + SIGKILL (signal 9). Check <code>docker inspect --format='{{.State.OOMKilled}}'</code> &mdash; if
+                <code>true</code>, the container was killed for memory.</li>
+            <li><strong>Key tool/command</strong>: <code>docker stats</code> shows live memory usage.
+                <code>docker inspect &lt;cid&gt; --format='{{.State.OOMKilled}}'</code> confirms OOM.
+                <code>docker run --memory=512m</code> sets limits. <code>dmesg | grep -i oom</code> shows kernel OOM
+                events.</li>
+            <li><strong>Watch out for</strong>: <code>--memory</code> without <code>--memory-swap</code> defaults swap
+                to 2&times; memory. Java's <code>-Xmx</code> must be lower than <code>--memory</code> to leave room for
+                non-heap. On cgroups v2, <code>--oom-kill-disable</code> is silently discarded.</li>
+            <li><strong>Works with</strong>: Docker Engine 20.10+ (cgroups v1/v2), Docker Desktop 4.x, Podman, Docker
+                Compose, Kubernetes.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never use <code>--oom-kill-disable</code> on cgroups v2 hosts &mdash; the flag is silently discarded in
+                Docker Engine 27+; the container will still be OOM-killed [<a
+                    href="https://docs.docker.com/engine/release-notes/27/">src7</a>]</li>
+            <li>JVM heap (<code>-Xmx</code>) must be set to 70-80% of the container memory limit &mdash; setting it
+                equal to <code>--memory</code> guarantees OOMKilled because metaspace, threads, and GC buffers need the
+                remaining 20-30% [<a
+                    href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                    href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</li>
+            <li>On Docker Desktop (Mac/Windows), total container memory cannot exceed the VM allocation (default ~50% of
+                host RAM) regardless of per-container <code>--memory</code> flags [<a
+                    href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</li>
+            <li>Exit code 137 does not always mean OOM &mdash; always confirm with
+                <code>docker inspect --format='{{.State.OOMKilled}}'</code> before assuming a memory issue [<a
+                    href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>, <a
+                    href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</li>
+            <li>The <code>--kernel-memory</code> flag is discarded on cgroups v2 &mdash; do not rely on it for kernel
+                memory limits on modern Linux hosts [<a
+                    href="https://docs.docker.com/engine/release-notes/27/">src7</a>]</li>
+            <li>On Kubernetes 1.28+ with cgroups v2, the cgroup-aware OOM killer terminates ALL processes in the cgroup,
+                not just the one that exceeded the limit [<a
+                    href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Container memory limit too low</td>
+                        <td>~30%</td>
+                        <td><code>OOMKilled: true</code>; app uses expected memory</td>
+                        <td>Increase <code>--memory</code> limit [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Application memory leak</td>
+                        <td>~25%</td>
+                        <td>Memory grows linearly; OOM after hours/days</td>
+                        <td>Profile and fix the leak [<a
+                                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>, <a
+                                href="https://eastondev.com/blog/en/posts/dev/20251218-docker-resource-limits-guide/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>JVM heap exceeds container limit</td>
+                        <td>~15%</td>
+                        <td>Java app; <code>-Xmx</code> &ge; <code>--memory</code></td>
+                        <td>Set <code>-Xmx</code> to 70-80% of container memory [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Large file/data processing</td>
+                        <td>~8%</td>
+                        <td>OOM during specific operations</td>
+                        <td>Use streaming/chunked processing [<a
+                                href="https://eastondev.com/blog/en/posts/dev/20251218-docker-resource-limits-guide/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Fork bomb / child process explosion</td>
+                        <td>~5%</td>
+                        <td>Memory spikes instantly; many processes</td>
+                        <td>Set <code>--pids-limit</code>; fix fork logic [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Host itself is out of memory</td>
+                        <td>~5%</td>
+                        <td>Multiple containers OOMKilled; <code>dmesg</code> shows OOM</td>
+                        <td>Add host RAM; reduce container count [<a
+                                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>, <a
+                                href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>No memory limit + host exhaustion</td>
+                        <td>~4%</td>
+                        <td>No <code>--memory</code> flag; host runs out</td>
+                        <td>Always set memory limits in production [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Memory-mapped files / tmpfs</td>
+                        <td>~3%</td>
+                        <td>Container uses tmpfs or mmap</td>
+                        <td>Exclude tmpfs or increase limit [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Swap disabled or misconfigured</td>
+                        <td>~3%</td>
+                        <td>OOMs at exactly the <code>--memory</code> value</td>
+                        <td>Configure <code>--memory-swap</code> [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Build-time OOM</td>
+                        <td>~2%</td>
+                        <td>OOM during <code>npm install</code>, compilation</td>
+                        <td>Increase Docker Desktop memory [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START &mdash; Container exits with code 137
+&#9500;&#9472;&#9472; Is OOMKilled true? (docker inspect --format='{{.State.OOMKilled}}')
+&#9474;   &#9500;&#9472;&#9472; YES &rarr; Out of memory &darr;
+&#9474;   &#9492;&#9472;&#9472; NO &rarr; Not OOM &mdash; killed by docker kill, docker stop timeout, or orchestrator
+&#9500;&#9472;&#9472; Was a memory limit set? (docker inspect --format='{{.HostConfig.Memory}}')
+&#9474;   &#9500;&#9472;&#9472; YES &rarr; Container exceeded this limit
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Is the limit too low? &rarr; Increase --memory [src1]
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Gradual growth (leak)? &rarr; Profile the application [src4, src8]
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Java/JVM? &rarr; Check -Xmx (leave 25-30% for non-heap) [src1]
+&#9474;   &#9492;&#9472;&#9472; NO &rarr; Host ran out of memory
+&#9474;       &#9500;&#9472;&#9472; Check host: free -m, dmesg | grep oom [src6]
+&#9474;       &#9492;&#9472;&#9472; Set limits on all containers [src1]
+&#9500;&#9472;&#9472; cgroups version? (stat -fc %T /sys/fs/cgroup)
+&#9474;   &#9500;&#9472;&#9472; cgroup2fs &rarr; v2: check memory.max, memory.events [src6]
+&#9474;   &#9492;&#9472;&#9472; tmpfs &rarr; v1: check memory.limit_in_bytes, memory.oom_control [src6]
+&#9500;&#9472;&#9472; Build-time OOM? &rarr; Increase Docker Desktop memory [src1]
+&#9492;&#9472;&#9472; Monitor with docker stats to find peak usage [src2]
+    &#9500;&#9472;&#9472; Peak near limit? &rarr; Increase limit by 20-30%
+    &#9492;&#9472;&#9472; Sudden spike? &rarr; Profile that code path</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Confirm the OOM kill</h3>
+        <p>Not every exit code 137 is OOM &mdash; it can also be a manual <code>docker kill</code>. [<a
+                href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>, <a
+                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</p>
+        <pre><code class="language-bash">docker inspect &lt;cid&gt; --format='{{.State.OOMKilled}}'
+docker inspect &lt;cid&gt; --format='{{json .State}}' | python -m json.tool
+dmesg | grep -i "oom\|out of memory" | tail -20
+# cgroups v2: check OOM event count
+cat /sys/fs/cgroup/system.slice/docker-&lt;id&gt;.scope/memory.events</code></pre>
+        <p><strong>Verify</strong>: <code>OOMKilled: true</code> confirms the container was killed for exceeding memory.
+        </p>
+
+        <h3>2. Check current memory limits</h3>
+        <p>Understand what limits are configured. [<a
+                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>]</p>
+        <pre><code class="language-bash">docker inspect &lt;cid&gt; --format='Memory: {{.HostConfig.Memory}}, Swap: {{.HostConfig.MemorySwap}}'
+docker inspect &lt;cid&gt; --format='{{.HostConfig.Memory}}' | awk '{print $1/1024/1024 "MB"}'
+# Check cgroups version
+stat -fc %T /sys/fs/cgroup   # cgroup2fs = v2, tmpfs = v1</code></pre>
+        <p><strong>Verify</strong>: Know the exact limit (0 = unlimited).</p>
+
+        <h3>3. Monitor live memory usage</h3>
+        <p>Use <code>docker stats</code> to see real-time memory consumption. [<a
+                href="https://docs.docker.com/reference/cli/docker/container/stats/">src2</a>]</p>
+        <pre><code class="language-bash">docker stats
+docker stats --no-stream
+docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.PIDs}}"</code></pre>
+        <p><strong>Verify</strong>: Watch memory over time &mdash; gradual growth = leak; spikes = load-dependent.</p>
+
+        <h3>4. Set appropriate memory limits</h3>
+        <p>Configure limits based on observed usage plus headroom. [<a
+                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</p>
+        <pre><code class="language-bash">docker run --memory=512m --memory-swap=1g myapp
+docker run --memory=512m --memory-swap=512m myapp  # No swap
+docker run --memory=1g --memory-reservation=512m myapp  # Soft limit</code></pre>
+        <pre><code class="language-yaml"># Docker Compose
+services:
+  app:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M</code></pre>
+
+        <h3>5. Configure JVM / Node.js / Python memory</h3>
+        <p>Runtime-specific settings must align with container limits. [<a
+                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</p>
+        <pre><code class="language-bash"># Java 10+ (container-aware)
+docker run --memory=1g myapp java -XX:MaxRAMPercentage=75.0 -jar app.jar
+
+# Node.js
+docker run --memory=512m myapp node --max-old-space-size=384 app.js</code></pre>
+
+        <h3>6. Profile memory usage inside the container</h3>
+        <p>Get detailed memory breakdown. [<a
+                href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>, <a
+                href="https://eastondev.com/blog/en/posts/dev/20251218-docker-resource-limits-guide/">src8</a>]</p>
+        <pre><code class="language-bash">docker exec &lt;cid&gt; ps aux --sort=-%mem | head -20
+docker exec &lt;cid&gt; cat /proc/meminfo | head -10
+docker exec &lt;cid&gt; cat /proc/1/status | grep -E "VmRSS|VmSize|VmPeak"
+# cgroups v2: check memory pressure
+docker exec &lt;cid&gt; cat /sys/fs/cgroup/memory.pressure 2&gt;/dev/null</code></pre>
+
+        <h3>7. Set up memory alerts</h3>
+        <p>Proactive monitoring before OOM kills. [<a
+                href="https://www.netdata.cloud/academy/diagnosing-linux-cgroups/">src5</a>]</p>
+        <pre><code class="language-bash">#!/bin/bash
+THRESHOLD=80
+while true; do
+    docker stats --no-stream --format '{{.Name}} {{.MemPerc}}' | while read name pct; do
+        pct_num=$(echo "$pct" | tr -d '%')
+        if (( $(echo "$pct_num &gt; $THRESHOLD" | bc -l) )); then
+            echo "WARNING $(date): $name at ${pct}% memory"
+        fi
+    done
+    sleep 30
+done</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Container memory diagnostics script</h3>
+        <p>Full script: <a href="scripts/container-memory-diagnostics-script.sh">container-memory-diagnostics-script.sh</a> (43 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+# Input:  Container ID or name
+# Output: Complete memory diagnostic report
+
+CID="$1"
+if [ -z "$CID" ]; then echo "Usage: $0 &lt;container_id&gt;"; exit 1; fi
+
+echo "=== Memory Diagnostic Report ==="
+echo "Container: $CID"
+echo "Time: $(date -u)"
+
+STATE=$(docker inspect "$CID" --format='{{.State.Status}}' 2&gt;/dev/null)
+if [ -z "$STATE" ]; then echo "Container not found"; exit 1; fi
+
+OOM=$(docker inspect "$CID" --format='{{.State.OOMKilled}}')
+EXIT=$(docker inspect "$CID" --format='{{.State.ExitCode}}')
+echo "Status: $STATE | Exit: $EXIT | OOMKilled: $OOM"
+
+MEM=$(docker inspect "$CID" --format='{{.HostConfig.Memory}}')
+echo "Memory limit: $(echo "$MEM" | awk '{if($1&gt;0) printf "%.0fMB\n",$1/1024/1024; else print "unlimited"}')"
+
+if [ "$STATE" = "running" ]; then
+    echo "=== Current Usage ==="
+    docker stats --no-stream --format "Memory: {{.MemUsage}} ({{.MemPerc}})" "$CID"
+    echo "=== Top Processes ==="
+    docker exec "$CID" ps aux --sort=-%mem 2&gt;/dev/null | head -6
+fi
+
+echo "=== Last 10 Log Lines ==="
+docker logs --tail 10 "$CID" 2&gt;&amp;1
+
+echo "=== Host OOM Events ==="
+dmesg 2&gt;/dev/null | grep -i "oom\|killed process" | tail -5 || echo "(unavailable)"</code></pre>
+
+        <h3>Docker Compose with proper memory management</h3>
+        <p>Full script: <a href="scripts/docker-compose-with-proper-memory-management.yml">docker-compose-with-proper-memory-management.yml</a> (62 lines)</p>
+        <pre><code class="language-yaml">version: "3.8"
+services:
+  api:
+    build: ./api
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+      NODE_OPTIONS: "--max-old-space-size=384"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      retries: 3
+
+  worker:
+    build: ./worker
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    restart: on-failure:5
+
+  postgres:
+    image: postgres:16
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    environment:
+      POSTGRES_SHARED_BUFFERS: "256MB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+
+  redis:
+    image: redis:7-alpine
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    command: ["redis-server", "--maxmemory", "200mb", "--maxmemory-policy", "allkeys-lru"]</code></pre>
+
+        <h3>Memory leak detection in running container</h3>
+        <p>Full script: <a href="scripts/memory-leak-detection-in-running-container.py">memory-leak-detection-in-running-container.py</a> (50 lines)</p>
+        <pre><code class="language-python">#!/usr/bin/env python3
+# Input:  Container name to monitor
+# Output: Alert when memory growth exceeds threshold
+
+import subprocess, json, time, sys
+from datetime import datetime
+
+def get_container_memory(cid):
+    result = subprocess.run(
+        ["docker", "stats", "--no-stream", "--format", "{{json .}}", cid],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        return None
+    data = json.loads(result.stdout.strip())
+    usage_str = data.get("MemUsage", "").split("/")[0].strip()
+    if "GiB" in usage_str:
+        return float(usage_str.replace("GiB", "")) * 1024 * 1024 * 1024
+    elif "MiB" in usage_str:
+        return float(usage_str.replace("MiB", "")) * 1024 * 1024
+    return 0
+
+def monitor(cid, interval=30, growth_threshold_mb=50, samples=10):
+    history = []
+    print(f"Monitoring {cid} every {interval}s...")
+    while True:
+        mem = get_container_memory(cid)
+        if mem is None:
+            print(f"WARNING: Container not found"); break
+        history.append((datetime.now(), mem))
+        mem_mb = mem / 1024 / 1024
+        print(f"[{datetime.now():%H:%M:%S}] {mem_mb:.1f} MB")
+        if len(history) &gt;= samples:
+            growth_mb = (mem - history[-samples][1]) / 1024 / 1024
+            if growth_mb &gt; growth_threshold_mb:
+                rate = growth_mb / (samples * interval / 60)
+                print(f"ALERT: +{growth_mb:.1f}MB ({rate:.1f} MB/min)")
+        time.sleep(interval)
+
+if __name__ == "__main__":
+    monitor(sys.argv[1] if len(sys.argv) &gt; 1 else "myapp")</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: No memory limit in production</h3>
+        <pre><code class="language-bash"># BAD &mdash; container can consume all host memory [src1]
+docker run -d myapp</code></pre>
+
+        <h3>Correct: Always set memory limits</h3>
+        <pre><code class="language-bash"># GOOD &mdash; constrained to 512MB [src1]
+docker run -d --memory=512m --memory-swap=1g myapp</code></pre>
+
+        <h3>Wrong: JVM heap equals container memory</h3>
+        <pre><code class="language-bash"># BAD &mdash; no room for non-heap memory [src1, src4]
+docker run --memory=1g myapp java -Xmx1g -jar app.jar</code></pre>
+
+        <h3>Correct: JVM heap at 70-80% of container memory</h3>
+        <pre><code class="language-bash"># GOOD &mdash; leaves 25-30% for metaspace, threads, buffers [src1, src4]
+docker run --memory=1g myapp java -XX:MaxRAMPercentage=75.0 -jar app.jar</code></pre>
+
+        <h3>Wrong: Restarting OOM containers without fixing root cause</h3>
+        <pre><code class="language-yaml"># BAD &mdash; infinite restart loop [src4]
+services:
+  app:
+    restart: always</code></pre>
+
+        <h3>Correct: Limit restarts and investigate</h3>
+        <pre><code class="language-yaml"># GOOD &mdash; stops after 5 failures [src4]
+services:
+  app:
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 512M</code></pre>
+
+        <h3>Wrong: Using --oom-kill-disable on cgroups v2</h3>
+        <pre><code class="language-bash"># BAD &mdash; flag silently discarded on cgroups v2 (Docker 27+) [src7]
+docker run --memory=512m --oom-kill-disable myapp</code></pre>
+
+        <h3>Correct: Set appropriate limits and monitor instead</h3>
+        <pre><code class="language-bash"># GOOD &mdash; right-size limit and monitor proactively [src1, src5]
+docker run --memory=512m --memory-reservation=384m myapp</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Exit 137 &ne; always OOM</strong>: Can be <code>docker kill</code>, <code>docker stop</code>
+                timeout, or orchestrator. Check <code>OOMKilled</code> flag. [<a
+                    href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>, <a
+                    href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</li>
+            <li><strong><code>--memory</code> without <code>--memory-swap</code></strong>: Swap defaults to 2&times; memory on
+                Linux Engine, may be disabled on Docker Desktop. Set explicitly. [<a
+                    href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</li>
+            <li><strong>Java container-awareness</strong>: JVM before Java 10 ignores cgroup limits. Use 10+ with
+                <code>UseContainerSupport</code> or set <code>-Xmx</code>. [<a
+                    href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                    href="https://www.stackstate.com/blog/understanding-and-troubleshooting-out-of-memory-error-code-137/">src4</a>]</li>
+            <li><strong><code>docker stats</code> includes page cache</strong>: High usage may be reclaimable cache, not
+                actual pressure. Kernel evicts cache before OOM. [<a
+                    href="https://docs.docker.com/reference/cli/docker/container/stats/">src2</a>]</li>
+            <li><strong>tmpfs counts against memory limit</strong>: <code>--tmpfs</code> and <code>/dev/shm</code> count
+                against the limit. Large temp files can trigger OOM. [<a
+                    href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</li>
+            <li><strong>Build-time OOM</strong>: <code>docker build</code> runs in a container too.
+                <code>npm install</code>, compilation spike memory. Increase Docker Desktop allocation. [<a
+                    href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</li>
+            <li><strong><code>--oom-kill-disable</code> and <code>--kernel-memory</code> discarded on cgroups v2</strong>:
+                Docker Engine 27+ silently ignores these flags on cgroups v2 hosts. [<a
+                    href="https://docs.docker.com/engine/release-notes/27/">src7</a>]</li>
+            <li><strong>cgroups v2 memory pressure</strong>: cgroups v2 can throttle before OOM via <code>memory.high</code>.
+                This causes slowness without kills &mdash; check <code>memory.pressure</code> for stall indicators. [<a
+                    href="https://www.netdata.cloud/academy/diagnosing-linux-cgroups/">src5</a>, <a
+                    href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Confirm OOM ===
+docker inspect &lt;cid&gt; --format='OOMKilled: {{.State.OOMKilled}}, Exit: {{.State.ExitCode}}'
+dmesg | grep -i "oom\|killed process" | tail -10
+
+# === Memory Usage ===
+docker stats
+docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
+
+# === Memory Limits ===
+docker inspect &lt;cid&gt; --format='Memory: {{.HostConfig.Memory}}, Swap: {{.HostConfig.MemorySwap}}'
+
+# === Inside Container ===
+docker exec &lt;cid&gt; cat /proc/meminfo | head -5
+docker exec &lt;cid&gt; cat /proc/1/status | grep VmRSS
+docker exec &lt;cid&gt; ps aux --sort=-%mem | head -10
+
+# === cgroups v2 ===
+cat /sys/fs/cgroup/system.slice/docker-&lt;id&gt;.scope/memory.current
+cat /sys/fs/cgroup/system.slice/docker-&lt;id&gt;.scope/memory.max
+cat /sys/fs/cgroup/system.slice/docker-&lt;id&gt;.scope/memory.events
+cat /sys/fs/cgroup/system.slice/docker-&lt;id&gt;.scope/memory.pressure
+
+# === cgroups v1 (Legacy) ===
+cat /sys/fs/cgroup/memory/docker/&lt;id&gt;/memory.usage_in_bytes
+cat /sys/fs/cgroup/memory/docker/&lt;id&gt;/memory.limit_in_bytes
+
+# === Host Memory ===
+free -m
+vmstat 1 5
+
+# === cgroups version check ===
+stat -fc %T /sys/fs/cgroup   # cgroup2fs = v2, tmpfs = v1</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Docker 27+ (2024)</td>
+                        <td>Current</td>
+                        <td>OOMScoreAdj for services; <code>--oom-kill-disable</code> and <code>--kernel-memory</code>
+                            discarded on cgroups v2; containerd default [<a
+                                href="https://docs.docker.com/engine/release-notes/27/">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 25-26</td>
+                        <td>Stable</td>
+                        <td>Improved memory metrics; containerd integration [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 24</td>
+                        <td>Stable</td>
+                        <td>cgroups v2 fully supported; BuildKit default [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                                href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 23</td>
+                        <td>Stable</td>
+                        <td>Compose V2 default [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 20.10</td>
+                        <td>LTS-like</td>
+                        <td>cgroups v2 support [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>, <a
+                                href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 19.03</td>
+                        <td>Legacy</td>
+                        <td><code>--memory-swap</code> standardized [<a
+                                href="https://docs.docker.com/engine/containers/resource_constraints/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>cgroups v2</td>
+                        <td>Modern Linux</td>
+                        <td><code>memory.max</code>; <code>memory.events</code> for OOM count; <code>memory.pressure</code>
+                            for stall tracking; <code>memory.high</code> soft throttling [<a
+                                href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>cgroups v1</td>
+                        <td>Legacy Linux</td>
+                        <td><code>memory.limit_in_bytes</code> + <code>memory.oom_control</code>;
+                            <code>--oom-kill-disable</code> works [<a
+                                href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">src6</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Exit 137 and OOMKilled=true</td>
+                        <td>Exit 137 but OOMKilled=false</td>
+                        <td>Check for <code>docker kill</code> or stop timeout</td>
+                    </tr>
+                    <tr>
+                        <td>Memory grows over time in stats</td>
+                        <td>Memory is constant but app is slow</td>
+                        <td>CPU profiling</td>
+                    </tr>
+                    <tr>
+                        <td>Java/Node process needs right-sizing</td>
+                        <td>Build step fails with OOM</td>
+                        <td>Increase Docker Desktop memory</td>
+                    </tr>
+                    <tr>
+                        <td>Multiple containers compete for memory</td>
+                        <td>Single container with headroom</td>
+                        <td>Other issues (CPU, IO, network)</td>
+                    </tr>
+                    <tr>
+                        <td>Container keeps restarting with exit 137</td>
+                        <td>Container runs but performance degrades</td>
+                        <td>Check cgroups v2 <code>memory.pressure</code> for throttling</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>On Docker Desktop (Mac/Windows), the Docker VM has a fixed memory allocation (default ~50% of host RAM since
+                Docker Desktop 4.x). Even with <code>--memory</code> limits, total across all containers cannot exceed the
+                VM's allocation. Docker Desktop 4.38 introduced a known regression causing higher baseline memory
+                consumption.</li>
+            <li>The <code>OOMKilled</code> flag only indicates PID 1 was OOM-killed. Child process OOM kills may show
+                <code>OOMKilled: false</code>. Check <code>dmesg</code>.</li>
+            <li><code>docker stats</code> memory includes page cache. High usage may be reclaimable &mdash; kernel evicts
+                cache before OOM.</li>
+            <li>Kubernetes uses the same cgroup mechanism but with <code>resources.limits.memory</code>. On K8s 1.28+ with
+                cgroups v2, the cgroup-aware OOM killer terminates ALL processes in the cgroup. A
+                <code>singleProcessOOMKill</code> kubelet flag is being developed to restore the old behavior.</li>
+            <li>In swap-enabled environments, containers may exceed <code>--memory</code> without OOM (using swap). This
+                causes slowness, not kills. Monitor swap separately.</li>
+            <li>Docker Engine 27.0.3 (2024) had a documented memory leak bug that could trigger host-level OOM killing of
+                multiple containers simultaneously &mdash; upgrade to 27.1+ if affected.</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/docker-container-wont-start/2026" data-relationship="related_to">Docker Container Won't Start</a>
+        <a href="/software/debugging/kubernetes-crashloopbackoff/2026" data-relationship="solves">Kubernetes CrashLoopBackOff</a>
+        <a href="/software/debugging/python-memory-leaks/2026" data-relationship="related_to">Python Memory Leaks</a>
+        <a href="/software/debugging/nodejs-memory-leaks/2026" data-relationship="related_to">Node.js Memory Leaks</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

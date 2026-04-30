@@ -1,0 +1,61 @@
+# docker-compose.yml -- Production Nginx + Certbot SSL Setup
+# Input:  Domain name (replace example.com), upstream app on port 8080
+# Output: TLS-terminated reverse proxy with auto-renewing Let's Encrypt certificates
+#
+# Usage:
+#   1. Replace example.com with your domain
+#   2. Replace your-app:latest with your application image
+#   3. Run: docker compose up -d nginx
+#   4. Obtain cert: docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d example.com --email you@example.com --agree-tos
+#   5. Enable SSL config in nginx/conf.d/default.conf
+#   6. Reload: docker compose exec nginx nginx -s reload
+#   7. Start Certbot renewal: docker compose up -d certbot
+
+services:
+  app:
+    image: your-app:latest
+    expose:
+      - "8080"
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on:
+      - app
+    networks:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:v2.11.0
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
+    depends_on:
+      - nginx
+
+volumes:
+  certbot-conf:
+  certbot-www:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

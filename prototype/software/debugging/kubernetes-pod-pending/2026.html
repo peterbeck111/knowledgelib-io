@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Debug Kubernetes Pods Stuck in Pending State | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to debugging Kubernetes Pending pods: 12 causes ranked, scheduler event analysis, taints/tolerations, PVC binding, nodeSelector/affinity,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/kubernetes-pod-pending/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug Kubernetes Pods Stuck in Pending State | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to debugging Kubernetes Pending pods: 12 causes ranked, scheduler event analysis, taints/tolerations, PVC binding, nodeSelector/affinity, ResourceQuota, In-Place Pod Resize (K8s 1.35), 3 code examples, 4 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/kubernetes-pod-pending/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-18">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug Kubernetes Pods Stuck in Pending State | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to debugging Kubernetes Pending pods: 12 causes ranked, scheduler event analysis, taints/tolerations, PVC binding, nodeSelector/affinity, ResourceQuota, In-Place Pod Resize (K8s 1.35), 3 code examples, 4 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.94">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/kubernetes_pod_pending">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug Kubernetes pods stuck in Pending state?">
+    <meta name="ai:aliases"
+        content="Kubernetes pod Pending; K8s pod stuck Pending; Kubernetes pod not scheduling; kubectl pod Pending fix; Kubernetes insufficient resources; Kubernetes node selector no match; Kubernetes taint toleration pod; Kubernetes PVC Pending; Kubernetes FailedScheduling; Kubernetes pod waiting to schedule">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/kubernetes-pod-pending/2026.md">
+    <meta name="ai:token_estimate" content="6200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-18">
+    <meta name="ai:inputs_needed" content="scheduler_event,cluster_type,pending_duration">
+    <meta name="ai:constraints"
+        content="Scheduling uses resource requests not limits; Never delete a Pending pod to fix scheduling; WaitForFirstConsumer PVCs are zone-aware; Wait 1-5 min for Cluster Autoscaler on managed K8s; In-Place Pod Resize cannot fix already-Pending pods; RequiredDuringScheduling anti-affinity with more replicas than nodes is unsatisfiable">
+    <meta name="ai:skip_this_unit_if"
+        content="Pod shows CrashLoopBackOff instead of Pending → software/debugging/kubernetes-crashloopbackoff/2026; Pod shows ContainerCreating (image pull or volume mount) → software/debugging/kubernetes-container-creating/2026; Pod is Running but not Ready → software/debugging/kubernetes-pod-not-ready/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Debug Kubernetes Pods Stuck in Pending State",
+    "headline": "How to Debug Kubernetes Pods Stuck in Pending State",
+    "description": "Complete debugging guide for Kubernetes Pending pods covering 12 ranked causes including insufficient resources, taints/tolerations, PVC binding, nodeSelector, affinity, ResourceQuota, node conditions, and K8s 1.35 In-Place Pod Resize implications.",
+    "keywords": ["Kubernetes", "Pending pod", "scheduling", "taints", "tolerations", "PVC", "nodeSelector", "affinity", "ResourceQuota", "In-Place Pod Resize", "FailedScheduling"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-18",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.20+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Kubernetes — Debugging Pods", "url": "https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/" },
+      { "@type": "WebPage", "name": "Kubernetes — Taints and Tolerations", "url": "https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/" },
+      { "@type": "WebPage", "name": "Komodor — Pod Pending Troubleshooting", "url": "https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/" },
+      { "@type": "WebPage", "name": "Datadog — Kubernetes Pending Pods: How to Debug", "url": "https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/" },
+      { "@type": "WebPage", "name": "Groundcover — Fixing Kubernetes Pod Pending", "url": "https://www.groundcover.com/blog/fixing-kubernetes-pod-pending-causes-troubleshooting-steps" },
+      { "@type": "WebPage", "name": "Kubernetes — Persistent Volumes", "url": "https://kubernetes.io/docs/concepts/storage/persistent-volumes/" },
+      { "@type": "WebPage", "name": "Kubernetes — Assigning Pods to Nodes", "url": "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/" },
+      { "@type": "WebPage", "name": "Kubernetes v1.35 — In-Place Pod Resize GA", "url": "https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Debug Kubernetes Pods Stuck in Pending State",
+    "description": "Structured reference for Kubernetes Pending pod debugging with 12 ranked causes, scheduling analysis, node capacity auditing, and K8s 1.35 compatibility notes.",
+    "keywords": ["Kubernetes", "Pending", "scheduling", "taints", "PVC", "resources", "In-Place Pod Resize"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-18",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes (CNCF)"},
+      {"@type": "Organization", "name": "Datadog"},
+      {"@type": "Organization", "name": "Komodor"},
+      {"@type": "Organization", "name": "Groundcover"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Debug Kubernetes Pods Stuck in Pending State" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug Kubernetes pods stuck in Pending state?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Pending pod means the Kubernetes scheduler accepted it but can't find a node to place it on. The most common causes are: insufficient CPU/memory on existing nodes (~35%), taints without matching tolerations (~20%), PVC binding failures (~15%), and nodeSelector/affinity mismatches (~12%). The Events section in kubectl describe pod always tells you why."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes pod Pending",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Pending pod means the Kubernetes scheduler accepted it but can't find a node to place it on. The most common causes are: insufficient CPU/memory on existing nodes (~35%), taints without matching tolerations (~20%), PVC binding failures (~15%), and nodeSelector/affinity mismatches (~12%). The Events section in kubectl describe pod always tells you why."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "K8s pod stuck Pending",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Pending pod means the Kubernetes scheduler accepted it but can't find a node to place it on. The most common causes are: insufficient CPU/memory on existing nodes (~35%), taints without matching tolerations (~20%), PVC binding failures (~15%), and nodeSelector/affinity mismatches (~12%). The Events section in kubectl describe pod always tells you why."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes pod not scheduling",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Pending pod means the Kubernetes scheduler accepted it but can't find a node to place it on. The most common causes are: insufficient CPU/memory on existing nodes (~35%), taints without matching tolerations (~20%), PVC binding failures (~15%), and nodeSelector/affinity mismatches (~12%). The Events section in kubectl describe pod always tells you why."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "kubectl pod Pending fix",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Pending pod means the Kubernetes scheduler accepted it but can't find a node to place it on. The most common causes are: insufficient CPU/memory on existing nodes (~35%), taints without matching tolerations (~20%), PVC binding failures (~15%), and nodeSelector/affinity mismatches (~12%). The Events section in kubectl describe pod always tells you why."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes insufficient resources",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Pending pod means the Kubernetes scheduler accepted it but can't find a node to place it on. The most common causes are: insufficient CPU/memory on existing nodes (~35%), taints without matching tolerations (~20%), PVC binding failures (~15%), and nodeSelector/affinity mismatches (~12%). The Events section in kubectl describe pod always tells you why."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Debug Kubernetes Pods Stuck in Pending State</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug Kubernetes pods stuck in Pending state?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/kubernetes-pod-pending/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: A Pending pod means the scheduler accepted it but can't find a suitable
+                node. Most common: insufficient CPU/memory (~35%), taints without tolerations (~20%), PVC binding
+                failures (~15%), nodeSelector mismatches (~12%). The Events section in <code>kubectl describe pod</code>
+                always tells you why.</li>
+            <li><strong>Key tool/command</strong>: <code>kubectl describe pod &lt;pod&gt; -n &lt;ns&gt;</code> — the
+                Events section shows the exact scheduler reason.</li>
+            <li><strong>Watch out for</strong>: Resource <em>requests</em> (not limits) drive scheduling.
+                <code>WaitForFirstConsumer</code> PVCs staying Pending is normal, not an error.</li>
+            <li><strong>Works with</strong>: All Kubernetes 1.20+. Same concepts for OpenShift, EKS, GKE, AKS, k3s,
+                minikube. K8s 1.35+ adds In-Place Pod Resize GA and gang scheduling.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Scheduling uses resource <em>requests</em> not limits — a pod requesting 4Gi is unschedulable on a node
+                with 3Gi allocatable even if actual usage is low. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</li>
+            <li>Never delete a Pending pod to "fix" scheduling — delete the root cause (taint, quota, missing label) or
+                the pod will just Pending again. [<a
+                    href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]
+            </li>
+            <li><code>WaitForFirstConsumer</code> PVCs are zone-aware — PV in zone-a + only available node in zone-b =
+                both stay Pending. [<a
+                    href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</li>
+            <li>On managed K8s (EKS/GKE/AKS), wait 1-5 min for Cluster Autoscaler before reducing requests — a Pending
+                pod triggers node scale-up. [<a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</li>
+            <li>In-Place Pod Resize (GA in K8s 1.35) can adjust CPU/memory on running pods but cannot fix scheduling —
+                already-Pending pods must still wait for node capacity. [<a
+                    href="https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/">src8</a>]</li>
+            <li>RequiredDuringScheduling anti-affinity with more replicas than nodes is permanently unsatisfiable — use
+                PreferredDuringScheduling instead. [<a
+                    href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Scheduler Message</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Insufficient CPU/memory</td>
+                        <td>~35%</td>
+                        <td>"Insufficient cpu/memory"</td>
+                        <td>Reduce requests, add nodes [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Taints without tolerations</td>
+                        <td>~20%</td>
+                        <td>"had taint pod didn't tolerate"</td>
+                        <td>Add toleration or remove taint [<a
+                                href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/">src2</a>,
+                            <a href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>PVC not bound</td>
+                        <td>~15%</td>
+                        <td>"unbound PersistentVolumeClaims"</td>
+                        <td>Fix StorageClass, provision PV [<a
+                                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>,
+                            <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>nodeSelector mismatch</td>
+                        <td>~12%</td>
+                        <td>"didn't match node affinity/selector"</td>
+                        <td>Fix selector or label nodes [<a
+                                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                                href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Node affinity mismatch</td>
+                        <td>~5%</td>
+                        <td>"didn't match node affinity"</td>
+                        <td>Fix affinity or add nodes [<a
+                                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                                href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Pod anti-affinity</td>
+                        <td>~4%</td>
+                        <td>"didn't match anti-affinity"</td>
+                        <td>Reduce replicas or add nodes [<a
+                                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                                href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Node cordoned</td>
+                        <td>~3%</td>
+                        <td>"nodes were unschedulable"</td>
+                        <td><code>kubectl uncordon &lt;node&gt;</code> [<a
+                                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>,
+                            <a href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>ResourceQuota exceeded</td>
+                        <td>~2%</td>
+                        <td>"exceeded quota"</td>
+                        <td>Increase quota [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>PodDisruptionBudget blocking</td>
+                        <td>~2%</td>
+                        <td>"disruption budget violated"</td>
+                        <td>Adjust PDB [<a
+                                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Topology spread constraints</td>
+                        <td>~1%</td>
+                        <td>"didn't satisfy topology spread"</td>
+                        <td>Relax constraints [<a
+                                href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Node condition (DiskPressure/MemoryPressure)</td>
+                        <td>~1%</td>
+                        <td>"node(s) had condition"</td>
+                        <td>Resolve node pressure [<a
+                                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                                href="https://www.groundcover.com/blog/fixing-kubernetes-pod-pending-causes-troubleshooting-steps">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Scheduler not running</td>
+                        <td>&lt;1%</td>
+                        <td>No events at all</td>
+                        <td>Check kube-scheduler [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — Pod stuck in Pending
+├── kubectl describe pod → Check Events section
+│   ├── "Insufficient cpu/memory" → Check requests vs allocatable [src1, src4]
+│   │   └── K8s 1.35+? → Consider In-Place Pod Resize for running pods [src8]
+│   ├── "taint pod didn't tolerate" → Add toleration or remove taint [src2]
+│   ├── "unbound PersistentVolumeClaims" → Fix PVC/StorageClass [src6]
+│   ├── "didn't match node affinity/selector" → Fix labels/selectors [src7]
+│   ├── "nodes were unschedulable" → kubectl uncordon [src3]
+│   ├── "exceeded quota" → Increase ResourceQuota [src1]
+│   ├── "didn't satisfy topology spread" → Relax maxSkew or ScheduleAnyway [src7]
+│   ├── "node(s) had condition" → Check DiskPressure/MemoryPressure [src4]
+│   └── No events → Check kube-scheduler is running [src1]
+├── Managed K8s? → Check Cluster Autoscaler events [src4]
+└── kubectl get events -A --sort-by='.lastTimestamp'</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Identify the Pending pods</h3>
+        <p>Find which pods are stuck. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]</p>
+        <pre><code class="language-bash">kubectl get pods -A --field-selector=status.phase=Pending
+kubectl get pods -o wide | grep Pending</code></pre>
+
+        <h3>2. Read the scheduler events</h3>
+        <p>The most important step — events tell you exactly why. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>, <a
+                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</p>
+        <pre><code class="language-bash">kubectl describe pod &lt;pod&gt; -n &lt;ns&gt;
+kubectl get events -n &lt;ns&gt; --field-selector involvedObject.name=&lt;pod&gt;</code></pre>
+
+        <h3>3. Check node resources</h3>
+        <p>Compare requests against allocatable. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                href="https://www.groundcover.com/blog/fixing-kubernetes-pod-pending-causes-troubleshooting-steps">src5</a>]
+        </p>
+        <pre><code class="language-bash">kubectl top nodes
+kubectl describe nodes | grep -A5 "Allocatable:"
+kubectl describe node &lt;node&gt; | grep -A20 "Allocated resources"
+kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.containers[*].resources.requests}'</code></pre>
+
+        <h3>4. Check taints and tolerations</h3>
+        <p>Taints repel pods without matching tolerations. [<a
+                href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/">src2</a>, <a
+                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</p>
+        <pre><code class="language-bash">kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints[*].key
+kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.tolerations}'
+kubectl taint node &lt;node&gt; key=value:NoSchedule-    # Remove taint</code></pre>
+
+        <h3>5. Fix PVC binding issues</h3>
+        <p>PVCs must bind before pods can schedule. [<a
+                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>, <a
+                href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</p>
+        <pre><code class="language-bash">kubectl get pvc -n &lt;ns&gt;
+kubectl describe pvc &lt;name&gt; -n &lt;ns&gt;
+kubectl get pv
+kubectl get storageclass</code></pre>
+
+        <h3>6. Fix nodeSelector and affinity</h3>
+        <p>Selectors must match actual node labels. [<a
+                href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]</p>
+        <pre><code class="language-bash">kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.nodeSelector}'
+kubectl get nodes --show-labels
+kubectl label node &lt;node&gt; disktype=ssd</code></pre>
+
+        <h3>7. Check ResourceQuota and node cordon</h3>
+        <p>Quotas and cordoned nodes block scheduling. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]</p>
+        <pre><code class="language-bash">kubectl get resourcequota -n &lt;ns&gt;
+kubectl get nodes     # "SchedulingDisabled" = cordoned
+kubectl uncordon &lt;node&gt;
+kubectl describe limitrange -n &lt;ns&gt;</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Comprehensive Pending pod diagnostic script</h3>
+        <pre><code class="language-bash">#!/bin/bash
+POD="$1"; NS="${2:-default}"
+if [ -z "$POD" ]; then
+    echo "Usage: $0 &lt;pod&gt; [ns]"
+    kubectl get pods -A --field-selector=status.phase=Pending; exit 1
+fi
+
+echo "=== Pending Pod Diagnostic: $POD (ns: $NS) ==="
+kubectl get pod "$POD" -n "$NS" -o wide
+
+echo "=== Resource Requests ==="
+kubectl get pod "$POD" -n "$NS" -o jsonpath='{range .spec.containers[*]}  {.name}: cpu={.resources.requests.cpu} mem={.resources.requests.memory}{"\n"}{end}'
+
+echo "=== Node Selector ==="
+kubectl get pod "$POD" -n "$NS" -o jsonpath='{.spec.nodeSelector}'
+
+echo "=== Tolerations ==="
+kubectl get pod "$POD" -n "$NS" -o jsonpath='{range .spec.tolerations[*]}  {.key}={.value}:{.effect}{"\n"}{end}'
+
+echo "=== Node Resources ==="
+kubectl get nodes -o custom-columns=NAME:.metadata.name,CPU:.status.allocatable.cpu,MEM:.status.allocatable.memory,TAINTS:.spec.taints[*].key
+
+echo "=== PVCs ==="
+PVCS=$(kubectl get pod "$POD" -n "$NS" -o jsonpath='{.spec.volumes[*].persistentVolumeClaim.claimName}')
+for PVC in $PVCS; do
+    kubectl get pvc "$PVC" -n "$NS" 2&gt;/dev/null
+done
+
+echo "=== Scheduler Events ==="
+kubectl get events -n "$NS" --field-selector "involvedObject.name=$POD" --sort-by='.lastTimestamp' | tail -10
+
+# Auto-diagnosis
+EVENTS=$(kubectl get events -n "$NS" --field-selector "involvedObject.name=$POD" -o jsonpath='{.items[-1].message}')
+if echo "$EVENTS" | grep -qi "insufficient"; then echo "DIAGNOSIS: Insufficient resources"
+elif echo "$EVENTS" | grep -qi "taint"; then echo "DIAGNOSIS: Taint/toleration mismatch"
+elif echo "$EVENTS" | grep -qi "PersistentVolumeClaim"; then echo "DIAGNOSIS: PVC not bound"
+elif echo "$EVENTS" | grep -qi "affinity\|selector"; then echo "DIAGNOSIS: Selector/affinity mismatch"
+elif echo "$EVENTS" | grep -qi "unschedulable"; then echo "DIAGNOSIS: Node cordoned"
+elif echo "$EVENTS" | grep -qi "condition"; then echo "DIAGNOSIS: Node condition issue"
+elif [ -z "$EVENTS" ]; then echo "DIAGNOSIS: No events — check kube-scheduler"
+fi</code></pre>
+
+        <h3>Production-ready pod with proper scheduling config</h3>
+        <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      containers:
+        - name: api
+          image: myapp:1.2.3
+          resources:
+            requests: { cpu: 250m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "api"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              preference:
+                matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values: ["ssd"]
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: api-server
+                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: api-server</code></pre>
+
+        <h3>Cluster capacity audit script</h3>
+        <pre><code class="language-python">#!/usr/bin/env python3
+import subprocess, json
+
+def run_kubectl(cmd):
+    result = subprocess.run(f"kubectl {cmd} -o json".split(), capture_output=True, text=True)
+    return json.loads(result.stdout) if result.returncode == 0 else None
+
+def parse_resource(value):
+    if not value: return 0
+    value = str(value)
+    if value.endswith("m"): return int(value[:-1])
+    elif value.endswith("Mi"): return int(value[:-2]) * 1024 * 1024
+    elif value.endswith("Gi"): return int(value[:-2]) * 1024**3
+    else:
+        try: return int(float(value) * 1000)
+        except: return 0
+
+def audit():
+    nodes = run_kubectl("get nodes")
+    pods = run_kubectl("get pods -A")
+    if not nodes or not pods: print("Cannot access cluster"); return
+
+    node_req = {}
+    for pod in pods.get("items", []):
+        node = pod.get("spec", {}).get("nodeName")
+        if not node or pod["status"].get("phase") != "Running": continue
+        if node not in node_req: node_req[node] = {"cpu": 0, "mem": 0}
+        for c in pod["spec"].get("containers", []):
+            r = c.get("resources", {}).get("requests", {})
+            node_req[node]["cpu"] += parse_resource(r.get("cpu", "0"))
+            node_req[node]["mem"] += parse_resource(r.get("memory", "0"))
+
+    for node in nodes["items"]:
+        name = node["metadata"]["name"]
+        alloc = node["status"]["allocatable"]
+        taints = [t["key"] for t in node["spec"].get("taints", [])]
+        req = node_req.get(name, {"cpu": 0, "mem": 0})
+        print(f"{name}: CPU free={parse_resource(alloc['cpu'])-req['cpu']}m "
+              f"Mem free={((parse_resource(alloc['memory'])-req['mem'])/1024**2):.0f}Mi "
+              f"Taints={taints or 'none'}")
+
+if __name__ == "__main__":
+    audit()</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Requesting more resources than any node has</h3>
+        <pre><code class="language-yaml"># BAD — no node has 64Gi allocatable [src1, src4]
+resources:
+  requests:
+    cpu: "16"
+    memory: 64Gi</code></pre>
+
+        <h3>Correct: Size requests based on node capacity</h3>
+        <pre><code class="language-yaml"># GOOD — fits within typical node [src1, src4]
+resources:
+  requests: { cpu: 500m, memory: 512Mi }
+  limits: { cpu: "1", memory: 1Gi }</code></pre>
+
+        <h3>Wrong: nodeSelector for non-existent labels</h3>
+        <pre><code class="language-yaml"># BAD — label doesn't exist on any node [src4, src7]
+nodeSelector:
+  gpu-type: a100</code></pre>
+
+        <h3>Correct: Verify labels exist first</h3>
+        <pre><code class="language-bash"># GOOD — check labels, then set selector [src4, src7]
+kubectl get nodes --show-labels | grep gpu-type
+kubectl label node worker-1 gpu-type=a100</code></pre>
+
+        <h3>Wrong: No tolerations for tainted nodes</h3>
+        <pre><code class="language-yaml"># BAD — all nodes tainted, no toleration [src2, src4]
+spec:
+  containers:
+    - name: app
+      image: myapp
+  # No tolerations!</code></pre>
+
+        <h3>Correct: Add matching tolerations</h3>
+        <pre><code class="language-yaml"># GOOD — toleration matches taint [src2, src4]
+spec:
+  tolerations:
+    - key: "dedicated"
+      operator: "Equal"
+      value: "special"
+      effect: "NoSchedule"</code></pre>
+
+        <h3>Wrong: RequiredDuringScheduling anti-affinity with too many replicas</h3>
+        <pre><code class="language-yaml"># BAD — 5 replicas with required anti-affinity on 3-node cluster [src7]
+spec:
+  replicas: 5
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: myapp
+              topologyKey: kubernetes.io/hostname
+# 2 pods will be Pending forever</code></pre>
+
+        <h3>Correct: Use preferredDuringScheduling anti-affinity</h3>
+        <pre><code class="language-yaml"># GOOD — preferred anti-affinity allows co-location as fallback [src7]
+spec:
+  replicas: 5
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: myapp
+                topologyKey: kubernetes.io/hostname</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Requests vs limits confusion</strong>: Scheduling uses <em>requests</em>, not limits. Right-size
+                requests based on <code>kubectl top</code> data. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</li>
+            <li><strong>WaitForFirstConsumer PVCs</strong>: These stay Pending until a pod needs them — by design, not a
+                bug. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</li>
+            <li><strong>Control-plane taints</strong>: Master nodes have <code>NoSchedule</code> by default. On
+                single-node clusters, remove the taint. [<a
+                    href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/">src2</a>, <a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</li>
+            <li><strong>Hidden resource consumers</strong>: DaemonSets and kube-system pods reduce schedulable capacity.
+                Check <code>kubectl describe node</code>. [<a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                    href="https://www.groundcover.com/blog/fixing-kubernetes-pod-pending-causes-troubleshooting-steps">src5</a>]
+            </li>
+            <li><strong>Anti-affinity deadlocks</strong>: RequiredDuringScheduling anti-affinity with more replicas than
+                nodes is unsatisfiable. Use Preferred instead. [<a
+                    href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]</li>
+            <li><strong>ResourceQuota silently blocks</strong>: Exhausted namespace quota makes new pods Pending. Check
+                <code>kubectl describe quota</code>. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]
+            </li>
+            <li><strong>maxUnavailable percentage rounding</strong>: For small deployments (&lt;4 replicas), 25%
+                maxUnavailable rounds to 0, blocking rolling updates. Use absolute values. [<a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</li>
+            <li><strong>Node conditions blocking scheduling</strong>: Nodes with DiskPressure, MemoryPressure, or
+                Ready=False are excluded from scheduling. Check with <code>kubectl describe node</code>. [<a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>, <a
+                    href="https://www.groundcover.com/blog/fixing-kubernetes-pod-pending-causes-troubleshooting-steps">src5</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Find Pending pods ===
+kubectl get pods -A --field-selector=status.phase=Pending
+
+# === Pod details ===
+kubectl describe pod &lt;pod&gt; -n &lt;ns&gt;
+
+# === Node resources ===
+kubectl top nodes
+kubectl describe nodes | grep -A5 "Allocatable:"
+
+# === Taints ===
+kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints[*].key
+
+# === Labels ===
+kubectl get nodes --show-labels
+
+# === PVC ===
+kubectl get pvc -n &lt;ns&gt;
+kubectl get pv
+kubectl get storageclass
+
+# === Quotas ===
+kubectl get resourcequota -n &lt;ns&gt;
+kubectl describe limitrange -n &lt;ns&gt;
+
+# === Schedulability ===
+kubectl get nodes     # SchedulingDisabled = cordoned
+kubectl uncordon &lt;node&gt;
+
+# === Node conditions ===
+kubectl describe node &lt;node&gt; | grep -A5 "Conditions:"
+
+# === Cluster Autoscaler (managed K8s) ===
+kubectl get events -n kube-system | grep cluster-autoscaler</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>K8s 1.35 (2025-12)</td>
+                        <td>Current</td>
+                        <td>In-Place Pod Resize GA; gang scheduling alpha; mutable PV node affinity [<a
+                                href="https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/">src8</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.34 (2025-08)</td>
+                        <td>Stable</td>
+                        <td>Async scheduler API; nominatedNodeName for more pods [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.32 (2025-04)</td>
+                        <td>Stable</td>
+                        <td>QueueingHint beta (faster Pending pod requeue) [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.29+ (2024)</td>
+                        <td>Stable</td>
+                        <td>Improved scheduling hints; sidecar containers GA [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.27 (2023)</td>
+                        <td>Stable</td>
+                        <td>In-place resource resize alpha [<a
+                                href="https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/">src8</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.24 (2022)</td>
+                        <td>Stable</td>
+                        <td>Non-graceful node shutdown; PV topology [<a
+                                href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.19 (2020)</td>
+                        <td>TopologySpread GA</td>
+                        <td>PodTopologySpreadConstraints GA [<a
+                                href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.18 (2020)</td>
+                        <td>WaitForFirstConsumer</td>
+                        <td>More StorageClasses default to delayed binding [<a
+                                href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Pod shows Pending status</td>
+                        <td>Pod shows CrashLoopBackOff</td>
+                        <td>Debug container crash (logs, exit code)</td>
+                    </tr>
+                    <tr>
+                        <td>Events mention scheduling failures</td>
+                        <td>Pod shows ContainerCreating</td>
+                        <td>Wait; or debug image pull / volume</td>
+                    </tr>
+                    <tr>
+                        <td>No node selected for pod</td>
+                        <td>Pod Running but not Ready</td>
+                        <td>Debug readiness probe</td>
+                    </tr>
+                    <tr>
+                        <td>PVC stuck in Pending</td>
+                        <td>Pod Evicted</td>
+                        <td>Check node pressure conditions</td>
+                    </tr>
+                    <tr>
+                        <td>Cluster Autoscaler not scaling up</td>
+                        <td>Pod OOMKilled</td>
+                        <td>Debug memory limits (not scheduling)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Scheduler considers resource <em>requests</em>, not actual usage. Use VPA to right-size automatically.
+                K8s 1.35 VPA InPlaceOrRecreate mode is now beta. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/">src8</a>]
+            </li>
+            <li>Managed K8s (EKS, GKE, AKS) may auto-scale nodes — a Pending pod can trigger scale-up in 1-5 minutes.
+                Monitor <code>NotTriggerScaleUp</code> events from Cluster Autoscaler. [<a
+                    href="https://www.datadoghq.com/blog/debug-kubernetes-pending-pods/">src4</a>]</li>
+            <li><code>WaitForFirstConsumer</code> PVCs are zone-aware. PV in zone-a + node in zone-b = both stay
+                Pending. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src6</a>]</li>
+            <li>Check <code>ResourceQuota</code> and <code>LimitRange</code> — they silently inject defaults or block
+                pods. [<a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]
+            </li>
+            <li>Higher-priority pods can preempt lower-priority ones. Check <code>PriorityClass</code> objects. In K8s
+                1.35, In-Place Pod Resize also respects priority for deferred resizes. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/">src8</a>]
+            </li>
+            <li>In multi-tenant clusters, per-namespace quota may be full even if cluster has capacity. [<a
+                    href="https://komodor.com/learn/pod-in-pending-state-top-6-causes-and-how-to-resolve/">src3</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/kubernetes-crashloopbackoff/2026"
+            data-relationship="related_to">Kubernetes CrashLoopBackOff</a>
+        <a href="/software/debugging/docker-container-wont-start/2026" data-relationship="related_to">Docker Container
+            Won't Start</a>
+        <a href="/software/debugging/docker-oomkilled/2026" data-relationship="solves">Docker OOMKilled</a>
+        <a href="/software/debugging/kubernetes-container-creating/2026"
+            data-relationship="often_confused_with">Kubernetes ContainerCreating</a>
+        <a href="/software/debugging/kubernetes-pod-not-ready/2026"
+            data-relationship="often_confused_with">Kubernetes Pod Not Ready</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

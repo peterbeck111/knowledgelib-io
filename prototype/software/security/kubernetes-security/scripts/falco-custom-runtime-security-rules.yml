@@ -1,0 +1,49 @@
+# Input:  Kubernetes cluster with security monitoring requirements
+# Output: Falco rules detecting common attack patterns
+
+# Detect shell execution inside containers (potential RCE)
+- rule: Shell Spawned in Container
+  desc: Detect shell (bash, sh, zsh) execution inside a container
+  condition: >
+    spawned_process and container and
+    proc.name in (bash, sh, zsh, csh, ksh) and
+    not proc.pname in (cron, supervisord, entrypoint.sh)
+  output: >
+    Shell spawned in container
+    (user=%user.name container=%container.name
+    image=%container.image.repository pod=%k8s.pod.name
+    ns=%k8s.ns.name shell=%proc.name parent=%proc.pname
+    cmdline=%proc.cmdline)
+  priority: WARNING
+  tags: [container, shell, mitre_execution]
+
+# Detect sensitive file access
+- rule: Read Sensitive File in Container
+  desc: Detect reading of sensitive files (passwd, shadow, keys)
+  condition: >
+    open_read and container and
+    (fd.name startswith /etc/shadow or
+     fd.name startswith /etc/passwd or
+     fd.name startswith /root/.ssh or
+     fd.name startswith /etc/kubernetes/pki)
+  output: >
+    Sensitive file read in container
+    (user=%user.name file=%fd.name container=%container.name
+    image=%container.image.repository pod=%k8s.pod.name)
+  priority: ERROR
+  tags: [container, filesystem, mitre_credential_access]
+
+# Detect Kubernetes secret access via API
+- rule: K8s Secret Accessed
+  desc: Detect attempts to read Kubernetes secrets via API
+  condition: >
+    ka.verb = get and ka.target.resource = secrets and
+    not ka.user.name in (system:kube-controller-manager,
+    system:kube-scheduler, replicaset-controller)
+  output: >
+    K8s secret accessed (user=%ka.user.name
+    ns=%ka.target.namespace secret=%ka.target.name
+    resource=%ka.target.resource)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s, secrets, mitre_credential_access]

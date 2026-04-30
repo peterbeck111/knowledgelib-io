@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Designing a Distributed Rate Limiter | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for distributed rate limiters: 4 algorithms compared (token bucket, sliding window, fixed window, leaky bucket), Redis Lua...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/rate-limiter/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Designing a Distributed Rate Limiter | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for distributed rate limiters: 4 algorithms compared (token bucket, sliding window, fixed window, leaky bucket), Redis Lua implementations in Python and Node.js, anti-patterns, and production architecture. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/rate-limiter/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Designing a Distributed Rate Limiter | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for distributed rate limiters: 4 algorithms compared (token bucket, sliding window, fixed window, leaky bucket), Redis Lua implementations in Python and Node.js, anti-patterns, and production architecture. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/rate_limiter">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a distributed rate limiter?">
+  <meta name="ai:aliases" content="distributed rate limiting; API rate limiter design; token bucket algorithm; sliding window rate limiter; rate limiting system design interview; Redis rate limiter; leaky bucket algorithm; API throttling architecture; rate limiter microservices; distributed rate limiting Redis">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/rate-limiter/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="algorithm_choice, scale, deployment">
+  <meta name="ai:constraints" content="All counter operations must be atomic (Lua scripts/CAS); Clock skew causes inconsistent windowing — use centralized time; Redis single-instance is SPOF — use replication; Never fail-open for security-critical rate limits; Set TTL on all rate-limit keys">
+  <meta name="ai:skip_this_unit_if" content="Need circuit breaking (availability not throttling) → Circuit breaker pattern; Need L3/L4 DDoS mitigation → CDN/edge rate limiting; Single-server only → In-process rate limiter">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Designing a Distributed Rate Limiter",
+    "headline": "Designing a Distributed Rate Limiter",
+    "description": "Complete system design guide for distributed rate limiters covering token bucket, sliding window, fixed window, and leaky bucket algorithms with Redis Lua implementations, production architecture patterns, and anti-patterns.",
+    "keywords": ["rate limiter", "distributed systems", "token bucket", "sliding window", "Redis", "API throttling", "system design", "rate limiting algorithms"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Redis 6+, Python 3.8+ or Node.js 18+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Scaling your API with rate limiters",
+        "url": "https://stripe.com/blog/rate-limiters"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How we built rate limiting capable of scaling to millions of domains",
+        "url": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Rate Limiting",
+        "url": "https://redis.io/glossary/rate-limiting/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Build 5 Rate Limiters with Redis",
+        "url": "https://redis.io/tutorials/howtos/ratelimiting/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Rate Limiter For The Real World",
+        "url": "https://blog.bytebytego.com/p/rate-limiter-for-the-real-world"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Rate limiting overview - Google Cloud Armor",
+        "url": "https://cloud.google.com/armor/docs/rate-limiting-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "From Token Bucket to Sliding Window: Pick the Perfect Rate Limiting Algorithm",
+        "url": "https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Designing a Distributed Rate Limiter",
+    "description": "Structured knowledge unit covering distributed rate limiter system design: algorithm comparison, Redis implementations, production architecture patterns, and common pitfalls with cited sources.",
+    "keywords": ["rate limiter", "distributed systems", "token bucket", "sliding window", "Redis", "system design"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Stripe Engineering"},
+      {"@type": "Organization", "name": "Cloudflare Engineering"},
+      {"@type": "Organization", "name": "Redis"},
+      {"@type": "Organization", "name": "ByteByteGo"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "API7.ai"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Designing a Distributed Rate Limiter" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a distributed rate limiter?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "distributed rate limiting",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "API rate limiter design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "token bucket algorithm",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "sliding window rate limiter",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "rate limiting system design interview",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Designing a Distributed Rate Limiter</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a distributed rate limiter?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/rate-limiter/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use a Redis-backed token bucket or sliding window counter at the API gateway layer; wrap all counter operations in Lua scripts for atomicity; deploy Redis with replication for availability.</li>
+    <li><strong>Key tool/command</strong>: <code>redis-cli EVAL "lua_script" 1 key limit window</code> (atomic rate-limit check via Lua)</li>
+    <li><strong>Watch out for</strong>: Race conditions from non-atomic read-then-write operations — two concurrent requests can both pass the check before either increments the counter.</li>
+    <li><strong>Works with</strong>: Any language with a Redis client; deploy at API gateway (Kong, NGINX, Envoy), application middleware, or edge (Cloudflare, AWS WAF).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>All counter operations (read-check-increment) must be atomic — use Redis Lua scripts or CAS operations to prevent race conditions</li>
+    <li>Clock skew across distributed nodes causes inconsistent windowing — use a centralized time source or wall-clock-aligned windows</li>
+    <li>Redis single-instance is a SPOF — always deploy with master-replica replication and Sentinel or Cluster for production</li>
+    <li>Never fail-open by default in security-critical contexts (DDoS protection, auth brute-force) — design explicit fail-open vs fail-closed policy per limiter</li>
+    <li>Memory grows linearly with unique keys — set TTL on all rate limit keys and monitor Redis memory usage</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table (SYSTEM DESIGN component architecture) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Rate Limit Algorithm</strong></td><td>Core counting logic</td><td>Token bucket, sliding window counter, fixed window, leaky bucket</td><td>Algorithm choice depends on burst tolerance vs accuracy requirements</td></tr>
+      <tr><td><strong>Centralized Counter Store</strong></td><td>Atomic counters shared across nodes</td><td>Redis (primary), Memcached, DynamoDB</td><td>Redis Cluster with hash slots; read replicas for high-read workloads</td></tr>
+      <tr><td><strong>API Gateway / Proxy</strong></td><td>Enforcement point before application</td><td>NGINX, Kong, Envoy, AWS API Gateway, Cloudflare</td><td>Horizontal scaling; each instance queries shared counter store</td></tr>
+      <tr><td><strong>Lua Script Engine</strong></td><td>Atomic multi-step operations</td><td>Redis EVAL/EVALSHA</td><td>Scripts cached server-side via SHA; no additional scaling needed</td></tr>
+      <tr><td><strong>Rule Configuration Store</strong></td><td>Per-client/tier rate limits</td><td>Config file, database, feature flags</td><td>Hot-reload without restart; hierarchical rules (global &gt; tenant &gt; endpoint)</td></tr>
+      <tr><td><strong>Client Identity Resolver</strong></td><td>Extracts rate-limit key from request</td><td>API key, JWT claims, IP address, combination</td><td>Consistent hashing to same Redis shard per client key</td></tr>
+      <tr><td><strong>Response Header Formatter</strong></td><td>Communicates limit status to clients</td><td>X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After, RateLimit (draft RFC)</td><td>Standard headers; no scaling concern</td></tr>
+      <tr><td><strong>Async Counter Sync</strong></td><td>Reduces latency for non-critical limits</td><td>Local counters + periodic sync to Redis</td><td>Eventual consistency; configurable sync interval</td></tr>
+      <tr><td><strong>Monitoring &amp; Alerting</strong></td><td>Tracks rejection rates, Redis latency</td><td>Prometheus + Grafana, Datadog, CloudWatch</td><td>Alert on rejection spike, Redis memory, counter key cardinality</td></tr>
+      <tr><td><strong>Fallback / Circuit Breaker</strong></td><td>Handles Redis outage gracefully</td><td>In-memory local limiter, fail-open, fail-closed</td><td>Degrade to local approximate limiting; log for reconciliation</td></tr>
+      <tr><td><strong>Load Shedder</strong></td><td>Protects system under extreme load</td><td>Priority-based traffic classification</td><td>Stripe model: critical &gt; POSTs &gt; GETs &gt; test traffic [<a href="https://stripe.com/blog/rate-limiters">src1</a>]</td></tr>
+      <tr><td><strong>Clock Synchronization</strong></td><td>Consistent time across nodes</td><td>NTP, wall-clock-aligned windows</td><td>Align windows to Unix epoch seconds; tolerate small skew with weighted windows</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Request volume &lt;1K/sec and single datacenter?
+│   ├── YES → In-process rate limiter (Guava RateLimiter, Go rate.Limiter)
+│   └── NO ↓
+├── Need to allow short traffic bursts above steady rate?
+│   ├── YES → Token bucket algorithm (Redis + Lua)
+│   │   ├── Stripe-style API? → Add concurrent request limiter + load shedder
+│   │   └── Standard API? → Token bucket with per-key buckets
+│   └── NO ↓
+├── Need precise per-second accuracy (billing, compliance)?
+│   ├── YES → Sliding window log (Redis sorted sets) — higher memory cost
+│   └── NO ↓
+├── Need smooth output rate (queue processing, webhooks)?
+│   ├── YES → Leaky bucket (process at fixed rate, queue excess)
+│   └── NO ↓
+├── Simple implementation, tolerant of boundary burst?
+│   ├── YES → Fixed window counter (simplest Redis INCR)
+│   └── NO ↓
+└── DEFAULT → Sliding window counter (Cloudflare approach) — best accuracy/memory trade-off</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Choose your rate-limiting key</h3>
+  <p>Define what identifies a unique client. Common keys: API key, user ID, IP address, or composite (user + endpoint). [<a href="https://stripe.com/blog/rate-limiters">src1</a>]</p>
+  <pre><code>Rate-limit key examples:
+  Per user:     ratelimit:{user_id}:{endpoint}
+  Per API key:  ratelimit:{api_key}
+  Per IP:       ratelimit:{client_ip}:{endpoint}
+  Per tenant:   ratelimit:{tenant_id}:{tier}</code></pre>
+  <p><strong>Verify</strong>: Ensure keys are unique per client scope — duplicate keys cause shared limits across unrelated clients.</p>
+
+  <h3>2. Implement atomic counter operations with Redis Lua</h3>
+  <p>All rate-limit checks must be atomic. A Lua script ensures the read-check-increment cycle cannot be interrupted by concurrent requests. [<a href="https://redis.io/glossary/rate-limiting/">src3</a>] [<a href="https://redis.io/tutorials/howtos/ratelimiting/">src4</a>]</p>
+  <pre><code class="language-lua">-- Token bucket rate limiter (Redis Lua script)
+-- KEYS[1] = rate limit key
+-- ARGV[1] = max tokens (bucket capacity)
+-- ARGV[2] = refill rate (tokens per second)
+-- ARGV[3] = current timestamp (seconds)
+-- ARGV[4] = tokens to consume (usually 1)
+-- Returns: {allowed (0/1), remaining_tokens}
+
+local key = KEYS[1]
+local capacity = tonumber(ARGV[1])
+local refill_rate = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+local requested = tonumber(ARGV[4])
+
+local bucket = redis.call('HMGET', key, 'tokens', 'last_refill')
+local tokens = tonumber(bucket[1])
+local last_refill = tonumber(bucket[2])
+
+if tokens == nil then
+  tokens = capacity
+  last_refill = now
+end
+
+local elapsed = math.max(0, now - last_refill)
+tokens = math.min(capacity, tokens + (elapsed * refill_rate))
+
+local allowed = 0
+local remaining = tokens
+
+if tokens &gt;= requested then
+  tokens = tokens - requested
+  allowed = 1
+  remaining = tokens
+end
+
+redis.call('HMSET', key, 'tokens', tokens, 'last_refill', now)
+redis.call('EXPIRE', key, math.ceil(capacity / refill_rate) * 2)
+
+return {allowed, remaining}</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli EVAL "$(cat token_bucket.lua)" 1 "ratelimit:user123" 10 1 $(date +%s) 1</code> → <code>{1, 9}</code></p>
+
+  <h3>3. Add response headers</h3>
+  <p>Communicate rate-limit state back to clients using IETF draft standard headers. [<a href="https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices">src7</a>]</p>
+  <pre><code>HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1708732800
+Retry-After: 30
+Content-Type: application/json
+{"error": "rate_limit_exceeded", "message": "Rate limit exceeded. Retry after 30s."}</code></pre>
+  <p><strong>Verify</strong>: <code>curl -v https://api.example.com/endpoint 2>&amp;1 | grep X-RateLimit</code></p>
+
+  <h3>4. Deploy Redis with high availability</h3>
+  <p>Use Redis Sentinel or Cluster for production to avoid single point of failure. [<a href="https://redis.io/glossary/rate-limiting/">src3</a>]</p>
+  <pre><code class="language-yaml"># Redis Sentinel configuration (sentinel.conf)
+sentinel monitor mymaster 10.0.0.1 6379 2
+sentinel down-after-milliseconds mymaster 5000
+sentinel failover-timeout mymaster 10000
+sentinel parallel-syncs mymaster 1</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli -p 26379 SENTINEL master mymaster</code> → confirms master is up and replicas connected.</p>
+
+  <h3>5. Implement fallback for Redis outages</h3>
+  <p>Rate limiters must handle Redis failures gracefully. Decide on fail-open or fail-closed based on context. [<a href="https://stripe.com/blog/rate-limiters">src1</a>]</p>
+  <pre><code>Fallback strategy:
+  1. Try Redis rate-limit check (Lua script)
+  2. If Redis unavailable:
+     a. Security-critical (auth, payment): FAIL CLOSED → reject with 503
+     b. General API: FAIL OPEN → allow request, log the bypass
+     c. Optional: fall back to in-memory approximate counter per node
+  3. Circuit breaker: stop retrying Redis for 30s after 3 consecutive failures
+  4. Alert on fallback activation</code></pre>
+  <p><strong>Verify</strong>: Kill Redis replica, confirm application logs fallback activation and requests handled per policy.</p>
+
+  <h3>6. Configure tiered rate limits</h3>
+  <p>Implement hierarchical rules for different client tiers and priority-based load shedding. [<a href="https://stripe.com/blog/rate-limiters">src1</a>] [<a href="https://cloud.google.com/armor/docs/rate-limiting-overview">src6</a>]</p>
+  <pre><code>Rate-limit tiers:
+  free_tier:    100 req/min,  1000 req/hour
+  pro_tier:     1000 req/min, 50000 req/hour
+  enterprise:   10000 req/min, unlimited/hour
+
+Priority classification (Stripe model):
+  P0 — Critical (payments):  never shed
+  P1 — POST operations:      shed at 90% capacity
+  P2 — GET operations:        shed at 80% capacity
+  P3 — Test mode/analytics:   shed at 70% capacity</code></pre>
+  <p><strong>Verify</strong>: Send requests with different API keys → confirm each tier receives correct <code>X-RateLimit-Limit</code>.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Redis-Based Sliding Window Counter</h3>
+  <p>Full script: <a href="scripts/sliding_window_limiter.py">sliding_window_limiter.py</a> (46 lines)</p>
+  <pre><code class="language-python"># Input:  client_key (str), max_requests (int), window_seconds (int)
+# Output: (allowed: bool, remaining: int, retry_after: int)
+# Requires: redis&gt;=5.0.0
+
+import time, redis
+
+SLIDING_WINDOW_LUA = """
+local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+local curr_window = tostring(math.floor(now / window) * window)
+local prev_window = tostring(tonumber(curr_window) - window)
+local prev_count = tonumber(redis.call('GET', key..':'..prev_window) or '0')
+local curr_count = tonumber(redis.call('GET', key..':'..curr_window) or '0')
+local elapsed = now - tonumber(curr_window)
+local weight = (window - elapsed) / window
+local estimated = math.floor(prev_count * weight) + curr_count
+if estimated &gt;= limit then return {0, 0, window - elapsed} end
+redis.call('INCR', key..':'..curr_window)
+redis.call('EXPIRE', key..':'..curr_window, window * 2)
+return {1, limit - estimated - 1, 0}
+"""
+
+class SlidingWindowRateLimiter:
+    def __init__(self, redis_url="redis://localhost:6379"):
+        self.r = redis.from_url(redis_url, decode_responses=True)
+        self._sha = self.r.script_load(SLIDING_WINDOW_LUA)
+
+    def is_allowed(self, client_key, max_requests=100, window_seconds=60):
+        try:
+            result = self.r.evalsha(self._sha, 1,
+                f"rl:{client_key}", max_requests, window_seconds, time.time())
+            return bool(result[0]), int(result[1]), int(result[2])
+        except redis.ConnectionError:
+            return True, -1, 0  # Fail-open</code></pre>
+
+  <h3>Node.js: Express Middleware Rate Limiter</h3>
+  <p>Full script: <a href="scripts/express_rate_limiter.js">express_rate_limiter.js</a> (65 lines)</p>
+  <pre><code class="language-javascript">// Input:  Express request object
+// Output: next() if allowed, 429 response if rate-limited
+// Requires: ioredis@^5.0.0, express@^4.18.0
+
+const Redis = require('ioredis');
+const TOKEN_BUCKET_LUA = `
+local key = KEYS[1]
+local cap = tonumber(ARGV[1])
+local rate = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+local d = redis.call('HMGET', key, 'tokens', 'ts')
+local t = tonumber(d[1]) or cap
+local ts = tonumber(d[2]) or now
+t = math.min(cap, t + (now - ts) * rate)
+if t &lt; 1 then return {0, 0, math.ceil((1-t)/rate)} end
+t = t - 1
+redis.call('HMSET', key, 'tokens', t, 'ts', now)
+redis.call('EXPIRE', key, math.ceil(cap/rate)*2)
+return {1, math.floor(t), 0}`;
+
+function createRateLimiter(opts = {}) {
+  const { redisUrl='redis://localhost:6379', capacity=100, refillRate=1.67 } = opts;
+  const r = new Redis(redisUrl, { maxRetriesPerRequest: 1 });
+  return async (req, res, next) =&gt; {
+    const key = `rl:${req.headers['x-api-key'] || req.ip}`;
+    try {
+      const [ok, rem, retry] = await r.eval(TOKEN_BUCKET_LUA, 1, key,
+        capacity, refillRate, Date.now()/1000);
+      res.set({ 'X-RateLimit-Limit': String(capacity),
+        'X-RateLimit-Remaining': String(rem) });
+      if (!ok) { res.set('Retry-After', String(retry));
+        return res.status(429).json({ error: 'rate_limit_exceeded' }); }
+      next();
+    } catch(e) { console.error('RL error:', e.message); next(); }
+  };
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Non-atomic read-then-write counter</h3>
+  <pre><code class="language-python"># BAD — race condition: two requests both read count=99, both pass, actual=101
+count = redis_client.get(f"rl:{client_id}")
+if int(count or 0) &lt; rate_limit:
+    redis_client.incr(f"rl:{client_id}")
+    allow_request()</code></pre>
+
+  <h3>Correct: Atomic Lua script</h3>
+  <pre><code class="language-python"># GOOD — entire check runs atomically in Redis
+result = redis_client.eval("""
+    local count = redis.call('INCR', KEYS[1])
+    if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[2]) end
+    if count &gt; tonumber(ARGV[1]) then return 0 else return 1 end
+""", 1, f"rl:{client_id}", rate_limit, window_seconds)</code></pre>
+
+  <h3>Wrong: Fixed window without boundary burst protection</h3>
+  <pre><code class="language-python"># BAD — 100 req at 0:59 + 100 at 1:00 = 200 in 2 seconds
+window = int(time.time() / 60)
+key = f"rl:{client_id}:{window}"
+count = redis_client.incr(key)</code></pre>
+
+  <h3>Correct: Sliding window counter</h3>
+  <pre><code class="language-python"># GOOD — weighted average across adjacent windows prevents boundary burst
+# Cloudflare: estimated = prev_count * ((window - elapsed) / window) + curr_count
+# At t=0:45 with 60s window: weight=0.25, only 25% of previous window counts</code></pre>
+
+  <h3>Wrong: In-memory state only (not shared)</h3>
+  <pre><code class="language-python"># BAD — 4 servers x 100/min = client can send 400/min total
+request_counts = {}  # Not shared across instances
+def check_rate(client_id):
+    request_counts[client_id] = request_counts.get(client_id, 0) + 1
+    return request_counts[client_id] &lt;= 100</code></pre>
+
+  <h3>Correct: Centralized counter store</h3>
+  <pre><code class="language-python"># GOOD — all instances share the same counter via Redis
+result = redis_client.evalsha(script_sha, 1, f"rl:{client_id}",
+    max_requests, window_seconds, time.time())</code></pre>
+
+  <h3>Wrong: No TTL on rate-limit keys</h3>
+  <pre><code class="language-python"># BAD — keys accumulate forever, Redis memory grows unbounded
+redis_client.hmset(f"rl:{client_id}", {"tokens": tokens, "ts": now})
+# No EXPIRE — if client disappears, key persists forever</code></pre>
+
+  <h3>Correct: Always set TTL</h3>
+  <pre><code class="language-python"># GOOD — TTL = 2x window ensures cleanup even with clock drift
+redis_client.hmset(f"rl:{client_id}", {"tokens": tokens, "ts": now})
+redis_client.expire(f"rl:{client_id}", window_seconds * 2)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Race conditions from non-atomic operations</strong>: Two concurrent requests both read the same counter, both pass, both increment — actual count exceeds limit. Fix: <code>redis.eval(lua_script)</code> for atomic read-check-increment. [<a href="https://redis.io/glossary/rate-limiting/">src3</a>]</li>
+    <li><strong>Fixed-window boundary burst</strong>: Client sends max requests at end of window N and start of N+1, doubling throughput in a short period. Fix: use sliding window counter with weighted average. [<a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/">src2</a>]</li>
+    <li><strong>Redis SPOF causing total outage</strong>: Single Redis instance down = all requests unthrottled or blocked. Fix: Redis Sentinel or Cluster + in-memory fallback with circuit breaker. [<a href="https://stripe.com/blog/rate-limiters">src1</a>]</li>
+    <li><strong>Clock skew in distributed nodes</strong>: Servers with offset clocks produce inconsistent window boundaries. Fix: wall-clock-aligned windows (<code>floor(ts/window)*window</code>) + NTP sync. [<a href="https://blog.bytebytego.com/p/rate-limiter-for-the-real-world">src5</a>]</li>
+    <li><strong>Missing Retry-After header</strong>: Clients without backoff guidance retry immediately, causing thundering herd. Fix: always include <code>Retry-After</code> on 429 responses. [<a href="https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices">src7</a>]</li>
+    <li><strong>Over-granular rate-limit keys</strong>: Using user+endpoint+method+IP creates millions of unique keys. Fix: use <code>user_id</code> or <code>api_key</code> + optional endpoint grouping. [<a href="https://stripe.com/blog/rate-limiters">src1</a>]</li>
+    <li><strong>No request priority differentiation</strong>: Analytics calls consume the same budget as payment operations. Fix: tiered load shedding with priority classification. [<a href="https://stripe.com/blog/rate-limiters">src1</a>]</li>
+    <li><strong>Testing only at low traffic</strong>: Rate limiters working at 10 req/sec may fail at 10K req/sec. Fix: load test at production scale; benchmark Redis <code>EVALSHA</code> latency under concurrency. [<a href="https://redis.io/tutorials/howtos/ratelimiting/">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Protecting APIs from abuse (brute force, scraping)</td><td>Single-server app with no distributed requirements</td><td>In-process rate limiter (Guava, Go rate, node-rate-limiter-flexible)</td></tr>
+      <tr><td>Enforcing SLA/tier-based API quotas</td><td>Need to block L3/L4 DDoS attacks</td><td>Network-level DDoS mitigation (Cloudflare, AWS Shield, Cloud Armor)</td></tr>
+      <tr><td>Preventing resource exhaustion in microservices</td><td>Service is failing (unhealthy, not overloaded)</td><td>Circuit breaker pattern (Resilience4j, Polly, Hystrix)</td></tr>
+      <tr><td>Multi-datacenter API with shared rate limits</td><td>Rate limiting per-user with small user base and single server</td><td>Simple in-memory counter with mutex</td></tr>
+      <tr><td>Cost control for expensive downstream calls (LLM APIs, payment processors)</td><td>Need request queuing with guaranteed delivery</td><td>Message queue (RabbitMQ, SQS) with consumer rate control</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Sliding window counter (Cloudflare approach) is an approximation — 0.003% error rate across 400M requests, acceptable for most use cases but not billing-precise metering</li>
+    <li>Redis Cluster splits keyspace into 16384 hash slots — ensure rate-limit key hashing distributes evenly; use hash tags <code>{user_id}</code> for related keys on same shard</li>
+    <li>Token bucket <code>capacity</code> and <code>refill_rate</code> are independent — capacity controls burst size, refill_rate controls sustained throughput; misconfiguring either produces unexpected behavior</li>
+    <li>Lua scripts block the Redis event loop during execution — keep scripts under 100 microseconds; complex scripts at high concurrency increase p99 latency</li>
+    <li>Distributed rate limiting with strict consistency adds 1-5ms latency per request; for sub-millisecond latency, use local approximate counting with periodic sync</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/postgresql-connection-pool/2026" data-relationship="related_to">PostgreSQL Connection Pool Exhaustion</a>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

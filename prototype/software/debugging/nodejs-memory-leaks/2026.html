@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Find and Fix Memory Leaks in Node.js | knowledgelib.io</title>
+    <meta name="description" content="Complete debugging guide for Node.js memory leaks with 10 ranked causes, heap snapshot walkthrough, Clinic.js usage, decision tree, 6 constraints, 3...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/nodejs-memory-leaks/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Find and Fix Memory Leaks in Node.js | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete debugging guide for Node.js memory leaks with 10 ranked causes, heap snapshot walkthrough, Clinic.js usage, decision tree, 6 constraints, 3 production-ready code examples, and 3 anti-pattern pairs. 8 sources, all cited. Verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/nodejs-memory-leaks/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Find and Fix Memory Leaks in Node.js | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete debugging guide for Node.js memory leaks with 10 ranked causes, heap snapshot walkthrough, Clinic.js usage, decision tree, 6 constraints, 3 production-ready code examples, and 3 anti-pattern pairs. 8 sources, all cited. Verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.92">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/nodejs_memory_leaks">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I find and fix memory leaks in Node.js?">
+    <meta name="ai:aliases"
+        content="Node.js memory leak; Node.js heap out of memory; Node.js process memory growing; Node.js RSS keeps increasing; Node.js garbage collection not working; Node.js FATAL ERROR Reached heap limit; Node.js EventEmitter memory leak warning; Node.js OOM kill in Docker container">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/nodejs-memory-leaks/2026.md">
+    <meta name="ai:token_estimate" content="4800">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="node_version,environment,symptom">
+    <meta name="ai:constraints"
+        content="Never increase maxListeners to suppress warnings — find the leak; Never take heap snapshots under production load; In containers set --max-old-space-size to 75% of cgroup limit; WeakRef/FinalizationRegistry are not substitutes for explicit cleanup; Node.js 22 RSS growth under sustained load is V8 page-caching, not a leak; Do not use --expose-gc in production">
+    <meta name="ai:skip_this_unit_if"
+        content="High CPU but stable memory → Use CPU profiling (clinic flame or 0x); OOM during expected large data processing → Use streaming/pagination; Slow responses without memory growth → software/debugging/nodejs-event-loop-blocking/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Find and Fix Memory Leaks in Node.js",
+    "headline": "How to Find and Fix Memory Leaks in Node.js",
+    "description": "Complete debugging guide for Node.js memory leaks covering 10 ranked causes, decision tree, heap snapshot analysis, Clinic.js profiling, production monitoring, constraints, and anti-patterns.",
+    "keywords": ["Node.js memory leak", "heap snapshot", "Chrome DevTools", "Clinic.js", "V8 garbage collection", "event listener leak", "LRU cache", "Node.js OOM", "container memory"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Node.js 18+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Node.js — Diagnostics: Memory", "url": "https://nodejs.org/en/learn/diagnostics/memory" },
+      { "@type": "WebPage", "name": "Better Stack — Debugging Memory Leaks in Node.js", "url": "https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/" },
+      { "@type": "WebPage", "name": "AppSignal — Finding And Fixing Node.js Memory Leaks", "url": "https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html" },
+      { "@type": "WebPage", "name": "Sematext — Node.js Memory Leaks", "url": "https://sematext.com/blog/nodejs-memory-leaks/" },
+      { "@type": "WebPage", "name": "Node.js — process.memoryUsage()", "url": "https://nodejs.org/api/process.html#processmemoryusage" },
+      { "@type": "WebPage", "name": "Clinic.js — Node.js Performance Profiling", "url": "https://clinicjs.org/" },
+      { "@type": "WebPage", "name": "Chrome DevTools — Memory Panel", "url": "https://developer.chrome.com/docs/devtools/memory" },
+      { "@type": "WebPage", "name": "Cribl — Understanding Node.js 22 Memory Behavior", "url": "https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Find and Fix Memory Leaks in Node.js",
+    "description": "Structured debugging reference for Node.js memory leaks with ranked causes, decision tree, code examples, constraints, and diagnostic commands.",
+    "keywords": ["Node.js memory leak", "heap snapshot", "V8 garbage collection", "container memory"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Node.js Foundation"},
+      {"@type": "Organization", "name": "Google (Chrome DevTools)"},
+      {"@type": "Organization", "name": "Cribl"},
+      {"@type": "Organization", "name": "NearForm (Clinic.js)"},
+      {"@type": "Organization", "name": "AppSignal"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Find and Fix Memory Leaks in Node.js" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I find and fix memory leaks in Node.js?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Node.js memory leaks occur when objects remain referenced after they're no longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1) forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large scopes, (4) uncleared timers (setInterval/setTimeout), (5) unhandled streams and unclosed connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js memory leak",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Node.js memory leaks occur when objects remain referenced after they're no longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1) forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large scopes, (4) uncleared timers (setInterval/setTimeout), (5) unhandled streams and unclosed connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js heap out of memory",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Node.js memory leaks occur when objects remain referenced after they're no longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1) forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large scopes, (4) uncleared timers (setInterval/setTimeout), (5) unhandled streams and unclosed connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js process memory growing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Node.js memory leaks occur when objects remain referenced after they're no longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1) forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large scopes, (4) uncleared timers (setInterval/setTimeout), (5) unhandled streams and unclosed connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js RSS keeps increasing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Node.js memory leaks occur when objects remain referenced after they're no longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1) forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large scopes, (4) uncleared timers (setInterval/setTimeout), (5) unhandled streams and unclosed connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js garbage collection not working",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Node.js memory leaks occur when objects remain referenced after they're no longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1) forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large scopes, (4) uncleared timers (setInterval/setTimeout), (5) unhandled streams and unclosed connections."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Find and Fix Memory Leaks in Node.js</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I find and fix memory leaks in Node.js?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/nodejs-memory-leaks/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Node.js memory leaks occur when objects remain referenced after they're no
+                longer needed, preventing V8's garbage collector from reclaiming memory. The 5 most common causes: (1)
+                forgotten event listeners, (2) growing global caches without eviction, (3) closures capturing large
+                scopes, (4) uncleared timers (<code>setInterval</code>/<code>setTimeout</code>), (5) unhandled streams
+                and unclosed connections.</li>
+            <li><strong>Key tool/command</strong>: <code>node --inspect app.js</code> then open Chrome DevTools Memory
+                tab, take two heap snapshots 5 minutes apart, compare by "# Delta" to find growing objects.</li>
+            <li><strong>Watch out for</strong>: <code>process.memoryUsage().heapUsed</code> growing monotonically over
+                hours -- this indicates a leak even if GC is running. RSS growth alone can be misleading: Node.js 22
+                caches free V8 pages under sustained load (not a leak). [<a
+                    href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+            </li>
+            <li><strong>Works with</strong>: Node.js 18 LTS, Node.js 20 LTS, Node.js 22 Current. Tools: Chrome DevTools,
+                Clinic.js, <code>heapdump</code>, <code>v8-profiler-next</code>.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never increase <code>maxListeners</code> to suppress <code>MaxListenersExceededWarning</code> -- it
+                masks a real leak; find and remove the accumulating listeners instead [<a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                <a
+                    href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]
+            </li>
+            <li>Never take heap snapshots under production load -- <code>v8.writeHeapSnapshot()</code> pauses the event
+                loop for seconds to minutes proportional to heap size [<a
+                    href="https://developer.chrome.com/docs/devtools/memory">src7</a>]</li>
+            <li>In containers set <code>--max-old-space-size</code> to 75% of cgroup memory limit -- Node.js 20+ is
+                cgroup-aware but V8 may still OOM-kill before GC runs [<a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+            <li><code>WeakRef</code> and <code>FinalizationRegistry</code> are not substitutes for explicit cleanup --
+                weak reference finalization timing is non-deterministic [<a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+            <li>Node.js 22 RSS growth under sustained CPU load is V8's page-caching optimization, not a memory leak --
+                verify with <code>heapUsed</code>, not <code>RSS</code> [<a
+                    href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+            </li>
+            <li>Do not use <code>--expose-gc</code> in production -- manual GC calls block the event loop and mask real
+                allocation patterns [<a href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Forgotten event listeners</td>
+                        <td>~25% of cases</td>
+                        <td><code>MaxListenersExceededWarning</code> or growing listener count</td>
+                        <td>Call <code>removeListener()</code>/<code>off()</code> in cleanup; use <code>once()</code>
+                            for one-shot events [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                            <a
+                                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Unbounded cache / Map / object</td>
+                        <td>~20% of cases</td>
+                        <td>Growing object count in heap snapshot</td>
+                        <td>Use LRU cache (<code>lru-cache</code>) or <code>WeakMap</code> for object keys [<a
+                                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>,
+                            <a href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Closures capturing large scope</td>
+                        <td>~15% of cases</td>
+                        <td>Retained size of closure objects growing in heap</td>
+                        <td>Narrow closure scope; nullify large variables after use [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                            <a href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Uncleared <code>setInterval</code>/<code>setTimeout</code></td>
+                        <td>~12% of cases</td>
+                        <td>Timer count grows; callbacks reference stale objects</td>
+                        <td>Call <code>clearInterval()</code>/<code>clearTimeout()</code> on cleanup; use
+                            <code>AbortSignal</code> in Node 20+ [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                            <a
+                                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Unhandled/unconsumed streams</td>
+                        <td>~8% of cases</td>
+                        <td>Internal buffer growing; <code>pause()</code> never triggered</td>
+                        <td>Implement backpressure; call <code>stream.destroy()</code> on error [<a
+                                href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Global variable accumulation</td>
+                        <td>~7% of cases</td>
+                        <td>Objects in global scope never freed</td>
+                        <td>Use <code>let</code>/<code>const</code> in functions; avoid <code>global.xxx</code> patterns
+                            [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                            <a
+                                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Unclosed DB/network connections</td>
+                        <td>~5% of cases</td>
+                        <td>Connection pool exhaustion; socket handles grow</td>
+                        <td>Use connection pooling with limits; close on shutdown [<a
+                                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Circular references (pre-WeakRef)</td>
+                        <td>~3% of cases</td>
+                        <td>Object pairs mutually referencing</td>
+                        <td>Use <code>WeakRef</code>/<code>WeakMap</code>; break cycles explicitly [<a
+                                href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Large Buffer allocation</td>
+                        <td>~3% of cases</td>
+                        <td><code>external</code> memory growing in <code>process.memoryUsage()</code></td>
+                        <td>Use streaming I/O; avoid loading full files into memory [<a
+                                href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Promise chains never resolved</td>
+                        <td>~2% of cases</td>
+                        <td>Pending promise count growing</td>
+                        <td>Always resolve/reject; add <code>.catch()</code>; use <code>AbortController</code> for
+                            timeouts [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Is heapUsed growing steadily over time (monotonically)?
+│   ├── YES → Likely a memory leak — continue diagnosis ↓
+│   └── NO → Might be normal GC behavior; check if RSS is growing without heapUsed growth
+│       └── RSS growing, heapUsed stable → V8 page caching (Node.js 22+), not a leak [src8]
+│           └── Confirm: introduce brief idle periods → if RSS drops, it's V8 optimization
+├── Do you see "MaxListenersExceededWarning" in logs?
+│   ├── YES → Event listener leak. Find where listeners are added without removal [src2, src3]
+│   └── NO ↓
+├── Running in Docker/K8s and getting OOM-killed?
+│   ├── YES → Check --max-old-space-size (set to 75% of container limit) [src1]
+│   │   └── Already set? → True leak — continue diagnosis ↓
+│   └── NO ↓
+├── Does memory growth correlate with specific requests/events?
+│   ├── YES → Trace the request handler
+│   │   ├── Using in-memory cache? → Add eviction policy (LRU, TTL) [src3, src4]
+│   │   ├── Creating timers per request? → Clear them in response/error handler [src2]
+│   │   └── Opening connections per request? → Use connection pool [src3]
+│   └── NO → Global or startup-time leak ↓
+├── Take two heap snapshots 5 minutes apart → compare
+│   ├── Growing object type identified → Trace by retainer path in DevTools [src7]
+│   └── No clear growing type → Use allocation timeline profiling [src7]
+└── Still unclear → Use Clinic.js HeapProfiler for automated analysis [src6]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Confirm there is actually a memory leak</h3>
+        <p>Not all memory growth is a leak. V8's garbage collector works in cycles, so memory usage fluctuates. A true
+            leak shows monotonically growing <code>heapUsed</code> over extended periods. In Node.js 22+, RSS may grow
+            under sustained CPU load due to V8's page-caching optimization -- this is not a leak. [<a
+                href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>, <a
+                href="https://nodejs.org/api/process.html#processmemoryusage">src5</a>, <a
+                href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+        </p>
+        <pre><code class="language-javascript">// Add this to your app for basic monitoring
+setInterval(() =&gt; {
+  const mem = process.memoryUsage();
+  console.log(JSON.stringify({
+    rss: Math.round(mem.rss / 1024 / 1024) + 'MB',
+    heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + 'MB',
+    heapUsed: Math.round(mem.heapUsed / 1024 / 1024) + 'MB',
+    external: Math.round(mem.external / 1024 / 1024) + 'MB',
+  }));
+}, 10000);</code></pre>
+        <p><strong>Verify</strong>: If <code>heapUsed</code> keeps growing over 30+ minutes under steady load → you have
+            a leak.</p>
+
+        <h3>2. Start with Chrome DevTools heap snapshots</h3>
+        <p>Connect Chrome DevTools to your Node.js process for interactive heap analysis. [<a
+                href="https://developer.chrome.com/docs/devtools/memory">src7</a>]</p>
+        <pre><code class="language-bash"># Start your app with --inspect
+node --inspect app.js
+
+# Or attach to a running process
+kill -USR1 &lt;PID&gt;  # Linux/macOS — enables inspector on default port 9229</code></pre>
+        <p>Then open <code>chrome://inspect</code> in Chrome → click "inspect" on your target → go to the
+            <strong>Memory</strong> tab.</p>
+        <p><strong>Verify</strong>: DevTools connects and shows heap statistics.</p>
+
+        <h3>3. Take comparison heap snapshots</h3>
+        <p>The most effective technique: take two heap snapshots with time/load in between, then compare them. Force GC
+            before each snapshot for accuracy. [<a
+                href="https://developer.chrome.com/docs/devtools/memory">src7</a>]</p>
+        <pre><code>1. Open Memory tab in Chrome DevTools
+2. Force GC (click trash icon) before first snapshot
+3. Select "Heap snapshot" → click "Take snapshot" → label it "Baseline"
+4. Exercise your app (send requests, run operations for 5 minutes)
+5. Force GC again → take another snapshot → label it "After load"
+6. Select the second snapshot → change view to "Comparison"
+7. Sort by "# Delta" (descending) → objects with positive delta are growing
+8. Click on growing objects → inspect "Retainers" to find what holds references</code></pre>
+        <p><strong>Verify</strong>: You should see specific constructor names with positive deltas -- these are your
+            leaking objects.</p>
+
+        <h3>4. Check for common leak patterns</h3>
+        <p>Search your codebase for the most common leak sources. [<a
+                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+            <a
+                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]</p>
+        <pre><code class="language-bash"># Event listeners added without removal
+grep -rn "\.on(" --include="*.js" --include="*.ts" src/ | head -30
+
+# Timers without cleanup
+grep -rn "setInterval\|setTimeout" --include="*.js" --include="*.ts" src/
+grep -rn "clearInterval\|clearTimeout" --include="*.js" --include="*.ts" src/
+
+# Global variable assignments
+grep -rn "global\.\|globalThis\." --include="*.js" --include="*.ts" src/</code></pre>
+        <p><strong>Verify</strong>: Each <code>setInterval</code>/<code>.on()</code> has a corresponding
+            <code>clearInterval</code>/<code>.off()</code> in cleanup code.</p>
+
+        <h3>5. Fix event listener leaks</h3>
+        <p>The most common leak: adding listeners in request handlers without removing them. [<a
+                href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+            <a
+                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]</p>
+        <pre><code class="language-javascript">// ❌ WRONG — listener added per request, never removed
+app.get('/data', (req, res) =&gt; {
+  database.on('update', (data) =&gt; {
+    res.write(data);
+  });
+});
+
+// ✅ CORRECT — remove listener when response ends
+app.get('/data', (req, res) =&gt; {
+  const onUpdate = (data) =&gt; res.write(data);
+  database.on('update', onUpdate);
+  res.on('close', () =&gt; {
+    database.off('update', onUpdate);
+  });
+});</code></pre>
+        <p><strong>Verify</strong>: <code>emitter.listenerCount('eventName')</code> stays constant under load.</p>
+
+        <h3>6. Fix unbounded cache leaks</h3>
+        <p>In-memory caches that grow forever are a classic leak. [<a
+                href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>, <a
+                href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</p>
+        <pre><code class="language-javascript">// ❌ WRONG — Map grows forever
+const cache = new Map();
+function getData(key) {
+  if (cache.has(key)) return cache.get(key);
+  const data = fetchFromDB(key);
+  cache.set(key, data);
+  return data;
+}
+
+// ✅ CORRECT — LRU cache with max size
+import { LRUCache } from 'lru-cache';
+const cache = new LRUCache({ max: 1000, ttl: 1000 * 60 * 5 });
+function getData(key) {
+  if (cache.has(key)) return cache.get(key);
+  const data = fetchFromDB(key);
+  cache.set(key, data);
+  return data;
+}</code></pre>
+        <p><strong>Verify</strong>: <code>cache.size</code> stays bounded under sustained load.</p>
+
+        <h3>7. Use Clinic.js for automated diagnosis</h3>
+        <p>When manual analysis is difficult, Clinic.js can automatically diagnose memory issues. [<a
+                href="https://clinicjs.org/">src6</a>]</p>
+        <pre><code class="language-bash"># Install and run heap profiler
+npm install -g clinic
+clinic heapprofile -- node app.js
+
+# Run doctor for overall health check
+clinic doctor -- node app.js</code></pre>
+        <p><strong>Verify</strong>: Clinic.js report highlights the source file and line where allocations are growing.
+        </p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Express.js: Fixing middleware memory leak</h3>
+        <pre><code class="language-javascript">// Input:  Express middleware leaking memory via event listeners
+// Output: Properly cleaned up middleware
+
+const express = require('express');
+const EventEmitter = require('events');
+const app = express();
+const eventBus = new EventEmitter();
+
+// ❌ LEAKY middleware — listeners accumulate
+app.use((req, res, next) =&gt; {
+  eventBus.on('notification', (msg) =&gt; {
+    console.log(`Request ${req.url}: ${msg}`);
+  });
+  next();
+});
+
+// ✅ FIXED middleware — listeners cleaned up
+app.use((req, res, next) =&gt; {
+  const handler = (msg) =&gt; {
+    console.log(`Request ${req.url}: ${msg}`);
+  };
+  eventBus.on('notification', handler);
+  res.on('finish', () =&gt; eventBus.off('notification', handler));
+  res.on('close', () =&gt; eventBus.off('notification', handler));
+  next();
+});
+
+app.listen(3000);</code></pre>
+
+        <h3>Production monitoring: Memory leak detection script</h3>
+        <pre><code class="language-javascript">// Input:  Need to detect memory leaks in production without DevTools
+// Output: Automated monitoring with alerts
+
+const LEAK_THRESHOLD_MB = 50;
+const CHECK_INTERVAL_MS = 30000;
+const WINDOW_SIZE = 20;
+const measurements = [];
+
+function checkMemory() {
+  const { heapUsed, rss } = process.memoryUsage();
+  const heapMB = heapUsed / 1024 / 1024;
+
+  measurements.push({ heapMB, timestamp: Date.now() });
+  if (measurements.length &gt; WINDOW_SIZE) measurements.shift();
+
+  if (measurements.length &gt;= WINDOW_SIZE) {
+    const oldest = measurements[0].heapMB;
+    const newest = measurements[measurements.length - 1].heapMB;
+    const growth = newest - oldest;
+
+    if (growth &gt; LEAK_THRESHOLD_MB) {
+      console.error(`MEMORY LEAK DETECTED: heap grew ${growth.toFixed(1)}MB`);
+
+      if (typeof v8 !== 'undefined') {
+        const filename = `/tmp/heapdump-${Date.now()}.heapsnapshot`;
+        require('v8').writeHeapSnapshot(filename);
+        console.error(`  Heap snapshot written to: ${filename}`);
+      }
+    }
+  }
+}
+
+const monitorTimer = setInterval(checkMemory, CHECK_INTERVAL_MS);
+process.on('SIGTERM', () =&gt; clearInterval(monitorTimer));</code></pre>
+
+        <h3>Graceful shutdown: Preventing connection leaks</h3>
+        <pre><code class="language-javascript">// Input:  Server with DB and Redis connections that leak on restart
+// Output: Graceful shutdown with comprehensive cleanup
+
+const http = require('http');
+const { Pool } = require('pg');
+const Redis = require('ioredis');
+
+const pgPool = new Pool({ max: 20 });
+const redis = new Redis();
+const server = http.createServer(app);
+const activeConnections = new Set();
+
+server.on('connection', (conn) =&gt; {
+  activeConnections.add(conn);
+  conn.on('close', () =&gt; activeConnections.delete(conn));
+});
+
+async function gracefulShutdown(signal) {
+  console.log(`${signal} received — starting graceful shutdown`);
+  server.close();
+  for (const conn of activeConnections) conn.destroy();
+  activeConnections.clear();
+  await pgPool.end();
+  await redis.quit();
+  console.log('Graceful shutdown complete');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () =&gt; gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () =&gt; gracefulShutdown('SIGINT'));
+server.listen(3000);</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Global cache without eviction</h3>
+        <pre><code class="language-javascript">// ❌ BAD — grows forever, guaranteed memory leak [src3, src4]
+const userCache = {};
+
+app.get('/user/:id', async (req, res) =&gt; {
+  if (!userCache[req.params.id]) {
+    userCache[req.params.id] = await db.getUser(req.params.id);
+  }
+  res.json(userCache[req.params.id]);
+});
+// After 100,000 unique users → cache holds all 100,000 in memory</code></pre>
+
+        <h3>Correct: Bounded cache with TTL</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — bounded size + automatic expiration [src3, src4]
+import { LRUCache } from 'lru-cache';
+
+const userCache = new LRUCache({
+  max: 500,
+  ttl: 1000 * 60 * 10,
+  updateAgeOnGet: true,
+});
+
+app.get('/user/:id', async (req, res) =&gt; {
+  let user = userCache.get(req.params.id);
+  if (!user) {
+    user = await db.getUser(req.params.id);
+    userCache.set(req.params.id, user);
+  }
+  res.json(user);
+});</code></pre>
+
+        <h3>Wrong: Event listeners in request handlers</h3>
+        <pre><code class="language-javascript">// ❌ BAD — adds a new listener on every request, never removes [src2, src3]
+const priceEmitter = new EventEmitter();
+
+app.get('/price', (req, res) =&gt; {
+  priceEmitter.on('update', (price) =&gt; {
+    console.log('New price:', price);
+  });
+  res.json({ price: currentPrice });
+});</code></pre>
+
+        <h3>Correct: Use once() or clean up listeners</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — once() auto-removes after first call [src2, src3]
+app.get('/price', (req, res) =&gt; {
+  priceEmitter.once('update', (price) =&gt; {
+    console.log('New price:', price);
+  });
+  res.json({ price: currentPrice });
+});
+
+// ✅ ALSO GOOD — explicit cleanup
+app.get('/price-stream', (req, res) =&gt; {
+  const handler = (price) =&gt; res.write(`data: ${price}\n\n`);
+  priceEmitter.on('update', handler);
+  req.on('close', () =&gt; priceEmitter.off('update', handler));
+});</code></pre>
+
+        <h3>Wrong: Timer per request without cleanup</h3>
+        <pre><code class="language-javascript">// ❌ BAD — timer keeps running after response is sent [src2]
+app.get('/status', (req, res) =&gt; {
+  setInterval(() =&gt; {
+    checkStatus().then(s =&gt; console.log(s));
+  }, 5000);
+  res.json({ status: 'ok' });
+});</code></pre>
+
+        <h3>Correct: Clear timers on cleanup</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — timer cleared when request ends [src2]
+app.get('/status', (req, res) =&gt; {
+  const timer = setInterval(() =&gt; {
+    checkStatus().then(s =&gt; console.log(s));
+  }, 5000);
+  res.on('finish', () =&gt; clearInterval(timer));
+  res.on('close', () =&gt; clearInterval(timer));
+  res.json({ status: 'ok' });
+});</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Confusing RSS with heap</strong>: <code>rss</code> (Resident Set Size) includes stack, code
+                segments, and V8's reserved-but-unused heap. <code>heapUsed</code> is the actual live object memory.
+                Track <code>heapUsed</code> for leak detection, not <code>rss</code>. In Node.js 22+, V8 caches free
+                pages under sustained load, causing RSS to grow even without a leak. [<a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>, <a
+                    href="https://nodejs.org/api/process.html#processmemoryusage">src5</a>, <a
+                    href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+            </li>
+            <li><strong>Event listener limit warning ignored</strong>: Node.js warns at 11+ listeners on a single event
+                -- this is often a leak signal. Don't increase <code>maxListeners</code> to suppress it; find and fix the
+                leak. [<a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                <a href="https://blog.appsignal.com/2024/08/14/finding-and-fixing-nodejs-memory-leaks.html">src3</a>]
+            </li>
+            <li><strong>Using <code>process.memoryUsage()</code> in production without alerting</strong>: Logging memory
+                stats is useless without automated threshold alerts. Set up monitoring that pages you when
+                <code>heapUsed</code> exceeds a baseline. [<a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+            <li><strong>Heap snapshots in production</strong>: Taking a heap snapshot pauses the event loop for seconds
+                to minutes (proportional to heap size). Use <code>v8.writeHeapSnapshot()</code> carefully -- never under
+                high load. Use <code>--heapsnapshot-near-heap-limit=N</code> to auto-capture before OOM instead. [<a
+                    href="https://developer.chrome.com/docs/devtools/memory">src7</a>, <a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+            <li><strong><code>--max-old-space-size</code> as a "fix"</strong>: Increasing heap size delays the crash but
+                doesn't fix the leak. Use it only as a stopgap while you find the root cause. [<a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+            <li><strong>Closures in hot paths</strong>: A closure in a frequently-called function (like a request
+                handler) that captures a large object from outer scope keeps that object alive as long as the closure
+                exists. [<a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/high-performance-nodejs/nodejs-memory-leaks/">src2</a>,
+                <a href="https://sematext.com/blog/nodejs-memory-leaks/">src4</a>]</li>
+            <li><strong>Not forcing GC before heap snapshots</strong>: Without forcing GC
+                (<code>--expose-gc</code> + <code>global.gc()</code>) before each snapshot, comparison data includes
+                unreachable objects awaiting collection, producing false positives. [<a
+                    href="https://developer.chrome.com/docs/devtools/memory">src7</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Start app with inspector for Chrome DevTools
+node --inspect app.js
+
+# Start with increased heap (stopgap, not a fix)
+node --max-old-space-size=4096 app.js
+
+# Expose GC for manual triggering (debug only)
+node --expose-gc app.js
+# Then in code: global.gc(); console.log(process.memoryUsage());
+
+# Generate heap snapshot programmatically (Node 12+)
+node -e "require('v8').writeHeapSnapshot()"
+
+# Auto-capture snapshots before OOM (Node 20+)
+node --heapsnapshot-near-heap-limit=3 --diagnostic-dir=/tmp/heapdumps app.js
+
+# Monitor memory from outside the process
+watch -n 5 'ps -o pid,rss,vsz,command -p $(pgrep -f "node app.js")'
+
+# Clinic.js automated profiling
+npx clinic heapprofile -- node app.js
+npx clinic doctor -- node app.js
+
+# Find potential global variable leaks
+grep -rn "global\.\|globalThis\." --include="*.js" --include="*.ts" src/
+
+# Count setInterval without clearInterval
+echo "setInterval: $(grep -rc 'setInterval' --include='*.js' src/)"
+echo "clearInterval: $(grep -rc 'clearInterval' --include='*.js' src/)"</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Memory Features</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Node.js 23 (Current)</td>
+                        <td>Latest V8 12.x</td>
+                        <td>Continued improvements to GC diagnostics, <code>--heapsnapshot-near-heap-limit</code> stable
+                            [<a href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 22 LTS</td>
+                        <td>V8 12.4</td>
+                        <td><code>v8.queryObjects()</code> for counting live objects by prototype; V8 caches free pages
+                            instead of unmapping (higher RSS under sustained load, not a leak);
+                            <code>stream.finished()</code> perf regression fixed in 22.17.1 [<a
+                                href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 20 LTS</td>
+                        <td>V8 11.3</td>
+                        <td><code>v8.writeHeapSnapshot()</code> stable, <code>--diagnostic-dir</code> flag,
+                            <code>AbortSignal.timeout()</code> for timer cleanup, container-aware max heap size via
+                            cgroup limits [<a href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 18 LTS (EOL Apr 2025)</td>
+                        <td>V8 10.2</td>
+                        <td><code>v8.writeHeapSnapshot()</code> built-in, improved heap snapshot performance [<a
+                                href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 16 (EOL)</td>
+                        <td>V8 9.4</td>
+                        <td><code>WeakRef</code> and <code>FinalizationRegistry</code> stable [<a
+                                href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>heapUsed</code> grows monotonically over time</td>
+                        <td>High CPU but stable memory</td>
+                        <td>CPU profiling (<code>clinic flame</code>, <code>0x</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>MaxListenersExceededWarning</code> in logs</td>
+                        <td>OOM kill on big data processing (expected)</td>
+                        <td>Streaming / pagination</td>
+                    </tr>
+                    <tr>
+                        <td>Process restarts due to FATAL ERROR heap</td>
+                        <td>Slow response times without memory growth</td>
+                        <td>Event loop profiling</td>
+                    </tr>
+                    <tr>
+                        <td>Memory usage never decreases after load drops</td>
+                        <td>Process uses lots of RSS but heapUsed is normal</td>
+                        <td>V8 page caching (Node.js 22+) -- not a leak [<a
+                                href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Container OOM-kills despite reasonable heap limits</td>
+                        <td>Memory spikes only during startup (one-time)</td>
+                        <td>Increase container limit or <code>--max-old-space-size</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>V8's GC is generational: short-lived objects in the "new space" are collected quickly, but long-lived
+                objects promoted to "old space" require expensive mark-sweep cycles. A leak in old space grows slowly
+                but steadily.</li>
+            <li><code>process.memoryUsage().external</code> tracks C++ objects bound to JavaScript (Buffers, native
+                addons). A growing <code>external</code> value points to native memory leaks, not JavaScript heap leaks.
+            </li>
+            <li><code>WeakRef</code> and <code>FinalizationRegistry</code> (Node.js 16+) are not replacements for proper
+                cleanup. Weak references help with caches, but finalization timing is non-deterministic.</li>
+            <li>In containerized environments (Docker, K8s), the OS may OOM-kill the process before V8's GC runs. Set
+                <code>--max-old-space-size</code> to 75% of container memory limit to give GC headroom. Node.js 20+
+                reads cgroup limits automatically, but explicit flags provide tighter control. [<a
+                    href="https://nodejs.org/en/learn/diagnostics/memory">src1</a>]</li>
+            <li>Cluster mode (<code>cluster</code> module) forks workers -- each has its own heap. A leak in one worker
+                doesn't affect others, but all workers likely share the same leaky code.</li>
+            <li>Node.js 22 changed V8's free-page strategy: instead of unmapping immediately, V8 caches free pages until
+                idle periods or memory-reducing GC cycles. This causes RSS to appear higher under sustained CPU load.
+                Introducing brief idle periods or applying memory pressure causes V8 to release cached pages. [<a
+                    href="https://cribl.io/blog/understanding-node-js-22-memory-behavior-and-our-upstream-contribution/">src8</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/nodejs-econnrefused/2026"
+            data-relationship="related_to">Node.js ECONNREFUSED</a>
+        <a href="/software/debugging/nodejs-unhandled-promises/2026"
+            data-relationship="related_to">Node.js Unhandled Promise Rejections</a>
+        <a href="/software/debugging/docker-container-debugging/2026"
+            data-relationship="solves">Docker Container Debugging</a>
+        <a href="/software/debugging/nodejs-event-loop-blocking/2026"
+            data-relationship="often_confused_with">Node.js Event Loop Blocking</a>
+        <a href="/software/debugging/nextjs-build-failures/2026"
+            data-relationship="often_confused_with">Next.js Build Failures</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

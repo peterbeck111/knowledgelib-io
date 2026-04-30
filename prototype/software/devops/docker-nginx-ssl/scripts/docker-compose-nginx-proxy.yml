@@ -1,0 +1,72 @@
+# docker-compose.yml -- nginx-proxy + acme-companion Automated SSL
+# Input:  VIRTUAL_HOST and LETSENCRYPT_HOST env vars on each proxied service
+# Output: Automatic TLS certificate provisioning for all proxied containers
+#
+# Usage:
+#   1. Set DEFAULT_EMAIL to your email
+#   2. Run: docker compose up -d
+#   3. Add services with VIRTUAL_HOST and LETSENCRYPT_HOST env vars
+#   4. Certificates are issued and renewed automatically
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.6
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy
+    restart: always
+
+  acme-companion:
+    image: nginxproxy/acme-companion:2.4
+    container_name: acme-companion
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      DEFAULT_EMAIL: you@example.com
+    networks:
+      - proxy
+    depends_on:
+      - nginx-proxy
+    restart: always
+
+  # Example proxied services -- add your own below
+  webapp:
+    image: your-webapp:latest
+    expose:
+      - "80"
+    environment:
+      VIRTUAL_HOST: app.example.com
+      LETSENCRYPT_HOST: app.example.com
+    networks:
+      - proxy
+
+  api:
+    image: your-api:latest
+    expose:
+      - "3000"
+    environment:
+      VIRTUAL_HOST: api.example.com
+      VIRTUAL_PORT: "3000"
+      LETSENCRYPT_HOST: api.example.com
+    networks:
+      - proxy
+
+volumes:
+  certs:
+  html:
+  acme:
+
+networks:
+  proxy:
+    driver: bridge

@@ -1,0 +1,106 @@
+{
+  "id": "software/patterns/mfa-implementation/2026",
+  "category": "software",
+  "subcategory": "patterns",
+  "topic": "mfa-implementation",
+  "version_tag": "2026",
+  "canonical_question": "How do I implement Multi-Factor Authentication?",
+  "aliases": [
+    "MFA implementation guide",
+    "two-factor authentication setup",
+    "2FA implementation Node.js Python",
+    "TOTP implementation",
+    "WebAuthn FIDO2 integration",
+    "add MFA to web application",
+    "multi-factor authentication best practices",
+    "OTP verification flow"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.92,
+  "token_estimate": 3800,
+  "source_count": 7,
+  "md_path": "/software/patterns/mfa-implementation/2026.md",
+  "html_path": "/software/patterns/mfa-implementation/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": "NIST SP 800-63-4 superseded 800-63-3 (2025-08); deprecated email OTP and downgraded SMS",
+    "next_review": "2026-08-24",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "TOTP shared secrets must be encrypted at rest (AES-256-GCM or equivalent) -- never store plaintext",
+    "Rate-limit verification attempts to 3-5 per minute per user to prevent brute-force",
+    "Backup/recovery codes are one-time-use -- hash them like passwords (bcrypt/argon2)",
+    "SMS OTP must not be the sole second factor -- NIST SP 800-63-4 deprecated SMS as standalone",
+    "WebAuthn relying party ID (rpID) must match the effective domain",
+    "TOTP time window tolerance should be +/- 1 step (30s) maximum"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need passwordless-only login (no password at all)",
+      "use_instead": "WebAuthn/passkeys-only flow -- MFA assumes a primary factor already exists"
+    },
+    {
+      "condition": "Need SSO federation (SAML/OIDC) with MFA delegated to IdP",
+      "use_instead": "OAuth2/OIDC with IdP-enforced MFA -- do not implement MFA in the relying party"
+    },
+    {
+      "condition": "Need machine-to-machine API authentication",
+      "use_instead": "Mutual TLS or API key + HMAC signing -- MFA is for interactive human authentication"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      {
+        "id": "software/patterns/session-management/2026",
+        "label": "Session Management"
+      },
+      {
+        "id": "software/patterns/jwt-implementation/2026",
+        "label": "JWT Implementation"
+      },
+      {
+        "id": "software/patterns/rbac-implementation/2026",
+        "label": "Role-Based Access Control"
+      }
+    ],
+    "solves": [],
+    "alternative_to": [
+      {
+        "id": "software/patterns/oauth2-authorization-code-pkce/2026",
+        "label": "OAuth2 Authorization Code with PKCE (delegates MFA to IdP)"
+      }
+    ],
+    "often_confused_with": [
+      {
+        "id": "software/patterns/passwordless-authentication/2026",
+        "label": "Passwordless Authentication (replaces passwords; MFA supplements them)"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "mfa_method",
+      "question": "Which MFA method do you want to implement?",
+      "type": "choice",
+      "options": ["TOTP (Google Authenticator, Authy)", "WebAuthn/FIDO2 (passkeys, security keys)", "SMS OTP", "Push notification", "Multiple methods"]
+    },
+    {
+      "key": "framework",
+      "question": "What backend framework/language are you using?",
+      "type": "choice",
+      "options": ["Node.js (Express/Fastify)", "Python (Django/Flask/FastAPI)", "Go", "Java (Spring Boot)", "Ruby on Rails", "Other"]
+    },
+    {
+      "key": "recovery_flow",
+      "question": "What recovery mechanism do you need for lost authenticators?",
+      "type": "choice",
+      "options": ["Backup codes", "Admin-initiated reset", "Alternative MFA method fallback", "Account recovery via verified email + identity verification"]
+    }
+  ]
+}

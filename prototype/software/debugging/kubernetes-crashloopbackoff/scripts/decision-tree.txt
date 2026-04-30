@@ -1,0 +1,34 @@
+START — Pod shows CrashLoopBackOff
+├── Run: kubectl describe pod <pod-name> -n <namespace>
+│   ├── Check "Last State" → Exit Code?
+│   │   ├── Exit 0 → Container exited successfully but shouldn't
+│   │   │   └── App completes and exits → needs long-running process [src6]
+│   │   ├── Exit 1 → Application error
+│   │   │   └── Check logs: kubectl logs <pod> --previous [src1]
+│   │   ├── Exit 126 → Permission denied
+│   │   │   └── Fix file permissions or securityContext [src4]
+│   │   ├── Exit 127 → Command not found
+│   │   │   └── Wrong image, bad CMD, or missing binary [src4, src6]
+│   │   ├── Exit 137 → OOMKilled or SIGKILL
+│   │   │   ├── OOMKilled: true → Increase memory limits [src3, src5]
+│   │   │   └── OOMKilled: false → Killed by liveness probe or manual [src2]
+│   │   └── Exit 143 → SIGTERM
+│   │       └── Graceful shutdown — check if probe is killing too early [src2]
+│   ├── Check Events section
+│   │   ├── "Liveness probe failed" → Fix probe config [src2, src3]
+│   │   ├── "Readiness probe failed" → Fix probe or dependencies [src2]
+│   │   ├── "MountVolume.SetUp failed" → Fix PVC/volume config [src3]
+│   │   ├── "Error: configmap/secret not found" → Create missing resource [src3]
+│   │   └── "Back-off restarting failed container" → Container keeps crashing ↓
+│   └── Check Init Containers section
+│       ├── Init container stuck/failing → Debug init: kubectl logs -c <init> [src7]
+│       └── All init containers completed → Problem is in main container
+├── Run: kubectl logs <pod> --previous
+│   ├── Error messages visible → Fix the specific error
+│   ├── No output → App crashes before logging
+│   │   └── Run locally: docker run --entrypoint /bin/sh <image> [src4]
+│   └── Stack trace → Fix application bug
+└── Still stuck?
+    ├── Run ephemeral debug container: kubectl debug -it <pod> --image=busybox [src1]
+    ├── Check if image works: docker run -it <image> [src4]
+    └── Check cluster events: kubectl get events --sort-by='.lastTimestamp' [src1]

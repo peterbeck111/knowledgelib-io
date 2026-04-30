@@ -1,0 +1,129 @@
+{
+  "id": "software/system-design/microservices-communication/2026",
+  "category": "software",
+  "subcategory": "system-design",
+  "topic": "microservices-communication",
+  "version_tag": "2026",
+  "canonical_question": "What are the best microservices communication patterns?",
+  "aliases": [
+    "microservices communication patterns",
+    "inter-service communication microservices",
+    "REST vs gRPC microservices",
+    "async vs sync microservices",
+    "message queue vs direct call microservices",
+    "event-driven microservices architecture",
+    "microservice API communication",
+    "service-to-service communication patterns"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.93,
+  "token_estimate": 20421,
+  "source_count": 5,
+  "md_path": "/software/system-design/microservices-communication/2026.md",
+  "html_path": "/software/system-design/microservices-communication/2026.html",
+  "priority": "medium",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": "gRPC v1.60+ default xDS support; Kafka 3.7+ KRaft mode replaces ZooKeeper (2024)",
+    "next_review": "2026-05-23T00:00:00.000Z",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Never use synchronous chains deeper than 2 hops -- cascading timeouts and failures create a distributed monolith",
+    "Always implement idempotency on message consumers -- at-least-once delivery means duplicates will arrive",
+    "gRPC requires HTTP/2 -- do not expose gRPC directly through HTTP/1.1-only proxies or load balancers without gRPC-Web or Envoy transcoding",
+    "Message ordering guarantees vary by broker -- Kafka guarantees order within a partition, RabbitMQ does not guarantee order across consumers",
+    "Circuit breakers are mandatory for all synchronous calls -- without them, a single slow service cascades failures across the entire mesh"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Designing a monolith-to-microservices migration strategy (not communication patterns)",
+      "use_instead": "software/migrations/monolith-to-microservices/2026"
+    },
+    {
+      "condition": "Designing a message queue / event-driven architecture from scratch",
+      "use_instead": "software/system-design/message-queue-event-driven/2026"
+    },
+    {
+      "condition": "Implementing CQRS and Event Sourcing patterns",
+      "use_instead": "software/system-design/cqrs-event-sourcing/2026"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [
+      {
+        "id": "software/system-design/api-gateway/2026",
+        "label": "API Gateway Design"
+      }
+    ],
+    "related_to": [
+      {
+        "id": "software/system-design/message-queue-event-driven/2026",
+        "label": "Message Queue and Event-Driven Architecture"
+      },
+      {
+        "id": "software/system-design/cqrs-event-sourcing/2026",
+        "label": "CQRS and Event Sourcing"
+      },
+      {
+        "id": "software/system-design/rate-limiter/2026",
+        "label": "Distributed Rate Limiter Design"
+      }
+    ],
+    "solves": [
+      {
+        "id": "software/system-design/notification-system/2026",
+        "label": "Scalable Notification System Design"
+      }
+    ],
+    "alternative_to": [
+      {
+        "id": "software/system-design/graphql-api-architecture/2026",
+        "label": "GraphQL API Architecture at Scale"
+      }
+    ],
+    "often_confused_with": [
+      {
+        "id": "software/migrations/monolith-to-microservices/2026",
+        "label": "Monolith to Microservices Migration"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "latency_requirement",
+      "question": "What is your latency requirement for inter-service calls?",
+      "type": "choice",
+      "options": [
+        "<10ms (real-time)",
+        "10-100ms (interactive)",
+        "100ms-5s (near real-time)",
+        ">5s (background/batch)"
+      ]
+    },
+    {
+      "key": "consistency_model",
+      "question": "Do you need strong consistency (immediate read-after-write) or eventual consistency?",
+      "type": "choice",
+      "options": [
+        "Strong consistency",
+        "Eventual consistency",
+        "Mixed (some operations need strong)"
+      ]
+    },
+    {
+      "key": "scale",
+      "question": "What is your expected request volume?",
+      "type": "choice",
+      "options": [
+        "<1K req/s",
+        "1K-10K req/s",
+        "10K-100K req/s",
+        ">100K req/s"
+      ]
+    }
+  ]
+}

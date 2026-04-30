@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Long Polling vs SSE vs WebSocket: Complete Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete reference for choosing between short polling, long polling, SSE, WebSocket, and WebTransport.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/polling-sse-websocket/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Long Polling vs SSE vs WebSocket: Complete Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete reference for choosing between short polling, long polling, SSE, WebSocket, and WebTransport. Includes decision tree, comparison table, code examples in Node.js/Python/Go, anti-patterns, and common pitfalls. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/polling-sse-websocket/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Long Polling vs SSE vs WebSocket: Complete Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete reference for choosing between short polling, long polling, SSE, WebSocket, and WebTransport. Includes decision tree, comparison table, code examples in Node.js/Python/Go, anti-patterns, and common pitfalls. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/long polling vs SSE vs WebSocket">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="When should I use long polling vs SSE vs WebSocket?">
+  <meta name="ai:aliases" content="long polling vs SSE vs WebSocket; Server-Sent Events vs WebSocket comparison; real-time communication protocol choice; EventSource vs WebSocket when to use; SSE or WebSocket for server push; short polling long polling SSE WebSocket WebTransport">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/polling-sse-websocket/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="direction, frequency, protocol_constraints">
+  <meta name="ai:constraints" content="SSE only supports server-to-client communication; WebSocket connections through corporate proxies often fail unless using WSS on port 443; SSE limited to 6 concurrent connections per domain in HTTP/1.1; WebTransport not production-ready as of 2026; Long polling without timeout leaks server resources">
+  <meta name="ai:skip_this_unit_if" content="Need webhook delivery (server-to-server) -> software/system-design/webhooks-system/2026; Need full chat system architecture -> software/system-design/chat-system/2026; Need peer-to-peer video/audio -> software/patterns/webrtc-peer-connection/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Long Polling vs SSE vs WebSocket: Complete Reference",
+    "headline": "Long Polling vs SSE vs WebSocket: Complete Reference",
+    "description": "Complete software reference for choosing between short polling, long polling, Server-Sent Events (SSE), WebSocket, and WebTransport for real-time web communication. Includes protocol comparison table, decision tree, implementation guides in Node.js, Python, and Go, anti-patterns, and production pitfalls.",
+    "keywords": ["SSE", "WebSocket", "long polling", "Server-Sent Events", "EventSource", "real-time", "WebTransport", "server push"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "HTTP/1.1 or HTTP/2, modern browser with EventSource/WebSocket support",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Using server-sent events",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events"
+      },
+      {
+        "@type": "WebPage",
+        "name": "WebSockets vs Server-Sent-Events vs Long-Polling vs WebRTC vs WebTransport",
+        "url": "https://rxdb.info/articles/websockets-sse-polling-webrtc-webtransport.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "WebSocket vs. Server-sent Events: A Performance Comparison",
+        "url": "https://www.timeplus.com/post/websocket-vs-sse"
+      },
+      {
+        "@type": "WebPage",
+        "name": "WebSockets vs SSE",
+        "url": "https://ably.com/blog/websockets-vs-sse"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Polling vs. Long Polling vs. SSE vs. WebSockets vs. Webhooks",
+        "url": "https://blog.algomaster.io/p/polling-vs-long-polling-vs-sse-vs-websockets-webhooks"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The WebSocket Protocol (RFC 6455)",
+        "url": "https://datatracker.ietf.org/doc/html/rfc6455"
+      },
+      {
+        "@type": "WebPage",
+        "name": "WebTransport API",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebTransport_API"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Long Polling vs SSE vs WebSocket: Complete Reference",
+    "description": "Structured comparison of real-time web communication protocols: short polling, long polling, Server-Sent Events, WebSocket, and WebTransport. Includes protocol feature matrix, decision tree, implementation examples, anti-patterns, and production pitfalls.",
+    "keywords": ["SSE", "WebSocket", "long polling", "Server-Sent Events", "EventSource", "real-time communication", "WebTransport"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "MDN Web Docs"},
+      {"@type": "Organization", "name": "IETF"},
+      {"@type": "Organization", "name": "Ably"},
+      {"@type": "Organization", "name": "Timeplus"},
+      {"@type": "Organization", "name": "RxDB"},
+      {"@type": "Organization", "name": "AlgoMaster"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Long Polling vs SSE vs WebSocket: Complete Reference" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "When should I use long polling vs SSE vs WebSocket?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable (legacy browsers, restrictive proxies)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "long polling vs SSE vs WebSocket",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable (legacy browsers, restrictive proxies)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Server-Sent Events vs WebSocket comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable (legacy browsers, restrictive proxies)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "real-time communication protocol choice",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable (legacy browsers, restrictive proxies)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "EventSource vs WebSocket when to use",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable (legacy browsers, restrictive proxies)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SSE or WebSocket for server push",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable (legacy browsers, restrictive proxies)."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Long Polling vs SSE vs WebSocket: Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">When should I use long polling vs SSE vs WebSocket?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/polling-sse-websocket/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use SSE for server-to-client streaming (dashboards, notifications, feeds); use WebSocket for bidirectional real-time communication (chat, gaming, collaborative editing); use long polling only when SSE/WebSocket are unavailable.</li>
+    <li><strong>Key tool/command</strong>: <code>new EventSource('/events')</code> for SSE; <code>new WebSocket('wss://host/ws')</code> for WebSocket</li>
+    <li><strong>Watch out for</strong>: Using WebSocket when SSE would suffice -- SSE auto-reconnects, works through all HTTP proxies, and needs no library. In 80% of "need WebSocket" cases, SSE is enough.</li>
+    <li><strong>Works with</strong>: All modern browsers (SSE: 97%+ support; WebSocket: 98%+ support; WebTransport: experimental, Chromium only as of Feb 2026)</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>SSE only supports UTF-8 text data server-to-client; it cannot send binary data or receive messages from the client on the same connection</li>
+    <li>WebSocket requires explicit upgrade handshake (HTTP 101 Switching Protocols); corporate proxies that don't understand this will drop the connection -- always use WSS (TLS) in production</li>
+    <li>HTTP/1.1 limits SSE to 6 concurrent connections per domain across all browser tabs; this is removed with HTTP/2 multiplexing</li>
+    <li>WebTransport (HTTP/3) is not production-ready as of February 2026 (W3C Working Draft); do not deploy without a WebSocket fallback</li>
+    <li>Long polling holds server threads/connections open; without proper timeout and connection pooling, it will exhaust server resources under load</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">Short Polling</th><th scope="col">Long Polling</th><th scope="col">SSE</th><th scope="col">WebSocket</th><th scope="col">WebTransport</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Direction</strong></td><td>Client-to-server</td><td>Client-to-server</td><td>Server-to-client</td><td>Bidirectional</td><td>Bidirectional</td></tr>
+      <tr><td><strong>Latency</strong></td><td>High (poll interval)</td><td>Medium (held request)</td><td>Low (~same as WS)</td><td>Low (~3ms advantage)</td><td>Lowest (UDP optional)</td></tr>
+      <tr><td><strong>Per-message overhead</strong></td><td>Full HTTP headers (~800B)</td><td>Full HTTP headers (~800B)</td><td>~5 bytes/message</td><td>~2 bytes/frame</td><td>~2 bytes/frame</td></tr>
+      <tr><td><strong>Auto-reconnect</strong></td><td>N/A</td><td>Manual</td><td>Built-in (EventSource)</td><td>Manual</td><td>Manual</td></tr>
+      <tr><td><strong>Binary support</strong></td><td>Yes (via encoding)</td><td>Yes (via encoding)</td><td>No (UTF-8 text only)</td><td>Yes (native)</td><td>Yes (native + datagrams)</td></tr>
+      <tr><td><strong>HTTP/2 multiplexing</strong></td><td>Yes</td><td>Yes</td><td>Yes (removes 6-conn limit)</td><td>No (separate TCP)</td><td>Yes (QUIC streams)</td></tr>
+      <tr><td><strong>Browser support</strong></td><td>Universal</td><td>Universal</td><td>97%+ (no IE)</td><td>98%+</td><td>Chromium only (experimental)</td></tr>
+      <tr><td><strong>Proxy friendliness</strong></td><td>Excellent</td><td>Good</td><td>Excellent (standard HTTP)</td><td>Poor (needs upgrade)</td><td>Poor (needs HTTP/3)</td></tr>
+      <tr><td><strong>Scaling difficulty</strong></td><td>Low (stateless)</td><td>High (held connections)</td><td>Medium (long-lived HTTP)</td><td>High (stateful connections)</td><td>Medium (QUIC)</td></tr>
+      <tr><td><strong>Connection setup</strong></td><td>New HTTP request each time</td><td>New HTTP request each time</td><td>Single HTTP stream</td><td>HTTP upgrade to TCP</td><td>HTTP/3 CONNECT</td></tr>
+      <tr><td><strong>Max connections/domain</strong></td><td>Browser-limited</td><td>Browser-limited</td><td>6 (HTTP/1.1), unlimited (HTTP/2)</td><td>Browser-limited</td><td>Browser-limited</td></tr>
+      <tr><td><strong>Ideal use case</strong></td><td>Dashboards with 30s+ intervals</td><td>Legacy compatibility</td><td>Live feeds, notifications</td><td>Chat, gaming, collab editing</td><td>Future: gaming, streaming</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Does data flow only from server to client?
+|   |-- YES --> Is HTTP/2 available?
+|   |   |-- YES --> Use SSE (EventSource API)
+|   |   |-- NO --> Will you have >6 tabs open to same domain?
+|   |       |-- YES --> Use WebSocket (to avoid 6-connection limit)
+|   |       |-- NO --> Use SSE
+|   |-- NO (bidirectional needed) --> Is sub-second latency critical?
+|       |-- YES --> Are corporate proxies / firewalls a concern?
+|       |   |-- YES --> Use WebSocket over WSS (port 443) with long-polling fallback
+|       |   |-- NO --> Use WebSocket
+|       |-- NO --> Can you use request-response for client-to-server?
+|           |-- YES --> Use SSE for server push + regular HTTP POST for client messages
+|           |-- NO --> Use WebSocket
+|
+|-- Must support IE11 or very old browsers?
+|   |-- YES --> Use long polling (or polyfill EventSource)
+|   |-- NO --> See above
+|
+|-- Need unreliable/unordered datagrams (gaming, media)?
+    |-- YES --> Use WebTransport (with WebSocket fallback)
+    |-- NO --> See above</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Implement an SSE server endpoint</h3>
+  <p>Create a server endpoint that sets the correct headers and streams events. The <code>Content-Type</code> must be <code>text/event-stream</code>, and you must disable response buffering. [<a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events">src1</a>]</p>
+  <pre><code class="language-javascript">// Node.js (Express) SSE server
+const express = require('express');
+const app = express();
+
+app.get('/events', (req, res) =&gt; {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  res.write(':ok\n\n');
+
+  const interval = setInterval(() =&gt; {
+    const data = JSON.stringify({ time: new Date().toISOString() });
+    res.write(`id:${Date.now()}\nevent:update\ndata:${data}\n\n`);
+  }, 1000);
+
+  req.on('close', () =&gt; { clearInterval(interval); res.end(); });
+});
+
+app.listen(3000);</code></pre>
+  <p><strong>Verify</strong>: <code>curl -N http://localhost:3000/events</code> &rarr; streaming <code>event:update</code> messages every second</p>
+
+  <h3>2. Connect with EventSource on the client</h3>
+  <p>The browser's built-in <code>EventSource</code> API handles reconnection automatically. If the connection drops, it reconnects after a server-specified <code>retry:</code> interval (default ~3 seconds). [<a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events">src1</a>]</p>
+  <pre><code class="language-javascript">const source = new EventSource('/events');
+
+source.addEventListener('update', (e) =&gt; {
+  const data = JSON.parse(e.data);
+  console.log('Received:', data);
+});
+
+source.addEventListener('error', (e) =&gt; {
+  if (source.readyState === EventSource.CONNECTING) {
+    console.log('Reconnecting...');
+  } else {
+    console.error('SSE connection failed');
+    source.close();
+  }
+});</code></pre>
+  <p><strong>Verify</strong>: Open browser DevTools Network tab &rarr; filter by <code>EventSource</code> &rarr; confirm streaming responses</p>
+
+  <h3>3. Implement a WebSocket server</h3>
+  <p>For bidirectional communication, set up a WebSocket server using the <code>ws</code> library for Node.js. [<a href="https://datatracker.ietf.org/doc/html/rfc6455">src6</a>]</p>
+  <pre><code class="language-javascript">const { WebSocketServer } = require('ws');
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on('connection', (ws, req) =&gt; {
+  ws.on('message', (message) =&gt; {
+    const parsed = JSON.parse(message);
+    wss.clients.forEach((client) =&gt; {
+      if (client.readyState === 1) {
+        client.send(JSON.stringify({ from: 'server', ...parsed }));
+      }
+    });
+  });
+  ws.on('close', (code, reason) =&gt; {
+    console.log(`Disconnected: ${code} ${reason}`);
+  });
+  ws.send(JSON.stringify({ type: 'connected', time: Date.now() }));
+});</code></pre>
+  <p><strong>Verify</strong>: <code>npx wscat -c ws://localhost:8080</code> &rarr; type <code>{"text":"hello"}</code> &rarr; see broadcast response</p>
+
+  <h3>4. Add client-side reconnection for WebSocket</h3>
+  <p>Unlike SSE, WebSocket does not auto-reconnect. Implement reconnection with exponential backoff. [<a href="https://ably.com/blog/websockets-vs-sse">src4</a>]</p>
+  <pre><code class="language-javascript">function createWebSocket(url) {
+  let ws, retries = 0;
+  const maxRetries = 10, baseDelay = 1000;
+
+  function connect() {
+    ws = new WebSocket(url);
+    ws.onopen = () =&gt; { retries = 0; };
+    ws.onmessage = (event) =&gt; { console.log(JSON.parse(event.data)); };
+    ws.onclose = (event) =&gt; {
+      if (!event.wasClean &amp;&amp; retries &lt; maxRetries) {
+        const delay = Math.min(baseDelay * Math.pow(2, retries++), 30000);
+        setTimeout(connect, delay);
+      }
+    };
+  }
+  connect();
+  return { getSocket: () =&gt; ws };
+}</code></pre>
+  <p><strong>Verify</strong>: Kill and restart the server &rarr; client reconnects automatically with increasing delays</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: SSE Server with Flask</h3>
+  <pre><code class="language-python"># Input:  HTTP GET /events
+# Output: text/event-stream with JSON events
+
+from flask import Flask, Response
+import json, time
+
+app = Flask(__name__)
+
+def event_stream():
+    while True:
+        data = json.dumps({"time": time.time()})
+        yield f"id:{int(time.time())}\nevent:update\ndata:{data}\n\n"
+        time.sleep(1)
+
+@app.route('/events')
+def sse():
+    return Response(
+        event_stream(),
+        mimetype='text/event-stream',
+        headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'}
+    )
+
+if __name__ == '__main__':
+    app.run(port=3000, threaded=True)</code></pre>
+
+  <h3>Python: WebSocket Server with websockets</h3>
+  <pre><code class="language-python"># Input:  WebSocket connection on ws://localhost:8765
+# Output: Echoes received messages back to all clients
+
+import asyncio, websockets, json
+
+connected = set()
+
+async def handler(websocket):
+    connected.add(websocket)
+    try:
+        async for message in websocket:
+            data = json.loads(message)
+            broadcast = json.dumps({"from": "server", **data})
+            await asyncio.gather(
+                *(c.send(broadcast) for c in connected if c.open)
+            )
+    finally:
+        connected.discard(websocket)
+
+async def main():
+    async with websockets.serve(handler, "localhost", 8765):
+        await asyncio.Future()
+
+asyncio.run(main())</code></pre>
+
+  <h3>Go: SSE Server</h3>
+  <pre><code class="language-go">// Input:  HTTP GET /events
+// Output: text/event-stream with periodic updates
+
+package main
+
+import (
+    "fmt"
+    "net/http"
+    "time"
+)
+
+func sseHandler(w http.ResponseWriter, r *http.Request) {
+    flusher, ok := w.(http.Flusher)
+    if !ok {
+        http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+        return
+    }
+    w.Header().Set("Content-Type", "text/event-stream")
+    w.Header().Set("Cache-Control", "no-cache")
+    w.Header().Set("Connection", "keep-alive")
+
+    for {
+        select {
+        case &lt;-r.Context().Done():
+            return
+        default:
+            fmt.Fprintf(w, "id:%d\nevent:update\ndata:{\"time\":\"%s\"}\n\n",
+                time.Now().UnixMilli(), time.Now().Format(time.RFC3339))
+            flusher.Flush()
+            time.Sleep(1 * time.Second)
+        }
+    }
+}
+
+func main() {
+    http.HandleFunc("/events", sseHandler)
+    http.ListenAndServe(":3000", nil)
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using WebSocket for simple server-to-client notifications</h3>
+  <pre><code class="language-javascript">// BAD -- WebSocket for one-way server push adds unnecessary complexity
+const ws = new WebSocket('wss://api.example.com/notifications');
+ws.onmessage = (e) =&gt; showNotification(JSON.parse(e.data));
+// Now you need: reconnection logic, heartbeat pings, connection state
+// management, proxy configuration, load balancer sticky sessions...</code></pre>
+
+  <h3>Correct: Use SSE for server-to-client push</h3>
+  <pre><code class="language-javascript">// GOOD -- SSE handles reconnection automatically, works through all proxies
+const source = new EventSource('/notifications');
+source.onmessage = (e) =&gt; showNotification(JSON.parse(e.data));
+// Auto-reconnects. Works through corporate proxies. No library needed.</code></pre>
+
+  <h3>Wrong: Short polling for real-time chat</h3>
+  <pre><code class="language-javascript">// BAD -- polling every 500ms wastes bandwidth and battery
+setInterval(async () =&gt; {
+  const res = await fetch('/api/messages?since=' + lastTimestamp);
+  const messages = await res.json();
+  messages.forEach(displayMessage);
+}, 500);
+// 172,800 requests/day per client. Most return empty arrays.</code></pre>
+
+  <h3>Correct: WebSocket for bidirectional real-time messaging</h3>
+  <pre><code class="language-javascript">// GOOD -- single persistent connection, instant delivery
+const ws = new WebSocket('wss://chat.example.com/ws');
+ws.onmessage = (e) =&gt; displayMessage(JSON.parse(e.data));
+
+function sendMessage(text) {
+  ws.send(JSON.stringify({ type: 'message', text }));
+}
+// One connection. Near-zero latency. Minimal bandwidth.</code></pre>
+
+  <h3>Wrong: No reconnection logic on WebSocket</h3>
+  <pre><code class="language-javascript">// BAD -- connection drops silently, user sees stale data
+const ws = new WebSocket('wss://example.com/ws');
+ws.onmessage = handleMessage;
+// Network blip? Connection gone. No recovery. User confused.</code></pre>
+
+  <h3>Correct: WebSocket with exponential backoff reconnection</h3>
+  <pre><code class="language-javascript">// GOOD -- automatic reconnection with backoff
+function connect(url, onMessage) {
+  let retries = 0;
+  function attempt() {
+    const ws = new WebSocket(url);
+    ws.onopen = () =&gt; { retries = 0; };
+    ws.onmessage = onMessage;
+    ws.onclose = (e) =&gt; {
+      if (!e.wasClean) {
+        const delay = Math.min(1000 * 2 ** retries++, 30000);
+        setTimeout(attempt, delay);
+      }
+    };
+  }
+  attempt();
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>SSE 6-connection limit on HTTP/1.1</strong>: Browsers allow only 6 simultaneous HTTP/1.1 connections per domain. If a user opens 6+ tabs, SSE connections queue indefinitely. Fix: Serve over HTTP/2 or use a different subdomain. [<a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events">src1</a>]</li>
+    <li><strong>Nginx buffering breaks SSE</strong>: Nginx buffers responses by default, preventing SSE events from reaching the client in real time. Fix: Add <code>X-Accel-Buffering: no</code> response header or set <code>proxy_buffering off</code> in Nginx config. [<a href="https://rxdb.info/articles/websockets-sse-polling-webrtc-webtransport.html">src2</a>]</li>
+    <li><strong>WebSocket through reverse proxies</strong>: Load balancers and reverse proxies require explicit WebSocket upgrade configuration. Fix: Configure <code>proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade";</code> in Nginx. [<a href="https://ably.com/blog/websockets-vs-sse">src4</a>]</li>
+    <li><strong>Missing heartbeat/keepalive</strong>: Connections can be silently terminated by intermediate proxies after 60-120 seconds of inactivity. Fix: Send a comment line (SSE: <code>:keepalive\n\n</code>) or ping frame (WebSocket) every 30 seconds. [<a href="https://www.timeplus.com/post/websocket-vs-sse">src3</a>]</li>
+    <li><strong>Not handling Last-Event-ID for SSE</strong>: When an SSE client reconnects, it sends the last received event ID in the <code>Last-Event-ID</code> header. If the server ignores this, the client misses events. Fix: Track event IDs server-side and replay missed events on reconnect. [<a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events">src1</a>]</li>
+    <li><strong>Memory leaks from unclosed connections</strong>: Forgetting to remove event listeners or clean up intervals when a client disconnects leaks memory. Fix: Always listen for <code>close</code>/<code>end</code> events and clean up resources. [<a href="https://blog.algomaster.io/p/polling-vs-long-polling-vs-sse-vs-websockets-webhooks">src5</a>]</li>
+    <li><strong>WebSocket message ordering across instances</strong>: WebSocket guarantees in-order delivery per connection, but broadcasting from multiple server instances may deliver out of order. Fix: Include sequence numbers in messages and reorder client-side. [<a href="https://datatracker.ietf.org/doc/html/rfc6455">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test SSE endpoint with curl (streaming)
+curl -N -H "Accept: text/event-stream" http://localhost:3000/events
+
+# Test WebSocket with wscat
+npx wscat -c ws://localhost:8080
+
+# Check if WebSocket upgrade is working through Nginx
+curl -i -N \
+  -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
+  http://localhost/ws
+# Expected: HTTP/1.1 101 Switching Protocols
+
+# Monitor open SSE/WebSocket connections on the server
+ss -tn state established | grep :3000 | wc -l
+
+# Check HTTP/2 support (required for SSE without 6-conn limit)
+curl -I --http2 https://example.com 2&gt;&amp;1 | grep -i "http/2"</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Server pushes updates to browser (dashboards, feeds, alerts)</td><td>Client needs to send frequent messages to server</td><td>WebSocket</td></tr>
+      <tr><td>You want zero-library client code with auto-reconnect</td><td>You need binary data transfer (images, audio, files)</td><td>WebSocket</td></tr>
+      <tr><td>Running behind corporate proxies or strict firewalls</td><td>Building real-time multiplayer gaming</td><td>WebSocket or WebTransport</td></tr>
+      <tr><td>HTTP/2 is available and you have many concurrent streams</td><td>IE11 support required and polyfills not acceptable</td><td>Long polling</td></tr>
+      <tr><td>Building chat, collaborative editing, or live gaming</td><td>Data updates every 30+ seconds with no urgency</td><td>Short polling (simpler)</td></tr>
+      <tr><td>Both client and server send messages frequently</td><td>Proxy/firewall blocks WebSocket and WSS fallback fails</td><td>SSE + HTTP POST</td></tr>
+      <tr><td>Legacy browser/proxy environment blocks SSE and WebSocket</td><td>Latency and efficiency matter</td><td>SSE or WebSocket (with polyfill)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Performance benchmarks show SSE and WebSocket have nearly identical throughput; WebSocket has a ~3ms latency advantage that is negligible in production where network RTT dominates</li>
+    <li>Safari on iOS terminates SSE connections when the app goes to background; use the Page Visibility API to detect this and reconnect on <code>visibilitychange</code></li>
+    <li>WebTransport is included in Interop 2026 for cross-browser standardization, but as of February 2026 it is Chromium-only and experimental -- do not depend on it without a fallback</li>
+    <li>Socket.IO, SignalR, and similar libraries abstract over these protocols with automatic fallback; they add 15-50KB to bundle size but simplify cross-protocol compatibility</li>
+    <li>AWS API Gateway WebSocket API has a 32KB message size limit and 10-minute idle timeout; for larger payloads or longer sessions, use a dedicated WebSocket server</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/webhooks-system/2026" data-relationship="related_to">Webhook Delivery System Design</a>
+    <a href="/software/system-design/notification-system/2026" data-relationship="related_to">Notification System Architecture</a>
+    <a href="/software/system-design/message-queue-event-driven/2026" data-relationship="related_to">Message Queue &amp; Event-Driven Architecture</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

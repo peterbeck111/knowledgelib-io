@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Scalable Notification System Design (Push, In-App | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a scalable multi-channel notification system covering push (FCM/APNs), in-app (WebSocket/SSE), and email...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/notification-system/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Scalable Notification System Design (Push, In-App | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a scalable multi-channel notification system covering push (FCM/APNs), in-app (WebSocket/SSE), and email (SendGrid/SES). Component architecture, decision tree, code examples in Python and Node.js, 4 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/notification-system/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Scalable Notification System Design (Push, In-App | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a scalable multi-channel notification system covering push (FCM/APNs), in-app (WebSocket/SSE), and email (SendGrid/SES). Component architecture, decision tree, code examples in Python and Node.js, 4 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/notification_system">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a scalable notification system (push, in-app, email)?">
+  <meta name="ai:aliases" content="notification service architecture; push notification system design; multi-channel notification platform; real-time notification infrastructure">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/notification-system/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,channels,latency">
+  <meta name="ai:constraints" content="Always check user notification preferences and opt-out status before sending; Use separate message queues per channel; FCM legacy HTTP and XMPP APIs removed June 2024 use HTTP v1 only; APNs requires HTTP/2 on port 443; Email must comply with CAN-SPAM CASL GDPR">
+  <meta name="ai:skip_this_unit_if" content="Need chat/messaging with bidirectional real-time communication -> software/system-design/chat-system/2026; Need event-driven microservices (not notification-specific) -> software/system-design/event-driven-architecture/2026; Need email deliverability only (SPF/DKIM/DMARC) -> software/system-design/email-deliverability/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Scalable Notification System Design (Push, In-App, Email)",
+    "headline": "Scalable Notification System Design (Push, In-App, Email)",
+    "description": "Complete system design guide for building a scalable multi-channel notification system covering push notifications (FCM/APNs), in-app real-time delivery (WebSocket/SSE), and email (SendGrid/SES). Includes component architecture table, decision tree, step-by-step implementation, code examples in Python and Node.js, anti-patterns, and common pitfalls.",
+    "keywords": ["notification system design", "push notifications", "FCM", "APNs", "in-app notifications", "WebSocket", "email notifications", "SendGrid", "message queue", "system design", "scalable architecture"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Firebase Admin SDK 6.4+, Socket.io 4.7+, SendGrid 6.11+, Redis 4.6+, AWS SDK",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "FCM Architectural Overview",
+        "url": "https://firebase.google.com/docs/cloud-messaging/fcm-architecture"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Sending Notification Requests to APNs",
+        "url": "https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design a Scalable Notification Service",
+        "url": "https://blog.algomaster.io/p/design-a-scalable-notification-service"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Design a Notification System: A Complete Guide",
+        "url": "https://www.systemdesignhandbook.com/guides/design-a-notification-system/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Architecting a Scalable Notification System (Push, Email, SMS, In-App)",
+        "url": "https://www.meerako.com/blogs/building-scalable-notification-system-architecture-aws"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Stable Architecture and Successful Email Sending at Scale",
+        "url": "https://sendgrid.com/en-us/blog/stable-architecture-and-successful-email-sending-at-scale"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Notification System Design: Architecture & Best Practices",
+        "url": "https://www.magicbell.com/blog/notification-system-design"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Scalable Notification System Design (Push, In-App, Email)",
+    "description": "Structured knowledge unit covering scalable notification system architecture with component design, decision trees, code examples, and anti-patterns for push (FCM/APNs), in-app (WebSocket/SSE), and email (SendGrid/SES) channels.",
+    "keywords": ["notification system design", "push notifications", "FCM", "APNs", "in-app notifications", "email notifications", "system design", "message queue architecture"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Google Firebase"},
+      {"@type": "Organization", "name": "Apple Developer"},
+      {"@type": "Organization", "name": "AlgoMaster"},
+      {"@type": "Organization", "name": "System Design Handbook"},
+      {"@type": "Organization", "name": "Meerako"},
+      {"@type": "Organization", "name": "SendGrid (Twilio)"},
+      {"@type": "Organization", "name": "MagicBell"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Scalable Notification System Design (Push, In-App, Email)" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a scalable notification system (push, in-app, email)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable notification system uses event-driven fan-out with per-channel message queues, a user preference service, dedicated channel processors (push/email/SMS/in-app), and a retry-with-DLQ strategy to reliably deliver millions of notifications daily."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "notification service architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable notification system uses event-driven fan-out with per-channel message queues, a user preference service, dedicated channel processors (push/email/SMS/in-app), and a retry-with-DLQ strategy to reliably deliver millions of notifications daily."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "push notification system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable notification system uses event-driven fan-out with per-channel message queues, a user preference service, dedicated channel processors (push/email/SMS/in-app), and a retry-with-DLQ strategy to reliably deliver millions of notifications daily."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "multi-channel notification platform",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable notification system uses event-driven fan-out with per-channel message queues, a user preference service, dedicated channel processors (push/email/SMS/in-app), and a retry-with-DLQ strategy to reliably deliver millions of notifications daily."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "real-time notification infrastructure",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable notification system uses event-driven fan-out with per-channel message queues, a user preference service, dedicated channel processors (push/email/SMS/in-app), and a retry-with-DLQ strategy to reliably deliver millions of notifications daily."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Scalable Notification System Design (Push, In-App, Email)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a scalable notification system (push, in-app, email)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/notification-system/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A scalable notification system uses event-driven fan-out with per-channel message queues, a user preference service, dedicated channel processors (push/email/SMS/in-app), and a retry-with-DLQ strategy to reliably deliver millions of notifications daily.</li>
+    <li><strong>Key tool/command</strong>: <code>SNS -&gt; SQS -&gt; Lambda/Worker</code> fan-out pattern (or Kafka topics with consumer groups for higher throughput)</li>
+    <li><strong>Watch out for</strong>: Sending notifications without checking user preferences first -- this causes opt-out violations, spam complaints, and CAN-SPAM/GDPR fines.</li>
+    <li><strong>Works with</strong>: FCM HTTP v1 API (Android/web), APNs HTTP/2 (iOS), SendGrid/SES (email), WebSocket/SSE (in-app). Cloud-agnostic architecture.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Always query the user preference service and check opt-in status before dispatching any notification to any channel</li>
+    <li>Use separate message queues per channel so a failure in email delivery does not block push or in-app notifications</li>
+    <li>FCM legacy HTTP API and XMPP API were removed in June 2024; all push to Android/web must use HTTP v1 API</li>
+    <li>APNs requires HTTP/2 connections on port 443 (or 2197); use token-based authentication (keys do not expire)</li>
+    <li>Email notifications must include a one-click unsubscribe header (RFC 8058) and physical mailing address per CAN-SPAM</li>
+    <li>Never store raw device tokens or APNs certificates in client-side code or public repositories</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Gateway</td><td>Rate-limit, authenticate, route notification requests</td><td>Kong, AWS API Gateway, Nginx</td><td>Horizontal + auto-scale on request rate</td></tr>
+      <tr><td>Notification Service</td><td>Validate payload, enrich with user prefs, fan-out to queues</td><td>Node.js, Go, Java Spring Boot</td><td>Stateless; scale by CPU/request count</td></tr>
+      <tr><td>User Preference Service</td><td>Store per-user channel opt-ins, quiet hours, frequency caps</td><td>PostgreSQL + Redis cache</td><td>Read-heavy; cache in Redis with 5-min TTL</td></tr>
+      <tr><td>Template Engine</td><td>Render channel-specific content from templates</td><td>Handlebars, Jinja2, MJML (email)</td><td>Stateless; co-locate with notification service</td></tr>
+      <tr><td>Message Queue</td><td>Decouple submission from delivery, buffer spikes</td><td>Kafka, RabbitMQ, AWS SQS+SNS</td><td>Partition by channel; scale consumers independently</td></tr>
+      <tr><td>Priority Router</td><td>Classify notifications (critical/high/normal/low) and route to priority queues</td><td>Custom logic + separate queue topics</td><td>Separate queues per priority tier</td></tr>
+      <tr><td>Push Processor</td><td>Deliver to mobile/web via FCM and APNs</td><td>FCM HTTP v1 API, APNs HTTP/2</td><td>Batch sends (FCM: 500 tokens/multicast); scale by queue depth</td></tr>
+      <tr><td>Email Processor</td><td>Render and send email via ESP</td><td>SendGrid, Amazon SES, Mailgun</td><td>Warm up IPs; separate transactional vs marketing subdomains</td></tr>
+      <tr><td>SMS Processor</td><td>Send SMS via telecom API</td><td>Twilio, Nexmo/Vonage, AWS SNS</td><td>Rate-limit per country; scale by queue depth</td></tr>
+      <tr><td>In-App Processor</td><td>Deliver real-time to connected clients</td><td>WebSocket (Socket.io), SSE, long polling</td><td>Sticky sessions or Redis Pub/Sub for horizontal scale</td></tr>
+      <tr><td>Notification Store</td><td>Persist notification history and read/unread status</td><td>PostgreSQL (recent), S3/cold storage (archive)</td><td>Time-partition; archive after 90 days</td></tr>
+      <tr><td>Retry / DLQ</td><td>Handle failed deliveries with exponential backoff</td><td>Built-in queue retry + Dead Letter Queue</td><td>Alert on DLQ depth; manual inspection workflow</td></tr>
+      <tr><td>Analytics &amp; Monitoring</td><td>Track delivery rates, open rates, latency</td><td>Prometheus + Grafana, ELK Stack, Datadog</td><td>Aggregate metrics; alert on delivery rate drops</td></tr>
+      <tr><td>Device Registry</td><td>Store and validate device tokens per user</td><td>PostgreSQL or DynamoDB</td><td>Prune invalid tokens on provider feedback</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What notification channels do you need?
+|
++-- Push notifications only?
+|   +-- YES --&gt; Use FCM (Android/web) + APNs (iOS) directly
+|   |           with a simple queue (SQS/Redis) in front
+|   +-- NO  |
+|           v
++-- Need email + push?
+|   +-- YES --&gt; Add message queue fan-out (SNS-&gt;SQS pattern or Kafka topics)
+|   |           with separate push and email processors
+|   +-- NO  |
+|           v
++-- Need in-app real-time notifications?
+|   +-- YES --&gt; Add WebSocket/SSE gateway with Redis Pub/Sub
+|   |           for cross-instance message delivery
+|   +-- NO  |
+|           v
++-- Need SMS?
+|   +-- YES --&gt; Add SMS processor + Twilio/Vonage integration
+|               with per-country rate limiting
+|   +-- NO  --&gt; Reassess requirements
+|
+SCALE CHECK:
++-- &lt; 1K notifications/day?
+|   +-- YES --&gt; Single-server with in-process queue (Bull/Celery) is sufficient
+|   +-- NO  |
+|           v
++-- 1K-100K notifications/day?
+|   +-- YES --&gt; Managed queue service (SQS+SNS or Cloud Tasks) + 2-4 workers
+|   +-- NO  |
+|           v
++-- 100K-10M notifications/day?
+|   +-- YES --&gt; Kafka with consumer groups, partitioned by channel + user-id sharding
+|   +-- NO  |
+|           v
++-- &gt; 10M notifications/day?
+    +-- YES --&gt; Multi-region Kafka clusters, dedicated worker pools,
+                Redis cluster for preference caching, sharded notification store</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define notification events and payload schema</h3>
+  <p>Establish a canonical event format that all services publish. Include event type, recipient, channel hints, priority, and idempotency key. [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</p>
+  <pre><code class="language-json">{
+  "event_id": "evt_abc123",
+  "event_type": "order.shipped",
+  "recipient_id": "user_789",
+  "channels": ["push", "email", "in_app"],
+  "priority": "high",
+  "data": {
+    "order_id": "ORD-456",
+    "tracking_url": "https://example.com/track/ORD-456"
+  },
+  "idempotency_key": "order_shipped_ORD-456",
+  "created_at": "2026-02-23T10:00:00Z"
+}</code></pre>
+  <p><strong>Verify</strong>: Validate schema with JSON Schema or Zod. All downstream processors must accept this format without transformation.</p>
+
+  <h3>2. Build the user preference service</h3>
+  <p>Store per-user, per-channel, per-notification-type preferences. Cache aggressively since this is read on every notification. [<a href="https://www.systemdesignhandbook.com/guides/design-a-notification-system/">src4</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE user_notification_preferences (
+  user_id       UUID NOT NULL,
+  channel       TEXT NOT NULL CHECK (channel IN ('push','email','sms','in_app')),
+  notif_type    TEXT NOT NULL,
+  enabled       BOOLEAN DEFAULT true,
+  quiet_start   TIME,
+  quiet_end     TIME,
+  timezone      TEXT DEFAULT 'UTC',
+  updated_at    TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (user_id, channel, notif_type)
+);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT * FROM user_notification_preferences WHERE user_id = 'test-user';</code> &rarr; should return one row per channel/type combination.</p>
+
+  <h3>3. Implement fan-out with message queues</h3>
+  <p>Publish the notification event to a central topic. Subscribers (one per channel) receive a copy and enqueue it for processing. [<a href="https://www.meerako.com/blogs/building-scalable-notification-system-architecture-aws">src5</a>]</p>
+  <pre><code class="language-python">import boto3
+import json
+
+sns = boto3.client('sns', region_name='us-east-1')
+TOPIC_ARN = 'arn:aws:sns:us-east-1:123456789:notifications'
+
+def publish_notification(event: dict):
+    """Publish notification event to SNS for fan-out."""
+    sns.publish(
+        TopicArn=TOPIC_ARN,
+        Message=json.dumps(event),
+        MessageAttributes={
+            'priority': {
+                'DataType': 'String',
+                'StringValue': event.get('priority', 'normal')
+            }
+        }
+    )</code></pre>
+  <p><strong>Verify</strong>: Check SQS queue depth after publishing: <code>aws sqs get-queue-attributes --queue-url $QUEUE_URL --attribute-names ApproximateNumberOfMessages</code> &rarr; should increment by 1 per subscribed queue.</p>
+
+  <h3>4. Build channel-specific processors</h3>
+  <p>Each processor pulls from its queue, checks user preferences, renders the message, and calls the external provider. Implement exponential backoff for retries. [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</p>
+  <pre><code class="language-python">import firebase_admin
+from firebase_admin import credentials, messaging
+
+cred = credentials.Certificate('service-account.json')
+firebase_admin.initialize_app(cred)
+
+def process_push(event: dict):
+    tokens = get_device_tokens(event['recipient_id'])
+    if not tokens:
+        return {'status': 'skipped', 'reason': 'no_tokens'}
+    message = messaging.MulticastMessage(
+        tokens=tokens[:500],
+        notification=messaging.Notification(
+            title=event['data'].get('title', 'Notification'),
+            body=event['data'].get('body', ''),
+        ),
+        data={k: str(v) for k, v in event['data'].items()},
+    )
+    response = messaging.send_each_for_multicast(message)
+    return {'success': response.success_count}</code></pre>
+  <p><strong>Verify</strong>: Check FCM response &mdash; <code>response.success_count</code> should be &gt; 0 for valid tokens.</p>
+
+  <h3>5. Add in-app notification delivery via WebSocket</h3>
+  <p>For real-time in-app notifications, maintain persistent connections and use Redis Pub/Sub for cross-instance routing. [<a href="https://www.systemdesignhandbook.com/guides/design-a-notification-system/">src4</a>]</p>
+  <pre><code class="language-javascript">const { Server } = require('socket.io');
+const { createClient } = require('redis');
+
+const io = new Server(3001, { cors: { origin: '*' } });
+const redisSub = createClient({ url: process.env.REDIS_URL });
+
+const userSockets = new Map();
+
+io.on('connection', (socket) =&gt; {
+  const uid = socket.handshake.auth.userId;
+  if (!userSockets.has(uid)) userSockets.set(uid, new Set());
+  userSockets.get(uid).add(socket.id);
+  socket.on('disconnect', () =&gt; {
+    userSockets.get(uid)?.delete(socket.id);
+  });
+});
+
+redisSub.subscribe('notifications:in_app', (message) =&gt; {
+  const event = JSON.parse(message);
+  const sockets = userSockets.get(event.recipient_id);
+  if (sockets) sockets.forEach(id =&gt; io.to(id).emit('notification', event.data));
+});</code></pre>
+  <p><strong>Verify</strong>: Connect a test WebSocket client and publish to Redis channel <code>notifications:in_app</code> &rarr; client should receive the event within 100ms.</p>
+
+  <h3>6. Implement retry logic and dead letter queues</h3>
+  <p>Configure exponential backoff with jitter. After max retries, move to DLQ for manual inspection. [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</p>
+  <pre><code class="language-python">import time, random
+
+MAX_RETRIES = 5
+BASE_DELAY = 1
+
+def process_with_retry(event, processor_fn):
+    for attempt in range(MAX_RETRIES):
+        try:
+            return processor_fn(event)
+        except TransientError as e:
+            if attempt == MAX_RETRIES - 1:
+                send_to_dlq(event, str(e))
+                raise
+            delay = BASE_DELAY * (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(delay)
+        except PermanentError as e:
+            send_to_dlq(event, str(e))
+            raise</code></pre>
+  <p><strong>Verify</strong>: Check DLQ depth after intentionally sending a malformed payload.</p>
+
+  <h3>7. Add monitoring and alerting</h3>
+  <p>Track delivery success rates per channel, latency percentiles, and queue depths. Alert when delivery rate drops below threshold. [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</p>
+  <pre><code class="language-yaml">groups:
+  - name: notification_alerts
+    rules:
+      - alert: NotificationDeliveryRateLow
+        expr: &gt;
+          rate(notifications_delivered_total{status="success"}[5m])
+          / rate(notifications_dispatched_total[5m]) &lt; 0.95
+        for: 5m
+        labels:
+          severity: warning</code></pre>
+  <p><strong>Verify</strong>: Trigger a test alert by temporarily lowering the threshold. Check Grafana dashboard shows the alert firing.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Send Push Notification via FCM HTTP v1</h3>
+  <pre><code class="language-python"># Input:  device_token (str), title (str), body (str), data (dict)
+# Output: message_id (str) on success
+
+import firebase_admin
+from firebase_admin import credentials, messaging  # firebase-admin&gt;=6.4.0
+
+cred = credentials.Certificate('service-account.json')
+firebase_admin.initialize_app(cred)
+
+def send_push(token: str, title: str, body: str, data: dict = None) -&gt; str:
+    message = messaging.Message(
+        token=token,
+        notification=messaging.Notification(title=title, body=body),
+        data={k: str(v) for k, v in (data or {}).items()},
+        android=messaging.AndroidConfig(priority='high'),
+        apns=messaging.APNSConfig(
+            headers={'apns-priority': '10'},
+            payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))
+        )
+    )
+    return messaging.send(message)</code></pre>
+
+  <h3>Node.js: In-App Notification Service with Socket.io</h3>
+  <pre><code class="language-javascript">// Input:  userId (string), notification payload (object)
+// Output: Emits 'notification' event to connected sockets for the user
+
+const { Server } = require('socket.io');    // socket.io@4.7.x
+const { createClient } = require('redis');  // redis@4.6.x
+
+const io = new Server(3001, { cors: { origin: '*' } });
+const redis = createClient({ url: process.env.REDIS_URL });
+
+const userSockets = new Map();
+
+io.on('connection', (socket) =&gt; {
+  const uid = socket.handshake.auth.userId;
+  if (!userSockets.has(uid)) userSockets.set(uid, new Set());
+  userSockets.get(uid).add(socket.id);
+  socket.on('disconnect', () =&gt; {
+    userSockets.get(uid)?.delete(socket.id);
+    if (!userSockets.get(uid)?.size) userSockets.delete(uid);
+  });
+});
+
+async function notifyUser(userId, payload) {
+  const sockets = userSockets.get(userId);
+  if (sockets) sockets.forEach(id =&gt; io.to(id).emit('notification', payload));
+  await redis.publish('notif:in_app', JSON.stringify({ userId, payload }));
+}</code></pre>
+
+  <h3>Python: Email Notification via SendGrid</h3>
+  <pre><code class="language-python"># Input:  to_email (str), subject (str), html_content (str)
+# Output: HTTP status code (202 on success)
+
+from sendgrid import SendGridAPIClient          # sendgrid&gt;=6.11.0
+from sendgrid.helpers.mail import Mail, Email, Content
+
+def send_email(to_email: str, subject: str, html_content: str) -&gt; int:
+    sg = SendGridAPIClient(api_key='SG.your_api_key')
+    mail = Mail(
+        from_email=Email('noreply@example.com', 'My App'),
+        subject=subject,
+        to_emails=to_email,
+        html_content=Content('text/html', html_content)
+    )
+    mail.add_header('List-Unsubscribe', '&lt;https://example.com/unsubscribe&gt;')
+    response = sg.send(mail)
+    return response.status_code</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Synchronous notification delivery in the request path</h3>
+  <pre><code class="language-python"># BAD -- blocks the API response until all notifications are sent
+@app.post('/api/orders/{order_id}/ship')
+def ship_order(order_id: str):
+    order = update_order_status(order_id, 'shipped')
+    send_push_notification(order.user_id, 'Shipped!')    # blocks 200-500ms
+    send_email(order.user_email, 'Shipped', render())     # blocks 1-3s
+    send_sms(order.user_phone, 'Shipped!')                # blocks 500ms-2s
+    return {'status': 'shipped'}  # user waits 2-5 seconds total</code></pre>
+
+  <h3>Correct: Asynchronous fan-out via message queue</h3>
+  <pre><code class="language-python"># GOOD -- publishes event and returns immediately
+@app.post('/api/orders/{order_id}/ship')
+def ship_order(order_id: str):
+    order = update_order_status(order_id, 'shipped')
+    publish_notification_event({
+        'event_type': 'order.shipped',
+        'recipient_id': order.user_id,
+        'channels': ['push', 'email', 'sms'],
+        'idempotency_key': f'order_shipped_{order_id}'
+    })
+    return {'status': 'shipped'}  # returns in &lt;50ms</code></pre>
+
+  <h3>Wrong: Single shared queue for all channels</h3>
+  <pre><code class="language-python"># BAD -- email provider outage blocks push and SMS delivery
+notifications_queue = Queue('all_notifications')
+
+def process_all(event):
+    if event['channel'] == 'email':
+        send_email(event)       # if SendGrid is down, entire queue backs up
+    elif event['channel'] == 'push':
+        send_push(event)</code></pre>
+
+  <h3>Correct: Separate queues per channel with independent consumers</h3>
+  <pre><code class="language-python"># GOOD -- channel isolation; email outage does not affect push/SMS
+push_queue = Queue('notifications:push')
+email_queue = Queue('notifications:email')
+sms_queue = Queue('notifications:sms')
+
+@push_queue.consumer
+def process_push(event):
+    send_push(event)
+
+@email_queue.consumer
+def process_email(event):
+    send_email(event)</code></pre>
+
+  <h3>Wrong: No idempotency protection on notification delivery</h3>
+  <pre><code class="language-python"># BAD -- worker crash after send but before ack = duplicate notification
+def process_notification(event):
+    send_push(event['token'], event['message'])
+    queue.ack(event['receipt_handle'])  # crash here = duplicate</code></pre>
+
+  <h3>Correct: Idempotency check before sending</h3>
+  <pre><code class="language-python"># GOOD -- check if notification was already sent using idempotency key
+def process_notification(event):
+    idem_key = event['idempotency_key']
+    if redis.setnx(f'notif:sent:{idem_key}', '1'):
+        redis.expire(f'notif:sent:{idem_key}', 86400)
+        send_push(event['token'], event['message'])
+    queue.ack(event['receipt_handle'])</code></pre>
+
+  <h3>Wrong: Ignoring device token lifecycle</h3>
+  <pre><code class="language-python"># BAD -- stale tokens waste API calls and trigger throttling
+def send_to_all_devices(user_id, message):
+    tokens = db.query('SELECT token FROM devices WHERE user_id = ?', user_id)
+    for token in tokens:
+        fcm.send(token, message)  # never checks if token is valid</code></pre>
+
+  <h3>Correct: Prune invalid tokens on provider feedback</h3>
+  <pre><code class="language-python"># GOOD -- remove tokens FCM/APNs report as invalid
+def send_to_all_devices(user_id, message):
+    tokens = db.query('SELECT token FROM devices WHERE user_id = ?', user_id)
+    response = fcm.send_multicast(tokens, message)
+    for i, result in enumerate(response.responses):
+        if result.exception:
+            if result.exception.code in ('UNREGISTERED', 'INVALID_ARGUMENT'):
+                db.execute('DELETE FROM devices WHERE token = ?', tokens[i])</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Notification storms during incidents</strong>: A cascading failure triggers millions of alerts simultaneously. Fix: implement circuit breakers and per-event-type rate limits (<code>max 1 alert per user per event type per 5 minutes</code>). [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</li>
+    <li><strong>Stale device tokens causing FCM/APNs errors</strong>: Users uninstall the app but tokens remain in the database. Fix: prune tokens on <code>UNREGISTERED</code>/<code>410</code> errors; run weekly token validation. [<a href="https://firebase.google.com/docs/cloud-messaging/fcm-architecture">src1</a>]</li>
+    <li><strong>Email landing in spam due to missing authentication</strong>: Emails without SPF, DKIM, and DMARC get flagged. Fix: configure DNS records for your sending domain; use a separate subdomain for notifications. [<a href="https://sendgrid.com/en-us/blog/stable-architecture-and-successful-email-sending-at-scale">src6</a>]</li>
+    <li><strong>No quiet hours enforcement</strong>: Push notifications at 3 AM increase opt-out rates. Fix: store user timezone; defer non-critical notifications to the next active window. [<a href="https://www.systemdesignhandbook.com/guides/design-a-notification-system/">src4</a>]</li>
+    <li><strong>Queue poisoning from malformed payloads</strong>: A bad message causes repeated processor crashes. Fix: validate before enqueueing; set <code>maxReceiveCount</code> to move poison messages to DLQ after 3-5 retries. [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</li>
+    <li><strong>Missing idempotency causing duplicates</strong>: At-least-once delivery means workers may process the same message twice. Fix: include idempotency key; check Redis/DB before sending. [<a href="https://www.systemdesignhandbook.com/guides/design-a-notification-system/">src4</a>]</li>
+    <li><strong>Ignoring provider rate limits</strong>: FCM allows 600K requests/minute; APNs throttles on burst. Fix: implement token-bucket rate limiting; use batch APIs (FCM: 500 tokens/multicast). [<a href="https://firebase.google.com/docs/cloud-messaging/fcm-architecture">src1</a>]</li>
+    <li><strong>Monolithic notification table</strong>: Storing all history in a single table degrades after millions of rows. Fix: partition by <code>created_at</code>; archive older than 90 days to cold storage. [<a href="https://blog.algomaster.io/p/design-a-scalable-notification-service">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check SQS queue depth (AWS)
+aws sqs get-queue-attributes --queue-url $QUEUE_URL \
+  --attribute-names ApproximateNumberOfMessages
+
+# Check DLQ depth for failed notifications
+aws sqs get-queue-attributes --queue-url $DLQ_URL \
+  --attribute-names ApproximateNumberOfMessages
+
+# Verify FCM service account is valid
+firebase projects:list
+
+# Test push notification delivery (FCM HTTP v1)
+curl -X POST "https://fcm.googleapis.com/v1/projects/YOUR_PROJECT/messages:send" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{"message":{"token":"DEVICE_TOKEN","notification":{"title":"Test","body":"Hello"}}}'
+
+# Check Redis Pub/Sub channel subscribers (in-app)
+redis-cli PUBSUB NUMSUB notifications:in_app
+
+# Check Kafka consumer lag (notification processor)
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
+  --describe --group notification-push-processor</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version / Service</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>FCM HTTP v1 API</td><td>Current (2024+)</td><td>Legacy HTTP/XMPP removed June 2024</td><td>Migrate to <code>fcm.googleapis.com/v1/projects/{project}/messages:send</code> with OAuth2</td></tr>
+      <tr><td>APNs HTTP/2</td><td>Current (2016+)</td><td>Binary protocol removed 2021</td><td>Use HTTP/2 port 443; prefer token-based auth</td></tr>
+      <tr><td>SendGrid v3 API</td><td>Current</td><td>v2 API deprecated</td><td>Use <code>/v3/mail/send</code>; API keys replace username/password</td></tr>
+      <tr><td>Socket.io 4.x</td><td>Current</td><td>v2&rarr;v4: namespace middleware changed</td><td>Upgrade client and server together</td></tr>
+      <tr><td>AWS SNS/SQS</td><td>Stable</td><td>FIFO queues added 2020</td><td>Use FIFO for ordered delivery; standard queues for throughput</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multi-channel delivery (push + email + SMS + in-app) is required</td><td>Only need simple webhook callbacks to a single endpoint</td><td>Webhook delivery system with retry</td></tr>
+      <tr><td>Scale exceeds 10K notifications/day and growing</td><td>Fewer than 100 notifications/day with a single channel</td><td>Direct API calls to FCM/SendGrid from your app</td></tr>
+      <tr><td>Need user preference management and quiet hours</td><td>Sending only system-to-system alerts (no human recipients)</td><td>Event bus (Kafka/RabbitMQ) without notification layer</td></tr>
+      <tr><td>Regulatory compliance (CAN-SPAM, GDPR) matters</td><td>Internal dev notifications only (Slack/Discord bots)</td><td>Slack Incoming Webhooks or Discord Bot API</td></tr>
+      <tr><td>Need delivery tracking, analytics, and audit trails</td><td>Fire-and-forget logging with no delivery guarantees needed</td><td>Simple log aggregation (ELK/Loki)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>FCM delivery is best-effort on Android when the app is force-stopped; OEM battery optimizations (Xiaomi, Samsung, Huawei) may block delivery</li>
+    <li>APNs device tokens change when a user restores from backup to a new device; always re-register tokens on app launch</li>
+    <li>Email delivery reputation is per-IP and per-domain; new IPs must be "warmed up" gradually (start with 50-100 emails/day, increase over 4-6 weeks)</li>
+    <li>WebSocket connections are stateful; horizontal scaling requires a shared Pub/Sub layer (Redis, NATS) to route messages to the correct instance</li>
+    <li>SMS costs vary by country ($0.01-$0.10+ per message); implement per-country rate limits and cost caps</li>
+    <li>At-least-once delivery is the practical guarantee; design clients to handle duplicate notifications gracefully</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/message-queues/2026" data-relationship="depends_on">Message Queue Architecture (Kafka vs RabbitMQ vs SQS)</a>
+    <a href="/software/system-design/rate-limiting/2026" data-relationship="related_to">Rate Limiting and Throttling Patterns</a>
+    <a href="/software/system-design/event-driven-architecture/2026" data-relationship="related_to">Event-Driven Architecture</a>
+    <a href="/software/debugging/notification-delivery-failures/2026" data-relationship="solves">Debugging Notification Delivery Failures</a>
+    <a href="/software/system-design/webhook-system/2026" data-relationship="alternative_to">Webhook Delivery System Design</a>
+    <a href="/software/system-design/chat-system/2026" data-relationship="often_confused_with">Real-Time Chat System Design</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

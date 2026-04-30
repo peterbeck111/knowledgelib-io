@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MySQL Deadlocks: Diagnosis and Resolution (2026) | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to MySQL InnoDB deadlock diagnosis and resolution: SHOW ENGINE INNODB STATUS, innodb_print_all_deadlocks, lock ordering strategies, retry...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/mysql-deadlocks/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="MySQL Deadlocks: Diagnosis and Resolution (2026) | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete MySQL deadlock guide: SHOW ENGINE INNODB STATUS, innodb_print_all_deadlocks, consistent lock ordering, application retry logic, gap lock prevention. 7 authoritative sources, verified 2026-02-20.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/mysql-deadlocks/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-20">
+    <meta property="article:modified_time" content="2026-02-20">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MySQL Deadlocks: Diagnosis and Resolution (2026) | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete MySQL deadlock guide: SHOW ENGINE INNODB STATUS, lock ordering, retry logic, gap lock prevention. 7 sources, verified 2026-02-20.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-20">
+    <meta name="ai:domain" content="software/debugging/mysql_deadlocks">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I diagnose and resolve MySQL deadlocks?">
+    <meta name="ai:aliases"
+        content="MySQL deadlock; InnoDB deadlock; SHOW ENGINE INNODB STATUS deadlock; MySQL deadlock detection; MySQL error 1213 deadlock; MySQL lock wait timeout; innodb_print_all_deadlocks; MySQL transaction deadlock retry">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/mysql-deadlocks/2026.md">
+    <meta name="ai:token_estimate" content="4800">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="stable">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-20">
+    <meta name="ai:inputs_needed" content="mysql_version,deadlock_frequency">
+    <meta name="ai:constraints" content="InnoDB storage engine only — MyISAM does not produce row-level deadlocks; SHOW ENGINE INNODB STATUS requires PROCESS privilege; performance_schema.data_locks requires MySQL 8.0+ (use INNODB_LOCKS on 5.7); never KILL blocking transactions blindly — InnoDB auto-resolves deadlocks via victim rollback; disable innodb_print_all_deadlocks after debugging to prevent error log bloat">
+    <meta name="ai:skip_this_unit_if" content="Database is PostgreSQL, not MySQL → PostgreSQL has different deadlock detection (pg_locks, pg_stat_activity); Error is 1205 (lock wait timeout), not 1213 (deadlock) → check innodb_lock_wait_timeout and long-running transactions; Problem is an application-level race condition (double-submit, TOCTOU) → use idempotency keys or optimistic locking at the application layer">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"MySQL Deadlocks: Diagnosis and Resolution","headline":"How Do I Diagnose and Resolve MySQL Deadlocks?","description":"Complete reference for MySQL InnoDB deadlock diagnosis and resolution covering SHOW ENGINE INNODB STATUS, lock ordering strategies, application retry logic, gap lock prevention, and diagnostic commands.","keywords":["MySQL","deadlock","InnoDB","SHOW ENGINE INNODB STATUS","innodb_print_all_deadlocks","lock ordering","transaction retry","error 1213"],"dateModified":"2026-02-20","datePublished":"2026-02-20","proficiencyLevel":"Intermediate","dependencies":"MySQL 5.7+ (InnoDB)","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"MySQL 8.4 Reference Manual — Deadlocks in InnoDB","url":"https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html"},{"@type":"WebPage","name":"MySQL 8.4 Reference Manual — How to Minimize and Handle Deadlocks","url":"https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html"},{"@type":"WebPage","name":"MySQL 8.4 Reference Manual — Deadlock Detection","url":"https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html"},{"@type":"WebPage","name":"MySQL 8.0 Reference Manual — An InnoDB Deadlock Example","url":"https://dev.mysql.com/doc/refman/8.0/en/innodb-deadlock-example.html"},{"@type":"WebPage","name":"How to Deal with and Resolve MySQL Deadlocks — Percona","url":"https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/"},{"@type":"WebPage","name":"Understanding MySQL Deadlocks — Virtual DBA","url":"https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/"},{"@type":"WebPage","name":"Percona Toolkit — pt-deadlock-logger","url":"https://docs.percona.com/percona-toolkit/pt-deadlock-logger.html"}]}</script>
+
+    <!-- Structured data: Dataset -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "MySQL Deadlocks: Diagnosis and Resolution",
+        "description": "Structured reference for MySQL InnoDB deadlock diagnosis with ranked cause table, decision tree, code examples, anti-patterns, and diagnostic commands.",
+        "keywords": ["MySQL", "deadlock", "InnoDB", "database debugging", "transaction locking"],
+        "temporalCoverage": "2010/2026",
+        "dateModified": "2026-02-20",
+        "datePublished": "2026-02-20",
+        "sourceOrganization": [
+            { "@type": "Organization", "name": "Oracle Corporation" },
+            { "@type": "Organization", "name": "Percona" }
+        ],
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+        "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+    }
+    </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+            { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+            { "@type": "ListItem", "position": 4, "name": "MySQL Deadlocks" }
+        ]
+    }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I diagnose and resolve MySQL deadlocks?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the smallest transaction (the \"victim\"). Diagnosis uses SHOW ENGINE INNODB STATUS to read the LATEST DETECTED DEADLOCK section. Prevention follows three rules: keep transactions short, access tables/rows in consistent order, and add indexes to reduce lock scope."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MySQL deadlock",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the smallest transaction (the \"victim\"). Diagnosis uses SHOW ENGINE INNODB STATUS to read the LATEST DETECTED DEADLOCK section. Prevention follows three rules: keep transactions short, access tables/rows in consistent order, and add indexes to reduce lock scope."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "InnoDB deadlock",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the smallest transaction (the \"victim\"). Diagnosis uses SHOW ENGINE INNODB STATUS to read the LATEST DETECTED DEADLOCK section. Prevention follows three rules: keep transactions short, access tables/rows in consistent order, and add indexes to reduce lock scope."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SHOW ENGINE INNODB STATUS deadlock",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the smallest transaction (the \"victim\"). Diagnosis uses SHOW ENGINE INNODB STATUS to read the LATEST DETECTED DEADLOCK section. Prevention follows three rules: keep transactions short, access tables/rows in consistent order, and add indexes to reduce lock scope."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MySQL deadlock detection",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the smallest transaction (the \"victim\"). Diagnosis uses SHOW ENGINE INNODB STATUS to read the LATEST DETECTED DEADLOCK section. Prevention follows three rules: keep transactions short, access tables/rows in consistent order, and add indexes to reduce lock scope."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MySQL error 1213 deadlock",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the smallest transaction (the \"victim\"). Diagnosis uses SHOW ENGINE INNODB STATUS to read the LATEST DETECTED DEADLOCK section. Prevention follows three rules: keep transactions short, access tables/rows in consistent order, and add indexes to reduce lock scope."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Diagnose and Resolve MySQL Deadlocks?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I diagnose and resolve MySQL deadlocks?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/mysql-deadlocks/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-20</span></span>
+        <span><strong>Freshness:</strong> stable</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: MySQL/InnoDB deadlocks occur when two or more transactions hold locks that
+                the other needs, creating a circular wait. InnoDB automatically detects deadlocks and rolls back the
+                smallest transaction (the "victim"). Diagnosis uses <code>SHOW ENGINE INNODB STATUS</code> to read the
+                <code>LATEST DETECTED DEADLOCK</code> section. Prevention follows three rules: keep transactions short,
+                access tables/rows in consistent order, and add indexes to reduce lock scope. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]</li>
+            <li><strong>Key tool/command</strong>: <code>SHOW ENGINE INNODB STATUS\G</code> — displays the most recent
+                deadlock with full lock details, transaction IDs, and which transaction was rolled back. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                    href="https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/">src6</a>]
+            </li>
+            <li><strong>Watch out for</strong>: Deadlocks are normal in any RDBMS and are NOT bugs — your application
+                MUST catch MySQL error 1213 and retry the transaction. Trying to eliminate all deadlocks is futile; the
+                goal is to minimize frequency and handle them gracefully. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>, <a
+                    href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</li>
+            <li><strong>Works with</strong>: MySQL 5.7+, 8.0, 8.4, 9.x. InnoDB only (MyISAM uses table-level locks and
+                does not deadlock the same way). [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>InnoDB only</strong>: Deadlock detection is an InnoDB feature. MyISAM and other engines use
+                table-level locking and do not have row-level deadlocks. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>]</li>
+            <li><strong>Never ignore error 1213</strong>: Applications MUST catch
+                <code>ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction</code> and
+                retry. Treating it as a fatal error is incorrect. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>, <a
+                    href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</li>
+            <li><strong>Do not disable deadlock detection without understanding the trade-off</strong>: Setting
+                <code>innodb_deadlock_detect = OFF</code> improves throughput on extremely high-concurrency systems but
+                means deadlocks are only resolved by <code>innodb_lock_wait_timeout</code> (default 50s). [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]</li>
+            <li><strong>SHOW ENGINE INNODB STATUS shows only the LAST deadlock</strong>: Enable
+                <code>innodb_print_all_deadlocks = ON</code> for persistent logging, but disable after debugging. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                    href="https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/">src6</a>]
+            </li>
+            <li><strong>LOCK TABLES deadlocks are NOT detected by InnoDB</strong>: Deadlocks involving
+                <code>LOCK TABLES</code> or non-InnoDB engines cannot be detected by InnoDB's wait-for graph. Use
+                <code>innodb_lock_wait_timeout</code> as fallback. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Inconsistent table/row access order</td>
+                        <td>~40%</td>
+                        <td>Two transactions lock different rows/tables in opposite order</td>
+                        <td>Access tables and rows in the same order across all transactions [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Missing or poor indexes</td>
+                        <td>~25%</td>
+                        <td>Lock on many index records in INNODB STATUS</td>
+                        <td>Add targeted indexes so queries lock fewer rows [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Gap lock conflicts on INSERT</td>
+                        <td>~15%</td>
+                        <td><code>lock_mode X locks gap</code> in deadlock output</td>
+                        <td>Use <code>READ COMMITTED</code> isolation or unique key inserts [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Long-running transactions</td>
+                        <td>~10%</td>
+                        <td>Transaction age &gt; seconds in INNODB_TRX</td>
+                        <td>Keep transactions short; commit immediately [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>FOR SHARE to FOR UPDATE escalation</td>
+                        <td>~5%</td>
+                        <td>S-lock holder tries to upgrade to X-lock</td>
+                        <td>Use <code>FOR UPDATE</code> directly when you plan to write [<a
+                                href="https://dev.mysql.com/doc/refman/8.0/en/innodb-deadlock-example.html">src4</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Bulk operations (large UPDATE/DELETE)</td>
+                        <td>~3%</td>
+                        <td>Statement locks large row range</td>
+                        <td>Break into smaller batches with LIMIT [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Foreign key constraint checks</td>
+                        <td>~2%</td>
+                        <td>Child/parent table locks during cascading ops</td>
+                        <td>Ensure indexes on foreign key columns [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — MySQL deadlock detected (ERROR 1213)
+├── Step 1: Capture the deadlock info
+│   ├── SHOW ENGINE INNODB STATUS\G → LATEST DETECTED DEADLOCK [src1]
+│   ├── Enable innodb_print_all_deadlocks = ON [src1, src6]
+│   └── Use pt-deadlock-logger for continuous monitoring [src7]
+│
+├── Step 2: Identify the conflict pattern
+│   ├── Two transactions locking rows in different order?
+│   │   └── Fix: Reorder operations consistently [src2]
+│   ├── Gap lock or next-key lock conflict?
+│   │   └── Fix: Use READ COMMITTED isolation [src1, src3]
+│   ├── Large number of locked index records?
+│   │   └── Fix: Add better indexes [src2]
+│   ├── Long-running transaction holding locks?
+│   │   └── Fix: Shorten transactions; commit earlier [src2]
+│   └── SELECT ... FOR SHARE escalation?
+│       └── Fix: Use FOR UPDATE from the start [src4]
+│
+├── Step 3: Apply prevention
+│   ├── Consistent lock ordering across all code paths [src2]
+│   ├── Add indexes on WHERE/JOIN columns of locking queries [src2]
+│   ├── Keep transactions short [src2]
+│   └── Implement application retry with exponential backoff [src5]
+│
+└── Step 4: Verify
+    ├── Monitor deadlock frequency via error log [src6]
+    └── If near-zero → done; if not → iterate Step 2</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Check the most recent deadlock</h3>
+        <p>Examine what InnoDB recorded about the deadlock. [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                href="https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/">src6</a>]</p>
+        <pre><code class="language-sql">-- View the most recent deadlock details
+SHOW ENGINE INNODB STATUS\G</code></pre>
+        <p>Look for the <code>LATEST DETECTED DEADLOCK</code> section showing Transaction 1 and Transaction 2 locks
+            held/waiting, and which was rolled back.</p>
+        <p><strong>Verify</strong>: The output should contain a <code>LATEST DETECTED DEADLOCK</code> section.</p>
+
+        <h3>2. Enable persistent deadlock logging</h3>
+        <p><code>SHOW ENGINE INNODB STATUS</code> only shows the last deadlock. Enable full logging. [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                href="https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/">src6</a>]</p>
+        <pre><code class="language-sql">-- Log ALL deadlocks to the MySQL error log
+SET GLOBAL innodb_print_all_deadlocks = ON;
+
+-- Or add to my.cnf for persistence:
+-- [mysqld]
+-- innodb_print_all_deadlocks = 1</code></pre>
+        <p><strong>Verify</strong>: Check MySQL error log for deadlock entries after triggering a known scenario.</p>
+
+        <h3>3. Identify conflicting queries and lock types</h3>
+        <p>Parse the deadlock output to understand which rows and indexes are involved. [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</p>
+        <pre><code class="language-sql">-- Check currently waiting transactions
+SELECT * FROM information_schema.INNODB_TRX
+WHERE trx_state = 'LOCK WAIT'\G
+
+-- Check current locks (MySQL 8.0+)
+SELECT * FROM performance_schema.data_locks\G
+
+-- Check lock waits (MySQL 8.0+)
+SELECT * FROM performance_schema.data_lock_waits\G</code></pre>
+        <p><strong>Verify</strong>: You should see specific index records and lock types (S, X, gap, insert intention).
+        </p>
+
+        <h3>4. Fix the root cause</h3>
+        <p>Apply the appropriate fix based on the identified pattern. [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>, <a
+                href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</p>
+        <pre><code class="language-sql">-- If missing index:
+CREATE INDEX idx_orders_customer ON orders(customer_id);
+
+-- If gap lock issue:
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- If bulk operation: break into batches
+DELETE FROM logs WHERE created_at &lt; '2025-01-01' LIMIT 1000;
+-- Repeat until 0 rows affected</code></pre>
+        <p><strong>Verify</strong>: Monitor deadlock frequency for 24-48 hours via error log.</p>
+
+        <h3>5. Implement application retry logic</h3>
+        <p>Mandatory regardless of prevention efforts. [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>, <a
+                href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</p>
+        <pre><code class="language-python">import mysql.connector, time
+
+def execute_with_retry(conn, statements, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            cursor = conn.cursor()
+            cursor.execute("START TRANSACTION")
+            for stmt, params in statements:
+                cursor.execute(stmt, params)
+            conn.commit()
+            return True
+        except mysql.connector.Error as e:
+            conn.rollback()
+            if e.errno == 1213 and attempt &lt; max_retries - 1:
+                time.sleep(0.1 * (2 ** attempt))
+                continue
+            raise</code></pre>
+        <p><strong>Verify</strong>: Test by triggering a deadlock in staging and confirming retry succeeds.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Python: deadlock-safe transaction with retry</h3>
+        <pre><code class="language-python"># Input:  MySQL connection, list of (query, params) tuples
+# Output: True on success, raises on non-deadlock error
+
+import mysql.connector
+import time
+import logging
+
+logger = logging.getLogger(__name__)
+DEADLOCK_ERROR = 1213
+LOCK_WAIT_TIMEOUT = 1205
+
+def deadlock_retry(conn, operations, max_retries=3, base_delay=0.1):
+    """Execute transaction with automatic deadlock retry."""
+    for attempt in range(max_retries):
+        try:
+            cursor = conn.cursor()
+            cursor.execute("START TRANSACTION")
+            for sql, params in operations:
+                cursor.execute(sql, params)
+            conn.commit()
+            cursor.close()
+            return True
+        except mysql.connector.Error as err:
+            conn.rollback()
+            if err.errno in (DEADLOCK_ERROR, LOCK_WAIT_TIMEOUT):
+                if attempt &lt; max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(f"Deadlock attempt {attempt+1}, retry in {delay}s")
+                    time.sleep(delay)
+                    continue
+            raise
+    raise RuntimeError("Deadlock retries exhausted")</code></pre>
+
+        <h3>Java: deadlock retry with Spring</h3>
+        <pre><code class="language-java">// Input:  Runnable transaction logic
+// Output: Completes transaction or throws after max retries
+
+@Service
+public class OrderService {
+    @Retryable(
+        retryFor = DeadlockLoserDataAccessException.class,
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 100, multiplier = 2)
+    )
+    @Transactional
+    public void transferFunds(long fromId, long toId, double amount) {
+        // Always lock in consistent order (lower ID first)
+        long first = Math.min(fromId, toId);
+        long second = Math.max(fromId, toId);
+        accountRepo.debit(first == fromId ? first : second, amount);
+        accountRepo.credit(first == toId ? first : second, amount);
+    }
+}</code></pre>
+
+        <h3>SQL: deadlock diagnostic report</h3>
+        <pre><code class="language-sql">-- Input:  MySQL 8.0+ with performance_schema
+-- Output: Current lock contention snapshot
+
+-- 1. Show most recent deadlock
+SHOW ENGINE INNODB STATUS\G
+
+-- 2. Currently blocked transactions
+SELECT
+    r.trx_id AS blocked_trx,
+    r.trx_mysql_thread_id AS blocked_thread,
+    r.trx_query AS blocked_query,
+    b.trx_id AS blocking_trx,
+    b.trx_mysql_thread_id AS blocking_thread,
+    b.trx_query AS blocking_query
+FROM information_schema.INNODB_TRX r
+JOIN performance_schema.data_lock_waits w
+    ON r.trx_id = w.REQUESTING_ENGINE_TRANSACTION_ID
+JOIN information_schema.INNODB_TRX b
+    ON b.trx_id = w.BLOCKING_ENGINE_TRANSACTION_ID;
+
+-- 3. All current locks
+SELECT ENGINE_TRANSACTION_ID AS trx_id,
+       OBJECT_NAME AS tbl, INDEX_NAME AS idx,
+       LOCK_TYPE, LOCK_MODE, LOCK_STATUS, LOCK_DATA
+FROM performance_schema.data_locks
+ORDER BY ENGINE_TRANSACTION_ID, LOCK_STATUS;</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Ignoring deadlock errors in application code</h3>
+        <pre><code class="language-python"># BAD — deadlock error crashes the application [src2, src5]
+cursor.execute("START TRANSACTION")
+cursor.execute("UPDATE accounts SET balance = balance - 100 WHERE id = 1")
+cursor.execute("UPDATE accounts SET balance = balance + 100 WHERE id = 2")
+conn.commit()
+# If ERROR 1213 occurs, the app crashes with an unhandled exception</code></pre>
+
+        <h3>Correct: Always catch error 1213 and retry</h3>
+        <pre><code class="language-python"># GOOD — retry on deadlock with exponential backoff [src2, src5]
+for attempt in range(3):
+    try:
+        cursor.execute("START TRANSACTION")
+        cursor.execute("UPDATE accounts SET balance = balance - 100 WHERE id = 1")
+        cursor.execute("UPDATE accounts SET balance = balance + 100 WHERE id = 2")
+        conn.commit()
+        break
+    except mysql.connector.Error as e:
+        conn.rollback()
+        if e.errno == 1213 and attempt &lt; 2:
+            time.sleep(0.1 * (2 ** attempt))
+            continue
+        raise</code></pre>
+
+        <h3>Wrong: Accessing tables in inconsistent order</h3>
+        <pre><code class="language-sql">-- BAD — opposite order causes circular wait [src2, src4]
+-- Transaction A:
+UPDATE orders SET status = 'shipped' WHERE id = 100;
+UPDATE inventory SET qty = qty - 1 WHERE product_id = 5;
+
+-- Transaction B (concurrent):
+UPDATE inventory SET qty = qty + 1 WHERE product_id = 5;
+UPDATE orders SET status = 'cancelled' WHERE id = 100;
+-- DEADLOCK: circular wait</code></pre>
+
+        <h3>Correct: Always access tables in the same order</h3>
+        <pre><code class="language-sql">-- GOOD — both access inventory THEN orders [src2, src4]
+-- Transaction A:
+UPDATE inventory SET qty = qty - 1 WHERE product_id = 5;
+UPDATE orders SET status = 'shipped' WHERE id = 100;
+
+-- Transaction B:
+UPDATE inventory SET qty = qty + 1 WHERE product_id = 5;
+UPDATE orders SET status = 'cancelled' WHERE id = 100;
+-- No deadlock: both wait in the same direction</code></pre>
+
+        <h3>Wrong: Large UPDATE without index</h3>
+        <pre><code class="language-sql">-- BAD — full table scan locks every row [src2]
+UPDATE orders SET processed = 1 WHERE status = 'pending';
+-- Without index on status, InnoDB locks ALL rows</code></pre>
+
+        <h3>Correct: Add index and batch the operation</h3>
+        <pre><code class="language-sql">-- GOOD — targeted index locks only matching rows [src2]
+CREATE INDEX idx_orders_status ON orders(status);
+
+-- Break large updates into batches:
+UPDATE orders SET processed = 1 WHERE status = 'pending' LIMIT 500;
+-- Repeat until 0 rows affected; commit between iterations</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Assuming deadlocks are bugs</strong>: Deadlocks are normal in any RDBMS. InnoDB handles them by
+                rolling back one transaction. The application must retry. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>, <a
+                    href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</li>
+            <li><strong>Not logging deadlocks persistently</strong>: <code>SHOW ENGINE INNODB STATUS</code> only retains
+                the last deadlock. Enable <code>innodb_print_all_deadlocks = ON</code> during investigation. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                    href="https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/">src6</a>]
+            </li>
+            <li><strong>SELECT ... FOR SHARE when you plan to UPDATE</strong>: Shared lock upgrade to exclusive creates
+                deadlock risk. Use <code>SELECT ... FOR UPDATE</code> from the start. [<a
+                    href="https://dev.mysql.com/doc/refman/8.0/en/innodb-deadlock-example.html">src4</a>]</li>
+            <li><strong>Disabling detection without lowering timeout</strong>:
+                <code>innodb_deadlock_detect = OFF</code> without reducing <code>innodb_lock_wait_timeout</code> from
+                50s causes long waits. Set to 5-10s if disabling. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]</li>
+            <li><strong>Long transactions in interactive sessions</strong>: Leaving
+                <code>START TRANSACTION</code> open while a user fills a form holds locks for minutes. Keep transactions
+                to milliseconds. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]</li>
+            <li><strong>Blaming the database</strong>: Most deadlocks are caused by application-level access patterns,
+                not MySQL configuration. [<a
+                    href="https://www.percona.com/blog/how-to-deal-with-mysql-deadlocks/">src5</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-sql">-- View last deadlock
+SHOW ENGINE INNODB STATUS\G
+
+-- Enable persistent deadlock logging
+SET GLOBAL innodb_print_all_deadlocks = ON;
+SHOW VARIABLES LIKE 'innodb_print_all_deadlocks';
+
+-- Check lock wait timeout
+SHOW VARIABLES LIKE 'innodb_lock_wait_timeout';
+
+-- Check deadlock detection status
+SHOW VARIABLES LIKE 'innodb_deadlock_detect';
+
+-- Currently waiting transactions
+SELECT trx_id, trx_state, trx_started, trx_wait_started,
+       trx_mysql_thread_id, trx_query
+FROM information_schema.INNODB_TRX WHERE trx_state = 'LOCK WAIT';
+
+-- Current locks (MySQL 8.0+)
+SELECT ENGINE_TRANSACTION_ID, OBJECT_NAME, INDEX_NAME,
+       LOCK_TYPE, LOCK_MODE, LOCK_STATUS, LOCK_DATA
+FROM performance_schema.data_locks;
+
+-- Lock waits (MySQL 8.0+)
+SELECT * FROM performance_schema.data_lock_waits;
+
+-- Deadlock count (MySQL 8.0+)
+SELECT COUNT FROM information_schema.INNODB_METRICS
+WHERE NAME = 'lock_deadlocks';
+
+-- Percona Toolkit: continuous deadlock logger
+-- pt-deadlock-logger --user=root --password=xxx h=localhost
+
+-- Kill a blocking thread if necessary
+-- KILL &lt;thread_id&gt;;</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>InnoDB deadlock detection</td>
+                        <td>MySQL 3.23.x</td>
+                        <td>Core feature since InnoDB introduction [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>SHOW ENGINE INNODB STATUS</code></td>
+                        <td>MySQL 4.1</td>
+                        <td>Replaced <code>SHOW INNODB STATUS</code> [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>innodb_print_all_deadlocks</code></td>
+                        <td>MySQL 5.6.2</td>
+                        <td>Logs all deadlocks to error log [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>innodb_deadlock_detect</code></td>
+                        <td>MySQL 8.0.1</td>
+                        <td>Allows disabling detection for high concurrency [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>performance_schema.data_locks</code></td>
+                        <td>MySQL 8.0</td>
+                        <td>Replaces <code>INFORMATION_SCHEMA.INNODB_LOCKS</code> [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>performance_schema.data_lock_waits</code></td>
+                        <td>MySQL 8.0</td>
+                        <td>Replaces <code>INFORMATION_SCHEMA.INNODB_LOCK_WAITS</code> [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Wait-for graph 200-transaction limit</td>
+                        <td>MySQL 5.7+</td>
+                        <td>Auto-rollback if &gt;200 transactions in wait chain [<a
+                                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>pt-deadlock-logger</code></td>
+                        <td>Percona Toolkit 2.x+</td>
+                        <td>Continuous deadlock monitoring tool [<a
+                                href="https://docs.percona.com/percona-toolkit/pt-deadlock-logger.html">src7</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ERROR 1213 in application logs</td>
+                        <td>ERROR 1205 (lock wait timeout, not deadlock)</td>
+                        <td>Check <code>innodb_lock_wait_timeout</code> and long queries</td>
+                    </tr>
+                    <tr>
+                        <td>Two transactions block each other cyclically</td>
+                        <td>Single query is slow</td>
+                        <td>Query optimization (EXPLAIN, indexes)</td>
+                    </tr>
+                    <tr>
+                        <td><code>LATEST DETECTED DEADLOCK</code> in INNODB STATUS</td>
+                        <td>Table-level locks from MyISAM</td>
+                        <td>Migrate to InnoDB for row-level locking</td>
+                    </tr>
+                    <tr>
+                        <td>High concurrency on overlapping row sets</td>
+                        <td>Read-only workload</td>
+                        <td>No deadlocks possible with pure reads</td>
+                    </tr>
+                    <tr>
+                        <td>Gap lock conflicts on inserts</td>
+                        <td>Deadlock on <code>LOCK TABLES</code></td>
+                        <td>InnoDB cannot detect these; use <code>innodb_lock_wait_timeout</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>InnoDB victim selection is based on transaction size</strong>: InnoDB rolls back the transaction
+                that has modified the fewest rows, not the one that started later. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]</li>
+            <li><strong><code>innodb_deadlock_detect = OFF</code> is a power-user setting</strong>: Only disable on
+                systems with hundreds of concurrent connections competing for the same rows. For most applications,
+                leave it ON. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]</li>
+            <li><strong>Gap locks in REPEATABLE READ cause extra deadlocks</strong>: The default isolation level uses gap
+                locks to prevent phantom reads. Switching to READ COMMITTED eliminates gap locks but allows phantom
+                reads. [<a href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html">src1</a>, <a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlock-detection.html">src3</a>]</li>
+            <li><strong>Deadlock information may be truncated</strong>: <code>SHOW ENGINE INNODB STATUS</code> output is
+                limited to ~1MB. Use <code>innodb_print_all_deadlocks</code> for complete records. [<a
+                    href="https://virtual-dba.com/blog/understanding-mysql-deadlocks-with-innodb-engine/">src6</a>]</li>
+            <li><strong>Foreign key checks acquire shared locks on parent rows</strong>: <code>INSERT</code> into a
+                child table acquires a shared lock on the parent. Index foreign key columns to minimize lock scope. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks-handling.html">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/postgresql-slow-queries/2026"
+            data-relationship="related_to">PostgreSQL Slow Queries</a>
+        <a href="/software/debugging/postgresql-connection-pool/2026"
+            data-relationship="related_to">PostgreSQL Connection Pool Exhaustion</a>
+        <a href="/software/debugging/redis-memory-issues/2026"
+            data-relationship="solves">Redis Memory Issues</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Fix N+1 Queries in GraphQL with DataLoader | knowledgelib.io</title>
+  <meta name="description" content="Complete debugging guide for fixing N+1 query problems in GraphQL using DataLoader.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/debugging/graphql-n-plus-1-dataloader/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Fix N+1 Queries in GraphQL with DataLoader | knowledgelib.io">
+  <meta property="og:description" content="Complete debugging guide for fixing N+1 query problems in GraphQL using DataLoader. Covers JavaScript/TypeScript (Apollo Server), Python (Strawberry, Graphene) with 8 ranked causes, decision tree, 6 step-by-step instructions, and 4 anti-pattern pairs. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/debugging/graphql-n-plus-1-dataloader/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fix N+1 Queries in GraphQL with DataLoader | knowledgelib.io">
+  <meta name="twitter:description" content="Complete debugging guide for fixing N+1 query problems in GraphQL using DataLoader. Covers JavaScript/TypeScript (Apollo Server), Python (Strawberry, Graphene) with 8 ranked causes, decision tree, 6 step-by-step instructions, and 4 anti-pattern pairs. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/debugging/graphql_n_plus_1_dataloader">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I fix N+1 queries in GraphQL with DataLoader?">
+  <meta name="ai:aliases" content="GraphQL N+1 problem DataLoader batching; How to batch GraphQL resolver queries; DataLoader per-request caching GraphQL; Reduce database calls in GraphQL nested resolvers">
+  <meta name="ai:raw" content="/api/v1/units/software/debugging/graphql-n-plus-1-dataloader/2026.md">
+  <meta name="ai:token_estimate" content="3200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="language,architecture">
+  <meta name="ai:constraints" content="DataLoader instances MUST be created per-request; Batch function MUST return array same length and order as keys; Requires async/Promise environment; Use cacheKeyFn for complex key objects">
+  <meta name="ai:skip_this_unit_if" content="Single slow query not from repeated resolver calls -> Database query optimization guide; Using REST API not GraphQL -> REST API N+1 solutions; N+1 in ORM outside GraphQL -> ORM eager loading guide">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Fix N+1 Queries in GraphQL with DataLoader",
+    "headline": "Fix N+1 Queries in GraphQL with DataLoader",
+    "description": "Complete debugging guide for fixing N+1 query problems in GraphQL using DataLoader. Covers batch loading patterns, per-request caching, and multi-language implementations for JavaScript/TypeScript (Apollo Server) and Python (Strawberry, Graphene).",
+    "keywords": ["GraphQL", "N+1 problem", "DataLoader", "batch loading", "Apollo Server", "Strawberry GraphQL", "Graphene", "query optimization", "resolver batching"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "dataloader >= 2.0.0 (JS), strawberry-graphql >= 0.100.0 (Python), aiodataloader >= 0.2.0 (Python/Graphene)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Solving the N+1 Problem with DataLoader",
+        "url": "https://www.graphql-js.org/docs/n1-dataloader/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DataLoader — Generic utility for batching and caching",
+        "url": "https://github.com/graphql/dataloader"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Handling the N+1 Problem",
+        "url": "https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DataLoaders Guide",
+        "url": "https://strawberry.rocks/docs/guides/dataloaders"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Graphene-Python DataLoader Documentation",
+        "url": "https://docs.graphene-python.org/en/latest/execution/dataloader/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Solving the N+1 Problem for GraphQL through Batching",
+        "url": "https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dataloader 3.0: A new algorithm to solve the N+1 Problem",
+        "url": "https://wundergraph.com/blog/dataloader_3_0_breadth_first_data_loading"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Fix N+1 Queries in GraphQL with DataLoader",
+    "description": "Structured debugging reference for resolving N+1 query performance problems in GraphQL APIs using the DataLoader batching pattern. Includes ranked diagnostic table, decision tree, multi-language code examples, and anti-patterns.",
+    "keywords": ["GraphQL", "N+1 problem", "DataLoader", "batch loading", "query optimization"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "GraphQL Foundation"},
+      {"@type": "Organization", "name": "Apollo GraphQL"},
+      {"@type": "Organization", "name": "Strawberry GraphQL"},
+      {"@type": "Organization", "name": "Graphene-Python"},
+      {"@type": "Organization", "name": "Shopify Engineering"},
+      {"@type": "Organization", "name": "WunderGraph"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "Fix N+1 Queries in GraphQL with DataLoader" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I fix N+1 queries in GraphQL with DataLoader?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every resolver that fetches related data in a DataLoader instance — it automatically batches individual .load(id) calls within one execution tick into a single bulk query, turning N+1 queries into 2."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL N+1 problem DataLoader batching",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every resolver that fetches related data in a DataLoader instance — it automatically batches individual .load(id) calls within one execution tick into a single bulk query, turning N+1 queries into 2."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to batch GraphQL resolver queries",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every resolver that fetches related data in a DataLoader instance — it automatically batches individual .load(id) calls within one execution tick into a single bulk query, turning N+1 queries into 2."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "DataLoader per-request caching GraphQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every resolver that fetches related data in a DataLoader instance — it automatically batches individual .load(id) calls within one execution tick into a single bulk query, turning N+1 queries into 2."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Reduce database calls in GraphQL nested resolvers",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every resolver that fetches related data in a DataLoader instance — it automatically batches individual .load(id) calls within one execution tick into a single bulk query, turning N+1 queries into 2."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Fix N+1 Queries in GraphQL with DataLoader</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I fix N+1 queries in GraphQL with DataLoader?</h2>
+
+  <aside class="unit-meta" data-card-id="software/debugging/graphql-n-plus-1-dataloader/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Wrap every resolver that fetches related data in a DataLoader instance — it automatically batches individual <code>.load(id)</code> calls within one execution tick into a single bulk query, turning N+1 queries into 2.</li>
+    <li><strong>Key tool/command</strong>: <code>new DataLoader(keys =&gt; batchFetchByIds(keys))</code> (JS) or <code>DataLoader(load_fn=batch_load)</code> (Python Strawberry)</li>
+    <li><strong>Watch out for</strong>: Creating a single global DataLoader instance instead of one per request — this leaks cached data between users.</li>
+    <li><strong>Works with</strong>: Any GraphQL server (Apollo Server 4, graphql-js, Strawberry, Graphene, gqlgen, graphql-java). DataLoader v2.x requires Node.js &gt;= 10; Strawberry DataLoader requires Python &gt;= 3.8 with asyncio.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>DataLoader instances MUST be created per-request (in the GraphQL context factory) — a shared global instance caches data across users, causing data leaks and stale reads</li>
+    <li>The batch function MUST return results in the exact same order as the input keys array, with the same length — mismatches cause silent data corruption</li>
+    <li>DataLoader requires an async execution environment — Node.js event loop (JS) or asyncio event loop (Python)</li>
+    <li>Never disable batching (<code>batch: false</code>) in production — it defeats the entire purpose of DataLoader</li>
+    <li>Error objects returned in the batch array are cached by default — clear the cache on transient failures or disable error caching</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table (DEBUGGING format) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Cause</th><th scope="col">Likelihood</th><th scope="col">Signature</th><th scope="col">Fix</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>No DataLoader — each resolver calls DB individually</td><td>~50% of cases</td><td>N separate <code>SELECT ... WHERE id = ?</code> in query logs</td><td>Wrap in DataLoader with <code>WHERE id IN (?)</code> batch query</td></tr>
+      <tr><td>2</td><td>DataLoader created globally, not per-request</td><td>~15% of cases</td><td>Stale/wrong data returned; data leaks between users</td><td>Move DataLoader instantiation into context factory</td></tr>
+      <tr><td>3</td><td>Batch function returns results in wrong order</td><td>~10% of cases</td><td>Data assigned to wrong parent objects</td><td>Map results to input keys: <code>keys.map(k =&gt; resultMap.get(k))</code></td></tr>
+      <tr><td>4</td><td>Batch function returns wrong array length</td><td>~8% of cases</td><td><code>DataLoader must return array of same length</code> error</td><td>Return <code>null</code> for missing keys; match array length to keys</td></tr>
+      <tr><td>5</td><td>Using <code>.loadMany()</code> where <code>.load()</code> suffices</td><td>~5% of cases</td><td>Bypasses per-key deduplication within a tick</td><td>Use <code>.load()</code> in resolvers; <code>.loadMany()</code> only for explicit bulk</td></tr>
+      <tr><td>6</td><td>Nested DataLoaders not batching across depth levels</td><td>~5% of cases</td><td>Batch size = 1 for deeply nested fields</td><td>Ensure async resolvers; check <code>batchScheduleFn</code> timing</td></tr>
+      <tr><td>7</td><td>Complex key objects not deduplicating</td><td>~4% of cases</td><td>Duplicate DB queries despite same logical key</td><td>Provide <code>cacheKeyFn</code> that serializes keys to strings</td></tr>
+      <tr><td>8</td><td>DataLoader cache hiding database updates</td><td>~3% of cases</td><td>Mutations not reflected in subsequent queries</td><td>Call <code>loader.clear(key)</code> or <code>loader.clearAll()</code> after mutations</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Is your GraphQL server in JavaScript/TypeScript?
+|   |-- YES --> Use `dataloader` npm package. See "JS/TS: Apollo Server" code example.
+|   +-- NO |
+|-- Is your server in Python with Strawberry?
+|   |-- YES --> Use `strawberry.dataloader.DataLoader`. See "Python: Strawberry" code example.
+|   +-- NO |
+|-- Is your server in Python with Graphene?
+|   |-- YES --> Use `aiodataloader` package. See "Python: Graphene" code example.
+|   +-- NO |
+|-- Is your server in Go (gqlgen)?
+|   |-- YES --> Use `graph-gophers/dataloader` or gqlgen built-in dataloaden.
+|   +-- NO |
+|-- Is your server using Apollo Federation?
+|   |-- YES --> Apply DataLoader in each subgraph's reference resolver.
+|   +-- NO |
++-- DEFAULT --> Implement batch-and-cache pattern manually:
+    collect keys during resolve phase, batch-fetch before returning.</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Identify the N+1 problem in your query logs</h3>
+  <p>Enable query logging in your database or GraphQL server to see repeated queries. Look for patterns where the same SELECT statement runs N times with different IDs. [<a href="https://www.graphql-js.org/docs/n1-dataloader/">src1</a>]</p>
+  <pre><code class="language-sql">-- You'll see this pattern in logs (N+1):
+SELECT * FROM posts;                    -- 1 query
+SELECT * FROM users WHERE id = 1;      -- N queries (one per post)
+SELECT * FROM users WHERE id = 2;
+SELECT * FROM users WHERE id = 3;
+-- ... repeated for every post.authorId</code></pre>
+  <p><strong>Verify</strong>: Count queries per GraphQL request in your DB logs. If <code>count &gt; (unique tables queried * 2)</code>, you likely have N+1.</p>
+
+  <h3>2. Install DataLoader</h3>
+  <p>Install the appropriate DataLoader package for your language. [<a href="https://github.com/graphql/dataloader">src2</a>]</p>
+  <pre><code class="language-bash"># JavaScript/TypeScript
+npm install dataloader
+
+# Python (Strawberry — built-in, no extra install)
+pip install strawberry-graphql
+
+# Python (Graphene)
+pip install aiodataloader</code></pre>
+  <p><strong>Verify</strong>: <code>npm list dataloader</code> &rarr; <code>dataloader@2.2.3</code> (or later)</p>
+
+  <h3>3. Create a batch loading function</h3>
+  <p>The batch function receives an array of keys and must return a Promise/awaitable resolving to an array of results in the same order as the keys. [<a href="https://github.com/graphql/dataloader">src2</a>]</p>
+  <pre><code class="language-javascript">// JavaScript — batch loading function
+async function batchUsers(userIds) {
+  // One query fetches ALL requested users
+  const users = await db.query(
+    'SELECT * FROM users WHERE id = ANY($1)',
+    [userIds]
+  );
+  // CRITICAL: return results in same order as input keys
+  const userMap = new Map(users.map(u =&gt; [u.id, u]));
+  return userIds.map(id =&gt; userMap.get(id) || null);
+}</code></pre>
+  <p><strong>Verify</strong>: <code>batchUsers([3, 1, 2])</code> returns <code>[user3, user1, user2]</code> — same order as input.</p>
+
+  <h3>4. Create DataLoader instances per-request in context</h3>
+  <p>Attach fresh DataLoader instances to the GraphQL context so every resolver in a single request shares the same loader (batching + dedup) but different requests get isolated caches. [<a href="https://www.graphql-js.org/docs/n1-dataloader/">src1</a>] [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one">src3</a>]</p>
+  <pre><code class="language-javascript">// Apollo Server 4 — context factory
+const server = new ApolloServer({ typeDefs, resolvers });
+
+const { url } = await startStandaloneServer(server, {
+  context: async () =&gt; ({
+    loaders: {
+      user: new DataLoader(batchUsers),
+      post: new DataLoader(batchPosts),
+    },
+  }),
+});</code></pre>
+  <p><strong>Verify</strong>: Add <code>console.log('context created')</code> in the factory — it should log once per HTTP request.</p>
+
+  <h3>5. Use DataLoader in resolvers</h3>
+  <p>Replace direct database calls in resolvers with <code>loader.load(key)</code>. [<a href="https://www.graphql-js.org/docs/n1-dataloader/">src1</a>]</p>
+  <pre><code class="language-javascript">const resolvers = {
+  Query: {
+    posts: () =&gt; db.query('SELECT * FROM posts'),
+  },
+  Post: {
+    // BEFORE (N+1): db.query('SELECT * FROM users WHERE id = $1', [post.authorId])
+    // AFTER (batched):
+    author: (post, _args, { loaders }) =&gt; loaders.user.load(post.authorId),
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: Run the query and check DB logs — you should see exactly 1 <code>SELECT * FROM posts</code> + 1 <code>SELECT * FROM users WHERE id = ANY(...)</code> instead of N+1 queries.</p>
+
+  <h3>6. Clear cache after mutations</h3>
+  <p>After any create/update/delete operation, clear the relevant DataLoader cache to prevent stale reads within the same request. [<a href="https://github.com/graphql/dataloader">src2</a>]</p>
+  <pre><code class="language-javascript">const resolvers = {
+  Mutation: {
+    updateUser: async (_, { id, input }, { loaders }) =&gt; {
+      const updated = await db.query(
+        'UPDATE users SET name = $1 WHERE id = $2 RETURNING *',
+        [input.name, id]
+      );
+      // Clear stale cache entry and prime with fresh data
+      loaders.user.clear(id);
+      loaders.user.prime(id, updated[0]);
+      return updated[0];
+    },
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: After mutation, subsequent resolvers in the same request return updated data.</p>
+
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>JavaScript/TypeScript: Apollo Server 4 with DataLoader</h3>
+  <pre><code class="language-typescript">// Input:  GraphQL query { posts { id title author { id name } } }
+// Output: 2 DB queries total (1 for posts, 1 for all authors) instead of N+1
+
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import DataLoader from 'dataloader';
+
+const batchUsers = async (ids: readonly number[]) =&gt; {
+  const users = await db.query('SELECT * FROM users WHERE id = ANY($1)', [ids]);
+  const map = new Map(users.rows.map((u: any) =&gt; [u.id, u]));
+  return ids.map(id =&gt; map.get(id) || null);
+};
+
+const resolvers = {
+  Post: {
+    author: (post: any, _: any, ctx: any) =&gt; ctx.loaders.user.load(post.author_id),
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
+const { url } = await startStandaloneServer(server, {
+  context: async () =&gt; ({
+    loaders: { user: new DataLoader(batchUsers) },
+  }),
+});</code></pre>
+
+  <h3>Python: Strawberry GraphQL with DataLoader</h3>
+  <pre><code class="language-python"># Input:  GraphQL query { posts { id title author { id name } } }
+# Output: 2 DB queries total instead of N+1
+
+import strawberry
+from strawberry.dataloader import DataLoader
+from typing import List, Optional
+
+async def load_users_batch(keys: List[int]) -&gt; List[Optional['User']]:
+    rows = await db.fetch('SELECT * FROM users WHERE id = ANY($1)', keys)
+    user_map = {row['id']: User(id=row['id'], name=row['name']) for row in rows}
+    return [user_map.get(key) for key in keys]
+
+@strawberry.type
+class Post:
+    id: int
+    title: str
+    author_id: int
+
+    @strawberry.field
+    async def author(self, info: strawberry.Info) -&gt; Optional[User]:
+        return await info.context["user_loader"].load(self.author_id)
+
+async def get_context():
+    return {"user_loader": DataLoader(load_fn=load_users_batch)}</code></pre>
+
+  <h3>Python: Graphene with aiodataloader</h3>
+  <pre><code class="language-python"># Input:  GraphQL query { posts { id title author { id name } } }
+# Output: 2 DB queries total instead of N+1
+
+from aiodataloader import DataLoader
+import graphene
+
+class UserLoader(DataLoader):
+    async def batch_load_fn(self, user_ids):
+        users = {u.id: u for u in await User.objects.filter(id__in=user_ids)}
+        return [users.get(uid) for uid in user_ids]
+
+class PostType(graphene.ObjectType):
+    id = graphene.Int()
+    title = graphene.String()
+    author = graphene.Field(lambda: UserType)
+
+    async def resolve_author(self, info):
+        return await info.context['user_loader'].load(self.author_id)</code></pre>
+
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Global singleton DataLoader (data leak between users)</h3>
+  <pre><code class="language-javascript">// BAD — shared across all requests, leaks user A's data to user B
+const globalUserLoader = new DataLoader(batchUsers);
+
+const resolvers = {
+  Post: {
+    author: (post) =&gt; globalUserLoader.load(post.authorId),
+  },
+};</code></pre>
+
+  <h3>Correct: Per-request DataLoader in context</h3>
+  <pre><code class="language-javascript">// GOOD — fresh instance per request, isolated cache
+const server = new ApolloServer({ typeDefs, resolvers });
+startStandaloneServer(server, {
+  context: async () =&gt; ({
+    loaders: { user: new DataLoader(batchUsers) },
+  }),
+});</code></pre>
+
+  <h3>Wrong: Batch function returns results in arbitrary order</h3>
+  <pre><code class="language-javascript">// BAD — results don't match key order, causes data corruption
+async function batchUsers(ids) {
+  const users = await db.query('SELECT * FROM users WHERE id = ANY($1)', [ids]);
+  return users.rows; // Order depends on DB, NOT on input key order!
+}</code></pre>
+
+  <h3>Correct: Map results back to input key order</h3>
+  <pre><code class="language-javascript">// GOOD — explicitly map to input key order
+async function batchUsers(ids) {
+  const users = await db.query('SELECT * FROM users WHERE id = ANY($1)', [ids]);
+  const map = new Map(users.rows.map(u =&gt; [u.id, u]));
+  return ids.map(id =&gt; map.get(id) || null);
+}</code></pre>
+
+  <h3>Wrong: Calling the database directly inside every resolver</h3>
+  <pre><code class="language-javascript">// BAD — each post triggers a separate DB query (N+1)
+const resolvers = {
+  Post: {
+    author: async (post) =&gt; {
+      return await db.query('SELECT * FROM users WHERE id = $1', [post.authorId]);
+    },
+  },
+};</code></pre>
+
+  <h3>Correct: Delegate to DataLoader</h3>
+  <pre><code class="language-javascript">// GOOD — DataLoader batches all author lookups into one query
+const resolvers = {
+  Post: {
+    author: (post, _, { loaders }) =&gt; loaders.user.load(post.authorId),
+  },
+};</code></pre>
+
+  <h3>Wrong: Using loadMany in individual resolvers instead of load</h3>
+  <pre><code class="language-javascript">// BAD — loadMany for a single key is wasteful and bypasses per-key dedup
+const resolvers = {
+  Post: {
+    author: (post, _, { loaders }) =&gt;
+      loaders.user.loadMany([post.authorId]).then(r =&gt; r[0]),
+  },
+};</code></pre>
+
+  <h3>Correct: Use load() for single keys, loadMany() for explicit bulk</h3>
+  <pre><code class="language-javascript">// GOOD — load() for resolvers, loadMany() only for explicit batch
+const resolvers = {
+  Query: {
+    users: (_, { ids }, { loaders }) =&gt; loaders.user.loadMany(ids),
+  },
+  Post: {
+    author: (post, _, { loaders }) =&gt; loaders.user.load(post.authorId),
+  },
+};</code></pre>
+
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Batch function returns wrong length</strong>: DataLoader throws <code>DataLoader must be constructed with a function which accepts Array&lt;key&gt; and returns Promise&lt;Array&lt;value&gt;&gt;</code> error. Fix: ensure you return <code>null</code> for missing keys &mdash; <code>keys.map(k =&gt; map.get(k) || null)</code>. [<a href="https://github.com/graphql/dataloader">src2</a>]</li>
+    <li><strong>Cache persists across requests</strong>: Users see other users' data because DataLoader instance lives beyond a single request. Fix: always create DataLoader in the context factory function, never at module scope. [<a href="https://www.graphql-js.org/docs/n1-dataloader/">src1</a>]</li>
+    <li><strong>Errors are cached by default</strong>: A transient DB error gets cached, and all subsequent <code>.load()</code> calls for that key return the cached error. Fix: call <code>loader.clear(key)</code> in your error handler, or use <code>new DataLoader(fn, { cache: false })</code>. [<a href="https://github.com/graphql/dataloader">src2</a>]</li>
+    <li><strong>Object keys don't deduplicate</strong>: Two <code>{id: 1}</code> objects are different references, so DataLoader treats them as different keys. Fix: provide <code>cacheKeyFn: (key) =&gt; key.id</code> or serialize to string. [<a href="https://github.com/graphql/dataloader">src2</a>]</li>
+    <li><strong>Async/await breaks batching window</strong>: If you <code>await</code> before calling <code>.load()</code>, the batching tick may have already fired. Fix: collect all <code>.load()</code> calls synchronously within a resolver, or use <code>Promise.all()</code>. [<a href="https://www.graphql-js.org/docs/n1-dataloader/">src1</a>]</li>
+    <li><strong>Federation subgraphs missing DataLoader</strong>: Each subgraph's <code>__resolveReference</code> runs once per entity key, recreating N+1 at the subgraph boundary. Fix: use DataLoader in <code>__resolveReference</code> resolvers too. [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one">src3</a>]</li>
+    <li><strong>No cache clearing after mutations</strong>: Reads after a mutation return stale cached data. Fix: call <code>loader.clear(key)</code> after writes, optionally <code>loader.prime(key, newValue)</code>. [<a href="https://github.com/graphql/dataloader">src2</a>]</li>
+    <li><strong>maxBatchSize not set for large lists</strong>: Batch functions may receive thousands of keys, causing <code>IN (...)</code> clauses that exceed DB limits. Fix: set <code>maxBatchSize: 100</code>. [<a href="https://github.com/graphql/dataloader">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check if DataLoader is installed (Node.js)
+npm list dataloader
+# Expected: dataloader@2.2.3
+
+# Check for N+1 in PostgreSQL logs (enable statement logging first)
+# In postgresql.conf: log_statement = 'all'
+grep 'SELECT.*FROM users WHERE id =' /var/log/postgresql/postgresql.log | wc -l
+# If count >> number of unique IDs, you have N+1
+
+# Enable Apollo Server query logging to detect N+1
+DEBUG=knex:query node server.js
+
+# Check DataLoader batch sizes at runtime (add to batch function)
+# async function batchUsers(ids) {
+#   console.log(`DataLoader batch size: ${ids.length}`);
+# }
+
+# Python: check aiodataloader version
+pip show aiodataloader
+# Expected: aiodataloader >= 0.2.0</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>dataloader 2.2.x (JS)</td><td>Current (2024)</td><td>None</td><td>Stable since 2.0.0</td></tr>
+      <tr><td>dataloader 2.0.0 (JS)</td><td>LTS</td><td>Dropped Node &lt; 10; TypeScript rewrite</td><td>Update Node.js; types now built-in</td></tr>
+      <tr><td>dataloader 1.x (JS)</td><td>EOL</td><td>&mdash;</td><td>API compatible; bump version</td></tr>
+      <tr><td>strawberry.dataloader (Python)</td><td>Current (2025)</td><td>None</td><td>Built into strawberry-graphql &gt;= 0.100.0</td></tr>
+      <tr><td>aiodataloader 0.2.x (Python)</td><td>Current (2024)</td><td>None</td><td>For Graphene; requires asyncio</td></tr>
+      <tr><td>graphql-batch (Ruby)</td><td>Current (2024)</td><td>None</td><td>Shopify's alternative; different API</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Nested GraphQL resolvers fetch related entities by ID</td><td>Single resolver fetches one record</td><td>Direct database query</td></tr>
+      <tr><td>Same entity is requested multiple times in one query</td><td>Data changes between resolver calls within one request</td><td>Disable cache or clear after mutation</td></tr>
+      <tr><td>Federated subgraph resolves entity references</td><td>You need cross-request persistent caching</td><td>Redis/Memcached layer</td></tr>
+      <tr><td>Any list-to-detail resolver pattern (posts &rarr; authors)</td><td>Query complexity is bounded and small (&lt; 5 items)</td><td>Direct fetch is fine for small N</td></tr>
+      <tr><td>You want to decouple data fetching from schema structure</td><td>ORM already handles eager loading (e.g., Rails includes)</td><td>Use ORM's built-in batching</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>DataLoader only caches within a single request — it is NOT a replacement for Redis/Memcached. For cross-request caching, layer a persistent cache underneath your batch function.</li>
+    <li>The batch function's returned array MUST match the length and order of the input keys array. This is the most common source of bugs. Always build a map from results and reconstruct the array from keys.</li>
+    <li>In serverless environments (AWS Lambda, Cloudflare Workers), DataLoader instances are naturally per-invocation, but be careful with warm starts that might reuse module-level variables.</li>
+    <li>Disabling the cache (<code>cache: false</code>) means duplicate keys within the same tick will appear multiple times in the batch function's keys array.</li>
+    <li>DataLoader uses <code>process.nextTick</code> (Node.js) or microtask scheduling by default. Custom <code>batchScheduleFn</code> can change timing but may break batching if the window is too short.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/database-connection-pooling/2026" data-relationship="related_to">Database Connection Pooling</a>
+    <a href="/software/patterns/api-caching-strategies/2026" data-relationship="related_to">Caching Strategies for APIs</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Debugging<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

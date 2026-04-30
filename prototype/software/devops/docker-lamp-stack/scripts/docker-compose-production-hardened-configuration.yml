@@ -1,0 +1,35 @@
+# Input:  .env file with credentials, app code in ./src
+# Output: Production LAMP stack (no phpMyAdmin, no exposed DB port)
+
+services:
+  php-apache:
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - app_code:/var/www/html:ro
+    environment:
+      - DB_HOST=db
+    restart: always
+
+  db:
+    image: mysql:8.4
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    secrets:
+      - db_root_password
+    restart: always
+
+secrets:
+  db_root_password:
+    file: ./secrets/db_root_password.txt
+
+volumes:
+  mysql_data:
+  app_code:

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>PostgreSQL Index Bloat: Diagnose and Fix 2026 | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to diagnosing and fixing PostgreSQL index bloat with pgstattuple, REINDEX CONCURRENTLY (PG 12+), and pg_repack. 15 diagnostic queries, 4 anti-patterns, fillfactor + HOT update prevention, BRIN alternatives. 8 sources, all cited. Verified 2026-04-15.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/debugging/postgresql-index-bloat/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="PostgreSQL Index Bloat: Diagnose and Fix 2026 | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to diagnosing and fixing PostgreSQL index bloat with pgstattuple, REINDEX CONCURRENTLY (PG 12+), and pg_repack. 15 diagnostic queries, 4 anti-patterns, fillfactor + HOT update prevention, BRIN alternatives. 8 sources, all cited. Verified 2026-04-15.">
+  <meta property="og:url" content="https://knowledgelib.io/software/debugging/postgresql-index-bloat/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-04-15">
+  <meta property="article:modified_time" content="2026-04-15">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PostgreSQL Index Bloat: Diagnose and Fix 2026 | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to diagnosing and fixing PostgreSQL index bloat with pgstattuple, REINDEX CONCURRENTLY (PG 12+), and pg_repack. 15 diagnostic queries, 4 anti-patterns, prevention with fillfactor and HOT updates. 8 sources, all cited. Verified 2026-04-15.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-04-15">
+  <meta name="ai:domain" content="software/debugging/postgresql_index_bloat">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I diagnose and fix PostgreSQL index bloat?">
+  <meta name="ai:aliases" content="PostgreSQL index bloat; REINDEX CONCURRENTLY PostgreSQL; pg_repack index bloat; PostgreSQL rebuild bloated index; pgstattuple index bloat">
+  <meta name="ai:raw" content="/api/v1/units/software/debugging/postgresql-index-bloat/2026.md">
+  <meta name="ai:token_estimate" content="3200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="stable">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-04-15">
+  <meta name="ai:inputs_needed" content="postgresql_version,deployment_type,downtime_tolerance,workload_pattern">
+  <meta name="ai:constraints" content="REINDEX CONCURRENTLY requires PostgreSQL 12+; pg_repack requires a primary key or unique not-null index; pg_repack needs 2x disk space; VACUUM FULL takes ACCESS EXCLUSIVE for entire operation; REINDEX CONCURRENTLY holds xmin horizon cluster-wide">
+  <meta name="ai:skip_this_unit_if" content="Slow query without disk concerns -> postgresql-slow-queries/2026; Table bloat rather than index bloat -> VACUUM tuning; Connection pool exhaustion -> postgresql-connection-pool/2026; Corrupted index -> non-concurrent REINDEX with storage check">
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- TechArticle structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "PostgreSQL Index Bloat: Diagnose and Fix 2026",
+    "headline": "PostgreSQL Index Bloat: Diagnose and Fix 2026",
+    "description": "Comprehensive guide to diagnosing and fixing PostgreSQL index bloat using pgstattuple, REINDEX CONCURRENTLY, and pg_repack. Includes diagnostic queries, fillfactor and HOT update prevention strategies, and version compatibility from PG 12 through PG 18.",
+    "keywords": ["PostgreSQL", "index bloat", "REINDEX CONCURRENTLY", "pg_repack", "pgstattuple", "fillfactor", "HOT updates", "autovacuum", "database maintenance", "BRIN index"],
+    "dateModified": "2026-04-15",
+    "datePublished": "2026-04-15",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 12+ (REINDEX CONCURRENTLY); pg_repack 1.4+; pgstattuple extension",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {"@type": "WebPage", "name": "PostgreSQL Documentation - REINDEX", "url": "https://www.postgresql.org/docs/current/sql-reindex.html"},
+      {"@type": "WebPage", "name": "PostgreSQL Documentation - pgstattuple", "url": "https://www.postgresql.org/docs/current/pgstattuple.html"},
+      {"@type": "WebPage", "name": "PostgresAI - How to deal with bloat", "url": "https://postgres.ai/docs/postgres-howtos/database-administration/maintenance/how-to-deal-with-bloat"},
+      {"@type": "WebPage", "name": "AWS - Removing bloat with pg_repack", "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/pg-repack.html"},
+      {"@type": "WebPage", "name": "Crunchy Data - HOT Updates and Fill Factor", "url": "https://www.crunchydata.com/blog/postgres-performance-boost-hot-updates-and-fill-factor"}
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "PostgreSQL Index Bloat: Diagnose and Fix 2026",
+    "description": "Structured knowledge unit covering PostgreSQL index bloat diagnosis (pgstattuple, size ratios), remediation (REINDEX CONCURRENTLY, pg_repack, VACUUM FULL trade-offs), and prevention (fillfactor, HOT updates, BRIN, autovacuum tuning) with 15 ranked diagnostic commands.",
+    "keywords": ["PostgreSQL", "index bloat", "REINDEX CONCURRENTLY", "pg_repack", "pgstattuple", "fillfactor", "HOT updates", "autovacuum"],
+    "temporalCoverage": "2012/2026",
+    "dateModified": "2026-04-15",
+    "datePublished": "2026-04-15",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Postgres.ai"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Crunchy Data"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "PostgreSQL Index Bloat: Diagnose and Fix 2026" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I diagnose and fix PostgreSQL index bloat?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL index bloat is diagnosed with pgstattuple or bloat-estimator SQL and fixed with REINDEX INDEX CONCURRENTLY (PG 12+) for zero-downtime rebuilds, or pg_repack when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL index bloat",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL index bloat is diagnosed with pgstattuple or bloat-estimator SQL and fixed with REINDEX INDEX CONCURRENTLY (PG 12+) for zero-downtime rebuilds, or pg_repack when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "REINDEX CONCURRENTLY PostgreSQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL index bloat is diagnosed with pgstattuple or bloat-estimator SQL and fixed with REINDEX INDEX CONCURRENTLY (PG 12+) for zero-downtime rebuilds, or pg_repack when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "pg_repack index bloat",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL index bloat is diagnosed with pgstattuple or bloat-estimator SQL and fixed with REINDEX INDEX CONCURRENTLY (PG 12+) for zero-downtime rebuilds, or pg_repack when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL rebuild bloated index",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL index bloat is diagnosed with pgstattuple or bloat-estimator SQL and fixed with REINDEX INDEX CONCURRENTLY (PG 12+) for zero-downtime rebuilds, or pg_repack when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "pgstattuple index bloat",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL index bloat is diagnosed with pgstattuple or bloat-estimator SQL and fixed with REINDEX INDEX CONCURRENTLY (PG 12+) for zero-downtime rebuilds, or pg_repack when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>PostgreSQL Index Bloat: Diagnose and Fix 2026</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I diagnose and fix PostgreSQL index bloat?</h2>
+
+  <aside class="unit-meta" data-card-id="software/debugging/postgresql-index-bloat/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-04-15</span></span>
+    <span><strong>Freshness:</strong> stable</span>
+  </aside>
+
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: PostgreSQL index bloat is diagnosed with <code>pgstattuple</code> or bloat-estimator SQL and fixed with <code>REINDEX INDEX CONCURRENTLY</code> (PG 12+) for zero-downtime rebuilds, or <code>pg_repack</code> when you need to reorganize both table and indexes. Prevent recurrence with fillfactor tuning, HOT updates, and aggressive autovacuum settings.</li>
+    <li><strong>Key tool/command</strong>: <code>REINDEX INDEX CONCURRENTLY idx_name;</code> - rebuilds the index without blocking writes. Fall back to <code>pg_repack --index idx_name</code> for very large indexes or when xmin horizon concerns block reindex.</li>
+    <li><strong>Watch out for</strong>: A failed <code>REINDEX CONCURRENTLY</code> leaves behind <code>INVALID</code> indexes with suffixes <code>_ccnew</code> or <code>_ccold</code> that still consume write overhead but are never used for reads. You must <code>DROP INDEX CONCURRENTLY</code> them before retrying.</li>
+    <li><strong>Works with</strong>: PostgreSQL 12+. <code>REINDEX CONCURRENTLY</code> added in PG 12; corruption bug fixed in PG 14.0 (do not use on PG 12-13 for unique indexes without latest minor-version patches). <code>pg_repack</code> works on PG 9.4+.</li>
+  </ul>
+  </section>
+
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>REINDEX CONCURRENTLY requires PostgreSQL 12 or later</strong>. On PG 11 or older, use the manual pattern: <code>CREATE INDEX CONCURRENTLY new_idx ...; DROP INDEX CONCURRENTLY old_idx; ALTER INDEX new_idx RENAME TO old_idx;</code>.</li>
+    <li><strong>REINDEX CONCURRENTLY cannot rebuild exclusion-constraint indexes or system catalog indexes</strong>, and cannot run inside a transaction block for partitioned indexes/tables. [<a href="https://www.postgresql.org/docs/current/sql-reindex.html">src1</a>]</li>
+    <li><strong>pg_repack requires a primary key or unique not-null index</strong> on every table it processes. Tables without one must use <code>REINDEX</code> or be restructured first. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/pg-repack.html">src5</a>]</li>
+    <li><strong>pg_repack needs 2x disk space</strong> - the table and all indexes are fully duplicated during the operation. Check <code>pg_database_size()</code> before starting on a full disk. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/pg-repack.html">src5</a>]</li>
+    <li><strong>Never run <code>VACUUM FULL</code> on production during business hours</strong> - it takes <code>ACCESS EXCLUSIVE</code> for the entire operation, blocking both reads and writes. Use <code>pg_repack</code> or <code>REINDEX CONCURRENTLY</code> instead.</li>
+    <li><strong><code>REINDEX CONCURRENTLY</code> holds the xmin horizon</strong> for its duration - autovacuum cannot clean dead tuples in ANY table cluster-wide until it finishes. Batch one index at a time on high-churn systems. [<a href="https://postgres.ai/docs/postgres-howtos/database-administration/maintenance/how-to-deal-with-bloat">src4</a>]</li>
+  </ul>
+  </section>
+
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Symptom / Goal</th><th scope="col">Command / Solution</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Check index sizes vs table sizes</td><td><code>SELECT indexrelname, pg_size_pretty(pg_relation_size(indexrelid)) FROM pg_stat_user_indexes ORDER BY pg_relation_size(indexrelid) DESC;</code></td><td>Index larger than table = likely bloat</td></tr>
+      <tr><td>2</td><td>Measure bloat precisely (slow but exact)</td><td><code>CREATE EXTENSION pgstattuple; SELECT * FROM pgstatindex('idx_name');</code></td><td>Full index scan; avoid on huge indexes</td></tr>
+      <tr><td>3</td><td>Measure bloat approximately (fast)</td><td><code>SELECT * FROM pgstattuple_approx('idx_name');</code></td><td>Sample-based; use for large indexes</td></tr>
+      <tr><td>4</td><td>Rebuild one index online (PG 12+)</td><td><code>REINDEX INDEX CONCURRENTLY idx_name;</code></td><td>No write lock; ~2x slower than REINDEX</td></tr>
+      <tr><td>5</td><td>Rebuild all indexes on a table online</td><td><code>REINDEX TABLE CONCURRENTLY my_table;</code></td><td>Sequential per index; takes hours on large tables</td></tr>
+      <tr><td>6</td><td>Rebuild with pg_repack (alternative)</td><td><code>pg_repack -d mydb --index idx_name</code></td><td>Works on older PG; no xmin horizon impact</td></tr>
+      <tr><td>7</td><td>Find invalid indexes from failed rebuild</td><td><code>SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;</code></td><td>Look for <code>_ccnew</code> / <code>_ccold</code> suffixes</td></tr>
+      <tr><td>8</td><td>Drop invalid index</td><td><code>DROP INDEX CONCURRENTLY idx_name_ccnew;</code></td><td>Must do before retrying REINDEX</td></tr>
+      <tr><td>9</td><td>Unused indexes (candidates to drop)</td><td><code>SELECT indexrelname FROM pg_stat_user_indexes WHERE idx_scan = 0;</code></td><td>Stats reset on restart - check uptime</td></tr>
+      <tr><td>10</td><td>Set fillfactor for write-heavy table</td><td><code>ALTER TABLE t SET (FILLFACTOR = 80);</code></td><td>Enables HOT updates; reduces index bloat 60%+</td></tr>
+      <tr><td>11</td><td>Check HOT update ratio</td><td><code>SELECT relname, n_tup_hot_upd::float / NULLIF(n_tup_upd,0) FROM pg_stat_user_tables;</code></td><td>Goal: &gt; 0.8 on frequently-updated tables</td></tr>
+      <tr><td>12</td><td>Aggressive autovacuum on hot table</td><td><code>ALTER TABLE t SET (autovacuum_vacuum_scale_factor = 0.01);</code></td><td>Vacuums at 1% dead instead of 20% default</td></tr>
+      <tr><td>13</td><td>Rebuild with pg_repack (table + indexes)</td><td><code>pg_repack -d mydb --table my_table -k</code></td><td>Requires PK; 2x disk space</td></tr>
+      <tr><td>14</td><td>Pre-check disk space before pg_repack</td><td><code>SELECT pg_size_pretty(pg_total_relation_size('t'));</code></td><td>Need 2x this free</td></tr>
+      <tr><td>15</td><td>BRIN alternative for time-series</td><td><code>CREATE INDEX CONCURRENTLY idx_brin ON t USING BRIN (created_at);</code></td><td>BRIN barely bloats; 1000x smaller than btree</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START - Suspected index bloat
+|-- Step 1: CONFIRM it is index bloat
+|   |-- Index size &gt; table size (pg_relation_size) -&gt; likely bloat
+|   |-- pgstattuple: leaf_fragmentation &gt; 20% or avg_leaf_density &lt; 50% -&gt; confirmed
+|   |-- Disk growing but row count flat -&gt; bloat suspected
+|   `-- If no -&gt; use postgresql-slow-queries/2026 or VACUUM for table bloat
+|
+|-- Step 2: CHOOSE remediation
+|   |-- Running PostgreSQL 12+?
+|   |   |-- Single bloated index &lt; 50GB -&gt; REINDEX INDEX CONCURRENTLY
+|   |   |-- Multiple indexes on one table -&gt; REINDEX TABLE CONCURRENTLY
+|   |   |-- Table + all indexes bloated; table has PK -&gt; pg_repack
+|   |   `-- Cannot tolerate xmin horizon hold -&gt; pg_repack
+|   |-- Running PostgreSQL 11 or older?
+|   |   `-- CREATE INDEX CONCURRENTLY new; DROP INDEX CONCURRENTLY old; RENAME
+|   `-- Maintenance window + small index?
+|       `-- REINDEX INDEX idx_name (blocks writes but ~2x faster)
+|
+|-- Step 3: VERIFY fix
+|   |-- Re-run pgstatindex -&gt; leaf_fragmentation should be &lt; 10%
+|   |-- Check pg_relation_size -&gt; should drop significantly
+|   `-- Check for invalid indexes -&gt; indisvalid must be true for all
+|
+`-- Step 4: PREVENT recurrence
+    |-- Write-heavy table? -&gt; ALTER TABLE SET (FILLFACTOR = 80) + re-REINDEX
+    |-- HOT ratio &lt; 80%? -&gt; Reduce indexes on updated columns
+    |-- Append-only table with range queries? -&gt; Replace btree with BRIN
+    |-- Time-series data? -&gt; Partition by date + drop old partitions
+    `-- Tune autovacuum_vacuum_scale_factor = 0.01 on high-churn tables</code></pre>
+  </section>
+
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Identify bloated indexes</h3>
+  <p>Start with size comparison - indexes larger than their tables are a strong signal. [<a href="https://www.postgresql.org/docs/current/routine-reindex.html">src3</a>, <a href="https://kendralittle.com/2025/12/01/index-bloat-postgres-why-it-matters-how-to-identify-and-resolve/">src8</a>]</p>
+  <pre><code class="language-sql">-- Indexes ordered by size, with table-relative ratio
+SELECT
+  schemaname,
+  relname AS table_name,
+  indexrelname AS index_name,
+  pg_size_pretty(pg_relation_size(indexrelid)) AS index_size,
+  pg_size_pretty(pg_relation_size(relid)) AS table_size,
+  round(pg_relation_size(indexrelid)::numeric
+        / NULLIF(pg_relation_size(relid), 0), 2) AS idx_to_table_ratio,
+  idx_scan
+FROM pg_stat_user_indexes
+ORDER BY pg_relation_size(indexrelid) DESC
+LIMIT 20;
+-- Indexes with idx_to_table_ratio &gt; 0.5 warrant a closer look.</code></pre>
+  <p><strong>Verify</strong>: Any index with ratio &gt; 0.5 AND &gt; 1 GB is a strong bloat candidate.</p>
+
+  <h3>2. Measure bloat precisely with pgstattuple</h3>
+  <p>For confirmed bloat analysis, <code>pgstattuple</code> is the authoritative source. [<a href="https://www.postgresql.org/docs/current/pgstattuple.html">src2</a>]</p>
+  <pre><code class="language-sql">-- One-time: install the extension (superuser)
+CREATE EXTENSION IF NOT EXISTS pgstattuple;
+
+-- Exact measurement (slow on large indexes - full scan)
+SELECT * FROM pgstatindex('public.orders_customer_id_idx');
+-- Key columns:
+--   avg_leaf_density  : lower = more bloat (&lt; 50% is bad, &lt; 30% is critical)
+--   leaf_fragmentation: higher = more bloat (&gt; 20% warrants reindex)
+
+-- Approximate measurement (fast, sample-based - PG 9.5+)
+SELECT * FROM pgstattuple_approx('public.orders_customer_id_idx');
+-- Use on multi-GB indexes to avoid table scans in production.</code></pre>
+  <p><strong>Verify</strong>: <code>avg_leaf_density &lt; 50</code> or <code>leaf_fragmentation &gt; 20</code> confirms bloat requiring remediation.</p>
+
+  <h3>3. Drop any invalid indexes from prior failed rebuilds</h3>
+  <p>Before rebuilding, clear debris from prior concurrent attempts. [<a href="https://www.postgresql.org/docs/current/sql-reindex.html">src1</a>]</p>
+  <pre><code class="language-sql">-- Find any invalid indexes (failed REINDEX CONCURRENTLY artifacts)
+SELECT
+  c.relname AS index_name,
+  pg_size_pretty(pg_relation_size(c.oid)) AS size
+FROM pg_index i
+JOIN pg_class c ON c.oid = i.indexrelid
+WHERE NOT i.indisvalid;
+
+-- Drop them (use CONCURRENTLY to avoid locks)
+DROP INDEX CONCURRENTLY IF EXISTS public.orders_customer_id_idx_ccnew;
+DROP INDEX CONCURRENTLY IF EXISTS public.orders_customer_id_idx_ccold;</code></pre>
+  <p><strong>Verify</strong>: Re-run the invalid-index query - should return zero rows.</p>
+
+  <h3>4. Rebuild with REINDEX CONCURRENTLY (primary fix)</h3>
+  <p>This is the zero-downtime remediation for PG 12+. [<a href="https://www.postgresql.org/docs/current/sql-reindex.html">src1</a>, <a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/reindex.html">src6</a>]</p>
+  <pre><code class="language-sql">-- Single bloated index (no write lock; reads and writes continue)
+REINDEX INDEX CONCURRENTLY public.orders_customer_id_idx;
+
+-- All indexes on a table (processed sequentially)
+REINDEX TABLE CONCURRENTLY public.orders;
+
+-- Parallel workers (PG 14+): control via max_parallel_maintenance_workers
+SET max_parallel_maintenance_workers = 4;
+REINDEX INDEX CONCURRENTLY public.large_idx;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT pg_size_pretty(pg_relation_size('public.orders_customer_id_idx'));</code> - size should drop significantly (often 50-90% reduction on heavily bloated indexes).</p>
+
+  <h3>5. Use pg_repack when REINDEX is unsuitable</h3>
+  <p>When the index is very large, the table is also bloated, or you cannot hold the xmin horizon. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/pg-repack.html">src5</a>]</p>
+  <pre><code class="language-bash"># Install extension once (requires superuser)
+psql -d mydb -c "CREATE EXTENSION pg_repack;"
+
+# Rebuild all indexes on a table (table stays writable)
+pg_repack -h db.example.com -d mydb --table public.orders -k
+
+# Rebuild only one index
+pg_repack -h db.example.com -d mydb --index public.orders_customer_id_idx
+
+# Dry run to verify before touching production
+pg_repack -h db.example.com -d mydb --table public.orders --dry-run</code></pre>
+  <p><strong>Verify</strong>: After completion, <code>pg_repack</code> reports "ok" and removes all intermediate objects. Check <code>pg_stat_activity</code> for stale sessions.</p>
+
+  <h3>6. Tune fillfactor to prevent recurrence</h3>
+  <p>For write-heavy tables, lower fillfactor enables HOT updates, which avoid updating indexes entirely. [<a href="https://www.crunchydata.com/blog/postgres-performance-boost-hot-updates-and-fill-factor">src7</a>]</p>
+  <pre><code class="language-sql">-- Set fillfactor to 80% - leaves room for HOT updates on same page
+ALTER TABLE public.orders SET (FILLFACTOR = 80);
+
+-- Rebuild table + indexes to apply fillfactor to existing pages
+VACUUM FULL public.orders;  -- OR: pg_repack -t public.orders
+
+-- Verify HOT update ratio is climbing
+SELECT
+  relname,
+  n_tup_upd,
+  n_tup_hot_upd,
+  round(n_tup_hot_upd::numeric / NULLIF(n_tup_upd, 0) * 100, 1) AS hot_pct
+FROM pg_stat_user_tables
+WHERE relname = 'orders';
+-- Goal: hot_pct &gt; 80 on heavily-updated tables.</code></pre>
+  <p><strong>Verify</strong>: <code>hot_pct</code> improves within hours of normal workload. Index bloat accumulation rate drops proportionally.</p>
+
+  <h3>7. Tune autovacuum for high-churn tables</h3>
+  <p>Default autovacuum triggers at 20% dead tuples - too late for high-churn tables. [<a href="https://postgres.ai/docs/postgres-howtos/database-administration/maintenance/how-to-deal-with-bloat">src4</a>]</p>
+  <pre><code class="language-sql">-- Per-table autovacuum settings (more aggressive)
+ALTER TABLE public.orders SET (
+  autovacuum_vacuum_scale_factor = 0.01,        -- vacuum at 1% dead vs 20%
+  autovacuum_vacuum_threshold    = 1000,        -- minimum dead tuples
+  autovacuum_analyze_scale_factor = 0.005,      -- analyze at 0.5%
+  autovacuum_vacuum_cost_limit   = 2000         -- allow more work per cycle
+);
+
+-- Kill idle-in-transaction sessions that block autovacuum
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE state = 'idle in transaction'
+  AND now() - state_change &gt; INTERVAL '10 minutes';</code></pre>
+  <p><strong>Verify</strong>: <code>pg_stat_user_tables.last_autovacuum</code> should update frequently; <code>n_dead_tup</code> should stay low.</p>
+  </section>
+
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>SQL: comprehensive bloat-detection report</h3>
+  <pre><code class="language-sql">-- Input:  pgstattuple extension installed
+-- Output: Ranked list of bloated indexes with precise metrics
+
+CREATE EXTENSION IF NOT EXISTS pgstattuple;
+
+WITH idx AS (
+  SELECT schemaname, indexrelname, indexrelid,
+         pg_relation_size(indexrelid) AS idx_bytes
+  FROM pg_stat_user_indexes
+  WHERE pg_relation_size(indexrelid) &gt; 100 * 1024 * 1024  -- &gt;100MB only
+)
+SELECT schemaname, indexrelname,
+       pg_size_pretty(idx_bytes) AS size,
+       (pgstatindex(indexrelid::regclass::text)).avg_leaf_density AS density,
+       (pgstatindex(indexrelid::regclass::text)).leaf_fragmentation AS frag
+FROM idx
+ORDER BY idx_bytes DESC;</code></pre>
+
+  <h3>Python: automated reindex worker with safety gates</h3>
+  <pre><code class="language-python"># Input:  connection string + bloat threshold (default: leaf_density &lt; 50)
+# Output: reindexes each qualifying index; reports status
+import psycopg2, time
+conn = psycopg2.connect(CONN_STR)
+conn.autocommit = True  # REINDEX CONCURRENTLY cannot be in a transaction
+with conn.cursor() as cur:
+    cur.execute("""
+      SELECT schemaname||'.'||indexrelname AS idx
+      FROM pg_stat_user_indexes i
+      WHERE pg_relation_size(indexrelid) &gt; 100*1024*1024
+        AND (pgstatindex(indexrelid::regclass::text)).avg_leaf_density &lt; 50
+    """)
+    for (idx,) in cur.fetchall():
+        cur.execute(f"REINDEX INDEX CONCURRENTLY {idx}")
+        print(f"reindexed {idx}")
+        time.sleep(5)  # brief pause to let autovacuum catch up</code></pre>
+
+  <h3>Bash: orchestrated pg_repack run with disk-space guard</h3>
+  <pre><code class="language-bash">#!/bin/bash
+# Input:  DB name + table name
+# Output: pg_repack runs only if 2x free disk space available
+
+DB="$1"; TABLE="$2"
+NEEDED=$(psql -tA -d "$DB" -c "SELECT pg_total_relation_size('$TABLE') * 2")
+FREE=$(df -B1 --output=avail /var/lib/postgresql | tail -1)
+
+if [ "$FREE" -lt "$NEEDED" ]; then
+  echo "ERROR: need $NEEDED bytes, have $FREE" &gt;&amp;2
+  exit 1
+fi
+
+pg_repack -d "$DB" --table "$TABLE" -k --jobs=4</code></pre>
+  </section>
+
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: VACUUM FULL on production to fix index bloat</h3>
+  <pre><code class="language-sql">-- BAD - takes ACCESS EXCLUSIVE lock on the entire table
+-- Blocks ALL reads and writes for minutes to hours
+VACUUM FULL public.orders;
+-- Queries pile up; connection pool fills; cascading outage</code></pre>
+
+  <h3>Correct: REINDEX CONCURRENTLY + pg_repack (zero downtime)</h3>
+  <pre><code class="language-sql">-- GOOD - no write lock; production continues normally
+REINDEX TABLE CONCURRENTLY public.orders;
+-- Or for table + index bloat together:
+-- pg_repack -d mydb --table public.orders -k</code></pre>
+
+  <h3>Wrong: REINDEX without CONCURRENTLY on a live table</h3>
+  <pre><code class="language-sql">-- BAD - takes ACCESS EXCLUSIVE on the index
+-- All queries using this index are blocked for the duration
+REINDEX INDEX public.orders_customer_id_idx;</code></pre>
+
+  <h3>Correct: always use CONCURRENTLY on live systems</h3>
+  <pre><code class="language-sql">-- GOOD - reads + writes continue; only ~2x slower
+REINDEX INDEX CONCURRENTLY public.orders_customer_id_idx;
+-- Monitor with: SELECT * FROM pg_stat_progress_create_index;</code></pre>
+
+  <h3>Wrong: ignoring invalid indexes from failed rebuilds</h3>
+  <pre><code class="language-sql">-- BAD - orphan _ccnew / _ccold indexes persist
+-- They consume write overhead but are never used for reads
+-- Cluster slowly accumulates dead weight every failed reindex
+-- (the anti-pattern is NOT running the cleanup query)</code></pre>
+
+  <h3>Correct: detect and drop invalid indexes as a routine check</h3>
+  <pre><code class="language-sql">-- GOOD - clean up failed rebuild artifacts
+SELECT 'DROP INDEX CONCURRENTLY ' || indexrelid::regclass::text || ';' AS cleanup_sql
+FROM pg_index WHERE NOT indisvalid;
+-- Review, then execute the generated statements.</code></pre>
+
+  <h3>Wrong: DROP INDEX + CREATE INDEX (non-concurrent) as a "fast rebuild"</h3>
+  <pre><code class="language-sql">-- BAD - between DROP and CREATE, queries do seq scans
+-- On a large table, this can bring an application to its knees
+DROP INDEX public.orders_customer_id_idx;
+CREATE INDEX public.orders_customer_id_idx ON public.orders (customer_id);</code></pre>
+
+  <h3>Correct: REINDEX CONCURRENTLY keeps the index available throughout</h3>
+  <pre><code class="language-sql">-- GOOD - old index serves queries while new one builds
+REINDEX INDEX CONCURRENTLY public.orders_customer_id_idx;
+-- Atomic swap at the end; no seq-scan gap.</code></pre>
+  </section>
+
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Ignoring the xmin horizon impact</strong>: <code>REINDEX CONCURRENTLY</code> holds the xmin horizon cluster-wide for its entire runtime. On a 4-hour reindex of a 500GB index, autovacuum cannot clean dead tuples on ANY table for 4 hours, causing cascading bloat. Fix: <code>pg_repack</code> for very large indexes; it does not hold xmin. [<a href="https://postgres.ai/docs/postgres-howtos/database-administration/maintenance/how-to-deal-with-bloat">src4</a>]</li>
+    <li><strong>Running pg_repack on a table without a PK</strong>: <code>pg_repack</code> silently fails or errors with "relation does not have a primary key". Fix: add a primary key, use a unique not-null index, or fall back to <code>REINDEX CONCURRENTLY</code>. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/pg-repack.html">src5</a>]</li>
+    <li><strong>Disk space exhaustion mid-rebuild</strong>: Both <code>REINDEX CONCURRENTLY</code> and <code>pg_repack</code> need old and new index simultaneously (effectively 2x space). Fix: pre-check with <code>SELECT pg_size_pretty(sum(pg_relation_size(indexrelid))) FROM pg_stat_user_indexes WHERE relid = 'mytable'::regclass;</code> and compare to <code>df</code>. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/postgresql-maintenance-rds-aurora/pg-repack.html">src5</a>]</li>
+    <li><strong>Fillfactor change doesn't apply retroactively</strong>: <code>ALTER TABLE SET (FILLFACTOR = 80)</code> only affects new pages. Existing pages remain at 100% full until <code>VACUUM FULL</code> or <code>pg_repack</code> rewrites them. Fix: change fillfactor THEN rebuild. [<a href="https://www.crunchydata.com/blog/postgres-performance-boost-hot-updates-and-fill-factor">src7</a>]</li>
+    <li><strong>Autovacuum blocked by long-running transactions</strong>: An <code>idle in transaction</code> session from 3 hours ago blocks autovacuum on every table in the cluster. Bloat accumulates silently. Fix: <code>SET idle_in_transaction_session_timeout = '10min'</code> globally. [<a href="https://postgres.ai/docs/postgres-howtos/database-administration/maintenance/how-to-deal-with-bloat">src4</a>]</li>
+    <li><strong>Missing <code>CONCURRENTLY</code> on DROP</strong>: Dropping an invalid index with plain <code>DROP INDEX</code> takes <code>ACCESS EXCLUSIVE</code> briefly. Use <code>DROP INDEX CONCURRENTLY</code> in production. [<a href="https://www.postgresql.org/docs/current/sql-reindex.html">src1</a>]</li>
+    <li><strong>HOT updates defeated by too many indexes</strong>: HOT requires the UPDATE to not touch ANY indexed column. A table with 10 indexes on frequently-updated columns will have HOT ratio near 0%. Fix: drop low-value indexes (check <code>idx_scan = 0</code> in <code>pg_stat_user_indexes</code>). [<a href="https://www.crunchydata.com/blog/postgres-performance-boost-hot-updates-and-fill-factor">src7</a>]</li>
+    <li><strong>Using btree where BRIN would suffice</strong>: On append-only time-series tables, btree indexes on timestamp columns bloat 1000x more than BRIN. Fix: <code>CREATE INDEX USING BRIN</code> for sequential-access columns. [<a href="https://www.crunchydata.com/blog/postgres-performance-boost-hot-updates-and-fill-factor">src7</a>]</li>
+  </ul>
+  </section>
+
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-sql">-- === Identify bloat candidates ===
+-- Indexes larger than their tables (strong bloat signal)
+SELECT schemaname, relname,
+       pg_size_pretty(pg_relation_size(indexrelid)) AS idx_sz,
+       pg_size_pretty(pg_relation_size(relid))      AS tbl_sz
+FROM pg_stat_user_indexes
+WHERE pg_relation_size(indexrelid) &gt; pg_relation_size(relid)
+ORDER BY pg_relation_size(indexrelid) DESC;
+
+-- Precise bloat via pgstattuple (requires extension)
+SELECT * FROM pgstatindex('schema.index_name');
+
+-- Fast approximate bloat (PG 9.5+)
+SELECT * FROM pgstattuple_approx('schema.index_name');
+
+-- === Invalid index cleanup ===
+SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
+
+-- === Monitor ongoing REINDEX progress (PG 12+) ===
+SELECT pid, phase, blocks_total, blocks_done,
+       round(100.0 * blocks_done / NULLIF(blocks_total,0), 1) AS pct
+FROM pg_stat_progress_create_index;
+
+-- === Unused indexes (candidates to drop) ===
+SELECT schemaname, relname, indexrelname,
+       pg_size_pretty(pg_relation_size(indexrelid)) AS size,
+       idx_scan
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+  AND pg_relation_size(indexrelid) &gt; 10 * 1024 * 1024
+ORDER BY pg_relation_size(indexrelid) DESC;
+
+-- === HOT update ratio per table ===
+SELECT relname, n_tup_upd, n_tup_hot_upd,
+       round(n_tup_hot_upd::numeric / NULLIF(n_tup_upd,0) * 100, 1) AS hot_pct
+FROM pg_stat_user_tables
+WHERE n_tup_upd &gt; 1000
+ORDER BY n_tup_upd DESC;
+
+-- === Check autovacuum health ===
+SELECT relname, last_autovacuum, n_dead_tup, n_live_tup,
+       round(n_dead_tup::numeric / NULLIF(n_live_tup,0) * 100, 1) AS dead_pct
+FROM pg_stat_user_tables
+WHERE n_dead_tup &gt; 1000
+ORDER BY dead_pct DESC;</code></pre>
+  </section>
+
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">Available Since</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>REINDEX</code> (non-concurrent)</td><td>PostgreSQL 7.x</td><td>Takes ACCESS EXCLUSIVE on index</td></tr>
+      <tr><td><code>pgstattuple</code> extension</td><td>PostgreSQL 8.2</td><td>Exact but slow bloat measurement</td></tr>
+      <tr><td><code>pg_repack</code></td><td>PostgreSQL 9.4+</td><td>External extension; no xmin horizon impact</td></tr>
+      <tr><td><code>pgstattuple_approx</code></td><td>PostgreSQL 9.5</td><td>Fast sample-based estimate</td></tr>
+      <tr><td><code>REINDEX CONCURRENTLY</code></td><td>PostgreSQL 12</td><td>Zero-downtime rebuild</td></tr>
+      <tr><td><code>pg_stat_progress_create_index</code></td><td>PostgreSQL 12</td><td>Monitor reindex progress</td></tr>
+      <tr><td>Parallel index builds</td><td>PostgreSQL 11</td><td><code>max_parallel_maintenance_workers</code></td></tr>
+      <tr><td>REINDEX CONCURRENTLY unique-index bug fix</td><td>PostgreSQL 14.0</td><td>Critical - avoid on PG 12-13 for unique indexes without patches</td></tr>
+      <tr><td>BRIN + HOT-update compatibility</td><td>PostgreSQL 16</td><td>BRIN indexes no longer block HOT</td></tr>
+      <tr><td><code>REINDEX ... TABLESPACE</code></td><td>PostgreSQL 14</td><td>Move index during rebuild</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Single index bloated, PG 12+, live system</td><td>PG 11 or older</td><td><code>CREATE INDEX CONCURRENTLY</code> + <code>DROP INDEX CONCURRENTLY</code> + rename</td></tr>
+      <tr><td>Table + all indexes bloated, table has PK</td><td>Table has no PK or unique index</td><td><code>REINDEX TABLE CONCURRENTLY</code></td></tr>
+      <tr><td>Very large index, cannot hold xmin horizon</td><td>Short-lived small index</td><td><code>REINDEX INDEX CONCURRENTLY</code> (simpler)</td></tr>
+      <tr><td>Slow queries + small index size</td><td>Index size is normal</td><td>See <code>postgresql-slow-queries/2026</code> (not bloat)</td></tr>
+      <tr><td>Table bloat (not just index bloat)</td><td>Only indexes are bloated</td><td><code>pg_repack --table</code> or <code>VACUUM</code> tuning</td></tr>
+      <tr><td>Append-only time-series data</td><td>High-cardinality equality lookups</td><td>BRIN index instead of btree</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>REINDEX CONCURRENTLY in PG 12-13 had a unique-index corruption bug</strong> (fixed in 14.0). If stuck on 12 or 13, apply the latest minor-version patches before using it on unique indexes, or fall back to <code>pg_repack</code>.</li>
+    <li><strong><code>pg_repack</code> client and extension versions must match exactly</strong>. Version drift causes silent failures. Pin both in deployment automation.</li>
+    <li><strong>PostgreSQL managed services have limits</strong>: AWS RDS, GCP Cloud SQL, and Azure may not allow <code>pg_repack</code> extension installation. <code>REINDEX CONCURRENTLY</code> is available everywhere PG 12+ is.</li>
+    <li><strong>Exclusion-constraint indexes skip concurrent reindex silently</strong>. Check with <code>\d+ tablename</code> for <code>EXCLUDE USING ...</code> constraints before relying on <code>REINDEX TABLE CONCURRENTLY</code>.</li>
+    <li><strong>Bloat below 20% is usually not worth fixing</strong> - the cost of rebuild often exceeds the recovered disk space. AWS suggests 20% as a practical threshold; some teams use 30-40%.</li>
+    <li><strong>Partitioned tables</strong>: <code>REINDEX TABLE CONCURRENTLY parent</code> processes each partition sequentially, and cannot run inside a transaction. For massive partitioned tables, script per-partition rebuilds with pauses.</li>
+  </ul>
+  </section>
+
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="depends_on">PostgreSQL Slow Queries</a>
+    <a href="/software/debugging/postgresql-connection-pool/2026" data-relationship="related_to">PostgreSQL Connection Pool Exhaustion</a>
+    <a href="/software/debugging/mysql-deadlocks/2026" data-relationship="related_to">MySQL Deadlocks</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> - structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Debugging<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> - query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

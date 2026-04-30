@@ -1,0 +1,68 @@
+# Input:  AWS account with VPC and RDS configured
+# Output: Lambda function in private subnet with Secrets Manager access
+
+resource "aws_iam_role" "lambda_role" {
+  name = "lambda-db-reader"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "lambda-minimal-access"
+  role = aws_iam_role.lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = [aws_secretsmanager_secret.db_creds.arn]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["rds-db:connect"]
+        Resource = ["arn:aws:rds-db:*:*:dbuser:*/lambda_user"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = ["arn:aws:logs:*:*:*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface"
+        ]
+        Resource = ["*"]  # Required for VPC-attached Lambda
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "db_reader" {
+  function_name = "db-reader"
+  role          = aws_iam_role.lambda_role.arn
+  runtime       = "python3.12"
+  handler       = "index.handler"
+  filename      = "lambda.zip"
+
+  vpc_config {
+    subnet_ids         = var.private_subnet_ids
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  # NEVER store secrets here -- use Secrets Manager
+  # environment { variables = { DB_PASSWORD = "..." } }  # BAD
+}

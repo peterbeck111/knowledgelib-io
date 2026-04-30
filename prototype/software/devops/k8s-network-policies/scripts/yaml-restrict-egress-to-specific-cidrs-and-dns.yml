@@ -1,0 +1,32 @@
+# Input:  API pods that should only reach a specific external service + DNS
+# Output: Egress limited to 10.0.0.0/8 (cluster), external API, and DNS
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-restricted-egress
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Egress
+  egress:
+    # Rule 1: Allow DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Rule 2: Allow cluster-internal traffic
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+    # Rule 3: Allow specific external API
+    - to:
+        - ipBlock:
+            cidr: 203.0.113.0/24   # External API CIDR
+      ports:
+        - protocol: TCP
+          port: 443

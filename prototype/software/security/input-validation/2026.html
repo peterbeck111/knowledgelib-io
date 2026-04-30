@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Input Validation: Secure Data Validation Patterns | knowledgelib.io</title>
+  <meta name="description" content="Complete input validation guide covering allowlist validation, type coercion, length limits, schema validation with Pydantic, Zod, Jakarta Validation,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/input-validation/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Input Validation: Secure Data Validation Patterns | knowledgelib.io">
+  <meta property="og:description" content="Complete input validation guide covering allowlist validation, type coercion, length limits, schema validation with Pydantic, Zod, Jakarta Validation, and Go validator. Code examples in 4 languages, 4 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/input-validation/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Input Validation: Secure Data Validation Patterns | knowledgelib.io">
+  <meta name="twitter:description" content="Complete input validation guide covering allowlist validation, type coercion, length limits, schema validation with Pydantic, Zod, Jakarta Validation, and Go validator. Code examples in 4 languages, 4 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/Input Validation">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the best input validation patterns?">
+  <meta name="ai:aliases" content="input validation best practices; server-side input validation; allowlist vs blocklist validation; data validation security patterns; CWE-20 input validation; Pydantic Zod Joi validation; how to validate user input securely; syntactic vs semantic validation">
+  <meta name="ai:raw" content="/api/v1/units/software/security/input-validation/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="language,input_source">
+  <meta name="ai:constraints" content="ALWAYS validate server-side; Use allowlist over blocklist; Canonicalize before validation; Validate syntactic AND semantic correctness; NEVER use regex as sole validation; Pin validation library versions">
+  <meta name="ai:skip_this_unit_if" content="Need XSS prevention (output encoding) → software/security/xss-prevention/2026; Need SQL injection prevention → software/security/sql-injection-prevention/2026; Need file upload validation only → software/security/file-upload-validation/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Input Validation: Secure Data Validation Patterns",
+    "headline": "Input Validation: Secure Data Validation Patterns",
+    "description": "Complete guide to secure input validation patterns including allowlist validation, type coercion, length limits, encoding normalization, and schema validation with Pydantic, Zod, Jakarta Validation, and Go validator. Covers CWE-20 mitigations.",
+    "keywords": ["input validation", "allowlist validation", "Pydantic", "Zod", "Jakarta Validation", "CWE-20", "server-side validation", "data sanitization", "schema validation"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Pydantic v2, Zod 3.x, Jakarta Validation 3.1, go-playground/validator v10",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Input Validation Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-20: Improper Input Validation",
+        "url": "https://cwe.mitre.org/data/definitions/20.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pydantic Validators Documentation",
+        "url": "https://docs.pydantic.dev/latest/concepts/validators/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Zod: TypeScript-first Schema Validation",
+        "url": "https://zod.dev/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Jakarta Bean Validation Specification",
+        "url": "https://beanvalidation.org/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Go Playground Validator v10",
+        "url": "https://github.com/go-playground/validator"
+      },
+      {
+        "@type": "WebPage",
+        "name": "C3: Validate all Input & Handle Exceptions",
+        "url": "https://top10proactive.owasp.org/the-top-10/c3-validate-input-and-handle-exceptions/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Input Validation: Secure Data Validation Patterns",
+    "description": "Structured knowledge unit on secure input validation patterns covering allowlist validation, type coercion, schema validation, and framework-specific code examples for Python, TypeScript, Java, and Go.",
+    "keywords": ["input validation", "allowlist validation", "Pydantic", "Zod", "Jakarta Validation", "CWE-20", "server-side validation"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "Pydantic"},
+      {"@type": "Organization", "name": "Eclipse Foundation"},
+      {"@type": "Organization", "name": "Go Playground"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "Input Validation" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best input validation patterns?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "input validation best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "server-side input validation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "allowlist vs blocklist validation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "data validation security patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CWE-20 input validation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Input Validation: Secure Data Validation Patterns</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best input validation patterns?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/input-validation/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Always validate input server-side using allowlist (accept known good) validation with strict type coercion, length limits, and semantic checks -- blocklist approaches are fundamentally incomplete and bypassable.</li>
+    <li><strong>Key tool/command</strong>: <code>z.string().email().max(254)</code> (Zod/TS), <code>EmailStr</code> + <code>Field(max_length=254)</code> (Pydantic/Python), <code>@Email @Size(max=254)</code> (Jakarta/Java), <code>validate:"required,email,max=254"</code> (Go validator).</li>
+    <li><strong>Watch out for</strong>: Validating on the client side only -- any JavaScript validation is bypassed in seconds with browser DevTools or a proxy.</li>
+    <li><strong>Works with</strong>: All server-side languages and frameworks. Libraries: Pydantic v2+ (Python), Zod 3.x (TypeScript), Joi 17.x (Node.js), Jakarta Validation 3.1 (Java), go-playground/validator v10 (Go).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>ALWAYS validate on the server side -- client-side validation is for UX only and is trivially bypassed</li>
+    <li>Use allowlist (accept known good) over blocklist (reject known bad) -- blocklists are incomplete by definition</li>
+    <li>Canonicalize and decode input BEFORE validation -- double-encoding bypasses validators</li>
+    <li>Validate BOTH syntactic correctness (format, type, length) AND semantic correctness (business rules, cross-field consistency)</li>
+    <li>NEVER use regex as the sole validation mechanism -- combine with type coercion, length limits, and range checks</li>
+    <li>Pin validation library versions -- breaking changes in Pydantic v1 to v2, Joi v16 to v17 changed APIs</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Validation Patterns</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Validation Pattern</th><th scope="col">Description</th><th scope="col">When to Use</th><th scope="col">Risk if Skipped</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Allowlist (accept known good)</td><td>Define exactly what is valid; reject everything else</td><td>All discrete inputs (enums, choices, known formats)</td><td>Injection attacks bypass incomplete checks</td></tr>
+      <tr><td>2</td><td>Type coercion</td><td>Convert input to expected type (int, float, bool, date)</td><td>Numeric fields, dates, booleans</td><td>Type confusion, integer overflow, NaN propagation</td></tr>
+      <tr><td>3</td><td>Length limits</td><td>Enforce min/max length on strings, arrays, file sizes</td><td>All string and collection inputs</td><td>Buffer overflow, DoS via oversized payloads, ReDoS</td></tr>
+      <tr><td>4</td><td>Range checks</td><td>Validate numeric values fall within expected bounds</td><td>Prices, quantities, ages, coordinates</td><td>Negative quantities, overflow, business logic abuse</td></tr>
+      <tr><td>5</td><td>Regex patterns</td><td>Match input against format patterns (anchored: <code>^...$</code>)</td><td>Emails, phone numbers, postal codes, IDs</td><td>Malformed data, injection via unexpected characters</td></tr>
+      <tr><td>6</td><td>Encoding/normalization</td><td>Canonicalize Unicode, decode URL-encoding before validation</td><td>All text inputs, especially multi-byte</td><td>Double-encoding bypasses, homoglyph attacks</td></tr>
+      <tr><td>7</td><td>Schema validation</td><td>Validate entire request structure (JSON Schema, Zod, Pydantic)</td><td>API payloads, complex nested objects</td><td>Missing fields, extra fields, type mismatches</td></tr>
+      <tr><td>8</td><td>Semantic validation</td><td>Cross-field consistency (start &lt; end, total = sum of parts)</td><td>Business logic, date ranges, financial data</td><td>Logic bugs, data corruption, fraud</td></tr>
+      <tr><td>9</td><td>Sanitization</td><td>Strip or encode dangerous characters AFTER validation</td><td>Rich text, HTML inputs (as defense-in-depth)</td><td>XSS, injection if validation alone is insufficient</td></tr>
+      <tr><td>10</td><td>File validation</td><td>Check MIME type, magic bytes, size, extension, filename</td><td>File uploads</td><td>Arbitrary code execution, path traversal</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Language/Framework Quick Map</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Language</th><th scope="col">Primary Library</th><th scope="col">Schema Example</th><th scope="col">Key Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Python</td><td>Pydantic v2</td><td><code>class User(BaseModel): email: EmailStr</code></td><td>Type-safe, fast Rust core, auto-coercion</td></tr>
+      <tr><td>TypeScript</td><td>Zod 3.x</td><td><code>z.object({ email: z.string().email() })</code></td><td>Static type inference from schema</td></tr>
+      <tr><td>Node.js</td><td>Joi 17.x</td><td><code>Joi.object({ email: Joi.string().email() })</code></td><td>Fluent API, detailed error messages</td></tr>
+      <tr><td>Java</td><td>Jakarta Validation 3.1</td><td><code>@Email @NotBlank String email;</code></td><td>Annotation-driven, framework-integrated</td></tr>
+      <tr><td>Go</td><td>validator v10</td><td><code>Email string `validate:"required,email"`</code></td><td>Struct tag-based, Gin integration</td></tr>
+      <tr><td>C#</td><td>FluentValidation</td><td><code>RuleFor(x =&gt; x.Email).NotEmpty().EmailAddress()</code></td><td>LINQ-like, testable rules</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What kind of input are you validating?
+&#9500;&#9472;&#9472; Discrete/enumerated value (country, status, category)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Allowlist: check against exact set of valid values
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Structured data type (email, URL, phone, date, UUID)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use library-provided validators + length limits + semantic checks
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Numeric value (price, quantity, age)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Type coerce to number + range check (min/max) + reject NaN/Infinity
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Free-form text (name, comment, description)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Length limit + Unicode normalization + encoding on OUTPUT
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; File upload?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Validate extension + MIME type + magic bytes + size limit + rename
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Complex nested object (API payload)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Schema validation (Pydantic, Zod, JSON Schema) + semantic checks
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Type coerce + length limit + allowlist characters + server-side only</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define your validation schema at the boundary</h3>
+  <p>Define validation schemas at the point where data enters your application (API endpoints, form handlers, CLI parsers). Never validate deep inside business logic. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python"># Python: Pydantic v2 -- define schema at API boundary
+from pydantic import BaseModel, Field, EmailStr, field_validator
+
+class CreateUserRequest(BaseModel):
+    email: EmailStr
+    name: str = Field(min_length=1, max_length=100)
+    age: int = Field(ge=13, le=150)
+    role: str = Field(pattern=r'^(admin|user|viewer)$')</code></pre>
+  <p><strong>Verify</strong>: <code>CreateUserRequest(email="bad", name="", age=5, role="hacker")</code> raises <code>ValidationError</code> with specific field errors.</p>
+
+  <h3>2. Implement allowlist validation for discrete values</h3>
+  <p>For any input that should be one of a known set of values, validate against an explicit allowlist. Never use blocklists for enumerated data. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-typescript">// TypeScript: Zod -- allowlist via enum
+import { z } from 'zod';  // ^3.22.0
+
+const RoleSchema = z.enum(['admin', 'user', 'viewer']);
+const CreateUserSchema = z.object({
+  email: z.string().email().max(254),
+  name: z.string().min(1).max(100).trim(),
+  role: RoleSchema,
+}).strict();  // Reject unknown keys</code></pre>
+  <p><strong>Verify</strong>: <code>CreateUserSchema.safeParse({ role: 'superadmin' })</code> returns <code>{ success: false }</code>.</p>
+
+  <h3>3. Add type coercion with strict error handling</h3>
+  <p>Convert inputs to expected types early. Reject values that cannot be cleanly coerced. [<a href="https://cwe.mitre.org/data/definitions/20.html">src2</a>]</p>
+  <pre><code class="language-go">// Go: validator v10 -- struct tag validation
+type CreateUserRequest struct {
+    Email string `json:"email" validate:"required,email,max=254"`
+    Name  string `json:"name"  validate:"required,min=1,max=100"`
+    Age   int    `json:"age"   validate:"required,gte=13,lte=150"`
+    Role  string `json:"role"  validate:"required,oneof=admin user viewer"`
+}</code></pre>
+  <p><strong>Verify</strong>: <code>validate.Struct(req)</code> with invalid fields returns <code>validator.ValidationErrors</code>.</p>
+
+  <h3>4. Validate at the semantic level</h3>
+  <p>After syntactic validation passes, check business rules: cross-field consistency, temporal logic, and domain constraints. [<a href="https://top10proactive.owasp.org/the-top-10/c3-validate-input-and-handle-exceptions/">src7</a>]</p>
+  <pre><code class="language-python"># Pydantic -- semantic (cross-field) validation
+from pydantic import model_validator
+
+class BookingRequest(BaseModel):
+    check_in: date
+    check_out: date
+
+    @model_validator(mode='after')
+    def validate_dates(self):
+        if self.check_out &lt;= self.check_in:
+            raise ValueError('check_out must be after check_in')
+        return self</code></pre>
+  <p><strong>Verify</strong>: Reversed dates raise <code>ValidationError</code>.</p>
+
+  <h3>5. Canonicalize input before validation</h3>
+  <p>Decode and normalize input before applying validation rules to prevent double-encoding attacks. [<a href="https://cwe.mitre.org/data/definitions/20.html">src2</a>]</p>
+  <pre><code class="language-python">import unicodedata
+
+def canonicalize(value: str) -&gt; str:
+    normalized = unicodedata.normalize('NFC', value)
+    cleaned = ''.join(
+        c for c in normalized
+        if unicodedata.category(c) != 'Cc' or c in ('\n', '\t')
+    )
+    return cleaned.strip()</code></pre>
+  <p><strong>Verify</strong>: Control characters like <code>\x00</code> are stripped; decomposed Unicode is composed.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python (Pydantic v2): API Request Validation</h3>
+  <pre><code class="language-python"># Input:  Raw JSON request body from HTTP POST
+# Output: Validated, typed Python object or ValidationError
+
+from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import ConfigDict
+from enum import Enum
+
+class UserRole(str, Enum):
+    admin = "admin"
+    user = "user"
+    viewer = "viewer"
+
+class CreateUserRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    email: EmailStr
+    name: str = Field(min_length=1, max_length=100)
+    age: int = Field(ge=13, le=150)
+    role: UserRole = UserRole.user
+    bio: str | None = Field(default=None, max_length=500)</code></pre>
+
+  <h3>TypeScript (Zod 3.x): Form and API Validation</h3>
+  <pre><code class="language-typescript">// Input:  Unknown data from request body or form submission
+// Output: Typed object or ZodError with field-level details
+
+import { z } from 'zod';  // ^3.22.0
+
+const CreateUserSchema = z.object({
+  email: z.string().email().max(254).toLowerCase(),
+  name: z.string().min(1).max(100).trim(),
+  age: z.coerce.number().int().min(13).max(150),
+  role: z.enum(['admin', 'user', 'viewer']).default('user'),
+}).strict();
+
+type CreateUser = z.infer&lt;typeof CreateUserSchema&gt;;</code></pre>
+
+  <h3>Java (Jakarta Validation 3.1): Bean Validation</h3>
+  <pre><code class="language-java">// Input:  Request DTO from Spring MVC / JAX-RS
+// Output: Validated bean or ConstraintViolationException
+
+import jakarta.validation.constraints.*;
+
+public record CreateUserRequest(
+    @NotBlank @Email @Size(max = 254)
+    String email,
+
+    @NotBlank @Size(min = 1, max = 100)
+    @Pattern(regexp = "^[\\p{L} '-]+$")
+    String name,
+
+    @NotNull @Min(13) @Max(150)
+    Integer age,
+
+    @NotNull @Pattern(regexp = "^(admin|user|viewer)$")
+    String role
+) {}</code></pre>
+
+  <h3>Go (validator v10): Struct Tag Validation</h3>
+  <pre><code class="language-go">// Input:  JSON-decoded struct from HTTP request
+// Output: nil (valid) or validator.ValidationErrors
+
+type CreateUserRequest struct {
+    Email string `json:"email" validate:"required,email,max=254"`
+    Name  string `json:"name"  validate:"required,min=1,max=100"`
+    Age   int    `json:"age"   validate:"required,gte=13,lte=150"`
+    Role  string `json:"role"  validate:"required,oneof=admin user viewer"`
+    Bio   string `json:"bio"   validate:"omitempty,max=500"`
+}
+
+var validate = validator.New()
+
+func ValidateUser(req *CreateUserRequest) error {
+    req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+    req.Name = strings.TrimSpace(req.Name)
+    return validate.Struct(req)
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Blocklist-based validation</h3>
+  <pre><code class="language-python"># BAD -- blocklist filtering is trivially bypassed
+def validate_input(value):
+    dangerous = ['&lt;script&gt;', 'DROP TABLE', 'eval(', '../']
+    for d in dangerous:
+        if d.lower() in value.lower():
+            raise ValueError('Dangerous input detected')
+    return value
+# Bypassed by: &lt;scr&lt;script&gt;ipt&gt;, DR/**/OP TABLE, e\x76al(, ..%2f</code></pre>
+
+  <h3>Correct: Allowlist with type coercion</h3>
+  <pre><code class="language-python"># GOOD -- define what is valid, reject everything else
+from pydantic import BaseModel, Field
+from enum import Enum
+
+class Status(str, Enum):
+    active = "active"
+    inactive = "inactive"
+
+class UpdateRequest(BaseModel):
+    status: Status
+    count: int = Field(ge=0, le=1000)
+    name: str = Field(max_length=100)</code></pre>
+
+  <h3>Wrong: Client-side validation only</h3>
+  <pre><code class="language-javascript">// BAD -- client-side validation provides zero security
+function submitForm() {
+  const email = document.getElementById('email').value;
+  if (!email.includes('@')) { alert('Invalid email'); return; }
+  // Attacker bypasses with: curl -X POST -d 'email=&lt;script&gt;alert(1)&lt;/script&gt;'
+  fetch('/api/users', { method: 'POST', body: JSON.stringify({ email }) });
+}</code></pre>
+
+  <h3>Correct: Server-side validation with client-side UX</h3>
+  <pre><code class="language-typescript">// GOOD -- server-side validation is authoritative
+import { z } from 'zod';
+
+const EmailSchema = z.string().email().max(254);
+
+app.post('/api/users', (req, res) =&gt; {
+  const result = EmailSchema.safeParse(req.body.email);
+  if (!result.success) {
+    return res.status(400).json({ error: result.error.flatten() });
+  }
+});</code></pre>
+
+  <h3>Wrong: Regex-only validation without length limits</h3>
+  <pre><code class="language-python"># BAD -- regex without length limit enables ReDoS
+import re
+email_re = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
+def validate_email(email):
+    if email_re.match(email):  # No length check!
+        return True  # 10MB string causes catastrophic backtracking
+    return False</code></pre>
+
+  <h3>Correct: Length limit before regex</h3>
+  <pre><code class="language-python"># GOOD -- check length BEFORE applying regex
+def validate_email(email: str) -&gt; bool:
+    if not email or len(email) &gt; 254:  # RFC 5321 limit
+        return False
+    if len(email.split('@')[0]) &gt; 64:  # Local part limit
+        return False
+    return bool(re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email))</code></pre>
+
+  <h3>Wrong: Trusting deserialized data</h3>
+  <pre><code class="language-python"># BAD -- deserializing untrusted input without validation
+import json
+data = json.loads(request.body)
+user_id = data['user_id']   # No type check
+quantity = data['quantity']  # No range check
+db.execute(f"UPDATE orders SET qty={quantity} WHERE user={user_id}")</code></pre>
+
+  <h3>Correct: Schema validation then parameterized queries</h3>
+  <pre><code class="language-python"># GOOD -- validate schema, then use parameterized queries
+from pydantic import BaseModel, Field
+
+class UpdateOrderRequest(BaseModel):
+    user_id: int = Field(gt=0)
+    quantity: int = Field(ge=1, le=9999)
+
+req = UpdateOrderRequest.model_validate_json(request.body)
+db.execute("UPDATE orders SET qty=%s WHERE user=%s", (req.quantity, req.user_id))</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Validating input but not encoding output</strong>: Input validation and output encoding solve different problems. Validate input for correctness; encode output for context-specific safety. Neither replaces the other. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>ReDoS via unbounded regex</strong>: Complex regex patterns on long input cause catastrophic backtracking. Fix: Always enforce length limits before regex; use RE2-compatible patterns; set regex timeouts. [<a href="https://cwe.mitre.org/data/definitions/20.html">src2</a>]</li>
+    <li><strong>Forgetting Unicode normalization</strong>: Equivalent Unicode representations bypass character allowlists. Fix: Apply <code>unicodedata.normalize('NFC', input)</code> before validation. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>Validating only at the API gateway</strong>: Middleware validates structure but business logic receives raw data from internal services. Fix: Validate at every trust boundary. [<a href="https://top10proactive.owasp.org/the-top-10/c3-validate-input-and-handle-exceptions/">src7</a>]</li>
+    <li><strong>Pydantic v1 to v2 migration breakage</strong>: <code>@validator</code> replaced by <code>@field_validator</code>; <code>class Config</code> replaced by <code>model_config</code>. Fix: Follow the Pydantic v2 migration guide; use <code>bump-pydantic</code> tool. [<a href="https://docs.pydantic.dev/latest/concepts/validators/">src3</a>]</li>
+    <li><strong>Zod .parse() vs .safeParse()</strong>: Using <code>.parse()</code> throws exceptions on invalid input, crashing Express if uncaught. Fix: Use <code>.safeParse()</code> in request handlers and check <code>result.success</code>. [<a href="https://zod.dev/">src4</a>]</li>
+    <li><strong>Silently coercing bad data</strong>: Automatic type coercion hides bugs. Fix: Use strict mode (<code>Pydantic strict=True</code>, <code>z.number()</code> without <code>z.coerce</code>). [<a href="https://docs.pydantic.dev/latest/concepts/validators/">src3</a>]</li>
+    <li><strong>Not validating array/collection sizes</strong>: Accepting unbounded arrays allows memory exhaustion DoS. Fix: Always set <code>max_length</code> on list/array fields. [<a href="https://cwe.mitre.org/data/definitions/20.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test Pydantic validation in Python REPL
+python -c "
+from pydantic import BaseModel, EmailStr, Field
+class T(BaseModel):
+    email: EmailStr
+    age: int = Field(ge=0, le=150)
+try: T(email='bad', age=-1)
+except Exception as e: print(e)
+"
+
+# Test Zod validation in Node.js
+node -e "
+const {z} = require('zod');
+const s = z.object({email: z.string().email(), age: z.number().int().min(0)});
+console.log(s.safeParse({email:'bad', age:-1}));
+"
+
+# Find unvalidated request body usage (Node.js/Express)
+grep -rn 'req\.body\.' --include="*.js" --include="*.ts" . | grep -v 'validate\|schema\|parse'
+
+# Find raw SQL string interpolation (Python)
+grep -rn 'f".*SELECT\|f".*INSERT\|f".*UPDATE\|f".*DELETE' --include="*.py" .
+
+# Audit Java controllers for missing @Valid annotation
+grep -rn '@RequestBody' --include="*.java" . | grep -v '@Valid'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Library</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Change</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pydantic</td><td>v2.x</td><td>Current</td><td>Rust-powered core, @field_validator, 5-50x faster</td></tr>
+      <tr><td>Pydantic</td><td>v1.x</td><td>EOL (2024)</td><td>@validator, class Config -- use bump-pydantic to migrate</td></tr>
+      <tr><td>Zod</td><td>3.x</td><td>Current/Stable</td><td>z.coerce, .pipe(), .brand(), discriminated unions</td></tr>
+      <tr><td>Joi</td><td>17.x</td><td>Current</td><td>ESM support, TypeScript types</td></tr>
+      <tr><td>Joi</td><td>16.x</td><td>Deprecated</td><td>Package was @hapi/joi</td></tr>
+      <tr><td>Jakarta Validation</td><td>3.1</td><td>Current</td><td>jakarta.validation.* namespace</td></tr>
+      <tr><td>Jakarta Validation</td><td>2.0</td><td>Legacy</td><td>javax.validation.* -- requires namespace migration</td></tr>
+      <tr><td>go-playground/validator</td><td>v10</td><td>Current</td><td>Custom validators, struct-level validation, dive support</td></tr>
+      <tr><td>FluentValidation (.NET)</td><td>11.x</td><td>Current</td><td>.NET 8 support, async validators</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Any user-supplied data enters your application</td><td>Processing fully trusted internal system data</td><td>Basic type assertions may suffice</td></tr>
+      <tr><td>Building APIs that accept JSON/form payloads</td><td>Validating output for display</td><td>Output encoding (context-specific escaping)</td></tr>
+      <tr><td>File upload processing</td><td>Simple static config file parsing</td><td>Config libraries with built-in schema</td></tr>
+      <tr><td>CLI tools accepting user arguments</td><td>Data already validated by upstream service in same trust zone</td><td>Pass validated types between services</td></tr>
+      <tr><td>Preventing injection attacks at the boundary</td><td>Replacing parameterized queries for SQL</td><td>Parameterized queries + input validation together</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Input validation is necessary but NOT sufficient for security -- it must be combined with output encoding, parameterized queries, and defense-in-depth measures</li>
+    <li>Validation library APIs change between major versions (Pydantic v1 vs v2, Joi 16 vs 17) -- always check the docs for your specific version</li>
+    <li>Unicode and encoding edge cases (homoglyphs, bidirectional text, zero-width characters) require explicit handling beyond basic regex patterns</li>
+    <li>Regex-based validation must be tested for ReDoS with tools like rxxr2 or safe-regex -- catastrophic backtracking can cause denial of service</li>
+    <li>Client-side and server-side validation should use the same schema definition when possible (Zod enables this for full-stack TypeScript) to avoid drift</li>
+    <li>Performance impact: deep validation of large payloads adds latency -- validate early and fail fast, set depth limits</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/security/sql-injection-prevention/2026" data-relationship="related_to">SQL Injection Prevention</a>
+    <a href="/software/security/csrf-prevention/2026" data-relationship="often_confused_with">CSRF Prevention</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

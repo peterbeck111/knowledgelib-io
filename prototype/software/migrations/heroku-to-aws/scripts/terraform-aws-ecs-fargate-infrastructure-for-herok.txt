@@ -1,0 +1,66 @@
+# Input:  Docker image in ECR, VPC/subnet IDs
+# Output: Complete ECS Fargate service with ALB, auto-scaling
+
+resource "aws_ecs_cluster" "main" {
+  name = "myapp-cluster"
+}
+
+resource "aws_ecs_task_definition" "app" {
+  family                   = "myapp"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"   # 0.25 vCPU (≈ Heroku standard-1x)
+  memory                   = "512"   # 512 MB
+  execution_role_arn       = aws_iam_role.ecs_execution.arn
+
+  container_definitions = jsonencode([{
+    name      = "myapp"
+    image     = "${aws_ecr_repository.app.repository_url}:latest"
+    essential = true
+    portMappings = [{ containerPort = 3000, protocol = "tcp" }]
+    environment = [
+      { name = "PORT", value = "3000" },
+      { name = "NODE_ENV", value = "production" }
+    ]
+    secrets = [
+      { name = "DATABASE_URL", valueFrom = aws_ssm_parameter.db_url.arn }
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = "/ecs/myapp"
+        awslogs-region        = var.region
+        awslogs-stream-prefix = "ecs"
+      }
+    }
+  }])
+}
+
+resource "aws_ecs_service" "app" {
+  name            = "myapp-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.app.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnets
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "myapp"
+    container_port   = 3000
+  }
+}
+
+# Auto-scaling (replaces Heroku dyno scaling)
+resource "aws_appautoscaling_target" "ecs" {
+  max_capacity       = 10
+  min_capacity       = 2
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.app.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}

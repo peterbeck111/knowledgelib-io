@@ -1,0 +1,93 @@
+{
+  "id": "software/system-design/multi-tenant-saas/2026",
+  "category": "software",
+  "subcategory": "system-design",
+  "topic": "multi-tenant-saas",
+  "version_tag": "2026",
+  "canonical_question": "How do I design a multi-tenant SaaS architecture?",
+  "aliases": [
+    "multi-tenant SaaS architecture",
+    "SaaS multi-tenancy design",
+    "tenant isolation strategies",
+    "shared database vs database per tenant",
+    "multi-tenant database design",
+    "SaaS tenant isolation",
+    "noisy neighbor SaaS",
+    "multi-tenant middleware pattern",
+    "tenant context injection",
+    "SaaS data partitioning"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.92,
+  "token_estimate": 3800,
+  "source_count": 7,
+  "md_path": "/software/system-design/multi-tenant-saas/2026.md",
+  "html_path": "/software/system-design/multi-tenant-saas/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": null,
+    "next_review": "2026-05-23",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Tenant isolation is a security requirement, not optional -- a single leaked tenant_id in a query can expose all tenant data",
+    "Row-Level Security (RLS) policies must be enabled AND enforced -- enabling RLS without creating policies silently blocks all rows",
+    "Schema-per-tenant hits PostgreSQL catalog limits at ~5,000-10,000 schemas -- plan migration path before that threshold",
+    "JWT tenant claims must be validated server-side -- never trust client-supplied tenant_id from headers or query params alone",
+    "Database connection pooling (PgBouncer) in transaction mode breaks SET app.current_tenant -- use session mode or pass tenant context per query"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Building a single-tenant self-hosted application with no shared infrastructure",
+      "use_instead": "Standard monolithic or microservice architecture"
+    },
+    {
+      "condition": "Need to isolate tenants at the infrastructure level (separate VPCs, accounts, clusters)",
+      "use_instead": "AWS Control Tower / Azure Landing Zones for account-per-tenant isolation"
+    },
+    {
+      "condition": "Designing a marketplace or platform with user-generated content (not SaaS tenancy)",
+      "use_instead": "Platform architecture with user/org hierarchy"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      {
+        "id": "software/debugging/postgresql-slow-queries/2026",
+        "label": "PostgreSQL Slow Query Optimization"
+      },
+      {
+        "id": "software/debugging/postgresql-connection-pool/2026",
+        "label": "PostgreSQL Connection Pool Exhaustion"
+      }
+    ],
+    "solves": [],
+    "alternative_to": [],
+    "often_confused_with": []
+  },
+  "inputs_needed": [
+    {
+      "key": "isolation_model",
+      "question": "What level of tenant isolation do you need?",
+      "type": "choice",
+      "options": ["Shared everything (pool)", "Shared DB with schema isolation", "Database per tenant (silo)", "Hybrid (pool for small, silo for enterprise)"]
+    },
+    {
+      "key": "expected_tenants",
+      "question": "How many tenants do you expect at scale?",
+      "type": "choice",
+      "options": ["< 100", "100-1,000", "1,000-10,000", "> 10,000"]
+    },
+    {
+      "key": "compliance_requirements",
+      "question": "Do tenants require data residency or compliance isolation (SOC 2, HIPAA, GDPR)?",
+      "type": "choice",
+      "options": ["No special requirements", "GDPR (EU data residency)", "HIPAA (healthcare)", "SOC 2 Type II", "Multiple / strict isolation required"]
+    }
+  ]
+}

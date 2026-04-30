@@ -1,0 +1,38 @@
+// Input:  None (demonstration of C++ safety patterns)
+// Output: Shows smart pointer usage to prevent segfaults
+
+#include <memory>
+#include <vector>
+#include <string>
+#include <iostream>
+
+// BAD: raw pointer — easy to forget delete, or use after delete
+void raw_pointer_bad() {
+    int* data = new int[100];
+    // ... exception thrown here → memory leaked, pointer dangling
+    delete[] data;
+}
+
+// GOOD: unique_ptr — automatic cleanup, no double-free possible
+void unique_ptr_good() {
+    auto data = std::make_unique<int[]>(100);
+    data[0] = 42;
+    // Automatically freed when scope exits, even on exception
+}
+
+// GOOD: shared_ptr — safe shared ownership
+void shared_ptr_good() {
+    auto data = std::make_shared<std::vector<int>>(100, 0);
+    auto alias = data;  // Reference count = 2
+    // Freed when last shared_ptr goes out of scope
+}
+
+// GOOD: use .at() for bounds-checked access
+void bounds_checked() {
+    std::vector<int> v = {1, 2, 3};
+    try {
+        int val = v.at(10);  // Throws std::out_of_range
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Bounds error: " << e.what() << "\n";
+    }
+}

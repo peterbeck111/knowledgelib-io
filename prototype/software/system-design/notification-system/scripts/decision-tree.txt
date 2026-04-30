@@ -1,0 +1,38 @@
+START: What notification channels do you need?
+|
++-- Push notifications only?
+|   +-- YES --> Use FCM (Android/web) + APNs (iOS) directly
+|   |           with a simple queue (SQS/Redis) in front
+|   +-- NO  |
+|           v
++-- Need email + push?
+|   +-- YES --> Add message queue fan-out (SNS->SQS pattern or Kafka topics)
+|   |           with separate push and email processors
+|   +-- NO  |
+|           v
++-- Need in-app real-time notifications?
+|   +-- YES --> Add WebSocket/SSE gateway with Redis Pub/Sub
+|   |           for cross-instance message delivery
+|   +-- NO  |
+|           v
++-- Need SMS?
+|   +-- YES --> Add SMS processor + Twilio/Vonage integration
+|               with per-country rate limiting
+|   +-- NO  --> Reassess requirements
+|
+SCALE CHECK:
++-- < 1K notifications/day?
+|   +-- YES --> Single-server with in-process queue (Bull/Celery) is sufficient
+|   +-- NO  |
+|           v
++-- 1K-100K notifications/day?
+|   +-- YES --> Managed queue service (SQS+SNS or Cloud Tasks) + 2-4 workers
+|   +-- NO  |
+|           v
++-- 100K-10M notifications/day?
+|   +-- YES --> Kafka with consumer groups, partitioned by channel + user-id sharding
+|   +-- NO  |
+|           v
++-- > 10M notifications/day?
+    +-- YES --> Multi-region Kafka clusters, dedicated push/email/SMS worker pools,
+                Redis cluster for preference caching, sharded notification store

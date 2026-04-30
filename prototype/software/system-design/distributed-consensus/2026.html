@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Distributed Consensus and Leader Election | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to distributed consensus algorithms: Raft vs Paxos vs ZAB vs Viewstamped Replication comparison, leader election with etcd/ZooKeeper,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/distributed-consensus/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Distributed Consensus and Leader Election | knowledgelib.io">
+  <meta property="og:description" content="Raft vs Paxos vs ZAB comparison, leader election with etcd/ZooKeeper, split-brain prevention, fencing tokens, code examples in Python/Go/Java. 7 sources, verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/distributed-consensus/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Distributed Consensus and Leader Election | knowledgelib.io">
+  <meta name="twitter:description" content="Raft vs Paxos vs ZAB comparison, leader election with etcd/ZooKeeper, split-brain prevention, fencing tokens. 7 sources, verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/distributed_consensus">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do distributed consensus and leader election work?">
+  <meta name="ai:aliases" content="distributed consensus algorithms explained; Raft vs Paxos vs ZAB comparison; leader election distributed systems; how does Raft consensus work; consensus protocol for distributed databases; split brain prevention distributed systems; etcd consensus and leader election; ZooKeeper ZAB protocol leader election">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/distributed-consensus/2026.md">
+  <meta name="ai:token_estimate" content="4500">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="stable">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="cluster_size,use_case,deployment">
+  <meta name="ai:constraints" content="Odd number of nodes (3,5,7) required for 2f+1 fault tolerance; FLP impossibility requires timeouts in practice; Quorum majority must be alive for progress; Election timeout must be 10x heartbeat interval; Never run consensus across WAN without tuning timeouts">
+  <meta name="ai:skip_this_unit_if" content="Need end-to-end distributed database design -> software/system-design/distributed-database/2026; Need eventual consistency (CRDTs, gossip) -> Eventual consistency patterns; Need distributed transactions (2PC/Saga) -> Distributed transaction protocols">
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Distributed Consensus and Leader Election",
+    "headline": "How Do Distributed Consensus and Leader Election Work?",
+    "description": "Complete system design reference for distributed consensus algorithms (Raft, Paxos, ZAB, Viewstamped Replication), leader election patterns with etcd and ZooKeeper, split-brain prevention with fencing tokens, and code examples in Python, Go, and Java.",
+    "keywords": ["distributed consensus", "Raft", "Paxos", "ZAB", "leader election", "etcd", "ZooKeeper", "split brain", "quorum", "fencing tokens", "state machine replication"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "etcd 3.5+, ZooKeeper 3.9+, Python etcd3, Go etcd client v3",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      { "@type": "WebPage", "name": "In Search of an Understandable Consensus Algorithm (Extended Version)", "url": "https://raft.github.io/raft.pdf" },
+      { "@type": "WebPage", "name": "Designing Data-Intensive Applications, Chapter 9", "url": "https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/" },
+      { "@type": "WebPage", "name": "How to Conduct Leader Election in etcd Cluster", "url": "https://etcd.io/docs/v3.5/tutorials/how-to-conduct-elections/" },
+      { "@type": "WebPage", "name": "Apache ZooKeeper ZAB 1.0 Protocol Specification", "url": "https://cwiki.apache.org/confluence/display/zookeeper/zab1.0" },
+      { "@type": "WebPage", "name": "Paxos vs Raft: Have We Reached Consensus on Distributed Consensus?", "url": "https://arxiv.org/pdf/2004.05074" },
+      { "@type": "WebPage", "name": "Consensus Algorithms: Paxos, Raft, ZAB Comparison", "url": "https://algomaster.io/learn/system-design/consensus-algorithms" },
+      { "@type": "WebPage", "name": "Preventing Split Brain: Quorums, Fencing, and Epochs", "url": "https://www.systemoverflow.com/learn/distributed-primitives/leader-election/preventing-split-brain-quorums-fencing-and-epochs" }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Distributed Consensus and Leader Election",
+    "description": "Structured knowledge unit covering distributed consensus algorithms (Raft, Paxos, ZAB, Viewstamped Replication), leader election patterns, split-brain prevention, and implementation with etcd and ZooKeeper.",
+    "keywords": ["distributed consensus", "Raft", "Paxos", "ZAB", "leader election", "etcd", "ZooKeeper", "split brain", "quorum"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Stanford University (Raft paper)"},
+      {"@type": "Organization", "name": "etcd Authors"},
+      {"@type": "Organization", "name": "Apache ZooKeeper"},
+      {"@type": "Organization", "name": "Martin Kleppmann"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Distributed Consensus and Leader Election" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do distributed consensus and leader election work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "distributed consensus algorithms explained",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Raft vs Paxos vs ZAB comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "leader election distributed systems",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how does Raft consensus work",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "consensus protocol for distributed databases",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>Distributed Consensus and Leader Election</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do distributed consensus and leader election work?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/distributed-consensus/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> stable</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Distributed consensus algorithms (Raft, Paxos, ZAB) allow a cluster of nodes to agree on a single value or sequence of values despite failures, by electing a leader and replicating a log to a quorum (majority) of nodes before committing.</li>
+    <li><strong>Key tool/command</strong>: <code>etcdctl elect</code> for leader election; <code>etcdctl put/get</code> for consensus-backed key-value operations</li>
+    <li><strong>Watch out for</strong>: Split brain -- running an even number of nodes or misconfiguring quorum so two partitions both believe they have a leader, causing divergent state.</li>
+    <li><strong>Works with</strong>: etcd (Raft), ZooKeeper (ZAB), Consul (Raft), CockroachDB (Raft), TiKV (Raft). Language-agnostic via gRPC/HTTP client libraries.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>A consensus cluster requires an odd number of nodes (3, 5, 7) to tolerate f failures with 2f+1 nodes -- even-numbered clusters waste a node</li>
+    <li>Consensus is impossible in a purely asynchronous system with even one crash failure (FLP impossibility) -- all practical algorithms use timeouts to circumvent this</li>
+    <li>A quorum (majority) of nodes must be alive and reachable for the cluster to make progress -- losing majority means the cluster halts</li>
+    <li>Leader election timeout must be significantly longer than heartbeat interval (typically 10x) to avoid unnecessary elections under normal network jitter</li>
+    <li>Never run consensus across WAN without tuning election timeouts to account for cross-region latency (150-300ms RTT) -- default timeouts assume LAN</li>
+    <li>Consensus is not a distributed transaction -- it replicates a log, not multi-shard ACID commits</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Algorithm</th><th scope="col">Origin</th><th scope="col">Leader-Based</th><th scope="col">Leader Election</th><th scope="col">Message Types</th><th scope="col">Understandability</th><th scope="col">Key Implementations</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Raft</td><td>Stanford, 2014</td><td>Yes</td><td>Randomized timeout + RequestVote RPC</td><td>4</td><td>High</td><td>etcd, Consul, CockroachDB, TiKV</td></tr>
+      <tr><td>Paxos</td><td>Lamport, 1989</td><td>Optional (Multi-Paxos)</td><td>Any proposer can propose</td><td>4+</td><td>Low</td><td>Google Chubby, Spanner, Cassandra LWT</td></tr>
+      <tr><td>ZAB</td><td>Yahoo, 2011</td><td>Yes</td><td>Round-robin + epoch number</td><td>10</td><td>Medium</td><td>Apache ZooKeeper (exclusive)</td></tr>
+      <tr><td>Viewstamped Replication</td><td>MIT, 1988</td><td>Yes</td><td>Round-robin (next in config)</td><td>10</td><td>Medium</td><td>Research implementations</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Raft</th><th scope="col">Paxos</th><th scope="col">ZAB</th><th scope="col">Viewstamped Replication</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Fault tolerance</td><td>f failures with 2f+1 nodes</td><td>f failures with 2f+1 nodes</td><td>f failures with 2f+1 nodes</td><td>f failures with 2f+1 nodes</td></tr>
+      <tr><td>Ordering guarantee</td><td>Total order (per-term log)</td><td>Per-slot (Multi-Paxos for total)</td><td>Total order (FIFO + causal)</td><td>Total order</td></tr>
+      <tr><td>Stable storage</td><td>Required</td><td>Required</td><td>Required</td><td>Not required</td></tr>
+      <tr><td>Reconfiguration</td><td>Joint consensus (online)</td><td>Separate protocol</td><td>Stop-the-world</td><td>Stop-the-world</td></tr>
+      <tr><td>Latency (LAN)</td><td>1-2ms</td><td>2-4ms</td><td>1-2ms</td><td>1-2ms</td></tr>
+      <tr><td>Best for</td><td>General purpose, new projects</td><td>Existing Google/academic systems</td><td>ZooKeeper coordination</td><td>Research / education</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START -- What do you need consensus for?
+|-- Leader election / distributed lock only?
+|   |-- YES --> Use etcd lease-based election or ZooKeeper ephemeral znodes
+|   +-- NO (need replicated state machine) |
+|-- Building a new distributed system from scratch?
+|   |-- YES --> Use Raft (most implementations, best docs, easiest to understand)
+|   |   |-- Go: hashicorp/raft or etcd/raft
+|   |   |-- Java: Apache Ratis, microraft
+|   |   +-- Rust: tikv/raft-rs
+|   +-- NO (integrating with existing system) |
+|-- Already using ZooKeeper for coordination?
+|   |-- YES --> Stay with ZAB -- do not add a second consensus system
+|   +-- NO |
+|-- Need multi-datacenter / WAN consensus?
+|   |-- YES --> etcd with tuned timeouts or CockroachDB (multi-region Raft)
+|   +-- NO |
++-- DEFAULT --> etcd (Raft) for coordination, Consul (Raft) for service discovery</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Choose cluster size based on failure tolerance</h3>
+  <p>The fundamental tradeoff is between fault tolerance and write latency. Every write must reach a quorum (majority), so more nodes means higher latency. [<a href="https://raft.github.io/raft.pdf">src1</a>]</p>
+  <pre><code>Nodes  |  Quorum  |  Tolerates  |  Write latency (LAN)
+  3    |    2     |   1 failure |  ~1-2ms
+  5    |    3     |   2 failures|  ~2-3ms
+  7    |    4     |   3 failures|  ~3-5ms (diminishing returns)</code></pre>
+  <p><strong>Verify</strong>: For most production systems, 5 nodes is the sweet spot -- tolerates 2 simultaneous failures (rolling upgrade + 1 unexpected failure).</p>
+
+  <h3>2. Deploy an etcd cluster with proper configuration</h3>
+  <p>etcd is the most widely deployed Raft implementation (used by Kubernetes). Configure with explicit peer URLs and tuned timeouts. [<a href="https://etcd.io/docs/v3.5/tutorials/how-to-conduct-elections/">src3</a>]</p>
+  <pre><code class="language-bash"># Node 1 (repeat for each node with appropriate names and URLs)
+etcd --name node1 \
+  --initial-advertise-peer-urls http://10.0.0.1:2380 \
+  --listen-peer-urls http://10.0.0.1:2380 \
+  --listen-client-urls http://10.0.0.1:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls http://10.0.0.1:2379 \
+  --initial-cluster "node1=http://10.0.0.1:2380,node2=http://10.0.0.2:2380,node3=http://10.0.0.3:2380" \
+  --initial-cluster-token my-cluster \
+  --initial-cluster-state new \
+  --heartbeat-interval 100 \
+  --election-timeout 1000</code></pre>
+  <p><strong>Verify</strong>: <code>etcdctl endpoint status --cluster -w table</code> -- all nodes should show <code>IS LEADER</code> for exactly one node and <code>RAFT TERM</code> should be identical.</p>
+
+  <h3>3. Implement leader election using etcd leases</h3>
+  <p>Leader election in etcd uses leases (TTL-based locks). A node acquires a lease, campaigns for election on a key, and keeps the lease alive. If the leader crashes, the lease expires and another node wins. [<a href="https://etcd.io/docs/v3.5/tutorials/how-to-conduct-elections/">src3</a>]</p>
+  <pre><code class="language-python"># pip install etcd3==0.12.0
+import etcd3
+import time
+import socket
+
+client = etcd3.client(host='10.0.0.1', port=2379)
+hostname = socket.gethostname()
+lease = client.lease(ttl=10)
+
+# Campaign: put_if_absent via transaction
+success, _ = client.transaction(
+    compare=[client.transactions.create('/leader/my-service') == 0],
+    success=[client.transactions.put('/leader/my-service', hostname, lease)],
+    failure=[]
+)
+
+if success:
+    print(f"{hostname} is the leader")
+    while True:
+        lease.refresh()
+        time.sleep(3)
+else:
+    print(f"{hostname} is a follower, watching for leader changes")
+    events_iterator, cancel = client.watch('/leader/my-service')
+    for event in events_iterator:
+        if isinstance(event, etcd3.events.DeleteEvent):
+            print("Leader lost, attempting to become leader...")
+            break</code></pre>
+  <p><strong>Verify</strong>: Kill the leader process, observe that within ~10 seconds (lease TTL) another node takes over leadership.</p>
+
+  <h3>4. Understand the Raft log replication flow</h3>
+  <p>Every state change goes through the leader and is replicated to a majority before being committed. This is the core of Raft's safety guarantee. [<a href="https://raft.github.io/raft.pdf">src1</a>]</p>
+  <pre><code>Client           Leader           Follower-1       Follower-2
+  |                |                  |                |
+  |-- write(x=5) ->|                  |                |
+  |                |-- AppendEntries ->|                |
+  |                |-- AppendEntries ------------------>|
+  |                |<-- ack -----------|                |
+  |                |  (quorum: leader + follower-1 = 2/3)
+  |                |  COMMIT (apply to state machine)  |
+  |<-- ok ---------|                  |                |
+  |                |-- AppendEntries(commit_index) ---->|
+  |                |  (follower-2 catches up)          |</code></pre>
+  <p><strong>Verify</strong>: Use <code>etcdctl put foo bar</code> on the leader, then <code>etcdctl get foo</code> on any follower -- the value should be consistent within milliseconds.</p>
+
+  <h3>5. Configure split-brain prevention with fencing tokens</h3>
+  <p>Fencing tokens (epoch numbers) prevent stale leaders from corrupting state after a network partition heals. Every write includes the leader's term/epoch; followers reject writes from old terms. [<a href="https://www.systemoverflow.com/learn/distributed-primitives/leader-election/preventing-split-brain-quorums-fencing-and-epochs">src7</a>]</p>
+  <pre><code class="language-python">def write_with_fencing(client, key, value, expected_epoch):
+    """Write only succeeds if our epoch matches the current leader epoch."""
+    success, _ = client.transaction(
+        compare=[
+            client.transactions.mod('/leader/epoch') == expected_epoch
+        ],
+        success=[client.transactions.put(key, value)],
+        failure=[]
+    )
+    if not success:
+        raise StaleLeaderError("Epoch changed -- another leader took over")
+    return True</code></pre>
+  <p><strong>Verify</strong>: Simulate a network partition (iptables drop), observe that the old leader's writes are rejected when the partition heals.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Leader Election with etcd</h3>
+  <p>Full script: <a href="scripts/python-leader-election-with-etcd.py">python-leader-election-with-etcd.py</a> (55 lines)</p>
+  <pre><code class="language-python"># Input:  etcd cluster endpoint, service name
+# Output: Elected leader performs work; followers watch and take over on failure
+# Deps:   pip install etcd3==0.12.0
+import etcd3
+import time
+# ... (see full script)</code></pre>
+
+  <h3>Go: Raft-Based Configuration Store</h3>
+  <p>Full script: <a href="scripts/go-raft-based-configuration-store.go">go-raft-based-configuration-store.go</a> (50 lines)</p>
+  <pre><code class="language-go">// Input:  Raft cluster with 3+ nodes
+// Output: Strongly consistent key-value store
+// Deps:   go get go.etcd.io/etcd/client/v3@v3.5.17
+package main
+import (
+// ... (see full script)</code></pre>
+
+  <h3>Java: ZooKeeper Leader Election</h3>
+  <p>Full script: <a href="scripts/java-zookeeper-leader-election.java">java-zookeeper-leader-election.java</a> (50 lines)</p>
+  <pre><code class="language-java">// Input:  ZooKeeper cluster connection string
+// Output: Leader election using ephemeral sequential znodes
+// Deps:   org.apache.zookeeper:zookeeper:3.9.2
+import org.apache.zookeeper.*;
+import java.util.Collections;
+// ... (see full script)</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Even number of consensus nodes</h3>
+  <pre><code class="language-yaml"># BAD -- 4 nodes requires quorum of 3.
+# Tolerates only 1 failure (same as 3 nodes), but costs an extra node.
+etcd_cluster:
+  nodes: [node1, node2, node3, node4]  # 4 nodes = waste of money
+  # Quorum: ceil(4/2) + 1 = 3
+  # Fault tolerance: 4 - 3 = 1 (same as 3-node cluster!)</code></pre>
+
+  <h3>Correct: Always use odd cluster sizes</h3>
+  <pre><code class="language-yaml"># GOOD -- 3 or 5 nodes. Every node contributes to fault tolerance.
+etcd_cluster:
+  nodes: [node1, node2, node3, node4, node5]  # 5 nodes
+  # Quorum: 3
+  # Fault tolerance: 2 (one more than 4-node cluster, worth the extra node)</code></pre>
+
+  <h3>Wrong: Using wall-clock time for leader election timeout</h3>
+  <pre><code class="language-python"># BAD -- system clock skew between nodes causes simultaneous elections,
+# leading to split votes and extended unavailability.
+import time
+ELECTION_TIMEOUT = 1.0  # Fixed 1 second for all nodes
+if time.time() - last_heartbeat > ELECTION_TIMEOUT:
+    start_election()</code></pre>
+
+  <h3>Correct: Randomized election timeouts to prevent split votes</h3>
+  <pre><code class="language-python"># GOOD -- Raft uses randomized timeouts (150-300ms range).
+# Different nodes timeout at different times, so one wins first.
+import random
+ELECTION_TIMEOUT_MIN = 150  # ms
+ELECTION_TIMEOUT_MAX = 300  # ms
+
+def get_election_timeout():
+    return random.randint(ELECTION_TIMEOUT_MIN, ELECTION_TIMEOUT_MAX) / 1000.0
+
+if elapsed_since_heartbeat > get_election_timeout():
+    start_election()</code></pre>
+
+  <h3>Wrong: Reading from followers without understanding consistency</h3>
+  <pre><code class="language-python"># BAD -- follower may be behind the leader.
+# Client reads stale data, makes a decision, writes back -- lost update.
+value = follower_client.get("/config/feature-flag")  # might be stale!</code></pre>
+
+  <h3>Correct: Use linearizable reads for consistency-critical operations</h3>
+  <pre><code class="language-python"># GOOD -- linearizable read goes through the leader.
+# Guarantees freshest value.
+value = client.get("/config/feature-flag",
+                   serializable=False)  # default: linearizable via leader
+# For read-heavy workloads where slight staleness is OK:
+cached_value = client.get("/config/feature-flag",
+                          serializable=True)  # fast, may be slightly stale</code></pre>
+
+  <h3>Wrong: No fencing after leader failover</h3>
+  <pre><code class="language-python"># BAD -- old leader (zombie) wakes up after GC pause,
+# still thinks it is leader, writes conflicting data.
+def process_as_leader():
+    while self.is_leader:  # stale boolean!
+        result = compute_something()
+        db.write(result)   # DANGER: another leader may already exist</code></pre>
+
+  <h3>Correct: Fencing tokens / epoch validation on every write</h3>
+  <pre><code class="language-python"># GOOD -- every write includes the leader's epoch/term number.
+# Storage layer rejects writes from old epochs.
+def process_as_leader():
+    while True:
+        try:
+            current_epoch = etcd.get("/leader/epoch")
+            result = compute_something()
+            etcd.transaction(
+                compare=[etcd.transactions.value("/leader/epoch") == current_epoch],
+                success=[etcd.transactions.put("/data/result", result)],
+                failure=[]  # Abort: another leader took over
+            )
+        except StaleEpochError:
+            demote_to_follower()
+            break</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Split brain with even cluster sizes</strong>: Running 2 or 4 nodes creates ambiguity about which partition has the majority during a network split. Fix: always deploy odd-numbered clusters (3, 5, 7). [<a href="https://raft.github.io/raft.pdf">src1</a>]</li>
+    <li><strong>Election storms from aggressive timeouts</strong>: If election timeout is too close to heartbeat interval, transient network delays trigger unnecessary elections, causing cascading failures. Fix: set election timeout to 10x heartbeat interval minimum. [<a href="https://raft.github.io/raft.pdf">src1</a>]</li>
+    <li><strong>WAN latency causing constant re-elections</strong>: Default etcd election timeout (1000ms) is too short for cross-datacenter deployments with 150-300ms RTT. Fix: tune <code>--election-timeout</code> to at least 5x the maximum RTT. [<a href="https://etcd.io/docs/v3.5/tutorials/how-to-conduct-elections/">src3</a>]</li>
+    <li><strong>Split brain from zombie leaders</strong>: A leader pauses (GC, swap, CPU starvation), loses its lease, another leader is elected, then the old leader resumes and writes conflicting data. Fix: use fencing tokens (epoch numbers) validated on every write. [<a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/">src2</a>] [<a href="https://www.systemoverflow.com/learn/distributed-primitives/leader-election/preventing-split-brain-quorums-fencing-and-epochs">src7</a>]</li>
+    <li><strong>Thundering herd on leader failure</strong>: All followers detect leader loss simultaneously and campaign at the same time, causing split votes and extended unavailability. Fix: Raft's randomized election timeout solves this -- ensure your implementation uses randomization. [<a href="https://raft.github.io/raft.pdf">src1</a>]</li>
+    <li><strong>Data loss from non-durable writes</strong>: Writing to the Raft log without fsync means a power failure can lose committed entries. Fix: ensure WAL (Write-Ahead Log) is synced to disk before acknowledging writes. [<a href="https://raft.github.io/raft.pdf">src1</a>]</li>
+    <li><strong>Quorum loss from correlated failures</strong>: Placing all consensus nodes in the same rack/AZ means a single power or network failure takes out the quorum. Fix: distribute nodes across failure domains. [<a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/">src2</a>]</li>
+    <li><strong>Confusing consensus with distributed transactions</strong>: Consensus replicates a single log across nodes; distributed transactions coordinate writes across multiple independent data stores. Fix: use consensus for state machine replication, 2PC/Saga for cross-service transactions. [<a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check etcd cluster health
+etcdctl endpoint health --cluster -w table
+
+# Verify leader and Raft term consistency
+etcdctl endpoint status --cluster -w table
+
+# Check etcd member list and IDs
+etcdctl member list -w table
+
+# Monitor leader elections in real-time
+etcdctl watch --prefix /leader/
+
+# Check Raft log compaction and snapshot status
+etcdctl alarm list
+
+# ZooKeeper: check cluster status
+echo stat | nc localhost 2181
+
+# ZooKeeper: check if node is leader or follower
+echo srvr | nc localhost 2181 | grep Mode
+
+# Check etcd disk latency (must be &lt;10ms for consensus performance)
+etcdctl check perf --load="s"</code></pre>
+  </section>
+
+  <!-- Version History & Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Implementation</th><th scope="col">Current Version</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>etcd</td><td>3.5.x (stable)</td><td>v3.4: gRPC gateway; v3.5: improved compaction, tracing</td><td>Kubernetes default; use v3.5+ for production</td></tr>
+      <tr><td>ZooKeeper</td><td>3.9.x</td><td>v3.8: TLS, JWT auth; v3.9: performance improvements</td><td>Mature but heavier than etcd; mainly for existing Kafka/Hadoop ecosystems</td></tr>
+      <tr><td>Consul</td><td>1.19.x</td><td>v1.16: sameness groups; v1.18: catalog v2</td><td>Best for service discovery + consensus combo</td></tr>
+      <tr><td>hashicorp/raft (Go)</td><td>1.7.x</td><td>v1.6: pre-vote protocol; v1.7: improved snapshots</td><td>For building custom Raft-based systems in Go</td></tr>
+      <tr><td>Apache Ratis (Java)</td><td>3.1.x</td><td>v3.0: streaming API; v3.1: async support</td><td>For building custom Raft-based systems in Java</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Need strong consistency across nodes (linearizable reads/writes)</td><td>Eventual consistency is acceptable (DNS caches, social media likes)</td><td>Gossip protocol, CRDTs, DynamoDB-style quorum reads</td></tr>
+      <tr><td>Coordinating leader election for stateful services</td><td>Stateless services that can run on any node independently</td><td>Load balancer round-robin (no coordination needed)</td></tr>
+      <tr><td>Distributed configuration store (feature flags, routing tables)</td><td>Configuration rarely changes and can be deployed via config files</td><td>Static config files + CI/CD deployment</td></tr>
+      <tr><td>Distributed locking (exactly-once processing, mutex)</td><td>Lock contention is low and operations are idempotent</td><td>Optimistic concurrency control (compare-and-swap)</td></tr>
+      <tr><td>Cluster membership and failure detection</td><td>Monitoring external services for health</td><td>Health check systems (Prometheus, Nagios)</td></tr>
+      <tr><td>Metadata management for distributed databases</td><td>Storing actual application data at high throughput</td><td>Purpose-built databases (PostgreSQL, Cassandra)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Consensus is a coordination mechanism, not a data store -- do not use etcd/ZooKeeper as a general-purpose database; they are optimized for small amounts of critical metadata (typically &lt;1GB)</li>
+    <li>Write throughput is fundamentally limited by disk fsync latency and quorum round-trip time -- expect 10K-50K writes/sec for etcd, not millions</li>
+    <li>Network partitions are more common than total node failures in cloud environments -- design for partition tolerance, not just crash tolerance</li>
+    <li>Raft's single-leader architecture means all writes go through one node -- this is a throughput bottleneck by design, traded for simplicity and consistency</li>
+    <li>Consensus does not solve Byzantine fault tolerance (malicious nodes) -- Raft/Paxos/ZAB assume nodes may crash but never lie; use PBFT or blockchain consensus for adversarial environments</li>
+    <li>Adding more nodes beyond 7 provides diminishing returns in fault tolerance while linearly increasing write latency -- 5 nodes is the production sweet spot</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/chat-app-at-scale/2026" data-relationship="related_to">Scalable Chat Application Design</a>
+    <a href="/software/system-design/url-shortener/2026" data-relationship="related_to">URL Shortener System Design</a>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

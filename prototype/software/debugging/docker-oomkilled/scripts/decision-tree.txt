@@ -1,0 +1,27 @@
+START — Container exits with code 137
+├── Is OOMKilled true? (docker inspect --format='{{.State.OOMKilled}}')
+│   ├── YES → Out of memory ↓
+│   └── NO → Not OOM — killed by docker kill, docker stop timeout, or orchestrator
+│       ├── docker stop timeout? → App doesn't handle SIGTERM → add signal handler
+│       └── Orchestrator? → Check K8s events: kubectl describe pod
+├── Was a memory limit set? (docker inspect --format='{{.HostConfig.Memory}}')
+│   ├── YES (--memory was set) → Container exceeded this limit
+│   │   ├── Is the limit too low for the application?
+│   │   │   ├── YES → Increase --memory [src1]
+│   │   │   └── NO → Application is using too much memory ↓
+│   │   ├── Is it a gradual increase (leak)?
+│   │   │   ├── YES → Memory leak — profile the application [src4, src8]
+│   │   │   └── NO → Spike on specific operation ↓
+│   │   └── Is it a Java/JVM application?
+│   │       ├── YES → Check -Xmx vs --memory (leave 25-30% for non-heap) [src1]
+│   │       └── NO → Check app-specific memory settings (Node --max-old-space-size, etc.)
+│   └── NO (no limit set) → Host ran out of memory
+│       ├── Check host: free -m, dmesg | grep oom [src6]
+│       ├── Other containers competing? → Set limits on all containers [src1]
+│       └── Add host RAM or reduce container count
+├── Does it happen during build? (docker build)
+│   ├── YES → Increase Docker Desktop memory allocation [src1]
+│   └── NO ↓
+└── Monitor with docker stats to find peak usage [src2]
+    ├── Peak near limit? → Increase limit by 20-30%
+    └── Peak well below limit? → Sudden spike — profile that code path

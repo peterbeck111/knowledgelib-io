@@ -1,0 +1,32 @@
+START
+|-- What type of data?
+|   |-- Static assets (images, CSS, JS, fonts)?
+|   |   |-- Use Browser Cache (Cache-Control: immutable) + CDN
+|   |   +-- Set long TTL (1 year) with content-hash in filename for busting
+|   |-- API responses (JSON)?
+|   |   |-- Is response user-specific / authenticated?
+|   |   |   |-- YES -> Application Cache (L1) + Distributed Cache (L2) only
+|   |   |   |   +-- Never cache in CDN/shared proxy without Vary or per-user key
+|   |   |   +-- NO (public data) -> CDN + Reverse Proxy + L1 + L2
+|   |   +-- Is strong consistency required?
+|   |       |-- YES -> Short TTL (30s-5min) + event-driven invalidation
+|   |       +-- NO -> Longer TTL (5min-1hr) + stale-while-revalidate
+|   |-- Database query results?
+|   |   |-- Is the query expensive (>100ms)?
+|   |   |   |-- YES -> Distributed Cache (Redis) with cache-aside pattern [src1]
+|   |   |   +-- NO -> Application-level L1 cache may suffice
+|   |   +-- Is the data read-heavy (>10:1 read-to-write)?
+|   |       |-- YES -> Multi-layer: L1 (in-process) + L2 (Redis)
+|   |       +-- NO -> Write-through cache or skip caching, optimize writes
+|   +-- Session / user state?
+|       +-- Use Redis/Memcached with TTL matching session lifetime
+|
+|-- Expected QPS on hot keys?
+|   |-- <100 QPS -> Simple cache-aside, no stampede protection needed
+|   |-- 100-10K QPS -> Add request coalescing (single-flight) [src6]
+|   +-- >10K QPS -> Probabilistic early expiration + distributed locking [src6]
+|
++-- How many app instances?
+    |-- 1 instance -> L1 in-process cache is sufficient
+    |-- 2-10 instances -> L1 + L2 (Redis) for consistency
+    +-- >10 instances -> L1 (short TTL) + L2 (Redis Cluster) + CDN

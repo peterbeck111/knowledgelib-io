@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Debug a Docker Container That Won't Start | knowledgelib.io</title>
+    <meta name="description"
+        content="Complete guide to debugging Docker containers that won't start: 10 exit codes explained, decision tree, Docker Debug, interactive shell debugging, Dockerfile anti-patterns, health checks, 3 code examples, 3 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/docker-container-wont-start/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug a Docker Container That Won't Start | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to debugging Docker containers that won't start: 10 exit codes explained, decision tree, Docker Debug, interactive shell debugging, Dockerfile anti-patterns, health checks, 3 code examples, 3 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/docker-container-wont-start/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug a Docker Container That Won't Start | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to debugging Docker containers that won't start: 10 exit codes explained, decision tree, Docker Debug, interactive shell debugging, Dockerfile anti-patterns, health checks, 3 code examples, 3 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/docker_container_wont_start">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug a Docker container that won't start?">
+    <meta name="ai:aliases"
+        content="Docker container won't start; Docker container exited with code; Docker exit code 1; Docker exit code 127; Docker exit code 137; Docker exit code 139; Docker ENTRYPOINT not found; Docker container keeps restarting; Docker container crash loop; Docker container stops immediately">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/docker-container-wont-start/2026.md">
+    <meta name="ai:token_estimate" content="5600">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="exit_code,log_output,orchestrator">
+    <meta name="ai:constraints"
+        content="Always check OOMKilled before assuming exit 137 means OOM; Never mix Shell form and Exec form expectations; Alpine images use musl — glibc binaries will fail; docker logs only captures stdout/stderr; depends_on without service_healthy only waits for start not ready; macOS/Windows memory limits apply within VM allocation">
+    <meta name="ai:skip_this_unit_if"
+        content="Container runs but app behaves incorrectly -> Application-level debugging; Docker image build fails -> software/debugging/docker-build-failures/2026; Kubernetes pod in CrashLoopBackOff -> software/debugging/kubernetes-crashloopbackoff/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Debug a Docker Container That Won't Start",
+    "headline": "How to Debug a Docker Container That Won't Start",
+    "description": "Complete debugging guide for Docker containers that won't start covering exit codes, ENTRYPOINT/CMD issues, Docker Debug, health checks, resource limits, networking, and 6 hard constraints agents must respect.",
+    "keywords": ["Docker", "container debugging", "exit code", "ENTRYPOINT", "CMD", "OOM", "docker logs", "docker debug", "Docker Compose", "Podman"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Docker Engine 20.10+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Docker — Dockerfile reference", "url": "https://docs.docker.com/reference/dockerfile/" },
+      { "@type": "WebPage", "name": "Docker — docker logs", "url": "https://docs.docker.com/reference/cli/docker/container/logs/" },
+      { "@type": "WebPage", "name": "Docker — docker inspect", "url": "https://docs.docker.com/reference/cli/docker/inspect/" },
+      { "@type": "WebPage", "name": "LogRocket — Exit Codes", "url": "https://blog.logrocket.com/docker-container-exit-codes/" },
+      { "@type": "WebPage", "name": "Komodor — Exit Codes Reference", "url": "https://komodor.com/learn/docker-exit-codes-a-complete-guide/" },
+      { "@type": "WebPage", "name": "HTTP Toolkit — Debugging Containers", "url": "https://httptoolkit.com/blog/debug-docker-containers/" },
+      { "@type": "WebPage", "name": "Groundcover — Exit Code 127", "url": "https://www.groundcover.com/blog/docker-exit-code-127" },
+      { "@type": "WebPage", "name": "Docker Engine v28/v29 Release Notes", "url": "https://docs.docker.com/engine/release-notes/28/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Debug a Docker Container That Won't Start",
+    "description": "Structured reference for debugging Docker containers that won't start with exit code lookup, diagnostic commands, Docker Debug, and fix patterns.",
+    "keywords": ["Docker", "container debugging", "exit code", "troubleshooting", "docker debug"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Docker Inc."},
+      {"@type": "Organization", "name": "Komodor"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Debug a Docker Container That Won't Start" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug a Docker container that won't start?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Docker container that won't start has either a configuration error (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not found, 137 = OOM/killed, 139 = segfault, 126 = permission denied."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker container won't start",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Docker container that won't start has either a configuration error (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not found, 137 = OOM/killed, 139 = segfault, 126 = permission denied."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker container exited with code",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Docker container that won't start has either a configuration error (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not found, 137 = OOM/killed, 139 = segfault, 126 = permission denied."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker exit code 1",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Docker container that won't start has either a configuration error (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not found, 137 = OOM/killed, 139 = segfault, 126 = permission denied."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker exit code 127",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Docker container that won't start has either a configuration error (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not found, 137 = OOM/killed, 139 = segfault, 126 = permission denied."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker exit code 137",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Docker container that won't start has either a configuration error (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not found, 137 = OOM/killed, 139 = segfault, 126 = permission denied."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Debug a Docker Container That Won't Start</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug a Docker container that won't start?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/docker-container-wont-start/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: A Docker container that won't start has either a configuration error
+                (wrong ENTRYPOINT/CMD, missing files, bad permissions) or a runtime crash (application error, missing
+                dependency, out of memory). The exit code tells you the category: 1 = app error, 127 = command not
+                found, 137 = OOM/killed, 139 = segfault, 126 = permission denied.</li>
+            <li><strong>Key tool/command</strong>: <code>docker logs &lt;container&gt;</code> shows stdout/stderr.
+                <code>docker inspect &lt;container&gt; --format='{{.State.ExitCode}}'</code> shows the exit code.
+                <code>docker run -it --entrypoint /bin/sh &lt;image&gt;</code> gets you an interactive shell.</li>
+            <li><strong>Watch out for</strong>: Shell form vs exec form in ENTRYPOINT/CMD &mdash; <code>CMD node app.js</code>
+                (shell form) vs <code>CMD ["node", "app.js"]</code> (exec form). Shell form can mask exit codes and
+                prevent signal forwarding.</li>
+            <li><strong>Works with</strong>: Docker Engine 20.10+ (including v27, v28, v29), Docker Desktop 4.33+, Podman 4+. Also applies to Docker
+                Compose v2/v5, Kubernetes, and ECS.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Always check <code>OOMKilled</code> field (<code>docker inspect --format='{{.State.OOMKilled}}'</code>) before assuming exit code 137 means out of memory &mdash; <code>docker kill</code> and <code>docker stop</code> timeouts also produce exit 137. [<a href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>]</li>
+            <li>Never mix Shell form and Exec form expectations &mdash; <code>CMD node app.js</code> (shell form) wraps in <code>/bin/sh -c</code> and makes the shell PID 1, preventing SIGTERM delivery to the app. [<a href="https://docs.docker.com/reference/dockerfile/">src1</a>]</li>
+            <li>Alpine-based images use musl libc &mdash; binaries compiled against glibc (Ubuntu/Debian) will segfault (exit 139) or fail with "not found" (exit 127) on Alpine. [<a href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>, <a href="https://www.groundcover.com/blog/docker-exit-code-127">src7</a>]</li>
+            <li><code>docker logs</code> only captures stdout/stderr &mdash; if the application logs to files inside the container, <code>docker logs</code> shows nothing. Reconfigure the app or use <code>docker exec</code> to read log files. [<a href="https://docs.docker.com/reference/cli/docker/container/logs/">src2</a>]</li>
+            <li><code>depends_on</code> in Docker Compose (without <code>condition: service_healthy</code>) only waits for the container to start, not for the service to be ready. Always pair with <code>healthcheck</code>. [<a href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</li>
+            <li>On macOS/Windows, Docker runs inside a Linux VM &mdash; memory limits via <code>--memory</code> apply within the VM allocation, not host RAM. Check Docker Desktop settings for total VM memory. [<a href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Exit Code</th>
+                        <th scope="col">Signal</th>
+                        <th scope="col">Meaning</th>
+                        <th scope="col">Most Common Cause</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>&mdash;</td>
+                        <td>Generic error</td>
+                        <td>Application crash, missing env var, config error</td>
+                        <td>Check <code>docker logs</code>; fix app code or config [<a
+                                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>&mdash;</td>
+                        <td>Shell misuse</td>
+                        <td>Bad shell syntax in entrypoint script</td>
+                        <td>Fix shell script syntax [<a
+                                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>126</td>
+                        <td>&mdash;</td>
+                        <td>Permission denied</td>
+                        <td>Entrypoint/script not executable</td>
+                        <td><code>chmod +x entrypoint.sh</code> in Dockerfile [<a
+                                href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>127</td>
+                        <td>&mdash;</td>
+                        <td>Command not found</td>
+                        <td>Binary missing from image, typo in CMD</td>
+                        <td>Check <code>which &lt;cmd&gt;</code> inside container; fix Dockerfile [<a
+                                href="https://www.groundcover.com/blog/docker-exit-code-127">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>137</td>
+                        <td>SIGKILL (9)</td>
+                        <td>Out of memory / killed</td>
+                        <td>Container exceeded memory limit; OOM killer</td>
+                        <td>Increase <code>--memory</code> limit or optimize app [<a
+                                href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>139</td>
+                        <td>SIGSEGV (11)</td>
+                        <td>Segmentation fault</td>
+                        <td>Architecture mismatch (ARM vs x86), C library incompatibility</td>
+                        <td>Build for correct platform; check binary compatibility [<a
+                                href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>143</td>
+                        <td>SIGTERM (15)</td>
+                        <td>Graceful termination</td>
+                        <td><code>docker stop</code> sent SIGTERM; app handled it</td>
+                        <td>Normal shutdown &mdash; not an error [<a
+                                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>255</td>
+                        <td>&mdash;</td>
+                        <td>Exit status out of range</td>
+                        <td>Application returned invalid exit code</td>
+                        <td>Fix app to return 0-125 [<a
+                                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>0</td>
+                        <td>&mdash;</td>
+                        <td>Success</td>
+                        <td>Container completed its task normally</td>
+                        <td>Normal &mdash; one-shot container finished [<a
+                                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>&mdash;</td>
+                        <td>&mdash;</td>
+                        <td>No logs, immediate exit</td>
+                        <td>No foreground process; CMD runs in background</td>
+                        <td>Keep process in foreground [<a
+                                href="https://docs.docker.com/reference/dockerfile/">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START &mdash; Container won't start or exits immediately
+&#9500;&#9472;&#9472; What is the exit code? (docker inspect --format='{{.State.ExitCode}}')
+&#9474;   &#9500;&#9472;&#9472; Exit 0 &rarr; Container finished successfully
+&#9474;   &#9474;   &#9492;&#9472;&#9472; If unexpected &rarr; CMD terminates immediately &rarr; keep in foreground [src1]
+&#9474;   &#9500;&#9472;&#9472; Exit 1 &rarr; Application error
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Check docker logs &rarr; find the error message [src2]
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Missing env var? &rarr; Add -e VAR=value
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Missing file/config? &rarr; Check COPY/ADD in Dockerfile [src1]
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Dependency error? &rarr; Check package installation
+&#9474;   &#9500;&#9472;&#9472; Exit 126 &rarr; Permission denied
+&#9474;   &#9474;   &#9492;&#9472;&#9472; chmod +x on entrypoint script; check USER directive [src5]
+&#9474;   &#9500;&#9472;&#9472; Exit 127 &rarr; Command not found
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Typo in CMD/ENTRYPOINT? &rarr; Fix Dockerfile [src7]
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Binary not installed? &rarr; Add to RUN install [src7]
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Wrong base image? &rarr; alpine vs debian (musl vs glibc) [src7]
+&#9474;   &#9500;&#9472;&#9472; Exit 137 &rarr; OOM or killed
+&#9474;   &#9474;   &#9500;&#9472;&#9472; OOMKilled=true &rarr; Increase --memory or optimize app [src5]
+&#9474;   &#9474;   &#9492;&#9472;&#9472; OOMKilled=false &rarr; Manual kill or orchestrator [src5]
+&#9474;   &#9500;&#9472;&#9472; Exit 139 &rarr; Segfault
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Architecture mismatch? &rarr; Build for correct platform [src5]
+&#9474;   &#9474;   &#9492;&#9472;&#9472; musl vs glibc? &rarr; Use compatible binaries [src5]
+&#9474;   &#9492;&#9472;&#9472; No exit code / keeps restarting &rarr; Check restart policy [src4]
+&#9500;&#9472;&#9472; Are there any logs?
+&#9474;   &#9500;&#9472;&#9472; YES &rarr; Read: docker logs --tail 50 [src2]
+&#9474;   &#9492;&#9472;&#9472; NO &rarr; Use docker debug or: docker run -it --entrypoint /bin/sh [src6]
+&#9492;&#9472;&#9472; Multi-stage build issue?
+    &#9492;&#9472;&#9472; Files missing from final stage &rarr; Check COPY --from= [src1]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Check the container status and exit code</h3>
+        <p>Start with <code>docker ps -a</code> to see all containers. [<a
+                href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>, <a
+                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</p>
+        <pre><code class="language-bash">docker ps -a
+docker inspect &lt;cid&gt; --format='{{.State.ExitCode}}'
+docker inspect &lt;cid&gt; --format='{{.State.OOMKilled}}'
+docker inspect &lt;cid&gt; --format='{{json .State}}' | python -m json.tool</code></pre>
+        <p><strong>Verify</strong>: Use the Quick Reference table to interpret the exit code.</p>
+
+        <h3>2. Read the container logs</h3>
+        <p>Logs show stdout/stderr from the container's main process. [<a
+                href="https://docs.docker.com/reference/cli/docker/container/logs/">src2</a>]</p>
+        <pre><code class="language-bash">docker logs &lt;cid&gt;
+docker logs --tail 50 &lt;cid&gt;
+docker logs -f &lt;cid&gt;
+docker logs -t &lt;cid&gt;</code></pre>
+        <p><strong>Verify</strong>: Look for error messages, stack traces, "file not found", "permission denied".</p>
+
+        <h3>3. Use Docker Debug for non-invasive inspection</h3>
+        <p>Docker Debug (GA since Docker Desktop 4.33, free for all users) lets you attach a debugging shell to any container &mdash; even stopped or minimal ones. [<a
+                href="https://docs.docker.com/engine/release-notes/28/">src8</a>]</p>
+        <pre><code class="language-bash"># Docker Debug (Docker Desktop 4.33+)
+docker debug &lt;cid&gt;
+
+# Traditional fallback: override entrypoint
+docker run -it --entrypoint /bin/sh &lt;image&gt;
+
+# Debug exited container
+docker commit &lt;exited_cid&gt; debug-image
+docker run -it --entrypoint /bin/sh debug-image
+
+# Exec into running container
+docker exec -it &lt;cid&gt; /bin/sh</code></pre>
+        <p><strong>Verify</strong>: Manually run the CMD command to see the exact error.</p>
+
+        <h3>4. Inspect the Dockerfile for common mistakes</h3>
+        <p>Review for configuration errors. [<a href="https://docs.docker.com/reference/dockerfile/">src1</a>]</p>
+        <pre><code class="language-dockerfile"># Use exec form CMD (receives signals properly)
+CMD ["node", "server.js"]
+
+# Make scripts executable
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
+
+# Run in foreground
+CMD ["nginx", "-g", "daemon off;"]
+
+# Multi-stage: copy build output
+COPY --from=builder /app/dist ./dist</code></pre>
+
+        <h3>5. Check environment variables and secrets</h3>
+        <p>Missing env vars are one of the most common causes of exit code 1. [<a
+                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</p>
+        <pre><code class="language-bash">docker inspect &lt;image&gt; --format='{{json .Config.Env}}'
+docker run -e DATABASE_URL=... -e SECRET_KEY=... &lt;image&gt;
+docker run --env-file .env &lt;image&gt;</code></pre>
+
+        <h3>6. Check resource limits</h3>
+        <p>Exit code 137 usually means OOM. [<a href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>]
+        </p>
+        <pre><code class="language-bash">docker stats &lt;cid&gt;
+docker inspect &lt;cid&gt; --format='{{.HostConfig.Memory}}'
+docker run --memory=512m --memory-swap=1g &lt;image&gt;</code></pre>
+
+        <h3>7. Verify networking and dependencies</h3>
+        <p>Containers depending on databases may fail if those aren't ready. [<a
+                href="https://blog.logrocket.com/docker-container-exit-codes/">src4</a>]</p>
+        <pre><code class="language-yaml"># docker-compose.yml &mdash; proper dependency waiting
+services:
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      retries: 5</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Comprehensive debug entrypoint script</h3>
+        <pre><code class="language-bash">#!/bin/sh
+# Input:  Container that fails with unclear errors
+# Output: Detailed diagnostic output before main process starts
+
+set -e
+
+echo "=== Container Debug Info ==="
+echo "Date:      $(date -u)"
+echo "Hostname:  $(hostname)"
+echo "User:      $(whoami) (UID=$(id -u), GID=$(id -g))"
+echo "Workdir:   $(pwd)"
+echo "OS:        $(cat /etc/os-release 2&gt;/dev/null | grep PRETTY_NAME | cut -d= -f2 || echo 'unknown')"
+echo "Arch:      $(uname -m)"
+
+echo ""
+echo "=== Environment ==="
+env | sort | grep -v -E '(PASSWORD|SECRET|KEY|TOKEN)' || true
+
+echo ""
+echo "=== File Permissions ==="
+ls -la /app/ 2&gt;/dev/null || echo "/app does not exist"
+
+echo ""
+echo "=== Connectivity Check ==="
+if [ -n "$DATABASE_URL" ]; then
+    DB_HOST=$(echo "$DATABASE_URL" | sed -E 's|.*@([^:/]+).*|\1|')
+    DB_PORT=$(echo "$DATABASE_URL" | sed -E 's|.*:([0-9]+)/.*|\1|')
+    echo "Checking DB: $DB_HOST:$DB_PORT"
+    nc -zv "$DB_HOST" "$DB_PORT" 2&gt;&amp;1 || echo "Cannot reach database!"
+fi
+
+echo ""
+echo "=== Starting Application ==="
+exec "$@"</code></pre>
+
+        <h3>Docker health check patterns</h3>
+        <pre><code class="language-dockerfile"># Node.js health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/health', (r) =&gt; { process.exit(r.statusCode === 200 ? 0 : 1) })"
+
+# Python/Flask health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
+
+# Nginx health check
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1</code></pre>
+
+        <h3>Automated container restart diagnostics</h3>
+        <pre><code class="language-python"># Input:  Containers that keep restarting
+# Output: Script that captures diagnostic info from crashing containers
+
+import subprocess, json, sys
+
+def diagnose_container(cid):
+    state = json.loads(subprocess.check_output(
+        ["docker", "inspect", "--format", "{{json .State}}", cid]
+    ))
+    print(f"=== Container: {cid} ===")
+    print(f"Status: {state.get('Status')}, Exit: {state.get('ExitCode')}")
+    print(f"OOMKilled: {state.get('OOMKilled')}")
+
+    meanings = {
+        0: "Success", 1: "App error", 126: "Permission denied",
+        127: "Command not found", 137: "OOM/killed", 139: "Segfault",
+    }
+    print(f"Meaning: {meanings.get(state.get('ExitCode', -1), 'Unknown')}")
+
+    logs = subprocess.check_output(
+        ["docker", "logs", "--tail", "30", cid], stderr=subprocess.STDOUT
+    ).decode('utf-8', errors='replace')
+    print(f"\n=== Last 30 log lines ===\n{logs}")
+
+    config = json.loads(subprocess.check_output(
+        ["docker", "inspect", "--format", "{{json .Config}}", cid]
+    ))
+    print(f"Image: {config.get('Image')}")
+    print(f"Entrypoint: {config.get('Entrypoint')}")
+    print(f"Cmd: {config.get('Cmd')}")
+
+if __name__ == "__main__":
+    diagnose_container(sys.argv[1])</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Shell form CMD (doesn't receive signals)</h3>
+        <pre><code class="language-dockerfile"># BAD &mdash; runs under /bin/sh -c, PID 1 is shell, not your app [src1]
+CMD node server.js</code></pre>
+
+        <h3>Correct: Exec form CMD</h3>
+        <pre><code class="language-dockerfile"># GOOD &mdash; app is PID 1, receives signals directly [src1]
+CMD ["node", "server.js"]</code></pre>
+
+        <h3>Wrong: Process daemonizes (container exits immediately)</h3>
+        <pre><code class="language-dockerfile"># BAD &mdash; nginx forks to background, container stops [src1]
+CMD ["nginx"]</code></pre>
+
+        <h3>Correct: Run in foreground mode</h3>
+        <pre><code class="language-dockerfile"># GOOD &mdash; stays in foreground as PID 1 [src1]
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+
+        <h3>Wrong: No wait-for-dependencies logic</h3>
+        <pre><code class="language-yaml"># BAD &mdash; depends_on only waits for container START, not READY [src4]
+services:
+  app:
+    depends_on:
+      - db</code></pre>
+
+        <h3>Correct: Health check + condition</h3>
+        <pre><code class="language-yaml"># GOOD &mdash; waits until DB is accepting connections [src4]
+services:
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      retries: 5</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Shell form vs exec form</strong>: Shell form (<code>CMD node app.js</code>) wraps your command
+                in <code>/bin/sh -c</code>, making the shell PID 1. Your app won't receive SIGTERM on
+                <code>docker stop</code>. Always use exec form. [<a
+                    href="https://docs.docker.com/reference/dockerfile/">src1</a>]</li>
+            <li><strong>ENTRYPOINT + CMD interaction</strong>: When both are set, CMD becomes arguments to ENTRYPOINT.
+                Overriding CMD at runtime replaces CMD, not ENTRYPOINT. [<a
+                    href="https://docs.docker.com/reference/dockerfile/">src1</a>]</li>
+            <li><strong>Alpine musl vs glibc</strong>: Binaries compiled for glibc (Ubuntu/Debian) often segfault (exit
+                139) on Alpine (musl). Use Alpine-native builds or <code>*-slim</code> Debian images. [<a
+                    href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>, <a
+                    href="https://www.groundcover.com/blog/docker-exit-code-127">src7</a>]</li>
+            <li><strong>Multi-stage missing runtime deps</strong>: Copying only the binary from the build stage but
+                forgetting shared libraries or CA certificates causes exit 127 or TLS errors. [<a
+                    href="https://docs.docker.com/reference/dockerfile/">src1</a>]</li>
+            <li><strong><code>docker stop</code> timeout</strong>: <code>docker stop</code> sends SIGTERM, waits 10s,
+                then SIGKILL. If your app always exits 137 on shutdown, it's not handling SIGTERM. [<a
+                    href="https://komodor.com/learn/docker-exit-codes-a-complete-guide/">src5</a>]</li>
+            <li><strong>Line endings (Windows to Linux)</strong>: Scripts with <code>\r\n</code> cause "command not
+                found" on Linux. Use <code>dos2unix</code> or configure your editor. [<a
+                    href="https://www.groundcover.com/blog/docker-exit-code-127">src7</a>]</li>
+            <li><strong>Compose v5 Go SDK changes</strong>: Docker Desktop 4.38+ ships Compose v5 with a new Go SDK. Build configurations that worked with Compose v2 may need updating for Bake-based workflows. [<a
+                    href="https://docs.docker.com/engine/release-notes/28/">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Container Status ===
+docker ps -a
+docker inspect &lt;cid&gt; --format='{{.State.ExitCode}}'
+docker inspect &lt;cid&gt; --format='{{.State.OOMKilled}}'
+docker inspect &lt;cid&gt; --format='{{json .State}}'
+
+# === Logs ===
+docker logs &lt;cid&gt;
+docker logs --tail 50 &lt;cid&gt;
+docker logs -f &lt;cid&gt;
+
+# === Docker Debug (Docker Desktop 4.33+) ===
+docker debug &lt;cid&gt;
+
+# === Interactive Debugging (fallback) ===
+docker run -it --entrypoint /bin/sh &lt;image&gt;
+docker exec -it &lt;cid&gt; /bin/sh
+docker commit &lt;cid&gt; debug &amp;&amp; docker run -it --entrypoint /bin/sh debug
+
+# === Image Inspection ===
+docker inspect &lt;image&gt; --format='{{json .Config.Entrypoint}}'
+docker inspect &lt;image&gt; --format='{{json .Config.Cmd}}'
+docker history &lt;image&gt;
+
+# === Resources ===
+docker stats &lt;cid&gt;
+docker system df
+
+# === Restart Policy ===
+docker inspect &lt;cid&gt; --format='{{.HostConfig.RestartPolicy.Name}}'
+docker update --restart=no &lt;cid&gt;
+
+# === Docker Compose ===
+docker compose logs &lt;service&gt;
+docker compose config
+docker compose ps</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Docker 28-29 (2025-2026)</td>
+                        <td>Current</td>
+                        <td>Networking improvements, NRI support, containerd default; Compose v5 + Go SDK [<a
+                                href="https://docs.docker.com/engine/release-notes/28/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 27 (2024)</td>
+                        <td>Stable</td>
+                        <td>Containerd image store default; kernel module loading improvements [<a
+                                href="https://docs.docker.com/engine/release-notes/28/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 25+ (2024)</td>
+                        <td>Stable</td>
+                        <td><code>docker init</code> for Dockerfile generation [<a
+                                href="https://docs.docker.com/reference/dockerfile/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 24</td>
+                        <td>Stable</td>
+                        <td>BuildKit default; containerd image store option [<a
+                                href="https://docs.docker.com/reference/dockerfile/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 23</td>
+                        <td>Stable</td>
+                        <td>Compose V2 default (<code>docker compose</code>) [<a
+                                href="https://docs.docker.com/reference/dockerfile/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker 20.10</td>
+                        <td>LTS-like</td>
+                        <td>cgroups v2 support; --platform flag [<a
+                                href="https://docs.docker.com/reference/dockerfile/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker Desktop 4.33+</td>
+                        <td>GA</td>
+                        <td><code>docker debug</code> free for all users [<a
+                                href="https://docs.docker.com/engine/release-notes/28/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Docker Desktop 4.38+</td>
+                        <td>Current</td>
+                        <td>Bake GA, Docker AI Agent, multi-node K8s testing [<a
+                                href="https://docs.docker.com/engine/release-notes/28/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Podman 4+</td>
+                        <td>Drop-in replacement</td>
+                        <td>Same CLI; rootless by default [<a
+                                href="https://docs.docker.com/reference/cli/docker/inspect/">src3</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Container exits with non-zero code</td>
+                        <td>Container runs but app behaves wrong</td>
+                        <td>Application-level debugging</td>
+                    </tr>
+                    <tr>
+                        <td>Container loop-restarts</td>
+                        <td>Image builds fail</td>
+                        <td><code>docker build --no-cache</code></td>
+                    </tr>
+                    <tr>
+                        <td>Container starts but crashes after seconds</td>
+                        <td>Network-level issues between containers</td>
+                        <td><code>docker network inspect</code></td>
+                    </tr>
+                    <tr>
+                        <td>docker compose up fails for one service</td>
+                        <td>Orchestrator-level issues (K8s)</td>
+                        <td><code>kubectl describe pod</code></td>
+                    </tr>
+                    <tr>
+                        <td>Exit code appears but logs are empty</td>
+                        <td>Docker Desktop itself won't start</td>
+                        <td>Docker Desktop troubleshooting docs</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><code>docker logs</code> only shows stdout/stderr. If your app logs to a file inside the container,
+                <code>docker logs</code> shows nothing. Configure your app to log to stdout/stderr.</li>
+            <li>Exit code 137 doesn't always mean OOM &mdash; it can also mean <code>docker kill</code> or
+                <code>docker stop</code> timeout. Check <code>OOMKilled</code> in <code>docker inspect</code>.</li>
+            <li><code>docker stop</code> sends SIGTERM first, then SIGKILL after the grace period (default 10s). If your
+                app always exits 137, add a SIGTERM handler.</li>
+            <li>On macOS/Windows, Docker runs inside a Linux VM. Memory limits are within the VM's allocation. Check
+                Docker Desktop settings.</li>
+            <li><code>docker commit</code> captures the filesystem but not volumes, network config, or running
+                processes. Useful for debugging, not production.</li>
+            <li><code>depends_on</code> in Docker Compose only waits for the container to <em>start</em>, not be
+                <em>ready</em>. Use <code>condition: service_healthy</code> with a <code>healthcheck</code>.</li>
+            <li><code>docker debug</code> (Docker Desktop 4.33+) can attach to stopped containers and minimal images (distroless/scratch) &mdash; it injects a debug toolbox without modifying the target container. Free for all Docker users since late 2024.</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/docker-oomkilled/2026" data-relationship="related_to">Docker OOMKilled</a>
+        <a href="/software/debugging/docker-networking-issues/2026" data-relationship="related_to">Docker Networking Issues</a>
+        <a href="/software/debugging/kubernetes-crashloopbackoff/2026" data-relationship="solves">Kubernetes CrashLoopBackOff</a>
+        <a href="/software/debugging/docker-build-failures/2026" data-relationship="often_confused_with">Docker Build Failures</a>
+        <a href="/software/debugging/nodejs-econnrefused/2026" data-relationship="often_confused_with">Node.js ECONNREFUSED</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

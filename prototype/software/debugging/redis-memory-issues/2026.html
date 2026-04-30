@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Redis Memory Issues: Diagnosis and Fixes (2026) | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to Redis memory diagnosis and resolution: INFO memory, MEMORY DOCTOR, eviction policies, active defragmentation, client buffer tuning,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/redis-memory-issues/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Redis Memory Issues: Diagnosis and Fixes (2026) | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete Redis memory guide: INFO memory, MEMORY DOCTOR, eviction policies, activedefrag, client buffers, bigkeys. 7 authoritative sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/redis-memory-issues/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-23">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Redis Memory Issues: Diagnosis and Fixes (2026) | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete Redis memory guide: INFO memory, MEMORY DOCTOR, eviction policies, activedefrag, client buffers, bigkeys. 7 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/redis_memory_issues">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I diagnose and fix Redis memory issues?">
+    <meta name="ai:aliases"
+        content="Redis out of memory; Redis OOM command not allowed; Redis high memory usage; Redis memory fragmentation; Redis used_memory vs maxmemory; Redis eviction policy; Redis MEMORY DOCTOR; Redis memory leak; Redis activedefrag; Redis client output buffer overflow">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/redis-memory-issues/2026.md">
+    <meta name="ai:token_estimate" content="4500">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="stable">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-23">
+    <meta name="ai:inputs_needed" content="redis_version,deployment_type,symptom">
+    <meta name="ai:constraints"
+        content="MEMORY commands require Redis 4.0+; Active defragmentation requires jemalloc (not system libc); Never set maxmemory to 0 in production; CONFIG SET changes are ephemeral without CONFIG REWRITE; redis-cli --bigkeys performs full SCAN, run on replicas">
+    <meta name="ai:skip_this_unit_if"
+        content="Redis is crashing/segfaulting, not OOM -> check core dumps and redis-check-rdb; Problem is slow queries, not memory -> use SLOWLOG GET; Redis Cluster rebalancing issues -> use redis-cli --cluster rebalance">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"Redis Memory Issues: Diagnosis and Fixes","headline":"How Do I Diagnose and Fix Redis Memory Issues?","description":"Complete reference for Redis memory issue diagnosis and resolution covering INFO memory, MEMORY DOCTOR, eviction policies, active defragmentation, client buffer tuning, bigkeys analysis, and memory optimization best practices.","keywords":["Redis","memory","OOM","maxmemory","eviction policy","fragmentation","activedefrag","MEMORY DOCTOR","bigkeys","client output buffer"],"dateModified":"2026-02-23","datePublished":"2026-02-23","proficiencyLevel":"Intermediate","dependencies":"Redis 4.0+ (for MEMORY commands and active defrag)","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"Redis Documentation — Key Eviction","url":"https://redis.io/docs/latest/develop/reference/eviction/"},{"@type":"WebPage","name":"Redis Documentation — Memory Optimization","url":"https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/"},{"@type":"WebPage","name":"Redis Documentation — MEMORY STATS Command","url":"https://redis.io/docs/latest/commands/memory-stats/"},{"@type":"WebPage","name":"Memory Management Best Practices — Google Cloud Memorystore","url":"https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices"},{"@type":"WebPage","name":"Best Practices for Memory Management — Azure Cache for Redis","url":"https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management"},{"@type":"WebPage","name":"Top Redis Headaches for DevOps — Client Buffers","url":"https://redis.io/blog/top-redis-headaches-for-devops-client-buffers/"},{"@type":"WebPage","name":"Redis Documentation — Client Handling","url":"https://redis.io/docs/latest/develop/reference/clients/"}]}</script>
+
+    <!-- Structured data: Dataset -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Redis Memory Issues: Diagnosis and Fixes",
+        "description": "Structured reference for Redis memory issue diagnosis with 9 ranked causes, decision tree, code examples in Python/JavaScript/Go, anti-patterns, and diagnostic commands.",
+        "keywords": ["Redis", "memory management", "OOM", "eviction", "fragmentation", "defragmentation", "database debugging"],
+        "temporalCoverage": "2020/2026",
+        "dateModified": "2026-02-23",
+        "datePublished": "2026-02-23",
+        "sourceOrganization": [
+            { "@type": "Organization", "name": "Redis Ltd." },
+            { "@type": "Organization", "name": "Google Cloud" },
+            { "@type": "Organization", "name": "Microsoft" }
+        ],
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+        "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+    }
+    </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+            { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+            { "@type": "ListItem", "position": 4, "name": "Redis Memory Issues" }
+        ]
+    }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I diagnose and fix Redis memory issues?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis memory issues stem from five root causes: hitting the maxmemory limit, memory fragmentation (high RSS vs low used_memory), large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose with INFO memory and MEMORY DOCTOR; fix by setting appropriate maxmemory-policy, enabling activedefrag, and auditing keys with --bigkeys/--memkeys."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis out of memory",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis memory issues stem from five root causes: hitting the maxmemory limit, memory fragmentation (high RSS vs low used_memory), large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose with INFO memory and MEMORY DOCTOR; fix by setting appropriate maxmemory-policy, enabling activedefrag, and auditing keys with --bigkeys/--memkeys."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis OOM command not allowed",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis memory issues stem from five root causes: hitting the maxmemory limit, memory fragmentation (high RSS vs low used_memory), large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose with INFO memory and MEMORY DOCTOR; fix by setting appropriate maxmemory-policy, enabling activedefrag, and auditing keys with --bigkeys/--memkeys."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis high memory usage",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis memory issues stem from five root causes: hitting the maxmemory limit, memory fragmentation (high RSS vs low used_memory), large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose with INFO memory and MEMORY DOCTOR; fix by setting appropriate maxmemory-policy, enabling activedefrag, and auditing keys with --bigkeys/--memkeys."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis memory fragmentation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis memory issues stem from five root causes: hitting the maxmemory limit, memory fragmentation (high RSS vs low used_memory), large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose with INFO memory and MEMORY DOCTOR; fix by setting appropriate maxmemory-policy, enabling activedefrag, and auditing keys with --bigkeys/--memkeys."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis used_memory vs maxmemory",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis memory issues stem from five root causes: hitting the maxmemory limit, memory fragmentation (high RSS vs low used_memory), large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose with INFO memory and MEMORY DOCTOR; fix by setting appropriate maxmemory-policy, enabling activedefrag, and auditing keys with --bigkeys/--memkeys."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Diagnose and Fix Redis Memory Issues?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I diagnose and fix Redis memory issues?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/redis-memory-issues/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> stable</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Redis memory issues stem from five root causes: hitting the
+                <code>maxmemory</code> limit, memory fragmentation (high RSS vs low <code>used_memory</code>),
+                large or forgotten keys, client output buffer bloat, and missing/wrong eviction policies. Diagnose
+                with <code>INFO memory</code> and <code>MEMORY DOCTOR</code>; fix by setting appropriate
+                <code>maxmemory-policy</code>, enabling <code>activedefrag</code>, and auditing keys with
+                <code>--bigkeys</code>/<code>--memkeys</code>. [<a
+                    href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>, <a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+            </li>
+            <li><strong>Key tool/command</strong>: <code>redis-cli INFO memory</code> — shows
+                <code>used_memory</code>, <code>used_memory_rss</code>, <code>mem_fragmentation_ratio</code>,
+                <code>maxmemory</code>, and <code>evicted_keys</code> in a single command. [<a
+                    href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]
+            </li>
+            <li><strong>Watch out for</strong>: Setting <code>maxmemory</code> without an eviction policy (default
+                is <code>noeviction</code>) — Redis rejects all writes with
+                <code>OOM command not allowed when used memory &gt; 'maxmemory'</code> instead of evicting old
+                keys. [<a href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]
+            </li>
+            <li><strong>Works with</strong>: Redis 4.0+ (for MEMORY commands and active defrag). Core
+                <code>INFO memory</code> works on all versions. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                <a href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>MEMORY commands require Redis 4.0+</strong>: <code>MEMORY USAGE</code>,
+                <code>MEMORY DOCTOR</code>, <code>MEMORY STATS</code>, and <code>MEMORY MALLOC-STATS</code> were
+                introduced in Redis 4.0. On older versions, use <code>INFO memory</code> and
+                <code>DEBUG OBJECT</code>. [<a
+                    href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]
+            </li>
+            <li><strong>Active defragmentation requires jemalloc</strong>: Redis must be compiled with its bundled
+                jemalloc (the default). System jemalloc without <code>JEMALLOC_FRAG_HINT</code> will not defrag.
+                Verify with <code>INFO memory</code> — <code>mem_allocator</code> should show
+                <code>jemalloc-5.x</code>. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                <a href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+            </li>
+            <li><strong>Never run <code>redis-cli --bigkeys</code> on a primary during peak traffic</strong>: It
+                performs a full <code>SCAN</code> of the keyspace and can cause latency spikes. Run on a replica or
+                during maintenance windows. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+            </li>
+            <li><strong>Do not set <code>maxmemory</code> to 0 in production</strong>: A value of 0 means no
+                limit. Redis will consume all available RAM until the OS OOM killer terminates the process without
+                clean shutdown, risking data loss. [<a
+                    href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>, <a
+                    href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+            </li>
+            <li><strong><code>CONFIG SET</code> is ephemeral</strong>: Runtime config changes via
+                <code>CONFIG SET maxmemory</code> or <code>CONFIG SET maxmemory-policy</code> are lost on
+                restart. Always follow with <code>CONFIG REWRITE</code> or update <code>redis.conf</code>
+                manually. [<a
+                    href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><code>maxmemory</code> reached with <code>noeviction</code> policy</td>
+                        <td>~30%</td>
+                        <td><code>OOM command not allowed when used memory &gt; 'maxmemory'</code></td>
+                        <td>Set <code>maxmemory-policy allkeys-lru</code> (or appropriate policy) [<a
+                                href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Memory fragmentation (high RSS, low dataset)</td>
+                        <td>~20%</td>
+                        <td><code>mem_fragmentation_ratio</code> &gt; 1.5 in <code>INFO memory</code></td>
+                        <td>Enable <code>activedefrag yes</code>; or restart Redis [<a
+                                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                            <a href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Large/forgotten keys consuming disproportionate memory</td>
+                        <td>~15%</td>
+                        <td><code>redis-cli --bigkeys</code> shows keys with millions of elements</td>
+                        <td>Delete or restructure oversized keys; set TTLs [<a
+                                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Client output buffer overflow (slow consumers)</td>
+                        <td>~10%</td>
+                        <td><code>client_recent_max_output_buffer</code> high in <code>INFO clients</code></td>
+                        <td>Tune <code>client-output-buffer-limit</code>; fix slow subscribers [<a
+                                href="https://redis.io/blog/top-redis-headaches-for-devops-client-buffers/">src6</a>,
+                            <a href="https://redis.io/docs/latest/develop/reference/clients/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Replica output buffer growth</td>
+                        <td>~8%</td>
+                        <td><code>mem_clients_slaves</code> large in <code>MEMORY STATS</code></td>
+                        <td>Fix replica lag; increase <code>client-output-buffer-limit replica</code> [<a
+                                href="https://redis.io/blog/top-redis-headaches-for-devops-client-buffers/">src6</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>No TTL on keys (unbounded growth)</td>
+                        <td>~7%</td>
+                        <td><code>db0:keys=N,expires=0</code> — zero keys have expiration</td>
+                        <td>Audit and set TTLs; use <code>volatile-*</code> eviction policies [<a
+                                href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>, <a
+                                href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>RDB/AOF fork doubling RSS</td>
+                        <td>~5%</td>
+                        <td>RSS spikes to 2x during <code>BGSAVE</code> or <code>BGREWRITEAOF</code></td>
+                        <td>Reserve 50% memory headroom; use <code>aof-use-rdb-preamble yes</code> [<a
+                                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                            <a href="https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Lua scripts holding references</td>
+                        <td>~3%</td>
+                        <td><code>used_memory_scripts</code> high in <code>INFO memory</code></td>
+                        <td>Avoid large data in Lua globals; use <code>redis.call</code> results directly [<a
+                                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Wrong maxmemory value (too low for workload)</td>
+                        <td>~2%</td>
+                        <td>Frequent <code>evicted_keys</code> but low <code>mem_fragmentation_ratio</code></td>
+                        <td>Increase <code>maxmemory</code> to match workload [<a
+                                href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START -- Redis memory issue detected
+|
++-- Is Redis returning "OOM command not allowed"?
+|   +-- YES: Check maxmemory and eviction policy
+|   |   +-- maxmemory-policy = noeviction? -> Set allkeys-lru or allkeys-lfu [Cause #1]
+|   |   +-- maxmemory too low? -> Increase maxmemory [Cause #9]
+|   |   +-- Keys have no TTL? -> Set TTLs, switch to volatile-lru [Cause #6]
+|   +-- NO: Continue below
+|
++-- Is RSS much higher than used_memory (fragmentation ratio > 1.5)?
+|   +-- YES -> Enable activedefrag; consider restart for severe cases [Cause #2]
+|   +-- NO: Continue below
+|
++-- Is used_memory growing steadily without stabilizing?
+|   +-- YES: Run redis-cli --bigkeys and --memkeys
+|   |   +-- Found oversized keys? -> Delete/restructure/TTL [Cause #3]
+|   |   +-- No big keys but mem_clients_normal is high? -> Client buffer issue [Cause #4]
+|   |   +-- mem_clients_slaves is high? -> Replica buffer issue [Cause #5]
+|   +-- NO: Continue below
+|
++-- Does RSS spike during BGSAVE/BGREWRITEAOF?
+|   +-- YES -> Reserve memory headroom; tune AOF settings [Cause #7]
+|   +-- NO -> Check used_memory_scripts and Lua usage [Cause #8]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Assess current memory state</h3>
+        <p>Get a complete picture of memory usage. [<a
+                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</p>
+        <pre><code class="language-bash">redis-cli INFO memory</code></pre>
+        <p>Key fields: <code>used_memory</code>, <code>used_memory_rss</code>, <code>used_memory_peak</code>,
+            <code>mem_fragmentation_ratio</code> (healthy: 1.0-1.5), <code>maxmemory</code>,
+            <code>maxmemory_policy</code>, <code>mem_allocator</code> (should be jemalloc).</p>
+        <p><strong>Verify</strong>: <code>redis-cli INFO memory | grep used_memory_human</code> → shows current usage
+            in human-readable format.</p>
+
+        <h3>2. Run MEMORY DOCTOR for automated diagnosis</h3>
+        <p>Redis 4.0+ includes a built-in diagnostic advisor. [<a
+                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</p>
+        <pre><code class="language-bash">redis-cli MEMORY DOCTOR</code></pre>
+        <p>Reports issues such as high fragmentation, peak memory significantly higher than current, and high RSS to
+            dataset ratio.</p>
+        <p><strong>Verify</strong>: Output should be <code>Sam, I have no memory problems</code> if healthy, or a
+            specific diagnostic message.</p>
+
+        <h3>3. Identify large keys consuming memory</h3>
+        <p>Find keys using disproportionate amounts of memory. [<a
+                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+        </p>
+        <pre><code class="language-bash"># Find largest keys by element count
+redis-cli --bigkeys -i 0.1
+
+# Find largest keys by memory usage (Redis 6.0+)
+redis-cli --memkeys -i 0.1
+
+# Check specific key memory usage
+redis-cli MEMORY USAGE mykey</code></pre>
+        <p><strong>Verify</strong>: Output shows the largest key per data type and summary statistics.</p>
+
+        <h3>4. Check and fix eviction policy</h3>
+        <p>If Redis hits <code>maxmemory</code> with <code>noeviction</code>, all writes fail. [<a
+                href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]</p>
+        <pre><code class="language-bash"># Check current policy
+redis-cli CONFIG GET maxmemory-policy
+
+# Set appropriate policy for cache workloads
+redis-cli CONFIG SET maxmemory-policy allkeys-lru
+
+# Persist the change
+redis-cli CONFIG REWRITE</code></pre>
+        <p><strong>Verify</strong>: <code>redis-cli CONFIG GET maxmemory-policy</code> → shows the new policy.</p>
+
+        <h3>5. Enable active defragmentation for high fragmentation</h3>
+        <p>If <code>mem_fragmentation_ratio</code> &gt; 1.5, enable active defrag. [<a
+                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+            <a href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+        </p>
+        <pre><code class="language-bash"># Enable active defragmentation
+redis-cli CONFIG SET activedefrag yes
+
+# Configure thresholds (optional)
+redis-cli CONFIG SET active-defrag-ignore-bytes 100mb
+redis-cli CONFIG SET active-defrag-threshold-lower 10
+redis-cli CONFIG SET active-defrag-threshold-upper 100
+redis-cli CONFIG SET active-defrag-cycle-min 1
+redis-cli CONFIG SET active-defrag-cycle-max 25
+
+# Persist
+redis-cli CONFIG REWRITE</code></pre>
+        <p><strong>Verify</strong>: <code>redis-cli INFO memory | grep mem_fragmentation_ratio</code> — should
+            decrease over minutes to hours.</p>
+
+        <h3>6. Audit and fix client output buffers</h3>
+        <p>Slow consumers (especially pub/sub subscribers) can cause massive buffer growth. [<a
+                href="https://redis.io/blog/top-redis-headaches-for-devops-client-buffers/">src6</a>, <a
+                href="https://redis.io/docs/latest/develop/reference/clients/">src7</a>]</p>
+        <pre><code class="language-bash"># Check client buffer usage
+redis-cli CLIENT LIST
+
+# Set buffer limits (hard limit, soft limit, soft time)
+redis-cli CONFIG SET client-output-buffer-limit "pubsub 32mb 8mb 60"
+redis-cli CONFIG SET client-output-buffer-limit "replica 256mb 64mb 60"</code></pre>
+        <p><strong>Verify</strong>: <code>redis-cli INFO clients</code> — check
+            <code>client_recent_max_output_buffer</code> has decreased.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Python: Redis memory health check</h3>
+        <pre><code class="language-python"># Input:  Redis connection URL
+# Output: Memory health report dict with issues list
+import redis
+
+def check_redis_memory(url="redis://localhost:6379"):
+    r = redis.Redis.from_url(url)
+    info = r.info("memory")
+    issues = []
+
+    frag = info.get("mem_fragmentation_ratio", 1.0)
+    if frag &gt; 1.5:
+        issues.append(f"High fragmentation: {frag:.2f} (&gt;1.5)")
+    elif frag &lt; 1.0:
+        issues.append(f"Swapping likely: ratio {frag:.2f} (&lt;1.0)")
+
+    used = info.get("used_memory", 0)
+    maxmem = info.get("maxmemory", 0)
+    if maxmem &gt; 0 and used / maxmem &gt; 0.9:
+        issues.append(f"Memory {used/maxmem:.0%} of maxmemory")
+
+    policy = info.get("maxmemory_policy", "noeviction")
+    if policy == "noeviction" and maxmem &gt; 0:
+        issues.append("noeviction policy with maxmemory set")
+
+    return {
+        "used_memory_human": info.get("used_memory_human"),
+        "maxmemory_human": info.get("maxmemory_human"),
+        "fragmentation_ratio": frag,
+        "eviction_policy": policy,
+        "evicted_keys": r.info("stats").get("evicted_keys", 0),
+        "issues": issues,
+    }</code></pre>
+
+        <h3>JavaScript (Node.js): Monitor memory with alerts</h3>
+        <pre><code class="language-javascript">// Input:  Redis connection URL
+// Output: Logs warnings when thresholds exceeded
+import Redis from "ioredis"; // ioredis@5.x
+
+async function monitorRedisMemory(redisUrl = "redis://localhost:6379") {
+  const redis = new Redis(redisUrl);
+  const info = await redis.info("memory");
+  const parsed = Object.fromEntries(
+    info.split("\r\n").filter(l =&gt; l.includes(":"))
+      .map(l =&gt; l.split(":"))
+  );
+  const fragRatio = parseFloat(parsed.mem_fragmentation_ratio);
+  const usedMem = parseInt(parsed.used_memory, 10);
+  const maxMem = parseInt(parsed.maxmemory, 10);
+
+  if (fragRatio &gt; 1.5)
+    console.warn(`[REDIS] High fragmentation: ${fragRatio}`);
+  if (maxMem &gt; 0 &amp;&amp; usedMem / maxMem &gt; 0.85)
+    console.warn(`[REDIS] Memory at ${((usedMem/maxMem)*100).toFixed(1)}%`);
+  if (parsed.maxmemory_policy === "noeviction" &amp;&amp; maxMem &gt; 0)
+    console.warn("[REDIS] noeviction with maxmemory -- writes will fail!");
+
+  await redis.quit();
+  return { fragRatio, usedMem, maxMem, policy: parsed.maxmemory_policy };
+}</code></pre>
+
+        <h3>Go: Programmatic memory diagnostics</h3>
+        <pre><code class="language-go">// Input:  Redis address
+// Output: MemoryReport struct with diagnostic fields
+package main
+
+import (
+    "context"
+    "fmt"
+    "strconv"
+    "github.com/redis/go-redis/v9" // v9.x
+)
+
+type MemoryReport struct {
+    UsedMemory    int64   `json:"used_memory"`
+    MaxMemory     int64   `json:"maxmemory"`
+    FragRatio     float64 `json:"fragmentation_ratio"`
+    Policy        string  `json:"eviction_policy"`
+    EvictedKeys   int64   `json:"evicted_keys"`
+    DoctorMessage string  `json:"doctor_message"`
+}
+
+func DiagnoseRedis(ctx context.Context, addr string) (*MemoryReport, error) {
+    rdb := redis.NewClient(&amp;redis.Options{Addr: addr})
+    defer rdb.Close()
+
+    info, err := rdb.InfoMap(ctx, "memory").Result()
+    if err != nil {
+        return nil, fmt.Errorf("INFO memory: %w", err)
+    }
+    mem := info["memory"]
+    used, _ := strconv.ParseInt(mem["used_memory"], 10, 64)
+    maxm, _ := strconv.ParseInt(mem["maxmemory"], 10, 64)
+    frag, _ := strconv.ParseFloat(mem["mem_fragmentation_ratio"], 64)
+
+    doctor, _ := rdb.MemoryDoctor(ctx).Result()
+    stats, _ := rdb.InfoMap(ctx, "stats").Result()
+    evicted, _ := strconv.ParseInt(stats["stats"]["evicted_keys"], 10, 64)
+
+    return &amp;MemoryReport{
+        UsedMemory: used, MaxMemory: maxm,
+        FragRatio: frag, Policy: mem["maxmemory_policy"],
+        EvictedKeys: evicted, DoctorMessage: doctor,
+    }, nil
+}</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Setting maxmemory without an eviction policy</h3>
+        <pre><code class="language-bash"># BAD -- noeviction is the default; Redis rejects ALL writes when full [src1]
+redis-cli CONFIG SET maxmemory 2gb
+# maxmemory-policy remains "noeviction"
+# Result: "OOM command not allowed when used memory &gt; 'maxmemory'"</code></pre>
+
+        <h3>Correct: Always pair maxmemory with an eviction policy</h3>
+        <pre><code class="language-bash"># GOOD -- set both together [src1]
+redis-cli CONFIG SET maxmemory 2gb
+redis-cli CONFIG SET maxmemory-policy allkeys-lru
+redis-cli CONFIG REWRITE</code></pre>
+
+        <h3>Wrong: Using KEYS * to find large keys in production</h3>
+        <pre><code class="language-bash"># BAD -- KEYS blocks the entire server while scanning all keys [src2]
+redis-cli KEYS "*session*"
+# On a 10M key database, this blocks Redis for seconds</code></pre>
+
+        <h3>Correct: Use SCAN-based tools for production key analysis</h3>
+        <pre><code class="language-bash"># GOOD -- SCAN is non-blocking and incremental [src2]
+redis-cli --bigkeys -i 0.1
+redis-cli --memkeys -i 0.1
+# Or use SCAN directly with a cursor
+redis-cli SCAN 0 MATCH "*session*" COUNT 100</code></pre>
+
+        <h3>Wrong: Ignoring mem_fragmentation_ratio below 1.0</h3>
+        <pre><code class="language-bash"># BAD -- ratio &lt; 1.0 means Redis is swapping to disk [src4]
+# INFO memory shows:
+# used_memory: 8000000000
+# used_memory_rss: 4000000000
+# mem_fragmentation_ratio: 0.50
+# Developer thinks: "Great, Redis is using less OS memory"
+# Reality: Redis is actively swapping -- catastrophic performance</code></pre>
+
+        <h3>Correct: Treat fragmentation ratio &lt; 1.0 as critical</h3>
+        <pre><code class="language-bash"># GOOD -- check for swapping immediately [src4, src5]
+redis-cli INFO memory | grep mem_fragmentation_ratio
+# If &lt; 1.0: Redis data is being swapped to disk
+# Fix: increase available RAM or reduce maxmemory
+# Verify no swap:
+cat /proc/$(pidof redis-server)/smaps | grep Swap</code></pre>
+
+        <h3>Wrong: Running activedefrag on Redis with system libc malloc</h3>
+        <pre><code class="language-bash"># BAD -- activedefrag silently does nothing without jemalloc [src2, src4]
+redis-cli CONFIG SET activedefrag yes
+# No error, but fragmentation never decreases
+# Because mem_allocator is "libc" not "jemalloc"</code></pre>
+
+        <h3>Correct: Verify allocator before enabling defrag</h3>
+        <pre><code class="language-bash"># GOOD -- check allocator first [src2]
+redis-cli INFO memory | grep mem_allocator
+# Expected: mem_allocator:jemalloc-5.3.0
+# If not jemalloc: rebuild Redis or use official packages
+redis-cli CONFIG SET activedefrag yes</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Not setting TTLs on cache keys</strong>: Without TTLs, the keyspace grows indefinitely. If
+                using <code>volatile-*</code> eviction policies, keys without TTLs are never evicted, leading to
+                OOM even with eviction enabled. Set TTLs on all cache data. [<a
+                    href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>, <a
+                    href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+            </li>
+            <li><strong>Confusing <code>used_memory</code> with <code>used_memory_rss</code></strong>:
+                <code>used_memory</code> is what Redis reports internally; <code>used_memory_rss</code> is what the
+                OS allocates. The gap is fragmentation overhead. Monitoring only <code>used_memory</code> misses
+                fragmentation-related OOM. [<a
+                    href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>, <a
+                    href="https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management">src5</a>]
+            </li>
+            <li><strong>Forgetting about fork overhead</strong>: <code>BGSAVE</code> and
+                <code>BGREWRITEAOF</code> fork the Redis process. Due to copy-on-write, write-heavy workloads
+                during fork can temporarily double RSS. Reserve at least 50% memory headroom. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                <a href="https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management">src5</a>]
+            </li>
+            <li><strong>Pub/Sub subscribers that fall behind</strong>: Slow pub/sub consumers cause Redis to buffer
+                all messages in the output buffer. A single slow subscriber can consume GB of RAM. Set
+                <code>client-output-buffer-limit pubsub 32mb 8mb 60</code> to disconnect slow consumers. [<a
+                    href="https://redis.io/blog/top-redis-headaches-for-devops-client-buffers/">src6</a>, <a
+                    href="https://redis.io/docs/latest/develop/reference/clients/">src7</a>]
+            </li>
+            <li><strong>Using FLUSHALL to "fix" memory issues</strong>: <code>FLUSHALL</code> deletes all data but
+                does not return memory to the OS immediately due to allocator fragmentation. RSS remains high until
+                defragmentation or restart. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+            </li>
+            <li><strong>Storing large blobs in Redis</strong>: Objects larger than 1MB (images, serialized datasets)
+                cause fragmentation and uneven allocation. Use external storage with Redis storing only references.
+                [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                <a href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+            </li>
+            <li><strong>Not monitoring evicted_keys</strong>: A high <code>evicted_keys</code> counter in
+                <code>INFO stats</code> means Redis is actively dropping data. This causes cache misses and
+                increased backend load. Alert on eviction rate, not just memory usage. [<a
+                    href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Memory overview ===
+redis-cli INFO memory
+
+# === Automated memory diagnosis (Redis 4.0+) ===
+redis-cli MEMORY DOCTOR
+
+# === Detailed memory statistics breakdown ===
+redis-cli MEMORY STATS
+
+# === Find largest keys by element count ===
+redis-cli --bigkeys -i 0.1
+
+# === Find largest keys by memory usage (Redis 6.0+) ===
+redis-cli --memkeys -i 0.1
+
+# === Check memory usage of a specific key ===
+redis-cli MEMORY USAGE mykey SAMPLES 0
+
+# === Check eviction stats ===
+redis-cli INFO stats | grep -E "evicted_keys|keyspace"
+
+# === Check current maxmemory and policy ===
+redis-cli CONFIG GET maxmemory
+redis-cli CONFIG GET maxmemory-policy
+
+# === Check client buffer usage ===
+redis-cli CLIENT LIST
+redis-cli INFO clients
+
+# === Check if Redis is swapping (Linux) ===
+cat /proc/$(pidof redis-server)/smaps 2&gt;/dev/null | grep -c "Swap:"
+
+# === Check active defragmentation status ===
+redis-cli INFO memory | grep -E "active_defrag|mem_fragmentation"
+
+# === Allocator statistics (jemalloc internals) ===
+redis-cli MEMORY MALLOC-STATS
+
+# === Keyspace overview (key count per database) ===
+redis-cli INFO keyspace</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>INFO memory</code> section</td>
+                        <td>Redis 2.4+</td>
+                        <td>Core memory reporting — works on all modern versions [<a
+                                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>maxmemory</code> + eviction policies</td>
+                        <td>Redis 2.0+</td>
+                        <td>LRU, random, volatile, noeviction [<a
+                                href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>MEMORY USAGE &lt;key&gt;</code></td>
+                        <td>Redis 4.0</td>
+                        <td>Per-key memory introspection [<a
+                                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>MEMORY DOCTOR</code></td>
+                        <td>Redis 4.0</td>
+                        <td>Automated memory diagnosis [<a
+                                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>MEMORY STATS</code></td>
+                        <td>Redis 4.0</td>
+                        <td>Detailed memory breakdown by category [<a
+                                href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Active defragmentation (<code>activedefrag</code>)</td>
+                        <td>Redis 4.0</td>
+                        <td>Requires jemalloc; improved in 6.0 and 7.0 [<a
+                                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                            <a href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>LFU eviction (<code>allkeys-lfu</code>, <code>volatile-lfu</code>)</td>
+                        <td>Redis 4.0</td>
+                        <td>Frequency-based eviction alternative to LRU [<a
+                                href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>redis-cli --memkeys</code></td>
+                        <td>Redis 6.0</td>
+                        <td>Memory-based key scanning [<a
+                                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Multi-threaded I/O</td>
+                        <td>Redis 6.0</td>
+                        <td>Reduces client buffer pressure on high-connection workloads [<a
+                                href="https://redis.io/docs/latest/develop/reference/clients/">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Active defrag improvements</td>
+                        <td>Redis 7.0</td>
+                        <td>Better large allocation handling, reduced CPU overhead [<a
+                                href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Redis returns <code>OOM command not allowed</code> errors</td>
+                        <td>Redis is slow but not out of memory</td>
+                        <td><code>SLOWLOG GET</code> for query performance analysis</td>
+                    </tr>
+                    <tr>
+                        <td><code>mem_fragmentation_ratio</code> &gt; 1.5 or &lt; 1.0</td>
+                        <td>Memory usage is stable and within limits</td>
+                        <td>Regular monitoring is sufficient</td>
+                    </tr>
+                    <tr>
+                        <td><code>evicted_keys</code> increasing but data should persist</td>
+                        <td>Keys are being evicted as designed (cache use case)</td>
+                        <td>Eviction is working correctly — no action needed</td>
+                    </tr>
+                    <tr>
+                        <td>RSS grows continuously without stabilizing</td>
+                        <td>RSS spikes only during BGSAVE/BGREWRITEAOF</td>
+                        <td>Normal fork behavior — ensure headroom exists</td>
+                    </tr>
+                    <tr>
+                        <td>Client output buffers consuming significant memory</td>
+                        <td>Single slow query blocking Redis</td>
+                        <td><code>CLIENT KILL</code> the offending client or <code>SLOWLOG</code> analysis</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>Managed Redis services have different defaults</strong>: Many managed services
+                (ElastiCache, Memorystore, Azure Cache) pre-configure <code>maxmemory-policy</code> to
+                <code>volatile-lru</code> and reserve 10-25% of memory for overhead. Check your provider's docs
+                before changing settings, as some parameters may be locked. [<a
+                    href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>,
+                <a href="https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management">src5</a>]
+            </li>
+            <li><strong><code>mem_fragmentation_ratio</code> is misleading after restart</strong>: Right after
+                restart, RSS is minimal and the ratio may be very high (&gt;5.0) or very low. Wait until memory
+                usage stabilizes before diagnosing fragmentation. [<a
+                    href="https://redis.io/docs/latest/commands/memory-stats/">src3</a>]
+            </li>
+            <li><strong>Active defragmentation trades CPU for memory</strong>: Enabling <code>activedefrag</code>
+                uses 1-25% of CPU (configurable). On CPU-bound workloads, this may increase latency. Monitor with
+                <code>INFO stats</code> field <code>active_defrag_running</code>. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                <a href="https://docs.cloud.google.com/memorystore/docs/redis/memory-management-best-practices">src4</a>]
+            </li>
+            <li><strong>Transparent Huge Pages (THP) cause latency spikes and inflate RSS</strong>: Linux THP causes
+                copy-on-write during fork to copy 2MB pages instead of 4KB, dramatically increasing fork memory and
+                latency. Disable with
+                <code>echo never &gt; /sys/kernel/mm/transparent_hugepage/enabled</code>. [<a
+                    href="https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/">src2</a>,
+                <a href="https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management">src5</a>]
+            </li>
+            <li><strong>Redis Cluster splits maxmemory per node</strong>: Each node has its own
+                <code>maxmemory</code> limit. Uneven key distribution can cause OOM on individual nodes while
+                others have free memory. [<a
+                    href="https://redis.io/docs/latest/develop/reference/eviction/">src1</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/docker-oomkilled/2026" data-relationship="related_to">Docker OOMKilled</a>
+        <a href="/software/debugging/nodejs-memory-leaks/2026" data-relationship="related_to">Node.js Memory Leaks</a>
+        <a href="/software/debugging/python-memory-leaks/2026" data-relationship="related_to">Python Memory Leaks</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

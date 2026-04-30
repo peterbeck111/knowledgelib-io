@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>File Upload Security: Preventing Unrestricted File | knowledgelib.io</title>
+  <meta name="description" content="Complete file upload security guide covering CWE-434 prevention with extension allowlisting, magic byte validation, path traversal defense, zip bomb...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/file-upload-security/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="File Upload Security: Preventing Unrestricted File | knowledgelib.io">
+  <meta property="og:description" content="Complete file upload security guide covering CWE-434 prevention with extension allowlisting, magic byte validation, path traversal defense, zip bomb protection, and framework-specific code examples for Python/Django, Node.js/Express, and Go. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/file-upload-security/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="File Upload Security: Preventing Unrestricted File | knowledgelib.io">
+  <meta name="twitter:description" content="Complete file upload security guide covering CWE-434 prevention with extension allowlisting, magic byte validation, path traversal defense, zip bomb protection, and framework-specific code examples for Python/Django, Node.js/Express, and Go. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/File Upload Security">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement secure file uploads?">
+  <meta name="ai:aliases" content="file upload security best practices; secure file upload implementation; prevent unrestricted file upload; CWE-434 prevention; file upload validation and sanitization; protect against malicious file uploads; file upload MIME type validation magic bytes; how to safely handle user file uploads">
+  <meta name="ai:raw" content="/api/v1/units/software/security/file-upload-security/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="framework,file_types">
+  <meta name="ai:constraints" content="NEVER trust Content-Type header or extension alone; NEVER store uploads in web root; ALWAYS validate magic bytes; ALWAYS generate UUID filenames; ALWAYS enforce server-side size limits; NEVER process archives without decompression ratio limits">
+  <meta name="ai:skip_this_unit_if" content="Need XSS prevention for uploaded SVG/HTML -> software/security/xss-prevention/2026; Need general input validation -> software/patterns/input-validation/2026; Need cloud storage security -> software/cloud/object-storage-security/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "File Upload Security: Preventing Unrestricted File Upload Attacks",
+    "headline": "File Upload Security: Preventing Unrestricted File Upload Attacks",
+    "description": "Complete guide to implementing secure file uploads with defense-in-depth: extension allowlisting, magic byte validation, path traversal prevention, zip bomb protection, and malware scanning. Covers Python/Django, Node.js/Express, and Go with tested code examples.",
+    "keywords": ["file upload security", "CWE-434", "unrestricted file upload", "magic bytes", "MIME validation", "path traversal", "zip bomb", "secure upload", "OWASP"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "python-magic 0.4.x, file-type 19.x, multer 1.4.x, Go net/http, ClamAV 1.3.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "File Upload Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-434: Unrestricted Upload of File with Dangerous Type",
+        "url": "https://cwe.mitre.org/data/definitions/434.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Unrestricted File Upload",
+        "url": "https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload"
+      },
+      {
+        "@type": "WebPage",
+        "name": "File-Type Validation in Multer is NOT SAFE",
+        "url": "https://dev.to/ayanabilothman/file-type-validation-in-multer-is-not-safe-3h8l"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Mastering File Upload Security: DoS Attacks and Antivirus",
+        "url": "https://blog.theodo.com/2024/03/mastering-file-upload-security-dos-attacks-and-antivirus/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "What is path traversal, and how to prevent it?",
+        "url": "https://portswigger.net/web-security/file-path-traversal"
+      },
+      {
+        "@type": "WebPage",
+        "name": "mimetype: A Go package for media type detection based on magic numbers",
+        "url": "https://github.com/gabriel-vasile/mimetype"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "File Upload Security: Preventing Unrestricted File Upload Attacks",
+    "description": "Structured knowledge unit on securing file uploads against CWE-434, MIME spoofing, path traversal, zip bombs, and malware with defense-in-depth validation and framework-specific code examples.",
+    "keywords": ["file upload security", "CWE-434", "unrestricted file upload", "magic bytes", "MIME validation", "path traversal", "OWASP"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "PortSwigger"},
+      {"@type": "Organization", "name": "Theodo"},
+      {"@type": "Organization", "name": "DEV Community"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "File Upload Security" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement secure file uploads?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "file upload security best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "secure file upload implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "prevent unrestricted file upload",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CWE-434 prevention",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "file upload validation and sanitization",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>File Upload Security: Preventing Unrestricted File Upload Attacks</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement secure file uploads?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/file-upload-security/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Defense-in-depth with extension allowlisting, magic byte validation, random filename generation, and storage outside the web root prevents CWE-434 (unrestricted file upload) -- no single check is sufficient.</li>
+    <li><strong>Key tool/command</strong>: <code>python-magic</code> (Python), <code>file-type</code> npm package (Node.js), <code>http.DetectContentType()</code> (Go) -- validate actual file content, not just headers or extensions.</li>
+    <li><strong>Watch out for</strong>: Trusting the <code>Content-Type</code> header or file extension alone -- both are trivially spoofed; combine with magic byte inspection for real content validation.</li>
+    <li><strong>Works with</strong>: All web frameworks. OWASP File Upload Cheat Sheet applies universally. Framework-specific: Django <code>FileExtensionValidator</code> + <code>python-magic</code>, Express/Multer + <code>file-type</code>, Go <code>net/http.DetectContentType</code>.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER trust the Content-Type header or file extension alone -- both are trivially spoofed by attackers</li>
+    <li>NEVER store uploaded files inside the web root or any directory with execute permissions</li>
+    <li>ALWAYS validate file content using magic bytes (file signature) in addition to extension allowlists</li>
+    <li>ALWAYS generate random filenames (UUID) server-side -- never use the original user-supplied filename for storage</li>
+    <li>ALWAYS enforce server-side file size limits -- client-side limits are trivially bypassed</li>
+    <li>NEVER process uploaded archives (ZIP, TAR) without decompression ratio limits to prevent zip bombs</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Vulnerability</th><th scope="col">Risk</th><th scope="col">Vulnerable Code</th><th scope="col">Secure Code</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Unrestricted upload (CWE-434)</td><td>Critical -- RCE via web shell</td><td>No extension/type check</td><td>Allowlist extensions + magic byte validation</td></tr>
+      <tr><td>2</td><td>MIME type spoofing</td><td>High -- bypass content filters</td><td><code>if (file.mimetype === 'image/png')</code></td><td>Read first 512+ bytes, validate magic signature</td></tr>
+      <tr><td>3</td><td>Path traversal via filename</td><td>High -- arbitrary file write</td><td><code>path.join(uploadDir, file.originalname)</code></td><td>Generate UUID filename, strip all path components</td></tr>
+      <tr><td>4</td><td>Stored XSS via SVG/HTML upload</td><td>High -- XSS on same origin</td><td>Allow SVG/HTML uploads, serve inline</td><td>Serve with <code>Content-Disposition: attachment</code> + CSP</td></tr>
+      <tr><td>5</td><td>Malware upload</td><td>High -- infect other users</td><td>No scanning</td><td>Scan with ClamAV or cloud AV API before storage</td></tr>
+      <tr><td>6</td><td>Zip bomb / decompression bomb</td><td>Medium -- DoS, disk exhaustion</td><td>Extract without size checks</td><td>Enforce compression ratio &lt; 100:1, max extracted size</td></tr>
+      <tr><td>7</td><td>Image bomb (pixel flood)</td><td>Medium -- DoS, memory exhaustion</td><td>Process image without dimension check</td><td>Enforce max pixel dimensions (e.g., 10000x10000)</td></tr>
+      <tr><td>8</td><td>Double extension bypass</td><td>High -- execute disguised file</td><td>Block <code>.php</code> but allow <code>file.php.jpg</code></td><td>Check final extension only after stripping all dots</td></tr>
+      <tr><td>9</td><td>Null byte injection</td><td>High -- truncate filename</td><td><code>file.php%00.jpg</code> passes extension check</td><td>Reject filenames containing null bytes or non-printable chars</td></tr>
+      <tr><td>10</td><td>Oversized upload DoS</td><td>Medium -- disk/bandwidth exhaustion</td><td>No file size limit</td><td>Enforce max size at reverse proxy AND application level</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What type of file upload does your application accept?
+&#9500;&#9472;&#9472; Images only (JPEG, PNG, GIF, WebP)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Allowlist image extensions + validate magic bytes + re-encode image (strip metadata)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Documents (PDF, DOCX, XLSX)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Allowlist doc extensions + magic bytes + Content Disarm &amp; Reconstruct (CDR) or AV scan
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Archives (ZIP, TAR, GZ)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Allowlist archive extensions + magic bytes + decompression ratio &lt; 100:1 + max extracted size
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Executable or script files needed?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; STOP: reconsider architecture. If unavoidable: sandbox + AV scan + never serve from web root
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Mixed/unknown file types?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Allowlist only required extensions + magic bytes + AV scan + Content-Disposition: attachment
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Allowlist extensions + magic byte validation + UUID filename + store outside web root</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Configure server-side file size limits</h3>
+  <p>Set maximum upload size at both the reverse proxy and application level. This is your first line of defense against DoS via oversized uploads. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-nginx"># Nginx: limit upload size to 10MB
+client_max_body_size 10m;</code></pre>
+  <pre><code class="language-javascript">// Express/Multer: limit to 10MB
+const upload = multer({
+  limits: { fileSize: 10 * 1024 * 1024 }
+});</code></pre>
+  <p><strong>Verify</strong>: Upload a file larger than the limit -- should receive HTTP 413 or framework-specific rejection.</p>
+
+  <h3>2. Implement extension allowlisting</h3>
+  <p>Only permit file extensions that your application specifically needs. Use an allowlist, never a blocklist. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'}
+ext = os.path.splitext(filename)[1].lower()
+if ext not in ALLOWED_EXTENSIONS:
+    raise ValidationError(f'File type {ext} not allowed')</code></pre>
+  <p><strong>Verify</strong>: Attempt to upload a <code>.php</code>, <code>.exe</code>, or <code>.html</code> file -- should be rejected.</p>
+
+  <h3>3. Validate file content with magic bytes</h3>
+  <p>The Content-Type header and file extension are user-controlled. Read the actual file bytes to verify content type. [<a href="https://cwe.mitre.org/data/definitions/434.html">src2</a>]</p>
+  <pre><code class="language-python">import magic
+mime = magic.from_buffer(file.read(2048), mime=True)
+file.seek(0)
+if mime not in ALLOWED_MIMES:
+    raise ValidationError(f'File content type {mime} not allowed')</code></pre>
+  <p><strong>Verify</strong>: Rename a <code>.php</code> file to <code>.jpg</code> and upload -- magic byte check should reject it.</p>
+
+  <h3>4. Generate random filenames and store outside web root</h3>
+  <p>Never use the user-supplied filename for storage. Generate a UUID and store files outside the web-accessible directory. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">import uuid, os
+safe_name = f'{uuid.uuid4().hex}{validated_ext}'
+dest = os.path.join('/var/uploads', safe_name)  # Outside web root</code></pre>
+  <p><strong>Verify</strong>: Check that stored files have UUID names, reside outside the web root, and the directory has no execute permission.</p>
+
+  <h3>5. Serve uploaded files safely</h3>
+  <p>Never serve uploaded files directly from the filesystem. Use a controller that sets security headers. [<a href="https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload">src3</a>]</p>
+  <pre><code class="language-python">response['Content-Disposition'] = f'attachment; filename="{original_name}"'
+response['X-Content-Type-Options'] = 'nosniff'
+response['Content-Security-Policy'] = "default-src 'none'"</code></pre>
+  <p><strong>Verify</strong>: Access an uploaded file URL -- should download (not render inline) with correct security headers.</p>
+
+  <h3>6. Scan for malware (production environments)</h3>
+  <p>For untrusted user uploads, integrate virus scanning before persistence. [<a href="https://blog.theodo.com/2024/03/mastering-file-upload-security-dos-attacks-and-antivirus/">src5</a>]</p>
+  <pre><code class="language-bash">clamscan --max-filesize=10M uploaded_file.pdf</code></pre>
+  <p><strong>Verify</strong>: Upload an EICAR test file -- should be detected and rejected.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python/Django: Complete Secure Upload Handler</h3>
+  <pre><code class="language-python">import os, uuid, magic
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']
+ALLOWED_MIMES = {
+    'image/jpeg', 'image/png', 'image/gif',
+    'image/webp', 'application/pdf'
+}
+MAX_SIZE = 10 * 1024 * 1024  # 10MB
+UPLOAD_DIR = '/var/uploads'   # Outside web root
+
+@require_POST
+def upload(request):
+    file = request.FILES.get('file')
+    if not file:
+        return JsonResponse({'error': 'No file'}, status=400)
+    if file.size &gt; MAX_SIZE:
+        return JsonResponse({'error': 'File too large'}, status=413)
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext.lstrip('.') not in ALLOWED_EXT:
+        return JsonResponse({'error': 'Type not allowed'}, status=400)
+    mime = magic.from_buffer(file.read(2048), mime=True)
+    file.seek(0)
+    if mime not in ALLOWED_MIMES:
+        return JsonResponse({'error': f'Invalid content: {mime}'}, status=400)
+    safe_name = f'{uuid.uuid4().hex}{ext}'
+    dest = os.path.join(UPLOAD_DIR, safe_name)
+    with open(dest, 'wb') as f:
+        for chunk in file.chunks():
+            f.write(chunk)
+    return JsonResponse({'id': safe_name}, status=201)</code></pre>
+
+  <h3>Node.js/Express: Multer with Magic Byte Validation</h3>
+  <pre><code class="language-javascript">import express from 'express';
+import multer from 'multer';
+import { fileTypeFromBuffer } from 'file-type';
+import { randomUUID } from 'crypto';
+import { readFile, unlink, rename } from 'fs/promises';
+import path from 'path';
+
+const UPLOAD_DIR = '/var/uploads';
+const ALLOWED_MIMES = new Set([
+  'image/jpeg', 'image/png', 'image/gif',
+  'image/webp', 'application/pdf'
+]);
+const upload = multer({
+  dest: '/tmp/uploads',
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
+const app = express();
+
+app.post('/upload', upload.single('file'), async (req, res) =&gt; {
+  if (!req.file) return res.status(400).json({ error: 'No file' });
+  try {
+    const buffer = await readFile(req.file.path);
+    const type = await fileTypeFromBuffer(buffer);
+    if (!type || !ALLOWED_MIMES.has(type.mime)) {
+      await unlink(req.file.path);
+      return res.status(400).json({ error: 'Invalid file content' });
+    }
+    const safeName = `${randomUUID()}.${type.ext}`;
+    await rename(req.file.path, path.join(UPLOAD_DIR, safeName));
+    res.status(201).json({ id: safeName });
+  } catch (err) {
+    if (req.file?.path) await unlink(req.file.path).catch(() =&gt; {});
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});</code></pre>
+
+  <h3>Go: Secure File Upload Handler</h3>
+  <pre><code class="language-go">package main
+
+import (
+    "crypto/rand"
+    "encoding/hex"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
+)
+
+const (
+    maxUploadSize = 10 &lt;&lt; 20 // 10MB
+    uploadDir     = "/var/uploads"
+)
+
+var allowedMIMEs = map[string]string{
+    "image/jpeg":      ".jpg",
+    "image/png":       ".png",
+    "image/gif":       ".gif",
+    "image/webp":      ".webp",
+    "application/pdf": ".pdf",
+}
+
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+    r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+    if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+        http.Error(w, "File too large", http.StatusRequestEntityTooLarge)
+        return
+    }
+    file, _, err := r.FormFile("file")
+    if err != nil {
+        http.Error(w, "Invalid file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+    buf := make([]byte, 512)
+    n, _ := file.Read(buf)
+    mime := http.DetectContentType(buf[:n])
+    ext, ok := allowedMIMEs[mime]
+    if !ok {
+        http.Error(w, fmt.Sprintf("Type %s not allowed", mime), http.StatusBadRequest)
+        return
+    }
+    file.Seek(0, io.SeekStart)
+    randBytes := make([]byte, 16)
+    rand.Read(randBytes)
+    safeName := hex.EncodeToString(randBytes) + ext
+    dst, err := os.Create(filepath.Join(uploadDir, safeName))
+    if err != nil {
+        http.Error(w, "Storage error", http.StatusInternalServerError)
+        return
+    }
+    defer dst.Close()
+    io.Copy(dst, file)
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(map[string]string{"id": safeName})
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Trusting file extension only</h3>
+  <pre><code class="language-python"># BAD -- extension is user-controlled and trivially spoofed
+def upload(request):
+    file = request.FILES['file']
+    if file.name.endswith('.jpg'):  # Attacker renames malware.php to malware.jpg
+        file.save('/var/www/uploads/' + file.name)  # Stored in web root!</code></pre>
+
+  <h3>Correct: Extension allowlist + magic bytes + UUID filename</h3>
+  <pre><code class="language-python"># GOOD -- multi-layer validation with safe storage
+ext = os.path.splitext(file.name)[1].lower()
+if ext not in ALLOWED_EXT:
+    raise ValidationError('Extension not allowed')
+mime = magic.from_buffer(file.read(2048), mime=True)
+file.seek(0)
+if mime not in ALLOWED_MIMES:
+    raise ValidationError('Content type mismatch')
+safe_name = f'{uuid.uuid4().hex}{ext}'
+dest = os.path.join('/var/uploads', safe_name)</code></pre>
+
+  <h3>Wrong: Storing uploads in the web root</h3>
+  <pre><code class="language-javascript">// BAD -- files in web root can be executed by the web server
+const upload = multer({ dest: 'public/uploads/' });
+// Attacker uploads shell.php -&gt; accessible at https://example.com/uploads/shell.php</code></pre>
+
+  <h3>Correct: Store outside web root, serve via controller</h3>
+  <pre><code class="language-javascript">// GOOD -- files stored outside web root, served through authenticated route
+const upload = multer({ dest: '/var/uploads/' });
+
+app.get('/files/:id', authenticate, (req, res) =&gt; {
+  res.set('Content-Disposition', 'attachment');
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.sendFile(path.join('/var/uploads', req.params.id));
+});</code></pre>
+
+  <h3>Wrong: No file size limits</h3>
+  <pre><code class="language-javascript">// BAD -- no size limit allows DoS via multi-GB uploads
+const upload = multer({ dest: '/tmp/uploads' });
+app.post('/upload', upload.single('file'), handler);</code></pre>
+
+  <h3>Correct: Enforce size limits at multiple layers</h3>
+  <pre><code class="language-javascript">// GOOD -- size limit at Multer + Nginx/reverse proxy
+const upload = multer({
+  dest: '/tmp/uploads',
+  limits: { fileSize: 10 * 1024 * 1024 }  // 10MB
+});
+// Also set in Nginx: client_max_body_size 10m;</code></pre>
+
+  <h3>Wrong: Using user-supplied filename for storage</h3>
+  <pre><code class="language-go">// BAD -- path traversal: filename could be "../../etc/passwd"
+destPath := filepath.Join(uploadDir, header.Filename)
+dst, _ := os.Create(destPath)</code></pre>
+
+  <h3>Correct: Generate random filename, ignore user input</h3>
+  <pre><code class="language-go">// GOOD -- UUID filename prevents path traversal and collisions
+randBytes := make([]byte, 16)
+rand.Read(randBytes)
+safeName := hex.EncodeToString(randBytes) + validatedExt
+destPath := filepath.Join(uploadDir, safeName)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>MIME spoofing via Content-Type header</strong>: Multer's <code>file.mimetype</code> comes from the client-sent header, which attackers control. Fix: Use <code>file-type</code> or <code>python-magic</code> to read actual file bytes. [<a href="https://dev.to/ayanabilothman/file-type-validation-in-multer-is-not-safe-3h8l">src4</a>]</li>
+    <li><strong>Double extension bypass</strong>: <code>malware.php.jpg</code> may pass extension checks but execute as PHP on misconfigured servers. Fix: Check only the final extension; configure web server to not execute files in upload directories. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>Null byte injection</strong>: <code>malware.php%00.jpg</code> truncates at the null byte on some systems. Fix: Reject filenames containing null bytes or non-printable characters. [<a href="https://cwe.mitre.org/data/definitions/434.html">src2</a>]</li>
+    <li><strong>SVG/HTML files enabling XSS</strong>: SVG files can contain <code>&lt;script&gt;</code> tags; HTML files execute JavaScript if served inline. Fix: Serve with <code>Content-Disposition: attachment</code> and restrictive CSP. [<a href="https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload">src3</a>]</li>
+    <li><strong>Zip bomb (decompression bomb)</strong>: A 42KB ZIP can expand to 4.5PB. Fix: Enforce decompression ratio limit (&lt; 100:1), maximum extracted file count, and maximum total extracted size. [<a href="https://blog.theodo.com/2024/03/mastering-file-upload-security-dos-attacks-and-antivirus/">src5</a>]</li>
+    <li><strong>Image bomb (pixel flood)</strong>: A small file with declared dimensions of 100000x100000 pixels causes OOM when processed. Fix: Read image headers (dimensions) before processing; enforce max 10000x10000 pixels. [<a href="https://blog.theodo.com/2024/03/mastering-file-upload-security-dos-attacks-and-antivirus/">src5</a>]</li>
+    <li><strong>Path traversal via filename</strong>: Filename <code>../../etc/cron.d/backdoor</code> writes outside intended directory. Fix: Generate UUID filenames; never use user input in file paths. [<a href="https://portswigger.net/web-security/file-path-traversal">src6</a>]</li>
+    <li><strong>Race condition (TOCTOU)</strong>: File is validated, then replaced before it is moved to permanent storage. Fix: Validate on the already-saved temp file; use atomic move operations. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check file's real MIME type via magic bytes
+file --mime-type uploaded_file.jpg
+
+# Check file magic signature (first 16 bytes as hex)
+xxd -l 16 uploaded_file.jpg
+
+# Known magic bytes: JPEG=FF D8 FF, PNG=89 50 4E 47, PDF=%PDF, ZIP=50 4B 03 04
+
+# Scan file for malware with ClamAV
+clamscan uploaded_file.pdf
+
+# Check upload directory permissions (should NOT have execute)
+ls -la /var/uploads/
+
+# Check Nginx upload size limit
+nginx -T 2&gt;/dev/null | grep client_max_body_size
+
+# Find files with double extensions in upload directory
+find /var/uploads -name '*.*.*' -type f
+
+# Check for executable files in upload directory
+find /var/uploads -type f -executable</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Tool</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OWASP File Upload Cheat Sheet</td><td>2024</td><td>Current</td><td>Comprehensive upload security guidance</td></tr>
+      <tr><td>CWE-434</td><td>4.19</td><td>Current</td><td>Top-25 CWE weakness classification</td></tr>
+      <tr><td>python-magic</td><td>0.4.x</td><td>Current</td><td>libmagic bindings for Python</td></tr>
+      <tr><td>file-type (npm)</td><td>19.x</td><td>Current</td><td>Magic byte detection (ESM only)</td></tr>
+      <tr><td>file-type (npm)</td><td>16.x</td><td>Maintained</td><td>CommonJS support (legacy)</td></tr>
+      <tr><td>multer (npm)</td><td>1.4.x</td><td>Current</td><td>Express multipart middleware</td></tr>
+      <tr><td>Go net/http</td><td>1.22+</td><td>Current</td><td>DetectContentType() built-in (512 bytes)</td></tr>
+      <tr><td>gabriel-vasile/mimetype</td><td>1.4.x</td><td>Current</td><td>Extended magic byte detection for Go</td></tr>
+      <tr><td>ClamAV</td><td>1.3.x</td><td>Current</td><td>Open-source antivirus scanning</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Application accepts file uploads from any user</td><td>Application only stores files generated server-side</td><td>Standard filesystem security</td></tr>
+      <tr><td>Uploaded files are served back to other users</td><td>Files are only processed server-side and never served</td><td>Simpler validation may suffice</td></tr>
+      <tr><td>Upload includes images, documents, or archives</td><td>API only accepts JSON/text payloads (no binary files)</td><td>Input validation patterns</td></tr>
+      <tr><td>Running a multi-tenant platform with untrusted users</td><td>Single-user admin tool with trusted operators</td><td>Reduced validation + logging</td></tr>
+      <tr><td>Files are processed (image resize, document parse)</td><td>Files are stored as opaque blobs and never opened</td><td>Hash verification + size limits only</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><code>http.DetectContentType()</code> in Go only checks the first 512 bytes and supports a limited set of MIME types -- for broader detection use <code>gabriel-vasile/mimetype</code> or <code>h2non/filetype</code></li>
+    <li><code>python-magic</code> requires <code>libmagic</code> system library (<code>apt install libmagic1</code> on Debian/Ubuntu, <code>brew install libmagic</code> on macOS) -- without it, the library fails silently or crashes</li>
+    <li>Multer's <code>fileFilter</code> runs before the file is fully written to disk -- magic byte validation must happen after the upload completes on the temp file</li>
+    <li>ClamAV scanning adds 100-500ms per file; for high-throughput systems, use <code>clamd</code> daemon mode with Unix socket, not the <code>clamscan</code> CLI</li>
+    <li>Image re-encoding (to strip metadata/payloads) may alter image quality -- always use lossless re-encoding for PNG/GIF and configurable quality for JPEG</li>
+    <li>Cloud storage (S3, GCS) with signed URLs shifts some security to the storage layer, but client-side validation and magic byte checks are still required before upload</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention</a>
+    <a href="/software/patterns/input-validation/2026" data-relationship="related_to">Input Validation Patterns</a>
+    <a href="/software/security/path-traversal-prevention/2026" data-relationship="often_confused_with">Path Traversal Prevention</a>
+    <a href="/software/security/csrf-prevention/2026" data-relationship="often_confused_with">CSRF Prevention</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

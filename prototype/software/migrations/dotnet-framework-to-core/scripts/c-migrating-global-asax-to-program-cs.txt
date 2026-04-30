@@ -1,0 +1,51 @@
+// Input:  ASP.NET Framework Global.asax with Application_Start, error handling
+// Output: ASP.NET Core Program.cs with equivalent startup and middleware
+
+// BEFORE: Global.asax.cs
+// public class MvcApplication : System.Web.HttpApplication
+// {
+//     protected void Application_Start()
+//     {
+//         AreaRegistration.RegisterAllAreas();
+//         FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+//         RouteConfig.RegisterRoutes(RouteTable.Routes);
+//         BundleConfig.RegisterBundles(BundleTable.Bundles);
+//     }
+//     protected void Application_Error(object sender, EventArgs e)
+//     {
+//         var ex = Server.GetLastError();
+//         Logger.LogError(ex);
+//     }
+// }
+
+// AFTER: Program.cs (.NET 8 minimal hosting)
+var builder = WebApplication.CreateBuilder(args);
+
+// Services (replaces FilterConfig, DI setup)
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<GlobalExceptionFilter>();
+});
+builder.Services.AddLogging();
+
+var app = builder.Build();
+
+// Middleware pipeline (replaces Global.asax events)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();     // Replaces BundleConfig for static assets
+app.UseRouting();
+app.UseAuthentication();  // Replaces FormsAuthentication
+app.UseAuthorization();
+
+// Replaces RouteConfig.RegisterRoutes
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Run();

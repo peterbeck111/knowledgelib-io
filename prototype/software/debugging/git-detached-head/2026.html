@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Recover from Git Detached HEAD State | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to Git detached HEAD: what it is, 13-row command reference, decision tree, recovery via git switch -c and git reflog, anti-patterns, 3...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/git-detached-head/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Recover from Git Detached HEAD State | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to Git detached HEAD: recovery via git switch -c, git reflog rescue, anti-patterns, CI/CD implications, git clone --revision. 8 authoritative sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/git-detached-head/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-19">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Recover from Git Detached HEAD State | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to Git detached HEAD: recovery via git switch -c, git reflog rescue, anti-patterns, CI/CD implications. 8 authoritative sources.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.95">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/git_detached_head">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I recover from a detached HEAD state in Git?">
+    <meta name="ai:aliases"
+        content="git detached HEAD; HEAD detached at commit; git checkout commit hash detached; git detached HEAD save work; git recover lost commits detached HEAD; git detached HEAD branch; git HEAD detached tag; git orphaned commits reflog; detached HEAD how to get back to branch; git HEAD not on branch">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/git-detached-head/2026.md">
+    <meta name="ai:token_estimate" content="6200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="yearly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-19">
+    <meta name="ai:inputs_needed" content="new_commits_made,already_switched_away,git_version">
+    <meta name="ai:constraints"
+        content="Never switch away without saving new commits to a branch; git switch requires Git 2.23+; Do not fix detached HEAD in CI/CD; Never run git gc during recovery; Shallow clones limit recovery">
+    <meta name="ai:skip_this_unit_if"
+        content="User has git merge conflicts -> software/debugging/git-merge-conflicts/2026; User wants to undo rebase or reset -> software/debugging/git-undo-rebase-reset/2026; User has SSH/HTTPS auth errors -> software/debugging/git-authentication-errors/2026">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Recover from Git Detached HEAD State",
+    "headline": "How Do I Recover from a Detached HEAD State in Git?",
+    "description": "Complete reference for Git detached HEAD: what it is, causes, recovery strategies via git switch -c and git reflog, anti-patterns, constraints, CI/CD context, and git clone --revision (Git 2.49+).",
+    "keywords": ["Git", "detached HEAD", "git switch", "git reflog", "orphaned commits", "git checkout", "git clone --revision"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-19",
+    "proficiencyLevel": "Beginner",
+    "dependencies": "Git 2.0+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Git docs — git-checkout", "url": "https://git-scm.com/docs/git-checkout" },
+      { "@type": "WebPage", "name": "Git docs — git-reflog", "url": "https://git-scm.com/docs/git-reflog" },
+      { "@type": "WebPage", "name": "Graphite — Detached HEAD State", "url": "https://graphite.dev/guides/git-detached-head" },
+      { "@type": "WebPage", "name": "Baeldung — Git Detached HEAD", "url": "https://www.baeldung.com/git/detached-head" },
+      { "@type": "WebPage", "name": "CircleCI — Understanding Detached HEAD", "url": "https://circleci.com/blog/git-detached-head-state/" },
+      { "@type": "WebPage", "name": "GeeksForGeeks — Git Detached HEAD", "url": "https://www.geeksforgeeks.org/git-detached-head/" },
+      { "@type": "WebPage", "name": "Stack Overflow — Recover from git detached head", "url": "https://stackoverflow.com/questions/10228760/how-do-i-fix-a-git-detached-head" },
+      { "@type": "WebPage", "name": "Pro Git — Git Internals References", "url": "https://git-scm.com/book/en/v2/Git-Internals-Git-References" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Recover from Git Detached HEAD State",
+    "description": "Structured reference for Git detached HEAD recovery with command table, decision tree, constraints, anti-patterns, and reflog-based recovery examples.",
+    "keywords": ["Git", "version control", "detached HEAD", "reflog", "git switch"],
+    "temporalCoverage": "2005/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-19",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Git Project"},
+      {"@type": "Organization", "name": "Graphite"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Recover from Git Detached HEAD State" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I recover from a detached HEAD state in Git?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Detached HEAD means HEAD points directly to a commit instead of a branch name. It is not an error — it is intentional for inspecting history. The danger: new commits made in this state are not on any branch and may be garbage-collected. Fix depends on intent: if you haven't committed anything new, just git switch <branch>. If you have new commits you want to keep, create a branch first: git switch -c <new-branch>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git detached HEAD",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Detached HEAD means HEAD points directly to a commit instead of a branch name. It is not an error — it is intentional for inspecting history. The danger: new commits made in this state are not on any branch and may be garbage-collected. Fix depends on intent: if you haven't committed anything new, just git switch <branch>. If you have new commits you want to keep, create a branch first: git switch -c <new-branch>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "HEAD detached at commit",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Detached HEAD means HEAD points directly to a commit instead of a branch name. It is not an error — it is intentional for inspecting history. The danger: new commits made in this state are not on any branch and may be garbage-collected. Fix depends on intent: if you haven't committed anything new, just git switch <branch>. If you have new commits you want to keep, create a branch first: git switch -c <new-branch>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git checkout commit hash detached",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Detached HEAD means HEAD points directly to a commit instead of a branch name. It is not an error — it is intentional for inspecting history. The danger: new commits made in this state are not on any branch and may be garbage-collected. Fix depends on intent: if you haven't committed anything new, just git switch <branch>. If you have new commits you want to keep, create a branch first: git switch -c <new-branch>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git detached HEAD save work",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Detached HEAD means HEAD points directly to a commit instead of a branch name. It is not an error — it is intentional for inspecting history. The danger: new commits made in this state are not on any branch and may be garbage-collected. Fix depends on intent: if you haven't committed anything new, just git switch <branch>. If you have new commits you want to keep, create a branch first: git switch -c <new-branch>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git recover lost commits detached HEAD",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Detached HEAD means HEAD points directly to a commit instead of a branch name. It is not an error — it is intentional for inspecting history. The danger: new commits made in this state are not on any branch and may be garbage-collected. Fix depends on intent: if you haven't committed anything new, just git switch <branch>. If you have new commits you want to keep, create a branch first: git switch -c <new-branch>."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Recover from a Detached HEAD State in Git?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I recover from a detached HEAD state in Git?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/git-detached-head/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> yearly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Detached HEAD means <code>HEAD</code> points directly to a commit instead
+                of a branch name. It is not an error. The danger: new commits made in this state are not on any branch
+                and may be garbage-collected. Fix: if no new commits, just <code>git switch &lt;branch&gt;</code>. If
+                you have new commits to keep, create a branch first: <code>git switch -c &lt;new-branch&gt;</code>.</li>
+            <li><strong>Key tool/command</strong>: <code>git switch -c &lt;new-branch&gt;</code> &mdash; saves all
+                detached-HEAD commits to a new branch without losing them.</li>
+            <li><strong>Watch out for</strong>: Switching away from detached HEAD <em>without creating a branch
+                    first</em> causes those commits to become unreachable (orphaned). You have ~30 days to recover them
+                via <code>git reflog</code> before garbage collection.</li>
+            <li><strong>Works with</strong>: Git 2.23+ (<code>git switch</code>). For older Git:
+                <code>git checkout -b &lt;branch&gt;</code>. Latest stable: Git 2.53 (Feb 2026).</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>Never switch away without saving</strong>: If you made commits in detached HEAD, always run
+                <code>git switch -c &lt;branch&gt;</code> before switching to another branch. Orphaned commits are
+                garbage-collected after ~30 days and become permanently unrecoverable. [<a
+                    href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                    href="https://graphite.dev/guides/git-detached-head">src3</a>]</li>
+            <li><strong>Git 2.23+ required for git switch</strong>: On older systems (RHEL 7, CentOS 7, some enterprise
+                Linux distributions), <code>git switch</code> is not available. Use <code>git checkout -b</code> as the
+                equivalent fallback. [<a href="https://git-scm.com/docs/git-checkout">src1</a>]</li>
+            <li><strong>Do not &ldquo;fix&rdquo; detached HEAD in CI/CD</strong>: Pipelines (GitHub Actions, Jenkins,
+                GitLab CI) check out a specific SHA for reproducibility. Detached HEAD is the expected and correct
+                behavior. Do not create branches or attempt recovery. [<a
+                    href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</li>
+            <li><strong>Never run git gc or git prune during recovery</strong>: These commands may permanently destroy
+                orphaned commits you are trying to recover. Complete recovery first, verify via <code>git log</code>,
+                then allow GC to proceed normally. [<a href="https://git-scm.com/docs/git-reflog">src2</a>, <a
+                    href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">src8</a>]</li>
+            <li><strong>Shallow clones limit recovery</strong>: CI/CD systems using <code>--depth=1</code> have very
+                limited reflog history. Orphaned commits in shallow clones may be unrecoverable via reflog &mdash; use
+                <code>git fsck --lost-found</code> as a last resort. [<a
+                    href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Goal</th>
+                        <th scope="col">Command</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Check if in detached HEAD</td>
+                        <td><code>git status</code></td>
+                        <td>Shows &ldquo;HEAD detached at &lt;hash&gt;&rdquo; [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>See current HEAD position</td>
+                        <td><code>git log --oneline -5</code></td>
+                        <td>Top commit = where HEAD is [<a href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Save new commits &rarr; new branch</td>
+                        <td><code>git switch -c &lt;new-branch&gt;</code></td>
+                        <td>Best recovery path; Git 2.23+ [<a href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                                href="https://graphite.dev/guides/git-detached-head">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Save new commits &rarr; new branch (old Git)</td>
+                        <td><code>git checkout -b &lt;new-branch&gt;</code></td>
+                        <td>Equivalent for Git &lt; 2.23 [<a href="https://git-scm.com/docs/git-checkout">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Go back to branch (no new commits)</td>
+                        <td><code>git switch &lt;branch&gt;</code></td>
+                        <td>Discards detached state cleanly [<a href="https://git-scm.com/docs/git-checkout">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Cherry-pick detached commits to existing branch</td>
+                        <td><code>git cherry-pick &lt;hash&gt;</code></td>
+                        <td>Copies specific commits to current branch [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Find lost commits after switching away</td>
+                        <td><code>git reflog</code></td>
+                        <td>Shows all HEAD positions for ~30 days [<a
+                                href="https://git-scm.com/docs/git-reflog">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Recover lost commit by hash</td>
+                        <td><code>git branch recover-work &lt;hash&gt;</code></td>
+                        <td>Create branch at recovered commit [<a href="https://git-scm.com/docs/git-checkout">src1</a>,
+                            <a href="https://git-scm.com/docs/git-reflog">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Inspect a historical commit (intentional)</td>
+                        <td><code>git switch --detach &lt;hash&gt;</code></td>
+                        <td>Safe read-only view of history [<a href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                                href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Check out a tag (enters detached HEAD)</td>
+                        <td><code>git checkout v1.2.3</code></td>
+                        <td>Tags are immutable; always detaches [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                                href="https://www.geeksforgeeks.org/git-detached-head/">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Check out remote branch (enters detached HEAD)</td>
+                        <td><code>git checkout origin/main</code></td>
+                        <td>Use <code>git switch main</code> instead [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Create local tracking branch from remote</td>
+                        <td><code>git switch -c main origin/main</code></td>
+                        <td>Fixes &ldquo;accidentally detached on origin/main&rdquo; [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                                href="https://graphite.dev/guides/git-detached-head">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>Clone at specific revision (intentional detach)</td>
+                        <td><code>git clone --revision &lt;ref&gt; &lt;url&gt;</code></td>
+                        <td>Git 2.49+; no tracking branch, HEAD detached [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START &mdash; &ldquo;HEAD detached at &lt;hash&gt;&rdquo; in git status
+&#9500;&#9472;&#9472; Did you make any NEW commits in the detached state?
+&#9474;   &#9500;&#9472;&#9472; NO &rarr; Just switch back to your branch:
+&#9474;   &#9474;         git switch main  [src1]
+&#9474;   &#9474;         Nothing is lost.
+&#9474;   &#9492;&#9472;&#9472; YES &rarr; Save those commits FIRST:
+&#9474;             git switch -c my-new-feature    [Git 2.23+, preferred]
+&#9474;             git checkout -b my-new-feature  [Git &lt; 2.23]
+&#9474;             Then merge/rebase into target branch as needed.
+&#9474;
+&#9500;&#9472;&#9472; Already switched away and lost the commits?
+&#9474;   &#9500;&#9472;&#9472; Find them:  git reflog
+&#9474;   &#9492;&#9472;&#9472; Recover:    git branch recover-work &lt;commit-hash&gt;
+&#9474;                   git switch recover-work  [src2]
+&#9474;
+&#9500;&#9472;&#9472; WHY did you end up detached?
+&#9474;   &#9500;&#9472;&#9472; git checkout &lt;commit-hash&gt;   &rarr; inspecting history (expected)
+&#9474;   &#9500;&#9472;&#9472; git checkout &lt;tag&gt;           &rarr; tags always detach [src6]
+&#9474;   &#9500;&#9472;&#9472; git checkout origin/main     &rarr; use git switch main instead [src3]
+&#9474;   &#9500;&#9472;&#9472; git clone --revision &lt;ref&gt;   &rarr; intentional minimal clone, Git 2.49+ [src1]
+&#9474;   &#9492;&#9472;&#9472; CI/CD pipeline               &rarr; shallow SHA checkout (expected) [src5]
+&#9474;
+&#9492;&#9472;&#9472; Prevent accidental detached HEAD?
+    &#9492;&#9472;&#9472; Prefer git switch over git checkout for branch navigation [src1]</code></pre>
+    </section>
+
+    <!-- Step-by-Step -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Understand what detached HEAD means</h3>
+        <p>Normally <code>HEAD</code> &rarr; branch pointer &rarr; commit. In detached HEAD, <code>HEAD</code> &rarr;
+            commit directly.
+            Commits made here are not on any branch and will be garbage-collected if you leave without saving. [<a
+                href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">src8</a>]</p>
+        <pre><code class="language-bash"># Normal state
+cat .git/HEAD          # &rarr; ref: refs/heads/main
+git branch             # &rarr; * main
+
+# Detached HEAD state
+cat .git/HEAD          # &rarr; a1b2c3d4e5f6... (a commit SHA)
+git status             # &rarr; HEAD detached at a1b2c3d
+git branch             # &rarr; * (HEAD detached at a1b2c3d)</code></pre>
+        <p><strong>Verify</strong>: <code>git status</code> &rarr; expected: <code>HEAD detached at &lt;hash&gt;</code>
+            or <code>On branch &lt;name&gt;</code></p>
+
+        <h3>2. Recover: save new commits to a new branch</h3>
+        <p>The most common recovery path &mdash; preserves all commits made while detached. [<a
+                href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                href="https://graphite.dev/guides/git-detached-head">src3</a>, <a
+                href="https://stackoverflow.com/questions/10228760/how-do-i-fix-a-git-detached-head">src7</a>]</p>
+        <pre><code class="language-bash">git status
+git log --oneline -10   # see commits made in detached state
+
+# Create a branch at current position &mdash; saves all detached commits
+git switch -c my-feature-branch      # Git 2.23+
+# OR: git checkout -b my-feature-branch   # older Git
+
+git status              # now shows &ldquo;On branch my-feature-branch&rdquo;
+git push -u origin my-feature-branch</code></pre>
+        <p><strong>Verify</strong>: <code>git status</code> &rarr; expected: <code>On branch my-feature-branch</code>
+        </p>
+
+        <h3>3. Recover: cherry-pick commits to an existing branch</h3>
+        <p>If you want to integrate specific detached-HEAD commits into an existing branch. [<a
+                href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                href="https://stackoverflow.com/questions/10228760/how-do-i-fix-a-git-detached-head">src7</a>]</p>
+        <pre><code class="language-bash">git log --oneline      # note the commit hash(es)
+git switch main
+git cherry-pick a1b2c3d         # copy one commit
+git cherry-pick a1b2c3d^..f4e5d6c  # copy a range</code></pre>
+        <p><strong>Verify</strong>: <code>git log --oneline -5</code> &rarr; expected: cherry-picked commits visible on
+            target branch</p>
+
+        <h3>4. Discard: return to branch without saving</h3>
+        <p>If you made no commits (or want to throw them away). [<a
+                href="https://git-scm.com/docs/git-checkout">src1</a>]</p>
+        <pre><code class="language-bash">git switch main                # clean return
+git checkout -f main           # force &mdash; discards uncommitted changes too</code></pre>
+        <p><strong>Verify</strong>: <code>git status</code> &rarr; expected: <code>On branch main</code></p>
+
+        <h3>5. Recover lost commits via reflog</h3>
+        <p>If you already switched away and lost the commits &mdash; ~30-day recovery window. [<a
+                href="https://git-scm.com/docs/git-reflog">src2</a>, <a
+                href="https://stackoverflow.com/questions/10228760/how-do-i-fix-a-git-detached-head">src7</a>]</p>
+        <pre><code class="language-bash">git reflog                  # find &ldquo;commit: add important feature&rdquo; entry
+# Example output:
+# a1b2c3d HEAD@{0}: checkout: moving from abc123 to main
+# f4e5d6c HEAD@{1}: commit: add important feature  &larr; lost commit
+# ...
+
+git branch recover-work f4e5d6c   # create branch at lost commit
+git switch recover-work            # go there and verify</code></pre>
+        <p><strong>Verify</strong>: <code>git branch -v</code> &rarr; expected:
+            <code>recover-work f4e5d6c add important feature</code></p>
+
+        <h3>6. CI/CD: detached HEAD is expected</h3>
+        <p>CI/CD pipelines check out a SHA for reproducibility &mdash; always creates detached HEAD. This is correct
+            behavior.
+            [<a href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</p>
+        <pre><code class="language-yaml"># GitHub Actions: by default checks out detached HEAD (correct)
+- uses: actions/checkout@v4
+
+# To get a real branch reference for PRs:
+- uses: actions/checkout@v4
+  with:
+    ref: ${{ github.head_ref }}</code></pre>
+        <p>Git 2.49+ also introduced <code>git clone --revision</code> for minimal CI clones with intentional detached
+            HEAD. [<a href="https://git-scm.com/docs/git-checkout">src1</a>]</p>
+        <pre><code class="language-bash"># Minimal CI clone at specific tag &mdash; intentional detached HEAD (Git 2.49+)
+git clone --revision refs/tags/v1.0 --depth=1 https://github.com/org/repo.git</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Bash: safe detached HEAD detector and recovery helper</h3>
+        <p>Full script: <a
+                href="scripts/bash-safe-detached-head-detector-and-recovery-help.sh">bash-safe-detached-head-detector-and-recovery-help.sh</a>
+            (61 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+RECOVER_BRANCH="${1:-}"
+
+echo "=== Git HEAD State Inspector ==="
+HEAD_REF=$(cat .git/HEAD 2&gt;/dev/null)
+
+if echo "$HEAD_REF" | grep -q "^ref:"; then
+    echo "Normal state &mdash; on branch: $(git branch --show-current)"
+    exit 0
+fi
+
+DETACHED_SHA=$(git rev-parse --short HEAD 2&gt;/dev/null)
+echo "DETACHED HEAD at: $DETACHED_SHA"
+
+LAST_BRANCH=$(git reflog | grep -E "checkout: moving from" | head -1 \
+              | sed 's/.*moving from \([^ ]*\).*/\1/')
+echo "   Last known branch: ${LAST_BRANCH:-unknown}"
+
+if [ -n "$LAST_BRANCH" ]; then
+    COUNT=$(git log --oneline "${LAST_BRANCH}..HEAD" 2&gt;/dev/null | wc -l | tr -d ' ')
+    echo "   Commits made while detached: $COUNT"
+    [ "$COUNT" -gt 0 ] &amp;&amp; git log --oneline "${LAST_BRANCH}..HEAD" | head -10 | sed 's/^/     /'
+fi
+
+if [ -n "$RECOVER_BRANCH" ]; then
+    git switch -c "$RECOVER_BRANCH" 2&gt;/dev/null || git checkout -b "$RECOVER_BRANCH"
+    echo "Work saved to branch: $RECOVER_BRANCH"
+else
+    echo ""
+    echo "Run: $0 &lt;branch-name&gt;  to auto-save and recover"
+    echo "Or:  git switch -c &lt;new-branch&gt;"
+    echo "Or:  git switch ${LAST_BRANCH:-main}  (discard detached commits)"
+fi</code></pre>
+
+        <h3>Python: git HEAD state analyzer</h3>
+        <p>Full script: <a
+                href="scripts/python-git-repository-head-state-checker.py">python-git-repository-head-state-checker.py</a>
+            (105 lines)</p>
+        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+Input:  path to a Git repository (default: current dir)
+Output: dict with HEAD state, branch, detached commit count, and recovery commands
+"""
+import subprocess, sys
+from pathlib import Path
+
+def run_git(args, cwd='.'):
+    r = subprocess.run(['git']+args, capture_output=True, text=True, cwd=cwd)
+    return r.stdout.strip(), r.returncode
+
+def analyze_head(repo='.'):
+    _, rc = run_git(['rev-parse','--git-dir'], repo)
+    if rc != 0: return {'error': f'{repo} is not a git repo'}
+
+    head = (Path(repo)/'.git'/'HEAD').read_text().strip()
+    sha, _ = run_git(['rev-parse','--short','HEAD'], repo)
+
+    if head.startswith('ref: refs/heads/'):
+        branch = head.replace('ref: refs/heads/','')
+        return {'state':'normal','branch':branch,'sha':sha,
+                'message':f'On branch: {branch} ({sha})'}
+
+    # Detached &mdash; find last branch from reflog
+    reflog, _ = run_git(['reflog','--pretty=%gs'], repo)
+    last_branch = None
+    for line in reflog.splitlines():
+        if 'checkout: moving from' in line:
+            last_branch = line.split('moving from ')[1].split(' to ')[0]
+            break
+
+    commits_out, _ = run_git(['log','--oneline',f'{last_branch}..HEAD'], repo) \
+                     if last_branch else ('', 0)
+    commits = [c for c in commits_out.splitlines() if c]
+
+    return {
+        'state': 'detached', 'sha': sha, 'last_branch': last_branch,
+        'detached_commits': commits,
+        'message': f'DETACHED HEAD at {sha}',
+        'recovery': {
+            'save_new_branch': 'git switch -c &lt;branch-name&gt;',
+            'discard_return': f'git switch {last_branch or "main"}',
+            'cherry_pick': f'git switch &lt;target&gt; &amp;&amp; git cherry-pick {sha}',
+        }
+    }
+
+info = analyze_head(sys.argv[1] if len(sys.argv)&gt;1 else '.')
+if 'error' in info: print(info['error']); sys.exit(1)
+print(info['message'])
+if info['state']=='detached':
+    print(f"Last branch: {info.get('last_branch','unknown')}")
+    print(f"Detached commits: {len(info['detached_commits'])}")
+    for c in info['detached_commits']: print(f"  {c}")
+    print("\nRecovery options:")
+    for k,v in info['recovery'].items(): print(f"  {k}: {v}")</code></pre>
+
+        <h3>Bash: reflog-based lost commit recovery</h3>
+        <p>Full script: <a
+                href="scripts/bash-reflog-based-lost-commit-recovery.sh">bash-reflog-based-lost-commit-recovery.sh</a>
+            (53 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+KEYWORD="${1:-}"
+
+echo "=== Lost Commit Recovery via reflog ==="
+git reflog --pretty=format:"%C(yellow)%h%Creset %C(bold)%gd%Creset %C(dim)%ar%Creset %gs" \
+  --color=always | head -30
+echo ""
+echo "=== Find Detached HEAD commits ==="
+git reflog | grep -i "detached\|commit:" | head -20
+
+echo ""
+echo "=== Recovery ==="
+echo "1. Find the commit hash from reflog above"
+echo "2. git branch recover-work &lt;hash&gt;"
+echo "3. git switch recover-work"
+echo "4. git log --oneline -5  (verify)"
+echo ""
+echo "Last resort (beyond reflog expiry):"
+echo "  git fsck --lost-found"
+echo "  ls .git/lost-found/commit/"</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Committing new work in detached HEAD without creating a branch</h3>
+        <pre><code class="language-bash"># BAD &mdash; commits have no branch anchor [src1, src3, src5]
+git checkout a1b2c3d   # enters detached HEAD
+git add . &amp;&amp; git commit -m "important feature"
+git checkout main      # WARNING: "leaving N commits behind" &mdash; easy to dismiss!
+# Commits become orphaned &mdash; GC'd in ~30 days</code></pre>
+
+        <h3>Correct: Create a branch before switching away</h3>
+        <pre><code class="language-bash"># GOOD &mdash; lock in your work before switching [src1, src3]
+git checkout a1b2c3d
+git add . &amp;&amp; git commit -m "important feature"
+git switch -c my-feature   # save NOW, then switch is safe
+git switch main            # commits are safe on my-feature branch</code></pre>
+
+        <h3>Wrong: Using git checkout for branch navigation (ambiguous)</h3>
+        <pre><code class="language-bash"># BAD &mdash; git checkout is overloaded; easy accidental detach [src1, src3]
+git checkout main      # fine &mdash; goes to branch
+git checkout a1b2c3d   # detached HEAD! same command, different behavior
+git checkout v1.2.3    # detached HEAD! (tag checkout)
+# One typo or copy-paste of a hash &rarr; silent detach</code></pre>
+
+        <h3>Correct: Use git switch for branch navigation</h3>
+        <pre><code class="language-bash"># GOOD &mdash; git switch is branch-only; explicit about detaching [src1]
+git switch main            # goes to branch
+git switch a1b2c3d         # ERROR: "invalid reference" &mdash; clear failure
+git switch --detach main   # explicit intentional detach &mdash; intent is clear
+git switch --detach v1.2.3 # inspect a tag explicitly</code></pre>
+
+        <h3>Wrong: Checking out origin/main directly</h3>
+        <pre><code class="language-bash"># BAD &mdash; origin/main is a remote-tracking ref, not a local branch [src1, src3, src6]
+git checkout origin/main   # detached HEAD at remote ref
+# Any commits here are orphaned; you're not "on main"</code></pre>
+
+        <h3>Correct: Use git switch to create a tracking branch</h3>
+        <pre><code class="language-bash"># GOOD &mdash; creates a local tracking branch [src1, src3]
+git switch main                  # uses existing local main (tracks origin/main)
+git switch -c main origin/main   # create local branch if it doesn't exist
+git checkout --track origin/main # same, older syntax</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Git's warning is easy to dismiss</strong>: When you switch away from detached HEAD with
+                uncommitted commits, Git prints a warning containing the orphaned commit hashes. Many developers dismiss
+                this warning. Write down the hashes immediately or create a branch right then. [<a
+                    href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                    href="https://graphite.dev/guides/git-detached-head">src3</a>, <a
+                    href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</li>
+            <li><strong>Garbage collection has a ~30-day window</strong>: Orphaned commits from detached HEAD are not
+                immediately deleted. <code>git reflog</code> keeps them accessible for 30 days (configurable via
+                <code>gc.reflogExpire</code>). After that, <code>git gc</code> deletes them permanently. [<a
+                    href="https://git-scm.com/docs/git-reflog">src2</a>, <a
+                    href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">src8</a>]</li>
+            <li><strong>Tags always cause detached HEAD</strong>: Checking out a tag (<code>git checkout v1.0</code>)
+                always enters detached HEAD because tags are immutable. This is expected but surprises newcomers. [<a
+                    href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                    href="https://www.geeksforgeeks.org/git-detached-head/">src6</a>]</li>
+            <li><strong>CI/CD pipelines are always in detached HEAD</strong>: GitHub Actions, Jenkins, and most CI
+                systems check out a specific commit SHA for reproducibility. This is correct &mdash; don't try to
+                &ldquo;fix&rdquo; it
+                inside CI. [<a href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</li>
+            <li><strong><code>git checkout</code> is overloaded</strong>: The same command checks out branches, files,
+                commits, and trees. <code>git switch</code> (Git 2.23+) is branch-only and gives clearer error messages
+                for detached-HEAD scenarios. [<a href="https://git-scm.com/docs/git-checkout">src1</a>, <a
+                    href="https://graphite.dev/guides/git-detached-head">src3</a>]</li>
+            <li><strong>Detached HEAD with stashed changes</strong>: A <code>git stash pop</code> in detached HEAD
+                creates a commit in the detached state. Create a branch before applying stash work if you intend to keep
+                it. [<a href="https://git-scm.com/docs/git-checkout">src1</a>]</li>
+            <li><strong>Interactive rebase uses detached HEAD internally</strong>: During <code>git rebase -i</code>,
+                Git temporarily enters detached HEAD to replay commits. This is normal and resolves automatically. Do
+                not be
+                alarmed by this. [<a href="https://git-scm.com/docs/git-checkout">src1</a>]</li>
+            <li><strong>Git 2.49+ <code>--revision</code> clone creates detached HEAD</strong>: The new
+                <code>git clone --revision</code> flag (Git 2.49, March 2025) intentionally creates a detached HEAD
+                without a tracking branch. This is by design for CI/CD use cases. [<a
+                    href="https://git-scm.com/docs/git-checkout">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Detect detached HEAD
+git status                    # &ldquo;HEAD detached at &lt;hash&gt;&rdquo;
+cat .git/HEAD                 # SHA = detached; &ldquo;ref: refs/heads/...&rdquo; = normal
+git branch                    # &ldquo;* (HEAD detached at ...)&rdquo;
+
+# Understand what happened
+git log --oneline -10
+git reflog                    # full HEAD movement history
+git log --oneline --graph --all   # all branches including detached
+
+# Recovery
+git switch -c &lt;new-branch&gt;           # save + create branch (Git 2.23+)
+git checkout -b &lt;new-branch&gt;         # same, older Git
+git switch &lt;existing-branch&gt;         # discard and go home
+git cherry-pick &lt;hash&gt;               # copy specific commit to current branch
+
+# Lost commit recovery
+git reflog                            # find lost commit hash
+git reflog --pretty=format:&quot;%h %gs %ar&quot;   # friendlier format
+git branch recover &lt;lost-hash&gt;        # create branch at lost commit
+git fsck --lost-found                 # last resort: find ALL unreachable objects
+
+# Prevention
+git switch --detach &lt;hash&gt;           # explicit intentional detach
+git switch &lt;branch&gt;                  # always use switch for branch navigation
+git config --global advice.detachedHead true  # ensure warnings are on</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>git switch</code></td>
+                        <td>Git 2.23 (Aug 2019)</td>
+                        <td>Preferred over <code>git checkout</code> for branch navigation [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git switch -c</code></td>
+                        <td>Git 2.23</td>
+                        <td>Create and switch (replaces <code>git checkout -b</code>) [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git switch --detach</code></td>
+                        <td>Git 2.23</td>
+                        <td>Explicit intentional detached HEAD [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git restore</code></td>
+                        <td>Git 2.23</td>
+                        <td>Replaces <code>git checkout -- &lt;file&gt;</code> [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git clone --revision</code></td>
+                        <td>Git 2.49 (Mar 2025)</td>
+                        <td>Intentional detached HEAD clone for CI/CD [<a
+                                href="https://git-scm.com/docs/git-checkout">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Improved detached HEAD messages</td>
+                        <td>Git 2.49 (Mar 2025)</td>
+                        <td>Clearer guidance when entering/leaving detached HEAD</td>
+                    </tr>
+                    <tr>
+                        <td><code>git reflog</code></td>
+                        <td>Git 1.5.0</td>
+                        <td>30-day default window [<a href="https://git-scm.com/docs/git-reflog">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git fsck --lost-found</code></td>
+                        <td>Git 1.5.0</td>
+                        <td>Find all unreachable objects [<a href="https://git-scm.com/docs/git-reflog">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>gc.reflogExpire</code></td>
+                        <td>Git 1.6.0</td>
+                        <td>Configure reflog retention period [<a
+                                href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Detached HEAD concept</td>
+                        <td>Git 1.0</td>
+                        <td>Core Git concept; unchanged since inception [<a
+                                href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Latest stable</td>
+                        <td>Git 2.53 (Feb 2026)</td>
+                        <td>All detached HEAD features fully supported</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use Detached HEAD For</th>
+                        <th scope="col">Don't Use Detached HEAD For</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Inspecting historical code: <code>git switch --detach &lt;hash&gt;</code></td>
+                        <td>Starting new development work</td>
+                        <td><code>git switch -c &lt;feature-branch&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td>Building/testing a specific tagged release</td>
+                        <td>Hotfixes &mdash; create a branch instead</td>
+                        <td><code>git switch -c hotfix/&lt;issue&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td>CI/CD pipelines checking out exact SHAs (expected)</td>
+                        <td>Any work you intend to commit and keep</td>
+                        <td>Any named branch</td>
+                    </tr>
+                    <tr>
+                        <td>Bisecting: <code>git bisect</code> manages detached HEAD for you</td>
+                        <td>Code review &mdash; use a named branch</td>
+                        <td><code>git switch -c review/&lt;pr&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td>Minimal CI clones: <code>git clone --revision</code> (Git 2.49+)</td>
+                        <td>Long-running experiments</td>
+                        <td><code>git switch -c experiment/&lt;name&gt;</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong><code>git switch</code> may not be available on older systems</strong>: Git 2.23 was released
+                August 2019, but some enterprise Linux distributions (RHEL 7, CentOS 7) ship with much older Git. On
+                those systems, use <code>git checkout -b</code> instead of <code>git switch -c</code>.</li>
+            <li><strong><code>git fsck --lost-found</code> can recover beyond reflog window</strong>: If reflog has
+                expired, <code>git fsck --lost-found</code> writes unreachable objects to <code>.git/lost-found/</code>.
+                This is the last resort for very old orphaned commits. [<a
+                    href="https://git-scm.com/docs/git-reflog">src2</a>]</li>
+            <li><strong>Shallow clones limit reflog recovery</strong>: CI/CD systems that use <code>--depth=1</code>
+                shallow clones have very limited reflog history. Commits orphaned in a shallow clone may not be
+                recoverable via reflog. [<a href="https://circleci.com/blog/git-detached-head-state/">src5</a>]</li>
+            <li><strong>Interactive rebase uses detached HEAD internally</strong>: During <code>git rebase -i</code>,
+                Git temporarily enters detached HEAD to replay commits. This resolves automatically when the rebase
+                completes or is aborted. [<a href="https://git-scm.com/docs/git-checkout">src1</a>]</li>
+            <li><strong><code>ORIG_HEAD</code> preserves pre-merge/rebase position</strong>: After a merge, rebase, or
+                reset, Git stores the previous <code>HEAD</code> in <code>ORIG_HEAD</code>. Use
+                <code>git reset --hard ORIG_HEAD</code> to undo a bad merge or rebase quickly. [<a
+                    href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">src8</a>]</li>
+            <li><strong>Git 2.49+ improved detached HEAD messages</strong>: Starting with Git 2.49 (March 2025), Git
+                provides clearer guidance messages when entering or leaving detached HEAD state, making recovery steps
+                more obvious.</li>
+        </ul>
+    </section>
+
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/git-merge-conflicts/2026" data-relationship="related_to">Git Merge Conflicts</a>
+        <a href="/software/debugging/ssl-tls-certificate-errors/2026" data-relationship="related_to">SSL/TLS Certificate
+            Errors</a>
+        <a href="/software/debugging/git-lost-commits/2026" data-relationship="solves">Recovering Lost Git Commits</a>
+        <a href="/software/debugging/git-undo-rebase-reset/2026" data-relationship="often_confused_with">Undoing Git
+            Rebase or Reset</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents
+        and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

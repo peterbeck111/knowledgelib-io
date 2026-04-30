@@ -1,0 +1,25 @@
+START
+├── Direction: PIVOT (rows → columns)?
+│   ├── YES → Column values known at query-write time?
+│   │   ├── YES (static pivot) → Which database?
+│   │   │   ├── SQL Server / Oracle → Use native PIVOT clause
+│   │   │   ├── PostgreSQL → Use FILTER() (9.4+) or crosstab()
+│   │   │   └── MySQL / SQLite / Any → Use SUM(CASE WHEN ... END) + GROUP BY
+│   │   └── NO (dynamic pivot) → Which database?
+│   │       ├── SQL Server → Build PIVOT in dynamic SQL (sp_executesql)
+│   │       ├── MySQL → GROUP_CONCAT + PREPARE/EXECUTE
+│   │       └── PostgreSQL → PL/pgSQL function with EXECUTE
+│   └── NO ↓
+├── Direction: UNPIVOT (columns → rows)?
+│   ├── YES → Need to preserve NULLs?
+│   │   ├── YES → Which database?
+│   │   │   ├── SQL Server → Use CROSS APPLY (VALUES ...) instead of UNPIVOT
+│   │   │   ├── Oracle → Use UNPIVOT INCLUDE NULLS
+│   │   │   └── PostgreSQL → Use CROSS JOIN LATERAL (VALUES ...)
+│   │   └── NO (NULLs can be dropped) → Which database?
+│   │       ├── SQL Server / Oracle → Use native UNPIVOT clause
+│   │       ├── PostgreSQL → Use CROSS JOIN LATERAL (VALUES ...)
+│   │       └── Any → Use UNION ALL (one SELECT per column)
+│   └── NO ↓
+└── DEFAULT → If columns are truly unknown at runtime, consider pivoting in
+    the application layer (pandas pivot_table, spreadsheet, BI tool)

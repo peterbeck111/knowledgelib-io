@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Salesforce Apex Governor Limits Per Transaction | knowledgelib.io</title>
+  <meta name="description" content="Salesforce Apex governor limits per transaction -- SOQL (100 sync/200 async), DML (150), CPU (10s/60s), heap (6MB/12MB), callouts (100).">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/salesforce-governor-limits/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Salesforce Apex Governor Limits Per Transaction | knowledgelib.io">
+  <meta property="og:description" content="Salesforce Apex governor limits per transaction -- SOQL (100 sync/200 async), DML (150), CPU (10s/60s), heap (6MB/12MB), callouts (100). Complete reference with sync vs async values, code examples, anti-patterns, and decision tree. 7 sources, all cited. Verified 2026-03-02.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/salesforce-governor-limits/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-02">
+  <meta property="article:modified_time" content="2026-03-02">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Salesforce Apex Governor Limits Per Transaction | knowledgelib.io">
+  <meta name="twitter:description" content="Salesforce Apex governor limits per transaction -- SOQL (100 sync/200 async), DML (150), CPU (10s/60s), heap (6MB/12MB), callouts (100). Complete reference with sync vs async values, code examples, anti-patterns, and decision tree. 7 sources, all cited. Verified 2026-03-02.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-03-02">
+  <meta name="ai:domain" content="business/erp-integration/salesforce-governor-limits">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the Salesforce Apex governor limits per transaction - SOQL, DML, CPU, heap, callouts?">
+  <meta name="ai:aliases" content="Salesforce Apex execution limits sync vs async; Salesforce SOQL query limit per transaction; Salesforce DML governor limits and CPU timeout; Salesforce callout and heap size limits">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/salesforce-governor-limits/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-02">
+  <meta name="ai:systems" content="Salesforce Platform (API v63.0 Spring '26)">
+  <meta name="ai:inputs_needed" content="execution_context,limit_type,trigger_context">
+  <meta name="ai:constraints" content="100 SOQL queries per sync transaction; 10,000 ms CPU time sync limit; 6 MB heap sync limit; Limits are per-transaction not per-trigger; LimitException cannot be caught; Future methods cannot chain">
+  <meta name="ai:skip_this_unit_if" content="Need org-level API rate limits -> salesforce-api-capabilities; Need auth flow guidance -> salesforce-auth-flows; Need NetSuite limits -> netsuite-governance-limits">
+  <meta name="ai:sections" content="tldr,system_profile,rate_limits,constraints,decision_tree,quick_reference,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Salesforce Apex Governor Limits Per Transaction (2026)",
+    "headline": "Salesforce Apex Governor Limits Per Transaction (2026)",
+    "description": "Complete reference for Salesforce Apex governor limits per transaction -- SOQL queries (100 sync/200 async), DML statements (150), CPU time (10s sync/60s async), heap size (6MB/12MB), callouts (100), and all other per-transaction limits with code examples and anti-patterns.",
+    "keywords": ["Salesforce", "Apex", "governor limits", "SOQL", "DML", "CPU time", "heap size", "callouts", "ERP integration"],
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce Platform API v63.0 (Spring '26)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Execution Governors and Limits -- Apex Developer Guide",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Apex Governor Limits -- Salesforce Developer Limits and Allocations Quick Reference",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_apexgov.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "API Request Limits and Allocations -- Salesforce Developer Limits Quick Reference",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Salesforce Apex Governor Limits Per Transaction (2026)",
+    "description": "Structured reference dataset of Salesforce Apex per-transaction governor limits including SOQL, DML, CPU, heap, callout limits for synchronous and asynchronous contexts.",
+    "keywords": ["Salesforce", "Apex", "governor limits", "ERP integration", "API capabilities"],
+    "temporalCoverage": "2025/2026",
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Salesforce Apex Governor Limits Per Transaction (2026)" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the Salesforce Apex governor limits per transaction - SOQL, DML, CPU, heap, callouts?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce enforces per-transaction governor limits on every Apex execution context -- SOQL, DML, CPU, heap, and callouts all have hard caps that abort the transaction when exceeded."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce Apex execution limits sync vs async",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce enforces per-transaction governor limits on every Apex execution context -- SOQL, DML, CPU, heap, and callouts all have hard caps that abort the transaction when exceeded."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce SOQL query limit per transaction",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce enforces per-transaction governor limits on every Apex execution context -- SOQL, DML, CPU, heap, and callouts all have hard caps that abort the transaction when exceeded."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce DML governor limits and CPU timeout",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce enforces per-transaction governor limits on every Apex execution context -- SOQL, DML, CPU, heap, and callouts all have hard caps that abort the transaction when exceeded."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce callout and heap size limits",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce enforces per-transaction governor limits on every Apex execution context -- SOQL, DML, CPU, heap, and callouts all have hard caps that abort the transaction when exceeded."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Salesforce Apex Governor Limits Per Transaction (2026)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the Salesforce Apex governor limits per transaction - SOQL, DML, CPU, heap, callouts?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/salesforce-governor-limits/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Salesforce Platform (API v63.0)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-02</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Salesforce enforces per-transaction governor limits on every Apex execution context -- SOQL, DML, CPU, heap, and callouts all have hard caps that abort the transaction when exceeded.</li>
+    <li><strong>Key limit</strong>: 100 SOQL queries per synchronous transaction (200 async), shared across all triggers, flows, and process builders in the same execution context. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Watch out for</strong>: Governor limits are per-transaction, not per-trigger -- cascading triggers, workflow rules, and process builders all consume from the same pool. A single DML operation can fire multiple triggers that collectively exhaust the 100-SOQL or 10,000 ms CPU budget. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Best for</strong>: Reference card for any Apex developer, integration architect, or AI agent recommending Salesforce customization patterns.</li>
+    <li><strong>Authentication</strong>: N/A -- governor limits apply to all Apex execution regardless of authentication method.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers Salesforce Apex governor limits as enforced by the Salesforce multitenant platform. These limits apply to all Apex code execution -- triggers, classes, Visualforce controllers, Lightning components, @future methods, Batch Apex, Queueable Apex, and Scheduled Apex. Limits apply uniformly across Enterprise, Unlimited, Performance, and Developer editions; edition differences affect org-level API call quotas (covered separately) but not per-transaction governor limits.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Vendor</strong></td><td>Salesforce</td></tr>
+      <tr><td><strong>System</strong></td><td>Salesforce Platform (Spring '26, API v63.0)</td></tr>
+      <tr><td><strong>API Surface</strong></td><td>Apex Runtime (triggers, classes, VF, Lightning, async Apex)</td></tr>
+      <tr><td><strong>Current API Version</strong></td><td>v63.0 (Spring '26)</td></tr>
+      <tr><td><strong>Editions Covered</strong></td><td>Enterprise, Unlimited, Performance, Developer</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>Cloud</td></tr>
+      <tr><td><strong>API Docs</strong></td><td><a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">Execution Governors and Limits</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>GA</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Transaction Governor Limits (Core)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Synchronous</th><th scope="col">Asynchronous</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>SOQL queries</strong></td><td>100</td><td>200</td><td>Includes queries from triggers, flows, process builders in same context</td></tr>
+      <tr><td><strong>Records retrieved by SOQL</strong></td><td>50,000</td><td>50,000</td><td>Use LIMIT clause or queryMore/Database.getQueryLocator for larger sets</td></tr>
+      <tr><td><strong>SOSL queries</strong></td><td>20</td><td>20</td><td>Each query returns max 2,000 records</td></tr>
+      <tr><td><strong>Records retrieved by SOSL</strong></td><td>2,000</td><td>2,000</td><td>Per single SOSL query</td></tr>
+      <tr><td><strong>DML statements</strong></td><td>150</td><td>150</td><td>Each insert/update/delete/undelete counts as 1, regardless of record count</td></tr>
+      <tr><td><strong>Records processed by DML</strong></td><td>10,000</td><td>10,000</td><td>Total across all DML statements in the transaction</td></tr>
+      <tr><td><strong>CPU time</strong></td><td>10,000 ms</td><td>60,000 ms</td><td>Exceeded = System.LimitException, transaction aborted</td></tr>
+      <tr><td><strong>Heap size</strong></td><td>6 MB</td><td>12 MB</td><td>Collections, deserialized JSON, SOQL results all consume heap</td></tr>
+      <tr><td><strong>HTTP callouts</strong></td><td>100</td><td>100</td><td>Includes REST, SOAP, and any external HTTP request</td></tr>
+      <tr><td><strong>Callout cumulative timeout</strong></td><td>120 seconds</td><td>120 seconds</td><td>Total across all callouts in the transaction</td></tr>
+      <tr><td><strong>Default callout timeout</strong></td><td>10 seconds</td><td>10 seconds</td><td>Configurable per request up to 120 seconds</td></tr>
+      <tr><td><strong>Future method calls (@future)</strong></td><td>50</td><td>0 (batch/future) / 1 (queueable)</td><td>Cannot call @future from @future or batch</td></tr>
+      <tr><td><strong>Queueable jobs (System.enqueueJob)</strong></td><td>50</td><td>1</td><td>Queueable can chain to 1 more queueable</td></tr>
+      <tr><td><strong>sendEmail invocations</strong></td><td>10</td><td>10</td><td>Per Messaging.sendEmail call</td></tr>
+      <tr><td><strong>Push notification method calls</strong></td><td>10</td><td>10</td><td>Each call can send up to 2,000 notifications</td></tr>
+      <tr><td><strong>Maximum execution time</strong></td><td>10 minutes</td><td>10 minutes</td><td>Hard timeout regardless of CPU usage</td></tr>
+      <tr><td><strong>Trigger recursion depth</strong></td><td>16</td><td>16</td><td>Maximum nested trigger invocations</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Certified Managed Package Limits</h3>
+  <p>Certified managed packages (AppExchange) receive their own separate governor limit pools in addition to the org's native code limits. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Additional Allocation (per package)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SOQL queries</td><td>+100 (sync) / +100 (async)</td></tr>
+      <tr><td>DML statements</td><td>+150</td></tr>
+      <tr><td>Callouts</td><td>+100</td></tr>
+      <tr><td>sendEmail</td><td>+10</td></tr>
+      <tr><td>Database.getQueryLocator records</td><td>+10,000</td></tr>
+      <tr><td>SOSL queries</td><td>+20</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Org-Level Async Apex Limits (24-hour rolling)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Asynchronous Apex executions</td><td>250,000 or (user licenses x 200), whichever is greater</td><td>Shared across batch, queueable, scheduled, future</td></tr>
+      <tr><td>Concurrent batch jobs (queued + active)</td><td>5</td><td>Additional jobs queue until slot opens</td></tr>
+      <tr><td>Scheduled Apex classes</td><td>100 (Developer: 5)</td><td></td></tr>
+      <tr><td>Synchronous concurrent transactions (long-running)</td><td>10</td><td>Transactions running &gt;5 seconds</td></tr>
+      <tr><td>Batch Apex Database.QueryLocator records</td><td>50,000,000</td><td>Per batch job</td></tr>
+      <tr><td>Batch size (Database.executeBatch)</td><td>200 records (default)</td><td>Configurable 1-2,000</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Org-Level API Request Limits (24-hour rolling)</h3>
+  <p>These are NOT governor limits -- they are org-level quotas on API calls. Included because agents frequently confuse them. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src3</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Edition</th><th scope="col">Base API Calls/24h</th><th scope="col">Per User License</th><th scope="col">Per Platform License</th><th scope="col">Sandbox</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Developer</td><td>15,000</td><td>--</td><td>--</td><td>--</td></tr>
+      <tr><td>Enterprise</td><td>100,000</td><td>+1,000</td><td>+1,000</td><td>5,000,000</td></tr>
+      <tr><td>Unlimited</td><td>100,000</td><td>+5,000</td><td>+5,000</td><td>5,000,000</td></tr>
+      <tr><td>Performance</td><td>100,000</td><td>+5,000</td><td>+5,000</td><td>5,000,000</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Formula: <code>base + (user_licenses x per_license) + purchased_add_ons</code></p>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Limits are per-transaction, not per-trigger</strong>: A single DML operation can fire before-update triggers, after-update triggers, workflow rules, process builders, and flows -- all sharing the same 100-SOQL, 150-DML, and 10,000 ms CPU pool. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>No catching LimitException</strong>: When a governor limit is exceeded, Salesforce throws System.LimitException, which cannot be caught by try-catch blocks. The entire transaction is rolled back. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>@future cannot chain</strong>: Future methods cannot call other future methods. Use Queueable Apex for async chaining (max depth: 1 queueable per async context). [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Callout restrictions in triggers</strong>: You cannot make HTTP callouts directly from a trigger. All callouts from trigger context must be delegated to @future or Queueable methods. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Mixed DML restrictions</strong>: You cannot perform DML on setup objects (User, Group, etc.) and non-setup objects in the same transaction. Use @future or System.runAs() to separate contexts. [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Heap is not just variables</strong>: Heap includes SOQL query results held in memory, deserialized JSON/XML, and any object reference. A single query returning 50,000 rows of a large object can exhaust 6 MB heap instantly. [<a href="https://onilab.com/blog/governor-limits-salesforce">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Developer hitting or worried about governor limits
+|-- Which limit is being hit?
+|   |-- SOQL queries (100 sync / 200 async)
+|   |   |-- SOQL inside a loop?
+|   |   |   |-- YES -> Bulkify: query ONCE before loop, use Map&lt;Id, SObject&gt; for lookups
+|   |   |   +-- NO -> Check for cascading triggers consuming SOQL budget
+|   |   +-- Need &gt;50,000 rows?
+|   |       |-- YES -> Use Database.getQueryLocator in Batch Apex (50M record limit)
+|   |       +-- NO -> Add LIMIT clause, use selective filters (indexed fields)
+|   |-- DML statements (150)
+|   |   |-- DML inside a loop?
+|   |   |   |-- YES -> Collect records in a List, single DML outside loop
+|   |   |   +-- NO -> Check for process builders/flows adding DML statements
+|   |   +-- Hitting 10,000 DML rows?
+|   |       +-- Move to Batch Apex (processes records in chunks of 200)
+|   |-- CPU time (10,000 ms sync)
+|   |   |-- Complex logic in trigger?
+|   |   |   |-- YES -> Move heavy processing to @future or Queueable
+|   |   |   +-- NO -> Profile with Limits.getCpuTime() to find hotspot
+|   |   +-- Need &gt;10s processing?
+|   |       +-- Use Batch Apex (60,000 ms per execute()) or Platform Events
+|   |-- Heap size (6 MB sync)
+|   |   |-- Large SOQL result set?
+|   |   |   |-- YES -> Use FOR loop on SOQL (streaming), or reduce fields in SELECT
+|   |   |   +-- NO -> Check for large String/JSON operations
+|   |   +-- Need &gt;6 MB?
+|   |       +-- Move to async context (12 MB) or Batch Apex
+|   +-- Callouts (100 per transaction)
+|       |-- Callouts in a trigger?
+|       |   |-- YES -> MUST use @future or Queueable (triggers block callouts)
+|       |   +-- NO -> Batch external calls, use Composite API to reduce count
+|       +-- Need &gt;100 callouts?
+|           +-- Use Batch Apex with Database.AllowsCallouts
++-- General approach
+    |-- &lt; 200 records -> Synchronous trigger/class (standard limits)
+    |-- 200-10,000 records -> Queueable Apex (async limits, chainable)
+    |-- &gt; 10,000 records -> Batch Apex (50M record ceiling)
+    +-- Real-time notifications -> Platform Events (separate transaction context)</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Operation</th><th scope="col">Sync Limit</th><th scope="col">Async Limit</th><th scope="col">How to Check Remaining</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SOQL queries issued</td><td>100</td><td>200</td><td><code>Limits.getQueries()</code> / <code>Limits.getLimitQueries()</code></td></tr>
+      <tr><td>SOQL rows retrieved</td><td>50,000</td><td>50,000</td><td><code>Limits.getQueryRows()</code> / <code>Limits.getLimitQueryRows()</code></td></tr>
+      <tr><td>DML statements issued</td><td>150</td><td>150</td><td><code>Limits.getDmlStatements()</code> / <code>Limits.getLimitDmlStatements()</code></td></tr>
+      <tr><td>DML rows processed</td><td>10,000</td><td>10,000</td><td><code>Limits.getDmlRows()</code> / <code>Limits.getLimitDmlRows()</code></td></tr>
+      <tr><td>CPU time consumed</td><td>10,000 ms</td><td>60,000 ms</td><td><code>Limits.getCpuTime()</code> / <code>Limits.getLimitCpuTime()</code></td></tr>
+      <tr><td>Heap size used</td><td>6 MB</td><td>12 MB</td><td><code>Limits.getHeapSize()</code> / <code>Limits.getLimitHeapSize()</code></td></tr>
+      <tr><td>Callouts made</td><td>100</td><td>100</td><td><code>Limits.getCallouts()</code> / <code>Limits.getLimitCallouts()</code></td></tr>
+      <tr><td>Future calls made</td><td>50</td><td>0-1</td><td><code>Limits.getFutureCalls()</code> / <code>Limits.getLimitFutureCalls()</code></td></tr>
+      <tr><td>Queueable jobs added</td><td>50</td><td>1</td><td><code>Limits.getQueueableJobs()</code> / <code>Limits.getLimitQueueableJobs()</code></td></tr>
+      <tr><td>SOSL queries issued</td><td>20</td><td>20</td><td><code>Limits.getSoslQueries()</code> / <code>Limits.getLimitSoslQueries()</code></td></tr>
+      <tr><td>Email invocations</td><td>10</td><td>10</td><td><code>Limits.getEmailInvocations()</code> / <code>Limits.getLimitEmailInvocations()</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Apex: Checking Governor Limit Consumption at Runtime</h3>
+  <pre><code class="language-apex">// Input:  Running Apex code that needs to monitor limit consumption
+// Output: Debug log with current consumption vs limits
+
+public class GovernorLimitChecker {
+    public static void logLimits(String context) {
+        System.debug('=== Governor Limits [' + context + '] ===');
+        System.debug('SOQL queries: ' + Limits.getQueries() + ' / ' + Limits.getLimitQueries());
+        System.debug('SOQL rows: ' + Limits.getQueryRows() + ' / ' + Limits.getLimitQueryRows());
+        System.debug('DML statements: ' + Limits.getDmlStatements() + ' / ' + Limits.getLimitDmlStatements());
+        System.debug('DML rows: ' + Limits.getDmlRows() + ' / ' + Limits.getLimitDmlRows());
+        System.debug('CPU time: ' + Limits.getCpuTime() + ' ms / ' + Limits.getLimitCpuTime() + ' ms');
+        System.debug('Heap size: ' + Limits.getHeapSize() + ' / ' + Limits.getLimitHeapSize());
+        System.debug('Callouts: ' + Limits.getCallouts() + ' / ' + Limits.getLimitCallouts());
+        System.debug('Future calls: ' + Limits.getFutureCalls() + ' / ' + Limits.getLimitFutureCalls());
+    }
+
+    public static Boolean canAffordQuery(Integer needed) {
+        return (Limits.getLimitQueries() - Limits.getQueries()) &gt;= needed;
+    }
+
+    public static Boolean canAffordDml(Integer needed) {
+        return (Limits.getLimitDmlStatements() - Limits.getDmlStatements()) &gt;= needed;
+    }
+}</code></pre>
+
+  <h3>Apex: Bulkified Trigger Pattern (Avoids SOQL/DML in Loops)</h3>
+  <pre><code class="language-apex">// Input:  Trigger on Account -- up to 200 records per batch
+// Output: Related Contacts updated without hitting governor limits
+
+trigger AccountTrigger on Account (after update) {
+    Set&lt;Id&gt; accountIds = new Set&lt;Id&gt;();
+    for (Account acc : Trigger.new) {
+        Account oldAcc = Trigger.oldMap.get(acc.Id);
+        if (acc.BillingCity != oldAcc.BillingCity) {
+            accountIds.add(acc.Id);
+        }
+    }
+
+    if (accountIds.isEmpty()) return;
+
+    // 1 SOQL query regardless of batch size (uses 1 of 100)
+    List&lt;Contact&gt; contactsToUpdate = [
+        SELECT Id, MailingCity, AccountId
+        FROM Contact
+        WHERE AccountId IN :accountIds
+    ];
+
+    for (Contact c : contactsToUpdate) {
+        c.MailingCity = Trigger.newMap.get(c.AccountId).BillingCity;
+    }
+
+    // 1 DML statement regardless of record count (uses 1 of 150)
+    if (!contactsToUpdate.isEmpty()) {
+        update contactsToUpdate;
+    }
+}</code></pre>
+
+  <h3>cURL: Check Org-Level API Limits</h3>
+  <pre><code class="language-bash"># Input:  Valid access token and instance URL
+# Output: JSON with current API usage and remaining limits
+
+# Check org-level API usage via REST API
+curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
+  "$INSTANCE_URL/services/data/v63.0/limits" | jq '.DailyApiRequests'
+
+# Expected output:
+# { "Max": 100000, "Remaining": 98500 }
+
+# Check all org limits (async Apex, bulk API, etc.)
+curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
+  "$INSTANCE_URL/services/data/v63.0/limits" | jq '.'</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: SOQL Query Inside a Loop</h3>
+  <pre><code class="language-apex">// BAD -- consumes 1 SOQL per record. 200 records = 200 SOQL = LimitException
+for (Account acc : Trigger.new) {
+    List&lt;Contact&gt; contacts = [SELECT Id FROM Contact WHERE AccountId = :acc.Id];
+    // Process contacts...
+}</code></pre>
+
+  <h3>Correct: Single Query with Collection Filter</h3>
+  <pre><code class="language-apex">// GOOD -- 1 SOQL regardless of batch size
+Map&lt;Id, List&lt;Contact&gt;&gt; contactsByAccount = new Map&lt;Id, List&lt;Contact&gt;&gt;();
+for (Contact c : [SELECT Id, AccountId FROM Contact WHERE AccountId IN :Trigger.newMap.keySet()]) {
+    if (!contactsByAccount.containsKey(c.AccountId)) {
+        contactsByAccount.put(c.AccountId, new List&lt;Contact&gt;());
+    }
+    contactsByAccount.get(c.AccountId).add(c);
+}
+for (Account acc : Trigger.new) {
+    List&lt;Contact&gt; contacts = contactsByAccount.get(acc.Id);
+    // Process contacts...
+}</code></pre>
+
+  <h3>Wrong: DML Inside a Loop</h3>
+  <pre><code class="language-apex">// BAD -- 200 records = 200 DML statements. Exceeds 150 DML limit.
+for (Contact c : contactsToUpdate) {
+    c.MailingCity = 'New York';
+    update c; // 1 DML per iteration
+}</code></pre>
+
+  <h3>Correct: Collect and Batch DML</h3>
+  <pre><code class="language-apex">// GOOD -- 1 DML statement regardless of collection size
+List&lt;Contact&gt; toUpdate = new List&lt;Contact&gt;();
+for (Contact c : contactsToUpdate) {
+    c.MailingCity = 'New York';
+    toUpdate.add(c);
+}
+update toUpdate; // 1 DML, even for 10,000 records</code></pre>
+
+  <h3>Wrong: Synchronous Callouts in Triggers</h3>
+  <pre><code class="language-apex">// BAD -- callouts are blocked in trigger context; throws CalloutException
+trigger OrderTrigger on Order (after insert) {
+    for (Order o : Trigger.new) {
+        Http h = new Http();
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('https://erp.example.com/api/orders');
+        req.setMethod('POST');
+        HttpResponse res = h.send(req); // CalloutException!
+    }
+}</code></pre>
+
+  <h3>Correct: Delegate Callouts to @future or Queueable</h3>
+  <pre><code class="language-apex">trigger OrderTrigger on Order (after insert) {
+    Set&lt;Id&gt; orderIds = new Set&lt;Id&gt;();
+    for (Order o : Trigger.new) {
+        orderIds.add(o.Id);
+    }
+    OrderCalloutService.syncToErp(orderIds);
+}
+
+public class OrderCalloutService {
+    @future(callout=true)
+    public static void syncToErp(Set&lt;Id&gt; orderIds) {
+        List&lt;Order&gt; orders = [SELECT Id, OrderNumber, TotalAmount FROM Order WHERE Id IN :orderIds];
+        Http h = new Http();
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('https://erp.example.com/api/orders');
+        req.setMethod('POST');
+        req.setBody(JSON.serialize(orders));
+        req.setTimeout(30000);
+        HttpResponse res = h.send(req);
+    }
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Trigger recursion consuming the SOQL pool</strong>: A trigger on Account updates Contacts, which fires a Contact trigger that queries Accounts again. Each cascade consumes from the same 100-SOQL budget. Fix: <code>Use static Boolean flags to prevent re-entry, or implement a trigger framework with recursion guards.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Process Builder + Flow + Trigger stacking</strong>: A single record save can fire a before trigger, after trigger, process builder, workflow rule, and flow -- all in the same transaction. Each consumes governor limits from the same pool. Fix: <code>Audit all automations on the object. Consolidate to a single automation framework.</code> [<a href="https://www.salesforceben.com/what-are-salesforce-governor-limits-best-practices-examples/">src5</a>]</li>
+    <li><strong>Large JSON deserialization blowing heap</strong>: Deserializing a 5 MB API response in synchronous context exhausts the 6 MB heap because the original String + deserialized objects both occupy heap simultaneously. Fix: <code>Move to async context (12 MB heap) or parse streaming with JSON.createParser().</code> [<a href="https://onilab.com/blog/governor-limits-salesforce">src4</a>]</li>
+    <li><strong>SELECT * equivalent</strong>: Using SELECT with all fields on objects wastes SOQL rows and heap. Fix: <code>Select only the fields you need. Use FieldSet or dynamic SOQL for configurable field lists.</code> [<a href="https://www.salesforceben.com/what-are-salesforce-governor-limits-best-practices-examples/">src5</a>]</li>
+    <li><strong>Not using Database.Stateful in Batch</strong>: Without Database.Stateful, instance variables reset between execute() calls. Developers add extra SOQL queries to re-fetch state. Fix: <code>Implement Database.Stateful to persist state across batch chunks.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm">src1</a>]</li>
+    <li><strong>Assuming sandbox has same limits as production</strong>: Developer Edition sandboxes have different org-level limits (15,000 API calls vs 100,000+). Fix: <code>Use a Full Sandbox or Partial Copy Sandbox for load testing.</code> [<a href="https://coefficient.io/salesforce-api/salesforce-api-rate-limits">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-apex">// Check current governor limit consumption in Execute Anonymous
+System.debug('SOQL: ' + Limits.getQueries() + '/' + Limits.getLimitQueries());
+System.debug('SOQL Rows: ' + Limits.getQueryRows() + '/' + Limits.getLimitQueryRows());
+System.debug('DML: ' + Limits.getDmlStatements() + '/' + Limits.getLimitDmlStatements());
+System.debug('DML Rows: ' + Limits.getDmlRows() + '/' + Limits.getLimitDmlRows());
+System.debug('CPU: ' + Limits.getCpuTime() + 'ms/' + Limits.getLimitCpuTime() + 'ms');
+System.debug('Heap: ' + Limits.getHeapSize() + '/' + Limits.getLimitHeapSize());
+System.debug('Callouts: ' + Limits.getCallouts() + '/' + Limits.getLimitCallouts());
+System.debug('Future: ' + Limits.getFutureCalls() + '/' + Limits.getLimitFutureCalls());
+System.debug('Queueable: ' + Limits.getQueueableJobs() + '/' + Limits.getLimitQueueableJobs());</code></pre>
+  <pre><code class="language-bash"># Query Apex execution logs for limit violations (via Tooling API)
+curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
+  "$INSTANCE_URL/services/data/v63.0/tooling/query/?q=SELECT+Id,Operation,Status,LogLength+FROM+ApexLog+WHERE+Status='Error'+ORDER+BY+SystemModstamp+DESC+LIMIT+10"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Version</th><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Governor Limit Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>v63.0</td><td>Spring '26 (Feb 2026)</td><td>Current</td><td>No governor limit changes</td><td>Named Query API GA</td></tr>
+      <tr><td>v62.0</td><td>Winter '26 (Oct 2025)</td><td>Supported</td><td>No governor limit changes</td><td>--</td></tr>
+      <tr><td>v61.0</td><td>Summer '25 (Jun 2025)</td><td>Supported</td><td>No governor limit changes</td><td>--</td></tr>
+      <tr><td>v60.0</td><td>Spring '25 (Feb 2025)</td><td>Supported</td><td>No governor limit changes</td><td>--</td></tr>
+      <tr><td>v59.0</td><td>Winter '25 (Oct 2024)</td><td>Supported</td><td>No governor limit changes</td><td>--</td></tr>
+      <tr><td>v58.0</td><td>Spring '24 (Feb 2024)</td><td>Supported</td><td>CPU time measurement methodology updated</td><td>Last significant limit-related change</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Writing Apex triggers, classes, or controllers</td><td>Need org-level API call quotas per edition</td><td>Salesforce API request limits reference</td></tr>
+      <tr><td>Debugging LimitException errors in production</td><td>Need Bulk API batch size and file limits</td><td>Salesforce Bulk API 2.0 reference</td></tr>
+      <tr><td>Designing trigger architecture for high-volume objects</td><td>Need authentication flow guidance</td><td>Salesforce auth flows reference</td></tr>
+      <tr><td>Planning async processing strategy (batch vs queueable)</td><td>Need NetSuite or SAP transaction limits</td><td>System-specific governor limits card</td></tr>
+      <tr><td>Reviewing AppExchange package limit isolation</td><td>Need to understand Flow-specific limits (not Apex)</td><td>Salesforce Flow limits reference</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Governor limits are per-transaction but the "transaction" includes ALL automation on the object -- triggers, process builders, flows, workflow rules, and validation rules all share the same limit pool. Audit everything before assuming you have budget.</li>
+    <li>Certified managed packages from AppExchange get their own separate governor limit pools. However, unmanaged packages share the org's limits. Do not confuse the two.</li>
+    <li>The Limits class methods (e.g., <code>Limits.getQueries()</code>) show consumption within the current transaction only. They reset to zero for each new transaction.</li>
+    <li>Salesforce can impose additional "concurrent request" throttling during peak load independent of governor limits. This manifests as "Unable to process request" errors even when governor limits are not exceeded.</li>
+    <li>These limits are current as of Spring '26 (API v63.0). Salesforce rarely decreases limits but may adjust measurement methodology (as with CPU time in Spring '24). Always verify against the official Apex Developer Guide for your API version.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-api-capabilities/2026" data-relationship="often_confused_with">Salesforce REST/SOAP/Bulk API Capabilities -- org-level API rate limits, not per-transaction</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

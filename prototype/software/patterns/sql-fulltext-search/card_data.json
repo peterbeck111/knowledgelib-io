@@ -1,0 +1,93 @@
+{
+  "id": "software/patterns/sql-fulltext-search/2026",
+  "category": "software",
+  "subcategory": "patterns",
+  "topic": "sql-fulltext-search",
+  "version_tag": "2026",
+  "canonical_question": "How do I implement full-text search in PostgreSQL and MySQL?",
+  "aliases": [
+    "PostgreSQL full-text search tsvector tsquery",
+    "MySQL FULLTEXT index search",
+    "pg_trgm trigram fuzzy search",
+    "SQL full-text search GIN index",
+    "PostgreSQL vs MySQL text search comparison",
+    "database full-text search without Elasticsearch",
+    "tsvector tsquery GIN index tutorial",
+    "MySQL boolean mode full-text search",
+    "PostgreSQL generated column tsvector",
+    "SQL text search ranking relevance"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.94,
+  "token_estimate": 3800,
+  "source_count": 7,
+  "md_path": "/software/patterns/sql-fulltext-search/2026.md",
+  "html_path": "/software/patterns/sql-fulltext-search/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": "PostgreSQL 12 — generated columns for tsvector (2019-10); MySQL 5.7 — InnoDB FULLTEXT support stable (2015-10)",
+    "next_review": "2026-08-23",
+    "change_sensitivity": "low"
+  },
+  "constraints": [
+    "PostgreSQL tsvector requires a text search configuration (language dictionary) — using the wrong one silently drops valid tokens",
+    "MySQL InnoDB FULLTEXT minimum token size is 3 characters by default (innodb_ft_min_token_size) — short words like 'Go', 'AI', 'C#' are silently excluded",
+    "GIN indexes are faster to query but slower to update than GiST — never use GiST for read-heavy full-text search workloads",
+    "MySQL FULLTEXT in NATURAL LANGUAGE MODE ignores words present in >50% of rows — high-frequency terms return zero results",
+    "PostgreSQL ts_rank does NOT use the GIN index — ranking always requires a sequential scan of matched rows to read tsvector values",
+    "pg_trgm similarity threshold defaults to 0.3 — failing to tune this produces either too many or too few fuzzy matches"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need to search across multiple services or >100M documents with sub-50ms latency",
+      "use_instead": "Dedicated search engine (Elasticsearch, Typesense, Meilisearch)"
+    },
+    {
+      "condition": "Looking for semantic/vector similarity search (embeddings, kNN)",
+      "use_instead": "software/patterns/vector-similarity-search/2026"
+    },
+    {
+      "condition": "Debugging slow PostgreSQL queries in general (not search-specific)",
+      "use_instead": "software/debugging/postgresql-slow-queries/2026"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      { "id": "software/debugging/postgresql-slow-queries/2026", "label": "PostgreSQL Slow Query Debugging" },
+      { "id": "software/system-design/search-engine/2026", "label": "Search Engine Architecture" },
+      { "id": "software/debugging/mysql-deadlocks/2026", "label": "MySQL Deadlock Debugging" }
+    ],
+    "solves": [],
+    "alternative_to": [
+      { "id": "software/system-design/search-engine/2026", "label": "Full Search Engine Architecture (Elasticsearch/Solr)" }
+    ],
+    "often_confused_with": [
+      { "id": "software/debugging/postgresql-slow-queries/2026", "label": "General PostgreSQL Query Optimization (not search-specific)" }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "database",
+      "question": "Which database engine are you using?",
+      "type": "choice",
+      "options": ["PostgreSQL", "MySQL", "Both/migrating"]
+    },
+    {
+      "key": "search_type",
+      "question": "What kind of text matching do you need?",
+      "type": "choice",
+      "options": ["Exact keyword search", "Natural language search with ranking", "Fuzzy/typo-tolerant search", "All of the above"]
+    },
+    {
+      "key": "dataset_size",
+      "question": "How large is the text corpus being searched?",
+      "type": "choice",
+      "options": ["Small (<100K rows)", "Medium (100K-10M rows)", "Large (>10M rows)"]
+    }
+  ]
+}

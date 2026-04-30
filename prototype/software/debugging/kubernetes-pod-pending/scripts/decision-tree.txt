@@ -1,0 +1,29 @@
+START — Pod stuck in Pending
+├── Run: kubectl describe pod <pod> -n <ns>
+│   └── Check Events section at the bottom
+│       ├── "Insufficient cpu" or "Insufficient memory"
+│       │   ├── Check requests vs allocatable: kubectl describe nodes [src1, src4]
+│       │   ├── Requests too high? → Reduce resource requests
+│       │   ├── Cluster full? → Add nodes or scale down other workloads
+│       │   └── Resource quota? → kubectl describe quota -n <ns> [src1]
+│       ├── "node(s) had taint ... pod didn't tolerate"
+│       │   ├── List taints: kubectl describe node <node> | grep Taint [src2]
+│       │   ├── Intentional taint? → Add toleration to pod spec [src2]
+│       │   └── Accidental taint? → Remove: kubectl taint node <node> key- [src2]
+│       ├── "unbound immediate PersistentVolumeClaims"
+│       │   ├── Check PVC: kubectl get pvc -n <ns> [src7]
+│       │   ├── PVC Pending? → Check StorageClass, provisioner, capacity [src7]
+│       │   └── PVC Bound? → Something else; check other events
+│       ├── "node(s) didn't match Pod's node affinity/selector"
+│       │   ├── Check pod nodeSelector: kubectl get pod <pod> -o yaml [src8]
+│       │   ├── Check node labels: kubectl get nodes --show-labels [src8]
+│       │   └── Fix: label node or change selector
+│       ├── "node(s) were unschedulable"
+│       │   ├── Node cordoned? → kubectl uncordon <node> [src3]
+│       │   └── Node NotReady? → Debug node (kubelet, disk, memory) [src1]
+│       ├── "exceeded quota"
+│       │   └── Check quota: kubectl describe quota -n <ns> [src1]
+│       └── No events at all
+│           ├── Scheduler running? → kubectl get pods -n kube-system | grep scheduler
+│           └── PriorityClass issue? → Check if lower-priority pod is being preempted
+└── Still stuck? → check cluster-wide events: kubectl get events -A --sort-by='.lastTimestamp'

@@ -1,0 +1,75 @@
+# Production Ghost CMS stack with Nginx reverse proxy
+# Usage: docker compose -f docker-compose-nginx.yml up -d
+# Requires: .env file with GHOST_URL, MYSQL_ROOT_PASSWORD, MYSQL_PASSWORD, GHOST_DB_USER, GHOST_DB_NAME
+# Requires: SSL certs from Certbot at /etc/letsencrypt
+# Requires: nginx.conf in ./nginx/ directory
+
+services:
+  ghost:
+    image: ghost:5.113.2
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      url: ${GHOST_URL}
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: ${GHOST_DB_USER}
+      database__connection__password: ${MYSQL_PASSWORD}
+      database__connection__database: ${GHOST_DB_NAME}
+      NODE_ENV: production
+      mail__transport: SMTP
+      mail__from: '"My Blog" <noreply@mg.example.com>'
+      mail__options__host: smtp.mailgun.org
+      mail__options__port: 587
+      mail__options__secure: "false"
+      mail__options__auth__user: ${MAIL_USER}
+      mail__options__auth__pass: ${MAIL_PASS}
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+    networks:
+      - internal
+      - web
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${GHOST_DB_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${GHOST_DB_NAME}
+    volumes:
+      - ghost_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    depends_on:
+      - ghost
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/ghost.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /usr/share/nginx/html:/usr/share/nginx/html
+    networks:
+      - web
+
+volumes:
+  ghost_content:
+  ghost_db:
+
+networks:
+  internal:
+    internal: true
+  web:

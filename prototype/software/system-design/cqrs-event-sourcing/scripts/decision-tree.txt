@@ -1,0 +1,26 @@
+START
+├── Do you need different read and write models?
+│   ├── NO → Standard CRUD is simpler; skip CQRS entirely
+│   └── YES ↓
+├── Do you need a complete audit trail / temporal queries?
+│   ├── NO → Use CQRS only (separate read/write models, shared or separate DB)
+│   │         See "CQRS Only" approach below
+│   └── YES ↓
+├── CQRS + Event Sourcing
+│   ├── Expected load < 1K concurrent users?
+│   │   ├── YES → Single-node EventStoreDB or PostgreSQL event table
+│   │   │         Synchronous projections acceptable
+│   │   └── NO ↓
+│   ├── Expected load 1K-100K concurrent users?
+│   │   ├── YES → EventStoreDB cluster or Kafka + dedicated projection service
+│   │   │         Async projections with consumer groups
+│   │   └── NO ↓
+│   └── Expected load > 100K concurrent users?
+│       └── YES → Kafka event backbone + partitioned read stores
+│                 (Elasticsearch, Redis, Cassandra)
+│                 Multiple projection services + snapshotting
+└── Framework available for your language?
+    ├── Java/Kotlin → Axon Framework (batteries-included)
+    ├── C#/.NET → Marten or EventStoreDB .NET client
+    ├── Python/JS/Go → Custom implementation with EventStoreDB or Kafka
+    └── Any → EventStoreDB gRPC client (polyglot)

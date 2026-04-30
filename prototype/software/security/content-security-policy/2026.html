@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Content Security Policy (CSP): Implementation Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete CSP implementation guide covering all directives, nonce-based strict policies, Express.js/Helmet, Django, Nginx, and Apache configurations,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/content-security-policy/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Content Security Policy (CSP): Implementation Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete CSP implementation guide covering all directives, nonce-based strict policies, Express.js/Helmet, Django, Nginx, and Apache configurations, with 5 anti-patterns and 8 common pitfalls. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/content-security-policy/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Content Security Policy (CSP): Implementation Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete CSP implementation guide covering all directives, nonce-based strict policies, Express.js/Helmet, Django, Nginx, and Apache configurations, with 5 anti-patterns and 8 common pitfalls. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/Content Security Policy">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement Content Security Policy (CSP)?">
+  <meta name="ai:aliases" content="CSP implementation guide; Content-Security-Policy header setup; how to configure CSP headers; CSP nonce strict-dynamic setup; Content Security Policy directives reference; CSP for XSS prevention; how to deploy Content Security Policy; CSP report-only mode">
+  <meta name="ai:raw" content="/api/v1/units/software/security/content-security-policy/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="server_platform,csp_goal">
+  <meta name="ai:constraints" content="ALWAYS start with Report-Only before enforcing; NEVER use unsafe-inline for script-src; NEVER use wildcard for script-src or default-src; Nonces MUST be cryptographically random and per-request; CSP is defense-in-depth NOT a replacement for encoding; frame-ancestors CANNOT be set via meta tag">
+  <meta name="ai:skip_this_unit_if" content="Need XSS prevention beyond CSP -> software/security/xss-prevention/2026; Need CORS configuration -> software/security/cors-configuration/2026; Need HTTP security headers in general -> software/security/http-security-headers/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Content Security Policy (CSP): Implementation Guide",
+    "headline": "Content Security Policy (CSP): Implementation Guide",
+    "description": "Complete guide to implementing Content Security Policy (CSP) with directive reference, nonce-based strict policies, framework-specific configurations for Express.js, Django, Nginx, and Apache, anti-patterns, and deployment strategies.",
+    "keywords": ["Content Security Policy", "CSP", "CSP directives", "nonce-based CSP", "strict-dynamic", "XSS prevention", "web security", "HTTP security headers"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Helmet 8.x (Express.js), django-csp 4.x (Django), CSP Level 3",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Content Security Policy (CSP) - HTTP",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Content-Security-Policy (CSP) Header Reference",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Content Security Policy Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Content Security Policy Level 3",
+        "url": "https://www.w3.org/TR/CSP3/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Mitigate XSS with a Strict Content Security Policy",
+        "url": "https://web.dev/articles/strict-csp"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Content Security Policy (CSP) Implementation Guide",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/CSP"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Content-Security-Policy (CSP) Header Quick Reference",
+        "url": "https://content-security-policy.com/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Content Security Policy (CSP): Implementation Guide",
+    "description": "Structured knowledge unit on implementing Content Security Policy (CSP) with directive reference tables, nonce-based strict policy configuration, and framework-specific code examples for Express.js, Django, Nginx, and Apache.",
+    "keywords": ["Content Security Policy", "CSP", "CSP directives", "nonce-based CSP", "strict-dynamic", "web security"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "MDN Web Docs"},
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "W3C Web Application Security Working Group"},
+      {"@type": "Organization", "name": "Google Web Dev"},
+      {"@type": "Organization", "name": "Foundeo Inc."}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "Content Security Policy (CSP)" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement Content Security Policy (CSP)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Deploy a strict nonce-based CSP with strict-dynamic to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CSP implementation guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Deploy a strict nonce-based CSP with strict-dynamic to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Content-Security-Policy header setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Deploy a strict nonce-based CSP with strict-dynamic to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to configure CSP headers",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Deploy a strict nonce-based CSP with strict-dynamic to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CSP nonce strict-dynamic setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Deploy a strict nonce-based CSP with strict-dynamic to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Content Security Policy directives reference",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Deploy a strict nonce-based CSP with strict-dynamic to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Content Security Policy (CSP): Implementation Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement Content Security Policy (CSP)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/content-security-policy/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Deploy a strict nonce-based CSP with <code>strict-dynamic</code> to prevent inline script injection (XSS) -- start in report-only mode, then enforce after validating no breakage.</li>
+    <li><strong>Key tool/command</strong>: <code>Content-Security-Policy: script-src 'nonce-{RANDOM}' 'strict-dynamic'; object-src 'none'; base-uri 'none';</code></li>
+    <li><strong>Watch out for</strong>: Using <code>'unsafe-inline'</code> in <code>script-src</code> defeats CSP's entire XSS protection -- use nonces or hashes instead.</li>
+    <li><strong>Works with</strong>: All modern browsers. CSP Level 3 (<code>strict-dynamic</code>) supported in Chrome 59+, Firefox 58+, Safari 15.4+, Edge 79+.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>ALWAYS start with <code>Content-Security-Policy-Report-Only</code> before enforcing -- deploying CSP in enforcement mode without testing WILL break site functionality</li>
+    <li>NEVER use <code>'unsafe-inline'</code> for <code>script-src</code> in production -- it defeats CSP's primary XSS protection</li>
+    <li>NEVER use wildcard (<code>*</code>) as a source for <code>script-src</code> or <code>default-src</code> -- it allows loading scripts from any origin</li>
+    <li>Nonces MUST be cryptographically random (at least 128 bits) and regenerated on every page load -- reusing nonces defeats their purpose</li>
+    <li>CSP is defense-in-depth, NOT a replacement for output encoding -- always combine CSP with proper input validation and output encoding</li>
+    <li><code>frame-ancestors</code> directive CANNOT be set via <code>&lt;meta&gt;</code> tag -- it must be sent as an HTTP header</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>CSP Directives by Category</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Directive</th><th scope="col">Category</th><th scope="col">Controls</th><th scope="col">Default Fallback</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><code>default-src</code></td><td>Fetch</td><td>Fallback for all other fetch directives</td><td>None (browser default)</td></tr>
+      <tr><td>2</td><td><code>script-src</code></td><td>Fetch</td><td>JavaScript and WebAssembly resources</td><td><code>default-src</code></td></tr>
+      <tr><td>3</td><td><code>style-src</code></td><td>Fetch</td><td>CSS stylesheets</td><td><code>default-src</code></td></tr>
+      <tr><td>4</td><td><code>img-src</code></td><td>Fetch</td><td>Images and favicons</td><td><code>default-src</code></td></tr>
+      <tr><td>5</td><td><code>connect-src</code></td><td>Fetch</td><td>XHR, Fetch, WebSocket, EventSource</td><td><code>default-src</code></td></tr>
+      <tr><td>6</td><td><code>font-src</code></td><td>Fetch</td><td>Web fonts via @font-face</td><td><code>default-src</code></td></tr>
+      <tr><td>7</td><td><code>frame-src</code></td><td>Fetch</td><td><code>&lt;iframe&gt;</code> and <code>&lt;frame&gt;</code> sources</td><td><code>child-src</code> then <code>default-src</code></td></tr>
+      <tr><td>8</td><td><code>media-src</code></td><td>Fetch</td><td><code>&lt;audio&gt;</code>, <code>&lt;video&gt;</code>, <code>&lt;track&gt;</code> elements</td><td><code>default-src</code></td></tr>
+      <tr><td>9</td><td><code>object-src</code></td><td>Fetch</td><td><code>&lt;object&gt;</code>, <code>&lt;embed&gt;</code> plugins</td><td><code>default-src</code></td></tr>
+      <tr><td>10</td><td><code>worker-src</code></td><td>Fetch</td><td>Worker, SharedWorker, ServiceWorker</td><td><code>child-src</code> then <code>script-src</code> then <code>default-src</code></td></tr>
+      <tr><td>11</td><td><code>base-uri</code></td><td>Document</td><td>URLs for <code>&lt;base&gt;</code> element</td><td>No fallback (allows any)</td></tr>
+      <tr><td>12</td><td><code>form-action</code></td><td>Navigation</td><td>Form submission target URLs</td><td>No fallback (allows any)</td></tr>
+      <tr><td>13</td><td><code>frame-ancestors</code></td><td>Navigation</td><td>Who can embed this page (replaces X-Frame-Options)</td><td>No fallback (allows any)</td></tr>
+      <tr><td>14</td><td><code>upgrade-insecure-requests</code></td><td>Document</td><td>Auto-upgrade HTTP to HTTPS</td><td>Disabled</td></tr>
+      <tr><td>15</td><td><code>report-to</code></td><td>Reporting</td><td>Where to send violation reports (replaces report-uri)</td><td>No reporting</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Source Expression Keywords</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Keyword</th><th scope="col">Meaning</th><th scope="col">Use In</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>'self'</code></td><td>Same origin only</td><td>Any directive</td></tr>
+      <tr><td><code>'none'</code></td><td>Block all resources of this type</td><td>Any directive</td></tr>
+      <tr><td><code>'unsafe-inline'</code></td><td>Allow inline <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> (dangerous)</td><td>script-src, style-src</td></tr>
+      <tr><td><code>'unsafe-eval'</code></td><td>Allow <code>eval()</code>, <code>new Function()</code>, <code>setTimeout(string)</code></td><td>script-src</td></tr>
+      <tr><td><code>'nonce-{random}'</code></td><td>Allow elements with matching nonce attribute</td><td>script-src, style-src</td></tr>
+      <tr><td><code>'sha256-{hash}'</code></td><td>Allow elements matching the hash</td><td>script-src, style-src</td></tr>
+      <tr><td><code>'strict-dynamic'</code></td><td>Trust scripts loaded by already-trusted scripts</td><td>script-src</td></tr>
+      <tr><td><code>'unsafe-hashes'</code></td><td>Allow inline event handlers matching hashes</td><td>script-src</td></tr>
+      <tr><td><code>https:</code></td><td>Allow any HTTPS origin</td><td>Any directive</td></tr>
+      <tr><td><code>data:</code></td><td>Allow data: URIs</td><td>Any directive</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What is your CSP deployment scenario?
+&#9500;&#9472;&#9472; New application (no existing inline scripts)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Deploy strict nonce-based CSP immediately (see Step 1)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Existing app with inline scripts you control?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Add nonces to all inline scripts, then deploy strict CSP (see Step 2)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Existing app with third-party inline scripts?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use hash-based CSP for static scripts + nonces for dynamic (see Step 3)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Legacy app that cannot be modified?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Deploy allowlist-based CSP as interim measure, plan migration to strict CSP
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Need to prevent clickjacking only?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use frame-ancestors 'none' or 'self' (Step 5)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Start with report-only mode to audit current resource loading (Step 1)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Deploy CSP in report-only mode</h3>
+  <p>Start by deploying a strict policy in report-only mode to discover what would break without actually blocking anything. [<a href="https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/CSP">src6</a>]</p>
+  <pre><code class="language-http">Content-Security-Policy-Report-Only:
+  default-src 'self';
+  script-src 'self';
+  style-src 'self';
+  img-src 'self';
+  object-src 'none';
+  base-uri 'none';
+  report-to csp-endpoint;</code></pre>
+  <p><strong>Verify</strong>: Open browser DevTools &gt; Console -- CSP violations appear as warnings with <code>[Report Only]</code> prefix.</p>
+
+  <h3>2. Add nonces to all inline scripts</h3>
+  <p>Generate a cryptographically random nonce per request and add it to every inline <code>&lt;script&gt;</code> tag. [<a href="https://web.dev/articles/strict-csp">src5</a>]</p>
+  <pre><code class="language-http">Content-Security-Policy: script-src 'nonce-dGhpcyBpcyBhIG5vbmNl' 'strict-dynamic'</code></pre>
+  <p><strong>Verify</strong>: Inline scripts without a nonce should be blocked. Check console for <code>Refused to execute inline script</code> errors.</p>
+
+  <h3>3. Build a strict CSP policy</h3>
+  <p>Combine the essential directives for a production-ready strict CSP. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html">src3</a>]</p>
+  <pre><code class="language-http">Content-Security-Policy:
+  default-src 'self';
+  script-src 'nonce-{RANDOM}' 'strict-dynamic';
+  style-src 'self' 'nonce-{RANDOM}';
+  img-src 'self' https:;
+  font-src 'self';
+  connect-src 'self' https://api.example.com;
+  frame-src 'none';
+  object-src 'none';
+  base-uri 'none';
+  form-action 'self';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;
+  report-to csp-endpoint;</code></pre>
+  <p><strong>Verify</strong>: Run your CSP through Google's CSP Evaluator at <code>https://csp-evaluator.withgoogle.com/</code>.</p>
+
+  <h3>4. Switch from report-only to enforcement</h3>
+  <p>After monitoring report-only mode for at least 1-2 weeks with no unexpected violations, switch to enforcement. [<a href="https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/CSP">src6</a>]</p>
+  <pre><code class="language-bash">curl -sI https://your-site.com | grep -i content-security-policy</code></pre>
+  <p><strong>Verify</strong>: Should return the enforced policy (not report-only).</p>
+
+  <h3>5. Configure frame-ancestors for clickjacking protection</h3>
+  <p>Replace the legacy <code>X-Frame-Options</code> header with CSP <code>frame-ancestors</code>. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">src1</a>]</p>
+  <pre><code class="language-http"># Prevent all framing
+Content-Security-Policy: frame-ancestors 'none';
+
+# Allow same-origin framing only
+Content-Security-Policy: frame-ancestors 'self';
+
+# Allow specific origins
+Content-Security-Policy: frame-ancestors 'self' https://trusted-partner.com;</code></pre>
+  <p><strong>Verify</strong>: Try embedding your page in an <code>&lt;iframe&gt;</code> on a different origin -- it should be blocked.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Express.js/Node.js: Helmet CSP with Per-Request Nonces</h3>
+  <pre><code class="language-javascript">const express = require('express');     // ^4.18.0
+const helmet = require('helmet');       // ^8.0.0
+const crypto = require('crypto');
+const app = express();
+
+// Generate per-request nonce middleware
+app.use((req, res, next) =&gt; {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
+// Configure CSP via Helmet
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        (req, res) =&gt; `'nonce-${res.locals.cspNonce}'`,
+        "'strict-dynamic'"
+      ],
+      styleSrc: ["'self'", (req, res) =&gt; `'nonce-${res.locals.cspNonce}'`],
+      imgSrc: ["'self'", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'none'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  }
+}));
+// In templates: &lt;script nonce="&lt;%= cspNonce %&gt;"&gt;...&lt;/script&gt;</code></pre>
+
+  <h3>Django: django-csp Configuration</h3>
+  <pre><code class="language-python"># settings.py -- using django-csp &gt;= 4.0
+# pip install django-csp
+MIDDLEWARE = ["csp.middleware.CSPMiddleware", ...]
+
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": ["'strict-dynamic'"],  # nonces added automatically
+        "style-src": ["'self'"],
+        "img-src": ["'self'", "https:"],
+        "connect-src": ["'self'"],
+        "font-src": ["'self'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'none'"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'none'"],
+        "upgrade-insecure-requests": True,
+    }
+}
+# In templates: {% load csp %} &lt;script nonce="{% csp_nonce %}"&gt;...&lt;/script&gt;</code></pre>
+
+  <h3>Nginx: CSP Header Configuration</h3>
+  <pre><code class="language-nginx"># /etc/nginx/snippets/csp-headers.conf
+# Hash-based CSP for static sites (Nginx cannot generate nonces natively)
+add_header Content-Security-Policy "
+  default-src 'self';
+  script-src 'self' 'sha256-{HASH_OF_INLINE_SCRIPT}';
+  style-src 'self';
+  img-src 'self' https:;
+  font-src 'self';
+  connect-src 'self';
+  object-src 'none';
+  base-uri 'none';
+  form-action 'self';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;
+" always;</code></pre>
+
+  <h3>Apache: CSP Header Configuration</h3>
+  <pre><code class="language-apache"># .htaccess or httpd.conf
+Header always set Content-Security-Policy "\
+  default-src 'self'; \
+  script-src 'self' 'sha256-{HASH_OF_INLINE_SCRIPT}'; \
+  style-src 'self'; \
+  img-src 'self' https:; \
+  font-src 'self'; \
+  connect-src 'self'; \
+  object-src 'none'; \
+  base-uri 'none'; \
+  form-action 'self'; \
+  frame-ancestors 'none'; \
+  upgrade-insecure-requests"</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using unsafe-inline with script-src</h3>
+  <pre><code class="language-http"># BAD -- unsafe-inline completely negates CSP's XSS protection
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
+# Any XSS payload can execute inline scripts freely</code></pre>
+
+  <h3>Correct: Nonce-based script-src</h3>
+  <pre><code class="language-http"># GOOD -- only scripts with the correct nonce execute
+Content-Security-Policy: script-src 'nonce-abc123def456' 'strict-dynamic'
+# XSS payloads cannot guess the per-request nonce</code></pre>
+
+  <h3>Wrong: Wildcard sources in script-src</h3>
+  <pre><code class="language-http"># BAD -- allows scripts from ANY origin
+Content-Security-Policy: default-src *; script-src *</code></pre>
+
+  <h3>Correct: Explicit origin allowlist or nonces</h3>
+  <pre><code class="language-http"># GOOD -- use nonce-based CSP with strict-dynamic
+Content-Security-Policy: script-src 'nonce-{RANDOM}' 'strict-dynamic'; object-src 'none'; base-uri 'none'</code></pre>
+
+  <h3>Wrong: Overly permissive default-src</h3>
+  <pre><code class="language-http"># BAD -- default-src https: allows loading from ANY HTTPS origin
+Content-Security-Policy: default-src https:
+# Attackers can host payloads on any HTTPS domain they control</code></pre>
+
+  <h3>Correct: Restrictive default-src with explicit overrides</h3>
+  <pre><code class="language-http"># GOOD -- lock down default, open specific directives as needed
+Content-Security-Policy: default-src 'none'; script-src 'nonce-{RANDOM}' 'strict-dynamic'; style-src 'self'; img-src 'self' https:; font-src 'self'; connect-src 'self'</code></pre>
+
+  <h3>Wrong: CSP via meta tag for frame-ancestors</h3>
+  <pre><code class="language-html">&lt;!-- BAD -- frame-ancestors, report-uri, report-to, and sandbox
+     are IGNORED in meta tags --&gt;
+&lt;meta http-equiv="Content-Security-Policy"
+      content="frame-ancestors 'none'; report-uri /csp-report"&gt;</code></pre>
+
+  <h3>Correct: CSP via HTTP header</h3>
+  <pre><code class="language-http"># GOOD -- all directives work via HTTP header
+Content-Security-Policy: frame-ancestors 'none'; report-to csp-endpoint</code></pre>
+
+  <h3>Wrong: Using unsafe-eval for convenience</h3>
+  <pre><code class="language-http"># BAD -- allows eval(), new Function(), setTimeout(string)
+Content-Security-Policy: script-src 'self' 'unsafe-eval'</code></pre>
+
+  <h3>Correct: Refactoring to avoid eval</h3>
+  <pre><code class="language-javascript">// GOOD -- replace eval() with safe alternatives
+// Instead of: setTimeout('doSomething()', 1000)
+setTimeout(doSomething, 1000);  // pass function reference
+// Instead of: new Function('return ' + userInput)
+JSON.parse(userInput);  // for data parsing</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Forgetting report-only first</strong>: Deploying CSP in enforcement mode immediately breaks inline scripts, third-party widgets, and analytics. Fix: Always deploy with <code>Content-Security-Policy-Report-Only</code> first and monitor for 1-2 weeks. [<a href="https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/CSP">src6</a>]</li>
+    <li><strong>Nonce reuse across requests</strong>: Serving the same nonce for all requests allows attackers who discover it to bypass CSP. Fix: Generate a new cryptographically random nonce for every HTTP response using <code>crypto.randomBytes(16)</code>. [<a href="https://web.dev/articles/strict-csp">src5</a>]</li>
+    <li><strong>Missing object-src and base-uri</strong>: Omitting <code>object-src</code> allows plugin injection; omitting <code>base-uri</code> allows <code>&lt;base&gt;</code> tag hijacking. Fix: Always include <code>object-src 'none'; base-uri 'none'</code>. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html">src3</a>]</li>
+    <li><strong>Allowlist bypasses via JSONP/Angular</strong>: Allowlisting a CDN that hosts JSONP endpoints lets attackers load script gadgets that bypass CSP. Fix: Use nonce-based CSP with <code>strict-dynamic</code> instead of domain allowlists. [<a href="https://web.dev/articles/strict-csp">src5</a>]</li>
+    <li><strong>CSP on meta tag limitations</strong>: Using <code>&lt;meta http-equiv="Content-Security-Policy"&gt;</code> ignores <code>frame-ancestors</code>, <code>report-uri</code>, <code>report-to</code>, and <code>sandbox</code>. Fix: Set CSP via HTTP response headers. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy">src2</a>]</li>
+    <li><strong>Mixed content after upgrade-insecure-requests</strong>: The directive does not upgrade WebSocket (<code>ws://</code>) connections. Fix: Explicitly use <code>wss://</code> for WebSocket connections. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">src1</a>]</li>
+    <li><strong>Breaking service workers</strong>: Restrictive <code>worker-src</code> or <code>script-src</code> without accounting for service worker scope blocks SW registration. Fix: Include <code>worker-src 'self'</code> if you use service workers. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy">src2</a>]</li>
+    <li><strong>report-uri deprecation</strong>: <code>report-uri</code> is deprecated in CSP Level 3 in favor of <code>report-to</code>. Fix: Include both during the transition period. [<a href="https://www.w3.org/TR/CSP3/">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check current CSP headers of a live site
+curl -sI https://your-site.com | grep -i content-security-policy
+
+# Check CSP with full headers
+curl -sI https://your-site.com | grep -iE '(content-security|report)'
+
+# Generate SHA-256 hash of an inline script for hash-based CSP
+echo -n 'console.log("hello")' | openssl dgst -sha256 -binary | openssl base64
+
+# Validate CSP: visit https://csp-evaluator.withgoogle.com/
+
+# Scan for inline scripts that need nonces
+grep -rn '&lt;script&gt;' --include="*.html" --include="*.ejs" .
+
+# Scan for inline event handlers that CSP will block
+grep -rn 'onclick=\|onload=\|onerror=\|onsubmit=' --include="*.html" .</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">CSP Level</th><th scope="col">Status</th><th scope="col">Browser Support</th><th scope="col">Key Features</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CSP Level 3</td><td>W3C Working Draft (June 2025)</td><td>Chrome 59+, Firefox 58+, Safari 15.4+, Edge 79+</td><td>strict-dynamic, report-to, worker-src, manifest-src, nonce/hash enhancements</td></tr>
+      <tr><td>CSP Level 2</td><td>W3C Recommendation</td><td>Chrome 40+, Firefox 31+, Safari 10+, Edge 15+</td><td>script-src, style-src, base-uri, form-action, frame-ancestors, report-uri, nonce/hash</td></tr>
+      <tr><td>CSP Level 1</td><td>W3C Recommendation (deprecated)</td><td>Chrome 25+, Firefox 23+, Safari 7+, Edge 12+</td><td>Basic default-src, script-src, img-src, style-src, connect-src</td></tr>
+      <tr><td>Trusted Types</td><td>W3C Draft</td><td>Chrome 83+, Firefox behind flag</td><td>require-trusted-types-for 'script', DOM sink protection</td></tr>
+      <tr><td>Reporting API v1</td><td>W3C Draft</td><td>Chrome 96+, Edge 96+</td><td>report-to with Reporting-Endpoints header</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Any web application serving HTML to browsers</td><td>Static file server with no HTML (pure API)</td><td>CORS headers for API protection</td></tr>
+      <tr><td>Need XSS defense-in-depth beyond output encoding</td><td>CSP is your only XSS defense</td><td>Output encoding + CSP together</td></tr>
+      <tr><td>Controlling third-party script loading (analytics, ads)</td><td>You trust all content from all origins</td><td>Still use CSP -- trust boundaries change</td></tr>
+      <tr><td>Preventing clickjacking (frame-ancestors)</td><td>Only need clickjacking protection</td><td>X-Frame-Options as legacy fallback, but prefer CSP</td></tr>
+      <tr><td>Compliance requires CSP (PCI DSS, SOC 2)</td><td>Internal-only tool with no external access</td><td>CSP still recommended but lower priority</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><code>strict-dynamic</code> trusts scripts loaded by nonce-approved scripts -- if a trusted script has a gadget vulnerability (e.g., JSONP endpoint, prototype pollution), it can be exploited to bypass CSP</li>
+    <li>CSP via <code>&lt;meta&gt;</code> tag does not support <code>frame-ancestors</code>, <code>report-uri</code>, <code>report-to</code>, or <code>sandbox</code> -- use HTTP headers for full protection</li>
+    <li>Internet Explorer does not support <code>Content-Security-Policy</code> -- only the non-standard <code>X-Content-Security-Policy</code> (IE 10-11, limited support)</li>
+    <li><code>upgrade-insecure-requests</code> does not upgrade WebSocket connections (<code>ws://</code> to <code>wss://</code>) -- handle this explicitly in application code</li>
+    <li>Hash-based CSP requires recalculating hashes whenever inline script content changes -- prefer nonces for dynamic applications</li>
+    <li>Multiple CSP headers are intersected (most restrictive wins), not merged -- adding a second header can only restrict, never relax, the policy</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/security/http-security-headers/2026" data-relationship="related_to">HTTP Security Headers</a>
+    <a href="/software/security/cors-configuration/2026" data-relationship="often_confused_with">CORS Configuration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

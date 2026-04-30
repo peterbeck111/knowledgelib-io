@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Dynamics 365 Authentication: Azure AD/Entra ID | knowledgelib.io</title>
+  <meta name="description" content="Dynamics 365 Dataverse authentication - OAuth 2.0 via Microsoft Entra ID, client credentials S2S flow, certificate vs client secret, app registration,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/dynamics-365-authentication/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Dynamics 365 Authentication: Azure AD/Entra ID | knowledgelib.io">
+  <meta property="og:description" content="Dynamics 365 Dataverse authentication - OAuth 2.0 via Microsoft Entra ID, client credentials S2S flow, certificate vs client secret, app registration, application user setup. 8 sources, all cited. Verified 2026-03-01.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/dynamics-365-authentication/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-01">
+  <meta property="article:modified_time" content="2026-03-01">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dynamics 365 Authentication: Azure AD/Entra ID | knowledgelib.io">
+  <meta name="twitter:description" content="Dynamics 365 Dataverse authentication - OAuth 2.0 via Microsoft Entra ID, client credentials S2S flow, certificate vs client secret, app registration, application user setup. 8 sources, all cited. Verified 2026-03-01.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-03-01">
+  <meta name="ai:domain" content="business/erp-integration/dynamics-365-authentication">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How does Dynamics 365 authentication work - Azure AD OAuth 2.0, service-to-service, app registration?">
+  <meta name="ai:aliases" content="How to authenticate with Dynamics 365 Dataverse API using OAuth 2.0; Dynamics 365 S2S server-to-server authentication setup; Microsoft Entra ID app registration for Dynamics 365 client credentials; Dynamics 365 certificate vs client secret authentication">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/dynamics-365-authentication/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-01">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-01">
+  <meta name="ai:systems" content="Microsoft Dynamics 365 (Dataverse) (Web API v9.2)">
+  <meta name="ai:inputs_needed" content="auth_flow,credential_type,environment">
+  <meta name="ai:constraints" content="Access tokens expire after ~60-75 minutes; Client secrets max 2 years, certificates max 3 years; Application users cannot log in interactively; Managed identity limited to plug-in scenarios; Multi-tenant apps require per-tenant admin consent; Application users have API request limits">
+  <meta name="ai:skip_this_unit_if" content="User needs D365 Business Central authentication -> business/erp-integration/dynamics-365-bc-authentication/2026; User needs D365 Finance & Operations authentication -> business/erp-integration/dynamics-365-fo-authentication/2026">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Dynamics 365 Authentication: Azure AD/Entra ID OAuth 2.0, S2S, and App Registration",
+    "headline": "Dynamics 365 Authentication: Azure AD/Entra ID OAuth 2.0, S2S, and App Registration",
+    "description": "Complete guide to Dynamics 365 Dataverse authentication - OAuth 2.0 flows via Microsoft Entra ID, client credentials for server-to-server, certificate-based auth, app registration, application user setup, managed identity, and common authentication pitfalls.",
+    "keywords": ["Dynamics 365", "Dataverse", "OAuth 2.0", "Microsoft Entra ID", "Azure AD", "S2S authentication", "client credentials", "app registration"],
+    "dateModified": "2026-03-01",
+    "datePublished": "2026-03-01",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Microsoft Dynamics 365 (Dataverse) Web API v9.2",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Use OAuth authentication with Microsoft Dataverse",
+        "url": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Register an app with Microsoft Entra ID for Dataverse",
+        "url": "https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Refresh tokens in the Microsoft identity platform",
+        "url": "https://learn.microsoft.com/en-us/entra/identity-platform/refresh-tokens"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Power Platform managed identity overview",
+        "url": "https://learn.microsoft.com/en-us/power-platform/admin/managed-identity-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Certificate-Based Authentication with Dynamics 365",
+        "url": "https://community.dynamics.com/blogs/post/?postid=507631dd-7508-48f6-951a-01addd72d6cd"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practices for Managing Client Secrets in Dynamics 365",
+        "url": "https://www.serversys.com/insights/best-practices-for-managing-client-secrets-in-dynamics-365/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Step by Step: D365 S2S Authentication Using Azure AD and Application User",
+        "url": "https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dynamics 365 Application Users - No Additional License Required",
+        "url": "https://medium.com/capgemini-microsoft-team/dynamics-365-application-users-no-additional-license-required-and-no-limit-on-quantity-4bdc49f8ce2d"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Dynamics 365 Authentication: Azure AD/Entra ID OAuth 2.0, S2S, and App Registration",
+    "description": "ERP integration reference for Dynamics 365 Dataverse authentication covering OAuth 2.0 flows, client credentials, certificate-based auth, app registration, application user setup, and managed identity.",
+    "keywords": ["Dynamics 365", "Dataverse", "OAuth 2.0", "Microsoft Entra ID", "authentication", "S2S"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-01",
+    "datePublished": "2026-03-01",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Dynamics 365 Authentication" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Dynamics 365 authentication work - Azure AD OAuth 2.0, service-to-service, app registration?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Dynamics 365 (Dataverse) uses Microsoft Entra ID (formerly Azure AD) as its identity provider with OAuth 2.0. For integrations, use the client credentials flow with an application user; for user-context operations, use the authorization code flow with delegated permissions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to authenticate with Dynamics 365 Dataverse API using OAuth 2.0",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Dynamics 365 (Dataverse) uses Microsoft Entra ID (formerly Azure AD) as its identity provider with OAuth 2.0. For integrations, use the client credentials flow with an application user; for user-context operations, use the authorization code flow with delegated permissions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Dynamics 365 S2S server-to-server authentication setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Dynamics 365 (Dataverse) uses Microsoft Entra ID (formerly Azure AD) as its identity provider with OAuth 2.0. For integrations, use the client credentials flow with an application user; for user-context operations, use the authorization code flow with delegated permissions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Microsoft Entra ID app registration for Dynamics 365 client credentials",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Dynamics 365 (Dataverse) uses Microsoft Entra ID (formerly Azure AD) as its identity provider with OAuth 2.0. For integrations, use the client credentials flow with an application user; for user-context operations, use the authorization code flow with delegated permissions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Dynamics 365 certificate vs client secret authentication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Dynamics 365 (Dataverse) uses Microsoft Entra ID (formerly Azure AD) as its identity provider with OAuth 2.0. For integrations, use the client credentials flow with an application user; for user-context operations, use the authorization code flow with delegated permissions."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Dynamics 365 Authentication: Azure AD/Entra ID OAuth 2.0, S2S, and App Registration</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How does Dynamics 365 authentication work - Azure AD OAuth 2.0, service-to-service, app registration?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/dynamics-365-authentication/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Microsoft Dynamics 365 (Dataverse) (Web API v9.2)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-01</span></span>
+    <span><strong>Freshness:</strong> 2026-03-01</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Dynamics 365 (Dataverse) uses Microsoft Entra ID (formerly Azure AD) as its identity provider with OAuth 2.0. For integrations, use the client credentials flow with an application user; for user-context operations, use the authorization code flow with delegated permissions.</li>
+    <li><strong>Key limit</strong>: Access tokens expire in ~60-75 minutes; client secrets max out at 2 years, certificates at 3 years. Plan automated rotation. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Watch out for</strong>: ADAL is fully deprecated since June 2022 - you must use MSAL (Microsoft Authentication Library). Any code still using ADAL will fail. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Best for</strong>: Any application integrating with Dynamics 365 Customer Engagement (Sales, Service, Marketing), Dataverse, or Power Platform APIs.</li>
+    <li><strong>Authentication</strong>: OAuth 2.0 via Microsoft Entra ID. Client credentials (S2S) for unattended integrations; authorization code for user-context; managed identity for Azure-hosted plug-ins. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>, <a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers authentication for Microsoft Dynamics 365 Customer Engagement apps (Sales, Service, Marketing, Customer Insights) that use Microsoft Dataverse as their data platform. All Dataverse-based D365 apps share the same authentication infrastructure through Microsoft Entra ID. This card does NOT cover Dynamics 365 Business Central (which has its own S2S flow) or Dynamics 365 Finance &amp; Operations (which uses a different token endpoint pattern). [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>, <a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Vendor</strong></td><td>Microsoft</td></tr>
+      <tr><td><strong>System</strong></td><td>Dynamics 365 (Dataverse) Web API v9.2</td></tr>
+      <tr><td><strong>API Surface</strong></td><td>OData v4 (REST)</td></tr>
+      <tr><td><strong>Current API Version</strong></td><td>v9.2 (2026)</td></tr>
+      <tr><td><strong>Editions Covered</strong></td><td>Sales, Service, Marketing, Customer Insights, Power Apps (all Dataverse-based)</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>Cloud (Dynamics 365 Online)</td></tr>
+      <tr><td><strong>API Docs</strong></td><td><a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview">Microsoft Dataverse Web API</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>GA</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Auth Flows Supported</th><th scope="col">Real-time?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Web API (OData v4)</td><td>HTTPS/JSON</td><td>REST integrations, any language</td><td>Client credentials, auth code, ROPC, managed identity</td><td>Yes</td><td>Primary API for all Dataverse operations</td></tr>
+      <tr><td>Organization Service (SDK)</td><td>.NET SDK</td><td>.NET applications, plug-ins</td><td>Client credentials, auth code, certificate</td><td>Yes</td><td>Requires Microsoft.PowerPlatform.Dataverse.Client NuGet</td></tr>
+      <tr><td>Dataverse Search API</td><td>HTTPS/JSON</td><td>Full-text search across entities</td><td>Same as Web API</td><td>Yes</td><td>Separate endpoint: {org}/api/search/v1.0/query</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max records per query</td><td>5,000</td><td>Web API OData query</td><td>Use $top and @odata.nextLink for pagination</td></tr>
+      <tr><td>Max request body size</td><td>128 MB</td><td>Web API</td><td>Larger payloads should use file/image column upload</td></tr>
+      <tr><td>Max batch subrequests</td><td>1,000</td><td>$batch endpoint</td><td>Each subrequest counts as a separate API request</td></tr>
+      <tr><td>Max concurrent connections</td><td>Per-tenant throttling</td><td>All API calls</td><td>Returns 429 when exceeded</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Power Platform API requests</td><td>Varies by license</td><td>24h rolling</td><td>Enterprise: 20K/user/day; per-app: 1K/user/day; application user: 250K/tenant/day (pooled)</td></tr>
+      <tr><td>Concurrent batch requests</td><td>Throttled per-org</td><td>Per-org</td><td>Returns 429 Too Many Requests</td></tr>
+      <tr><td>ExecuteMultiple max</td><td>1,000 requests per call</td><td>Per-request</td><td>Organization Service SDK only</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>All Dynamics 365 Dataverse authentication flows go through Microsoft Entra ID (formerly Azure AD) using OAuth 2.0. The token endpoint is <code>https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token</code>. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>, <a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Client Credentials (S2S)</td><td>Server-to-server, no user context, unattended integrations</td><td>Access: ~60-75 min</td><td>No refresh token; request new before expiry</td><td>Recommended for integrations. Requires application user in Dataverse.</td></tr>
+      <tr><td>Authorization Code</td><td>User-context operations, interactive apps</td><td>Access: ~60-75 min; Refresh: up to 90 days</td><td>Yes</td><td>Requires redirect URI. User or admin must consent.</td></tr>
+      <tr><td>Authorization Code + PKCE</td><td>SPAs and mobile apps</td><td>Access: ~60-75 min; Refresh: 24h (SPA)</td><td>Yes (limited for SPA)</td><td>Required for public clients.</td></tr>
+      <tr><td>ROPC (username/password)</td><td>Legacy testing only</td><td>Access: ~60-75 min</td><td>No</td><td>Do NOT use in production. No MFA support.</td></tr>
+      <tr><td>Managed Identity</td><td>Azure-hosted Dataverse plug-ins</td><td>Managed by Azure</td><td>Automatic</td><td>GA for Dataverse plug-ins only.</td></tr>
+      <tr><td>Certificate-based</td><td>Production S2S where secrets are insufficient</td><td>Access: ~60-75 min</td><td>No refresh; new assertion per request</td><td>More secure than client secrets. Store certs in Azure Key Vault.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li><strong>ADAL is dead</strong>: MSAL is now required. <code>CrmServiceClient</code> used ADAL internally; migrate to <code>ServiceClient</code> which uses MSAL. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Scopes differ by client type</strong>: Public clients use <code>{org_url}/user_impersonation</code>; confidential clients (S2S) use <code>{org_url}/.default</code>. Wrong scope causes "invalid_grant" errors. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Application users don't need Dataverse API permissions in Entra ID</strong>: For S2S, security roles in Dataverse control access, not Entra ID API permissions. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>, <a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</li>
+    <li><strong>Token lifetime is configurable</strong>: Default 60-75 min; min 10 min, max 1 day via Entra ID token lifetime policies. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/refresh-tokens">src3</a>]</li>
+    <li><strong>Multi-tenant registrations require per-tenant admin consent</strong>. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Application users cannot log in interactively - S2S only, cannot use D365 web UI. [<a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>, <a href="https://medium.com/capgemini-microsoft-team/dynamics-365-application-users-no-additional-license-required-and-no-limit-on-quantity-4bdc49f8ce2d">src8</a>]</li>
+    <li>Client secrets expire after max 2 years; certificates after max 3 years. Build automated rotation. [<a href="https://www.serversys.com/insights/best-practices-for-managing-client-secrets-in-dynamics-365/">src6</a>]</li>
+    <li>Application users draw from tenant's non-licensed user pool (250K requests/24h); exceeding returns 429 errors. [<a href="https://medium.com/capgemini-microsoft-team/dynamics-365-application-users-no-additional-license-required-and-no-limit-on-quantity-4bdc49f8ce2d">src8</a>]</li>
+    <li>ROPC flow does not support MFA - if account has MFA enabled, username/password auth fails with AADSTS50076. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li>Managed identity is limited to Dataverse plug-in scenarios only - cannot be used for general API access from Azure Functions/App Services. [<a href="https://learn.microsoft.com/en-us/power-platform/admin/managed-identity-overview">src4</a>]</li>
+    <li>On-premises D365 Customer Engagement uses claims-based auth (IFD/ADFS), not OAuth 2.0. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START - Authenticate with Dynamics 365 Dataverse
+|-- What type of application?
+|   |-- Server/daemon (no user present)
+|   |   |-- Running on Azure?
+|   |   |   |-- YES, Dataverse plug-in accessing Azure resources --> Managed Identity
+|   |   |   |-- YES, general API access --> Client Credentials + Certificate (Key Vault)
+|   |   |   |-- NO (on-premise server) --> Client Credentials + Certificate or Secret
+|   |   |-- Credential type?
+|   |       |-- Production --> Certificate (more secure, longer lifetime)
+|   |       |-- Dev/test --> Client Secret (simpler setup)
+|   |-- Interactive web application --> Authorization Code flow with PKCE
+|   |-- SPA (single-page app) --> Authorization Code + PKCE (public client)
+|   |-- Mobile / desktop app --> Authorization Code + PKCE with native redirect
+|   |-- Legacy (cannot be updated) --> ROPC (ONLY if MFA is disabled)
+|-- Multi-tenant or single-tenant?
+|   |-- Single-tenant --> Register in your tenant only
+|   |-- Multi-tenant --> Each tenant admin must consent; use /common authority
+|-- Token refresh strategy?
+    |-- S2S --> No refresh token; request new proactively before expiry
+    |-- Delegated --> Use MSAL cache; refresh tokens last up to 90 days
+    |-- SPA --> Refresh tokens expire in 24h; re-authenticate interactively</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Operation</th><th scope="col">Endpoint / Config</th><th scope="col">Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Token endpoint (v2.0)</td><td><code>https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token</code></td><td>POST</td><td>Use v2.0 endpoint for MSAL</td></tr>
+      <tr><td>Scope (confidential client)</td><td><code>{org_url}/.default</code></td><td>e.g., https://myorg.crm.dynamics.com/.default</td><td>S2S client credentials</td></tr>
+      <tr><td>Scope (public client)</td><td><code>{org_url}/user_impersonation</code></td><td>e.g., https://myorg.crm.dynamics.com/user_impersonation</td><td>Delegated permissions</td></tr>
+      <tr><td>API base URL</td><td><code>https://{org}.crm.dynamics.com/api/data/v9.2/</code></td><td>GET/POST/PATCH/DELETE</td><td>Regional suffixes: crm (NA), crm4 (EMEA), crm5 (APAC)</td></tr>
+      <tr><td>WhoAmI test</td><td><code>GET /api/data/v9.2/WhoAmI</code></td><td>Returns UserId, BusinessUnitId, OrganizationId</td><td>Best endpoint to verify auth</td></tr>
+      <tr><td>Application user creation</td><td>Power Platform Admin Center &gt; Environments &gt; S2S</td><td>Bind app registration to Dataverse user</td><td>Assign security roles after creation</td></tr>
+      <tr><td>MSAL NuGet package</td><td><code>Microsoft.Identity.Client</code></td><td>Latest stable</td><td>Replaces deprecated ADAL</td></tr>
+      <tr><td>MSAL Python package</td><td><code>msal</code></td><td>Latest stable</td><td>pip install msal</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Register application in Microsoft Entra ID</h3>
+  <p>Navigate to Azure Portal &gt; Microsoft Entra ID &gt; App registrations &gt; New registration. Provide a name, select the appropriate account type, and register. Copy the Application (client) ID and Directory (tenant) ID. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>]</p>
+  <pre><code class="language-bash"># Record these values from the Overview page:
+# - Application (client) ID: {your-client-id}
+# - Directory (tenant) ID: {your-tenant-id}
+# For multi-tenant: set Supported account types to "Accounts in any organizational directory"</code></pre>
+  <p><strong>Verify</strong>: App appears in the App registrations list in Entra ID.</p>
+
+  <h3>2. Configure credentials (secret or certificate)</h3>
+  <p>For client secret: Certificates &amp; secrets &gt; Client secrets &gt; New client secret. Copy the Value immediately. For certificates: Upload .cer, .pem, or .crt under the Certificates tab. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>, <a href="https://community.dynamics.com/blogs/post/?postid=507631dd-7508-48f6-951a-01addd72d6cd">src5</a>]</p>
+  <pre><code class="language-bash"># Self-signed certificate (dev/test only):
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
+  -subj "/CN=D365Integration"
+
+# Production: use Azure Key Vault
+# az keyvault certificate create --vault-name MyVault --name D365Cert \
+#   --policy "$(az keyvault certificate get-default-policy)"</code></pre>
+  <p><strong>Verify</strong>: Secret or certificate thumbprint appears under Certificates &amp; secrets.</p>
+
+  <h3>3. Create application user in Dataverse</h3>
+  <p>Go to Power Platform Admin Center &gt; Environments &gt; select environment &gt; S2S &gt; New app user. Select your app registration, choose business unit, assign security roles. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory">src2</a>, <a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</p>
+  <p><strong>Verify</strong>: In D365, Settings &gt; Security &gt; Users &gt; "Application Users" view shows your app user.</p>
+
+  <h3>4. Acquire access token and call API</h3>
+  <p>Use MSAL to acquire a token, include as Bearer token in Authorization header. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</p>
+  <pre><code class="language-python">import msal, requests
+
+tenant_id = "YOUR_TENANT_ID"
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+org_url = "https://yourorg.crm.dynamics.com"
+
+app = msal.ConfidentialClientApplication(
+    client_id,
+    authority=f"https://login.microsoftonline.com/{tenant_id}",
+    client_credential=client_secret
+)
+result = app.acquire_token_for_client(scopes=[f"{org_url}/.default"])
+
+if "access_token" in result:
+    headers = {
+        "Authorization": f"Bearer {result['access_token']}",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Accept": "application/json"
+    }
+    response = requests.get(f"{org_url}/api/data/v9.2/WhoAmI", headers=headers)
+    print(response.json())</code></pre>
+  <p><strong>Verify</strong>: <code>WhoAmI</code> returns JSON with <code>UserId</code>, <code>BusinessUnitId</code>, <code>OrganizationId</code>.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Client Credentials (S2S) with Certificate</h3>
+  <pre><code class="language-python"># Input:  tenant_id, client_id, certificate path, org_url
+# Output: Access token acquired via certificate assertion
+
+import msal, requests
+
+tenant_id = "YOUR_TENANT_ID"
+client_id = "YOUR_CLIENT_ID"
+org_url = "https://yourorg.crm.dynamics.com"
+
+with open("key.pem", "r") as f:
+    key_data = f.read()
+
+app = msal.ConfidentialClientApplication(
+    client_id,
+    authority=f"https://login.microsoftonline.com/{tenant_id}",
+    client_credential={"private_key": key_data, "thumbprint": "CERT_THUMBPRINT_HEX"}
+)
+result = app.acquire_token_for_client(scopes=[f"{org_url}/.default"])
+
+if "access_token" in result:
+    headers = {"Authorization": f"Bearer {result['access_token']}",
+               "OData-MaxVersion": "4.0", "OData-Version": "4.0", "Accept": "application/json"}
+    resp = requests.get(f"{org_url}/api/data/v9.2/accounts?$top=10&amp;$select=name", headers=headers)
+    print(resp.json())</code></pre>
+
+  <h3>JavaScript/Node.js: Client Credentials with @azure/identity</h3>
+  <pre><code class="language-javascript">// Input:  AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET env vars
+// Output: Authenticated Dataverse Web API call
+
+// npm install @azure/identity node-fetch@2
+const { ClientSecretCredential } = require("@azure/identity");
+const fetch = require("node-fetch");
+
+const orgUrl = "https://yourorg.crm.dynamics.com";
+const credential = new ClientSecretCredential(
+  process.env.AZURE_TENANT_ID,
+  process.env.AZURE_CLIENT_ID,
+  process.env.AZURE_CLIENT_SECRET
+);
+
+async function callDataverse() {
+  const token = await credential.getToken(`${orgUrl}/.default`);
+  const response = await fetch(`${orgUrl}/api/data/v9.2/WhoAmI`, {
+    headers: { Authorization: `Bearer ${token.token}`,
+               "OData-MaxVersion": "4.0", "OData-Version": "4.0", "Accept": "application/json" }
+  });
+  console.log(await response.json());
+}
+callDataverse().catch(console.error);</code></pre>
+
+  <h3>C#/.NET: ServiceClient with Client Secret</h3>
+  <pre><code class="language-csharp">// NuGet: Microsoft.PowerPlatform.Dataverse.Client
+using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Crm.Sdk.Messages;
+
+string connectionString = @"AuthType=ClientSecret;
+    Url=https://yourorg.crm.dynamics.com;
+    ClientId=YOUR_CLIENT_ID;
+    Secret=YOUR_CLIENT_SECRET;
+    RequireNewInstance=true";
+
+using var service = new ServiceClient(connectionString);
+if (service.IsReady) {
+    var response = (WhoAmIResponse)service.Execute(new WhoAmIRequest());
+    Console.WriteLine($"Connected as UserId: {response.UserId}");
+}</code></pre>
+
+  <h3>cURL: Quick token acquisition and API test</h3>
+  <pre><code class="language-bash"># Acquire access token
+TOKEN=$(curl -s -X POST \
+  "https://login.microsoftonline.com/TENANT_ID/oauth2/v2.0/token" \
+  -d "client_id=CLIENT_ID&amp;client_secret=SECRET&amp;scope=https://yourorg.crm.dynamics.com/.default&amp;grant_type=client_credentials" \
+  | jq -r '.access_token')
+
+# Test authentication
+curl -s "https://yourorg.crm.dynamics.com/api/data/v9.2/WhoAmI" \
+  -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" | jq .</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Authentication Configuration Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Config Field</th><th scope="col">Client Credentials</th><th scope="col">Auth Code</th><th scope="col">Certificate</th><th scope="col">Managed Identity</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>grant_type</td><td>client_credentials</td><td>authorization_code</td><td>client_credentials</td><td>N/A (automatic)</td></tr>
+      <tr><td>scope</td><td>{org_url}/.default</td><td>{org_url}/user_impersonation</td><td>{org_url}/.default</td><td>{org_url}/.default</td></tr>
+      <tr><td>client_id</td><td>Required</td><td>Required</td><td>Required</td><td>Not needed</td></tr>
+      <tr><td>client_secret</td><td>Required</td><td>Optional (with PKCE)</td><td>Not used</td><td>Not needed</td></tr>
+      <tr><td>client_assertion_type</td><td>Not used</td><td>Not used</td><td>urn:ietf:params:oauth:client-assertion-type:jwt-bearer</td><td>Not used</td></tr>
+      <tr><td>redirect_uri</td><td>Not needed</td><td>Required</td><td>Not needed</td><td>Not needed</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li><strong>Regional API endpoints differ</strong>: NA uses crm.dynamics.com, EMEA uses crm4.dynamics.com, APAC uses crm5.dynamics.com. The scope URL must match the org's actual endpoint. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Tenant ID vs Organization ID</strong>: Tenant ID (Entra ID) is for auth; Organization ID (Dataverse) identifies the D365 instance. Multi-org tenants have one tenant ID but multiple org IDs. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Application ID URI auto-generated</strong>: When creating an application user, the URI is auto-populated. Do not manually modify it. [<a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AADSTS700016</td><td>Application not found</td><td>Wrong client ID or app not in target tenant</td><td>Verify client ID; for multi-tenant, ensure admin consent was granted</td></tr>
+      <tr><td>AADSTS7000215</td><td>Invalid client secret</td><td>Secret expired or copied incorrectly</td><td>Rotate secret; copy the Value (not the ID) from Entra ID</td></tr>
+      <tr><td>AADSTS50076</td><td>MFA required</td><td>Using ROPC with MFA-enabled account</td><td>Switch to auth code flow or use S2S with application user</td></tr>
+      <tr><td>AADSTS65001</td><td>Consent not granted</td><td>Missing user or admin consent</td><td>Grant admin consent in Entra ID &gt; API permissions</td></tr>
+      <tr><td>AADSTS700027</td><td>Certificate validation failed</td><td>Wrong thumbprint, expired cert, or key mismatch</td><td>Verify SHA-1 thumbprint; ensure private key matches uploaded public key</td></tr>
+      <tr><td>401 Unauthorized</td><td>Invalid/expired token</td><td>Token expired, malformed, or wrong audience</td><td>Verify scope matches org URL; acquire new token</td></tr>
+      <tr><td>403 Forbidden</td><td>Insufficient privileges</td><td>Application user lacks security roles</td><td>Assign security roles via Power Platform Admin Center</td></tr>
+      <tr><td>429 Too Many Requests</td><td>Rate limit exceeded</td><td>Too many API calls</td><td>Implement exponential backoff; respect Retry-After header</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Client secret expiration</strong>: Secrets expire silently (max 2 years). Fix: <code>Use Azure Key Vault with notification webhooks, or certificates with auto-rotation.</code> [<a href="https://www.serversys.com/insights/best-practices-for-managing-client-secrets-in-dynamics-365/">src6</a>]</li>
+    <li><strong>Token cache misuse</strong>: Requesting new tokens per API call wastes time and risks throttling. Fix: <code>Use MSAL's built-in token cache; acquire_token_for_client() caches automatically.</code> [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Wrong scope</strong>: Using user_impersonation with client credentials or .default with delegated flow. Fix: <code>S2S always uses {org_url}/.default; delegated uses {org_url}/user_impersonation.</code> [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Application user deleted in Dataverse</strong>: Tokens still issued by Entra ID but all API calls return 403. Fix: <code>Monitor application user status; set alerts for security role changes.</code> [<a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</li>
+    <li><strong>Conditional Access blocking service principals</strong>: Policies requiring compliant devices block S2S auth. Fix: <code>Exclude service principal from location/device-based Conditional Access policies.</code> [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Hardcoding credentials in source code</h3>
+  <pre><code class="language-python"># BAD - credentials visible in version control
+client_secret = "myS3cretV@lue!"</code></pre>
+
+  <h3>Correct: Use environment variables or key vault</h3>
+  <pre><code class="language-python"># GOOD - credentials from environment or Azure Key Vault
+import os
+client_secret = os.environ["AZURE_CLIENT_SECRET"]
+# Even better: DefaultAzureCredential chains managed identity, env vars, CLI
+from azure.identity import DefaultAzureCredential
+credential = DefaultAzureCredential()</code></pre>
+
+  <h3>Wrong: Requesting a new token for every API call</h3>
+  <pre><code class="language-python"># BAD - wastes time, risks throttling
+for record in records:
+    result = app.acquire_token_for_client(scopes=scope)
+    requests.post(url, headers={"Authorization": f"Bearer {result['access_token']}"}, json=record)</code></pre>
+
+  <h3>Correct: Use MSAL token cache, acquire once</h3>
+  <pre><code class="language-python"># GOOD - MSAL caches internally, auto-refreshes near expiry
+result = app.acquire_token_for_client(scopes=scope)
+headers = {"Authorization": f"Bearer {result['access_token']}"}
+for record in records:
+    requests.post(url, headers=headers, json=record)</code></pre>
+
+  <h3>Wrong: Using ROPC for production integrations</h3>
+  <pre><code class="language-python"># BAD - breaks when MFA enabled, no Conditional Access support
+result = app.acquire_token_by_username_password(scopes=scope, username="admin@contoso.com", password="P@ss!")</code></pre>
+
+  <h3>Correct: Use client credentials with application user</h3>
+  <pre><code class="language-python"># GOOD - S2S with application user, supports MFA orgs
+app = msal.ConfidentialClientApplication(client_id, authority=authority, client_credential=client_secret)
+result = app.acquire_token_for_client(scopes=[f"{org_url}/.default"])</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>v1.0 vs v2.0 token endpoint</strong>: v1.0 uses <code>resource</code> param; v2.0 uses <code>scope</code>. MSAL uses v2.0. Mixing causes "unsupported_grant_type". Fix: <code>Always use v2.0 with MSAL and scope={org_url}/.default.</code> [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Missing security roles on app user</strong>: Token works but every API call returns 403. Fix: <code>Assign at least one security role via Power Platform Admin Center.</code> [<a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</li>
+    <li><strong>Secret Value vs ID confusion</strong>: Portal shows "Secret ID" (GUID) and "Value" (actual secret). Using the ID as credential fails. Fix: <code>Copy the Value immediately after creation - shown only once.</code> [<a href="https://www.serversys.com/insights/best-practices-for-managing-client-secrets-in-dynamics-365/">src6</a>]</li>
+    <li><strong>Testing with admin, deploying with restricted user</strong>: Works in dev with System Administrator role, fails in prod. Fix: <code>Test with actual application user security role before deploying.</code> [<a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</li>
+    <li><strong>Token expiry in long-running processes</strong>: Batch jobs >1h use expired tokens. Fix: <code>MSAL's acquire_token_for_client auto-returns fresh tokens from cache.</code> [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li><strong>Wrong regional endpoint</strong>: NA uses crm.dynamics.com, EMEA uses crm4.dynamics.com. Wrong region in scope causes API failures. Fix: <code>Use the org's actual URL from Power Platform Admin Center.</code> [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Acquire token and inspect claims
+TOKEN=$(curl -s -X POST \
+  "https://login.microsoftonline.com/TENANT_ID/oauth2/v2.0/token" \
+  -d "client_id=CLIENT_ID&amp;client_secret=SECRET&amp;scope=https://yourorg.crm.dynamics.com/.default&amp;grant_type=client_credentials" \
+  | jq -r '.access_token')
+
+# Decode token payload (base64) to check claims
+echo $TOKEN | cut -d. -f2 | base64 -d 2>/dev/null | jq .
+
+# Test authentication - WhoAmI
+curl -s "https://yourorg.crm.dynamics.com/api/data/v9.2/WhoAmI" \
+  -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" | jq .
+
+# Check application user's security roles
+curl -s "https://yourorg.crm.dynamics.com/api/data/v9.2/systemusers?\$filter=applicationid eq 'CLIENT_ID'&amp;\$expand=systemuserroles_association(\$select=name)" \
+  -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" | jq .
+
+# Verify Entra ID app registration (requires Azure CLI)
+az ad app show --id CLIENT_ID --query "{name:displayName,appId:appId}" -o table
+
+# List secrets and certificates with expiry dates
+az ad app credential list --id CLIENT_ID -o table</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Change</th><th scope="col">Date</th><th scope="col">Impact</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>MSAL required (ADAL deprecated)</td><td>2022-06</td><td>Breaking</td><td>Replace ADAL with MSAL. CrmServiceClient -> ServiceClient.</td></tr>
+      <tr><td>Azure AD renamed to Entra ID</td><td>2023-07</td><td>Branding only</td><td>No code changes. Old URLs redirect.</td></tr>
+      <tr><td>Managed identity GA for plug-ins</td><td>2024-11</td><td>New feature</td><td>Plug-ins only. Uses federated identity credentials.</td></tr>
+      <tr><td>ServiceClient replaces CrmServiceClient</td><td>2022-03</td><td>Recommended</td><td>Same connection string format, MSAL internally.</td></tr>
+      <tr><td>v2.0 token endpoint recommended</td><td>2020-06</td><td>Best practice</td><td>Use scope instead of resource parameter.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>S2S integrations with Dataverse-based D365 apps</td><td>Integrating with D365 Business Central</td><td>BC's own S2S flow (API.ReadWrite.All permissions)</td></tr>
+      <tr><td>Unattended daemon/service access to D365 data</td><td>Need user-context audit trail showing the actual human</td><td>Authorization code flow with delegated permissions</td></tr>
+      <tr><td>Want to avoid consuming a paid D365 license</td><td>Integrating with D365 Finance &amp; Operations</td><td>F&amp;O uses different resource URI and Entra ID config</td></tr>
+      <tr><td>Production integration requiring certificate security</td><td>Quick ad-hoc prototyping</td><td>Client secret with short expiry for dev/test</td></tr>
+      <tr><td>Azure-hosted plug-ins accessing Azure resources</td><td>Azure Functions calling Dataverse API directly</td><td>Client credentials (managed identity is plug-in only)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>D365 Business Central and D365 Finance &amp; Operations have different authentication patterns and token endpoints - do not mix them with this guide. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li>Token lifetime policies at the Entra ID tenant level affect all applications. Changes by another team can unexpectedly shorten your token lifetimes. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/refresh-tokens">src3</a>]</li>
+    <li>Application users created in one Dataverse environment are not automatically available in other environments. Create separately per environment. [<a href="https://rajeevpentyala.com/2018/03/24/step-by-step-d-365-server-to-server-s2s-authentication-using-azure-ad-and-application-user/">src7</a>]</li>
+    <li>New tenants may have "Security Defaults" enabled, which can interfere with service principal authentication. Verify Conditional Access exclusions. [<a href="https://learn.microsoft.com/en-us/power-apps/developer/data-platform/authenticate-oauth">src1</a>]</li>
+    <li>API request quotas for application users are pooled at the tenant level, not per-environment. Heavy usage in one environment affects another. [<a href="https://medium.com/capgemini-microsoft-team/dynamics-365-application-users-no-additional-license-required-and-no-limit-on-quantity-4bdc49f8ce2d">src8</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/dynamics-365-rest-api/2026" data-relationship="related_to">Dynamics 365 Dataverse Web API capabilities and rate limits</a>
+    <a href="/business/erp-integration/salesforce-dynamics-365-integration/2026" data-relationship="solves">Salesforce to Dynamics 365 integration playbook</a>
+    <a href="/business/erp-integration/dynamics-365-bc-authentication/2026" data-relationship="alternative_to">Dynamics 365 Business Central S2S authentication</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> - structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> - query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

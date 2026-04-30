@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Fix 503 Service Unavailable in Spring Boot | knowledgelib.io</title>
+    <meta name="description" content="Complete Spring Boot 503 debugging guide with 8 ranked root cause patterns, HikariCP and Tomcat tuning, virtual threads guidance, RestClient timeout...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/spring-boot-503/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Fix 503 Service Unavailable in Spring Boot | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete Spring Boot 503 debugging guide with 8 ranked root cause patterns, HikariCP tuning, virtual threads, circuit breaker examples, and Kubernetes probe configuration.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/spring-boot-503/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Fix 503 Service Unavailable in Spring Boot | knowledgelib.io">
+    <meta name="twitter:description"
+        content="8 ranked root causes for Spring Boot 503, HikariCP tuning, virtual threads, circuit breaker, Kubernetes probes.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.92">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/spring_boot_503">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I fix 503 Service Unavailable in Spring Boot?">
+    <meta name="ai:aliases"
+        content="Spring Boot 503 error; Spring Boot service unavailable; Spring Boot health check failing; Spring Boot actuator 503; Spring Boot readiness probe failing; Spring Boot Kubernetes 503; Spring Boot connection pool exhausted; Spring Boot thread pool saturated">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/spring-boot-503/2026.md">
+    <meta name="ai:token_estimate" content="3400">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="deployment_env,spring_boot_version,symptom_pattern">
+    <meta name="ai:constraints"
+        content="Never disable readiness probes to fix 503; Virtual threads do NOT fix connection pool exhaustion; HikariCP pool must not exceed DB max_connections / instance_count; RestClient replaces RestTemplate on 3.2+; Always use separate K8s probes; Enable leak-detection-threshold in production">
+    <meta name="ai:skip_this_unit_if"
+        content="502 Bad Gateway (proxy issue) -> Check reverse proxy logs; 504 Gateway Timeout -> Increase proxy timeout; 500 Internal Server Error -> software/debugging/spring-boot-npe/2026">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Fix 503 Service Unavailable in Spring Boot",
+    "headline": "How to Fix 503 Service Unavailable in Spring Boot",
+    "description": "Complete debugging guide for Spring Boot 503 errors covering 8 ranked root causes, connection pool tuning, thread pool configuration, virtual threads, RestClient timeouts, circuit breakers, and Kubernetes probe setup.",
+    "keywords": ["Spring Boot", "503", "Service Unavailable", "HikariCP", "Kubernetes", "health check", "virtual threads", "RestClient", "circuit breaker", "Resilience4j"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Spring Boot 2.x-3.x, HikariCP, Tomcat/Jetty/Undertow, Kubernetes (optional), Resilience4j (optional)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {"@type": "WebPage", "name": "Spring Boot Actuator Health Indicators", "url": "https://docs.spring.io/spring-boot/reference/actuator/endpoints.html"},
+      {"@type": "WebPage", "name": "Spring Boot Production-Ready Features", "url": "https://docs.spring.io/spring-boot/reference/actuator/"},
+      {"@type": "WebPage", "name": "HikariCP Connection Pool Configuration", "url": "https://github.com/brettwooldridge/HikariCP"},
+      {"@type": "WebPage", "name": "Spring Boot Kubernetes Deployment Guide", "url": "https://docs.spring.io/spring-boot/reference/deployment/cloud.html"},
+      {"@type": "WebPage", "name": "Tomcat Thread Pool and Connection Handling", "url": "https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html"},
+      {"@type": "WebPage", "name": "Spring Boot Circuit Breaker with Resilience4j", "url": "https://resilience4j.readme.io/docs"},
+      {"@type": "WebPage", "name": "Spring Boot RestClient Timeout Configuration", "url": "https://www.baeldung.com/spring-rest-timeout"}
+    ]
+  }
+  </script>
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Fix 503 Service Unavailable in Spring Boot",
+    "description": "Structured debugging guide with 8 ranked root cause patterns, connection pool and thread pool tuning parameters, virtual threads guidance, RestClient timeout configuration, and Kubernetes probe setup.",
+    "keywords": ["Spring Boot", "503", "debugging", "HikariCP", "Kubernetes", "virtual threads"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Spring.io"},
+      {"@type": "Organization", "name": "HikariCP"},
+      {"@type": "Organization", "name": "Apache Tomcat"},
+      {"@type": "Organization", "name": "Resilience4j"},
+      {"@type": "Organization", "name": "Baeldung"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/"},
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      {"@type": "ListItem", "position": 4, "name": "How to Fix 503 Service Unavailable in Spring Boot"}
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I fix 503 Service Unavailable in Spring Boot?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: 503 in Spring Boot means the server is up but can't handle requests -- top causes: (1) Kubernetes readiness probe failing, (2) HikariCP connection pool exhausted, (3) Tomcat thread pool saturated, (4) downstream service timeout cascading."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Spring Boot 503 error",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: 503 in Spring Boot means the server is up but can't handle requests -- top causes: (1) Kubernetes readiness probe failing, (2) HikariCP connection pool exhausted, (3) Tomcat thread pool saturated, (4) downstream service timeout cascading."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Spring Boot service unavailable",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: 503 in Spring Boot means the server is up but can't handle requests -- top causes: (1) Kubernetes readiness probe failing, (2) HikariCP connection pool exhausted, (3) Tomcat thread pool saturated, (4) downstream service timeout cascading."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Spring Boot health check failing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: 503 in Spring Boot means the server is up but can't handle requests -- top causes: (1) Kubernetes readiness probe failing, (2) HikariCP connection pool exhausted, (3) Tomcat thread pool saturated, (4) downstream service timeout cascading."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Spring Boot actuator 503",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: 503 in Spring Boot means the server is up but can't handle requests -- top causes: (1) Kubernetes readiness probe failing, (2) HikariCP connection pool exhausted, (3) Tomcat thread pool saturated, (4) downstream service timeout cascading."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Spring Boot readiness probe failing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: 503 in Spring Boot means the server is up but can't handle requests -- top causes: (1) Kubernetes readiness probe failing, (2) HikariCP connection pool exhausted, (3) Tomcat thread pool saturated, (4) downstream service timeout cascading."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+    
+  <main role="main">
+
+<h1>How to Fix 503 Service Unavailable in Spring Boot</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I fix 503 Service Unavailable in Spring Boot?</h2>
+    <aside class="unit-meta" data-card-id="software/debugging/spring-boot-503/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: 503 means server is up but can't handle requests -- top causes: (1) K8s
+                readiness probe failing, (2) HikariCP pool exhausted, (3) Tomcat threads saturated, (4) downstream
+                timeout cascade.</li>
+            <li><strong>Key tool/command</strong>: <code>curl http://localhost:8080/actuator/health</code> -- check which
+                health indicator is <code>DOWN</code>.</li>
+            <li><strong>Watch out for</strong>: Default HikariCP pool is only 10 connections -- production needs 20-50+.
+                Virtual threads do NOT fix this.</li>
+            <li><strong>Works with</strong>: Spring Boot 2.x-3.x, embedded Tomcat/Jetty/Undertow, Kubernetes/ECS/Cloud Run.</li>
+        </ul>
+    </section>
+
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never disable readiness probes to "fix" 503 -- the probe is reporting a real problem; fix the underlying
+                health indicator. [<a href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">src1</a>]</li>
+            <li>Virtual threads (Spring Boot 3.2+) eliminate thread-pool exhaustion but do NOT fix connection pool
+                exhaustion or downstream timeouts. [<a
+                    href="https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html">src5</a>]</li>
+            <li>HikariCP <code>maximum-pool-size</code> must not exceed your database's <code>max_connections</code>
+                divided by number of app instances. [<a href="https://github.com/brettwooldridge/HikariCP">src3</a>]</li>
+            <li>RestClient (Spring Boot 3.2+) replaces RestTemplate for new code -- configure timeouts via
+                <code>ClientHttpRequestFactorySettings</code> since Boot 3.4. [<a
+                    href="https://www.baeldung.com/spring-rest-timeout">src7</a>]</li>
+            <li>In Kubernetes, always use separate liveness, readiness, and startup probes -- never use a single
+                <code>/actuator/health</code> for all three. [<a
+                    href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</li>
+            <li>Connection leak detection (<code>leak-detection-threshold</code>) must be enabled in production --
+                default is disabled. [<a href="https://github.com/brettwooldridge/HikariCP">src3</a>]</li>
+        </ul>
+    </section>
+
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">503 Root Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Symptom</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Readiness probe failing</td>
+                        <td>~30%</td>
+                        <td>K8s removes pod; actuator DOWN</td>
+                        <td>Fix health indicator or increase probe timeout [<a
+                                href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">src1</a>, <a
+                                href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Connection pool exhausted</td>
+                        <td>~25%</td>
+                        <td><code>Connection is not available, request timed out after 30000ms</code></td>
+                        <td>Increase pool size, fix leaks, enable leak detection [<a
+                                href="https://github.com/brettwooldridge/HikariCP">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Thread pool saturated</td>
+                        <td>~15%</td>
+                        <td>All 200 Tomcat threads busy, <code>RejectedExecutionException</code></td>
+                        <td>Increase <code>server.tomcat.threads.max</code>, enable virtual threads on 3.2+ [<a
+                                href="https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Downstream timeout cascade</td>
+                        <td>~15%</td>
+                        <td>Requests hang waiting for external API</td>
+                        <td>Add timeouts + circuit breaker [<a href="https://resilience4j.readme.io/docs">src6</a>, <a
+                                href="https://www.baeldung.com/spring-rest-timeout">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>OutOfMemoryError</td>
+                        <td>~5%</td>
+                        <td>GC thrashing</td>
+                        <td>Increase heap or fix memory leak [<a
+                                href="https://docs.spring.io/spring-boot/reference/actuator/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Database unavailable</td>
+                        <td>~5%</td>
+                        <td>DB health check DOWN</td>
+                        <td>Fix DB connection or disable check [<a
+                                href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Disk space full</td>
+                        <td>~3%</td>
+                        <td>DiskSpaceHealthIndicator DOWN</td>
+                        <td>Free disk or adjust threshold [<a
+                                href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Graceful shutdown</td>
+                        <td>~2%</td>
+                        <td>App shutting down, rejecting requests</td>
+                        <td>Expected during rolling updates [<a
+                                href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Is /actuator/health returning DOWN?
+│   ├── YES → Which health indicator is DOWN?
+│   │   ├── db → Database connection issue [src1]
+│   │   │   └── FIX: Check DB connectivity, increase pool size
+│   │   ├── diskSpace → Disk full [src1]
+│   │   │   └── FIX: Free disk, adjust threshold
+│   │   ├── custom → Application-specific health check [src1]
+│   │   │   └── FIX: Debug the custom HealthIndicator
+│   │   └── readinessState → App not ready [src4]
+│   │       └── FIX: Check startup dependencies
+│   └── NO → Health is UP but still getting 503?
+│       ├── Check load balancer health check path
+│       └── Check if 503 comes from reverse proxy (nginx/ALB)
+├── Connection pool errors in logs?
+│   ├── YES → HikariCP exhausted [src3]
+│   │   └── FIX: spring.datasource.hikari.maximum-pool-size=30
+│   └── NO ↓
+├── Thread rejection in logs?
+│   ├── YES → Tomcat threads saturated [src5]
+│   │   └── FIX: server.tomcat.threads.max=400 or enable virtual threads (3.2+)
+│   └── NO ↓
+├── Downstream calls timing out?
+│   ├── YES → Cascading failure [src6]
+│   │   └── FIX: Add RestClient/WebClient timeouts + circuit breaker
+│   └── NO → Check JVM metrics (GC pauses, heap usage)
+└── DEFAULT → Enable actuator + micrometer metrics</code></pre>
+    </section>
+
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Check actuator health endpoint</h3>
+        <p>Determine which component is reporting DOWN. This is always the first diagnostic step. [<a
+                href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">src1</a>]</p>
+        <pre><code class="language-bash"># Check overall health
+curl -s http://localhost:8080/actuator/health | jq
+
+# Enable detailed health (application.properties):
+management.endpoint.health.show-details=always
+management.health.readinessstate.enabled=true
+management.health.livenessstate.enabled=true</code></pre>
+        <p><strong>Verify</strong>: <code>curl -s http://localhost:8080/actuator/health | jq .status</code> → expected:
+            <code>"UP"</code> after fix</p>
+
+        <h3>2. Check and tune connection pool</h3>
+        <p>HikariCP default pool size of 10 is almost always too small for production. [<a
+                href="https://github.com/brettwooldridge/HikariCP">src3</a>]</p>
+        <pre><code class="language-properties"># application.properties — HikariCP tuning [src3]
+spring.datasource.hikari.maximum-pool-size=30
+spring.datasource.hikari.minimum-idle=10
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+spring.datasource.hikari.leak-detection-threshold=60000</code></pre>
+        <p><strong>Verify</strong>:
+            <code>curl -s http://localhost:8080/actuator/metrics/hikaricp.connections.active | jq .measurements</code> →
+            active should be below maximum-pool-size</p>
+
+        <h3>3. Check and tune Tomcat thread pool</h3>
+        <p>Default 200 threads can be exhausted under sustained load. On Spring Boot 3.2+, consider virtual threads
+            instead. [<a href="https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html">src5</a>]</p>
+        <pre><code class="language-properties"># application.properties — Tomcat tuning [src5]
+server.tomcat.threads.max=400
+server.tomcat.threads.min-spare=20
+server.tomcat.accept-count=100
+server.tomcat.max-connections=10000
+server.tomcat.connection-timeout=20000
+
+# Spring Boot 3.2+ — virtual threads (eliminates thread pool exhaustion)
+spring.threads.virtual.enabled=true</code></pre>
+
+        <h3>4. Add timeouts to downstream calls</h3>
+        <p>Every outbound HTTP call must have connect and read timeouts. [<a
+                href="https://resilience4j.readme.io/docs">src6</a>, <a
+                href="https://www.baeldung.com/spring-rest-timeout">src7</a>]</p>
+        <pre><code class="language-java">// Spring Boot 3.2+ — RestClient with timeouts (preferred) [src7]
+@Configuration
+public class RestClientConfig {
+    @Bean
+    public RestClient restClient(RestClient.Builder builder) {
+        return builder
+            .requestFactory(ClientHttpRequestFactories.get(
+                ClientHttpRequestFactorySettings.DEFAULTS
+                    .withConnectTimeout(Duration.ofSeconds(5))
+                    .withReadTimeout(Duration.ofSeconds(10))
+            ))
+            .build();
+    }
+}
+
+// Spring Boot 2.x-3.1 — RestTemplate with timeouts
+@Configuration
+public class LegacyRestClientConfig {
+    @Bean
+    public RestTemplate restTemplate() {
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(10));
+        return new RestTemplate(factory);
+    }
+}</code></pre>
+
+        <h3>5. Configure Kubernetes probes correctly</h3>
+        <p>Use three separate probes: startup, liveness, and readiness. [<a
+                href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</p>
+        <pre><code class="language-yaml"># Kubernetes deployment — proper probe configuration [src4]
+containers:
+  - name: app
+    livenessProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      failureThreshold: 3
+    startupProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 30  # 30 × 5s = 150s max startup</code></pre>
+        <p><strong>Verify</strong>: <code>kubectl describe pod &lt;pod-name&gt;</code> → no probe failure events after
+            deployment</p>
+    </section>
+
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Java: Circuit breaker for downstream services</h3>
+        <p>Full script: <a
+                href="scripts/java-circuit-breaker-for-downstream-services.java">java-circuit-breaker-for-downstream-services.java</a>
+            (30 lines)</p>
+        <pre><code class="language-java">// Input:  Downstream API that may be slow/unavailable
+// Output: Graceful degradation instead of 503 cascade
+
+@Service
+public class PaymentService {
+    private final RestTemplate restTemplate;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+
+    // Resilience4j circuit breaker prevents cascade [src6]
+    @CircuitBreaker(name = "payment", fallbackMethod = "paymentFallback")
+    @TimeLimiter(name = "payment")
+    public CompletableFuture&lt;PaymentResult&gt; processPayment(PaymentRequest request) {
+        return CompletableFuture.supplyAsync(() ->
+            restTemplate.postForObject("/api/payments", request, PaymentResult.class)
+        );
+    }
+
+    private CompletableFuture&lt;PaymentResult&gt; paymentFallback(PaymentRequest req, Throwable t) {
+        return CompletableFuture.completedFuture(
+            PaymentResult.pending("Payment queued — retry in progress")
+        );
+    }
+}
+
+// application.yml — circuit breaker config
+// resilience4j.circuitbreaker.instances.payment:
+//   sliding-window-size: 10
+//   failure-rate-threshold: 50
+//   wait-duration-in-open-state: 30s</code></pre>
+
+        <h3>Java: Custom health indicator with graceful degradation</h3>
+        <pre><code class="language-java">// Input:  Non-critical external dependency (e.g., cache, search index)
+// Output: Health check that degrades to WARNING without failing readiness
+
+@Component
+public class SearchHealthIndicator implements HealthIndicator {
+    private final RestClient restClient;
+
+    @Override
+    public Health health() {
+        try {
+            restClient.get().uri("/ping")
+                .retrieve().toBodilessEntity();
+            return Health.up().build();
+        } catch (Exception e) {
+            // Report degraded but don't fail readiness [src1]
+            return Health.up()
+                .withDetail("search", "degraded: " + e.getMessage())
+                .build();
+        }
+    }
+}</code></pre>
+    </section>
+
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: No timeouts on HTTP calls</h3>
+        <pre><code class="language-java">// ❌ BAD — one slow downstream call can exhaust all threads [src6]
+String result = restTemplate.getForObject("http://slow-service/api", String.class);
+// Default: no timeout → thread hangs indefinitely</code></pre>
+        <h3>Correct: Always set timeouts + circuit breaker</h3>
+        <pre><code class="language-java">// ✅ GOOD — bounded timeout prevents thread exhaustion [src6, src7]
+var factory = new SimpleClientHttpRequestFactory();
+factory.setConnectTimeout(Duration.ofSeconds(3));
+factory.setReadTimeout(Duration.ofSeconds(10));
+var restTemplate = new RestTemplate(factory);</code></pre>
+
+        <h3>Wrong: Default connection pool size for production</h3>
+        <pre><code class="language-properties"># ❌ BAD — HikariCP default is 10 connections
+# Under load: "Connection is not available, request timed out after 30000ms"</code></pre>
+        <h3>Correct: Size pool for production workload</h3>
+        <pre><code class="language-properties"># ✅ GOOD — scale pool to match expected concurrency [src3]
+spring.datasource.hikari.maximum-pool-size=30
+spring.datasource.hikari.leak-detection-threshold=60000</code></pre>
+
+        <h3>Wrong: Virtual threads without connection pool scaling</h3>
+        <pre><code class="language-properties"># ❌ BAD — virtual threads handle more requests but each still needs a DB connection
+# 1000 virtual threads + 10-connection pool = massive contention [src3, src5]
+spring.threads.virtual.enabled=true
+# spring.datasource.hikari.maximum-pool-size=10  (default)</code></pre>
+        <h3>Correct: Virtual threads with appropriately sized pool</h3>
+        <pre><code class="language-properties"># ✅ GOOD — scale connection pool alongside virtual threads [src3]
+spring.threads.virtual.enabled=true
+spring.datasource.hikari.maximum-pool-size=50
+spring.datasource.hikari.leak-detection-threshold=60000</code></pre>
+
+        <h3>Wrong: Single health endpoint for all K8s probes</h3>
+        <pre><code class="language-yaml"># ❌ BAD — liveness and readiness have different semantics [src4]
+livenessProbe:
+  httpGet:
+    path: /actuator/health  # includes readiness checks!
+readinessProbe:
+  httpGet:
+    path: /actuator/health  # same endpoint</code></pre>
+        <h3>Correct: Separate probe endpoints</h3>
+        <pre><code class="language-yaml"># ✅ GOOD — each probe checks what it should [src4]
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness   # only: is the JVM alive?
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness  # only: can it accept traffic?
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness   # give app time to start</code></pre>
+    </section>
+
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Readiness probe too aggressive</strong>: <code>initialDelaySeconds</code> too short → K8s fails
+                probe before Spring Boot starts. Fix: use <code>startupProbe</code> for slow-starting apps. [<a
+                    href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</li>
+            <li><strong>Connection pool exhaustion from leaks</strong>: Connections not returned (exception before
+                <code>close()</code>). Fix: enable <code>leak-detection-threshold</code> and use try-with-resources. [<a
+                    href="https://github.com/brettwooldridge/HikariCP">src3</a>]</li>
+            <li><strong>Health check includes non-critical deps</strong>: Redis DOWN → entire app DOWN. Fix: group
+                non-critical under readiness only, or use custom HealthIndicator that reports degraded. [<a
+                    href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">src1</a>]</li>
+            <li><strong>No graceful shutdown</strong>: SIGTERM but no in-flight draining. Fix:
+                <code>server.shutdown=graceful</code> + <code>spring.lifecycle.timeout-per-shutdown-phase=30s</code>.
+                [<a href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</li>
+            <li><strong>Thread pool defaults too low</strong>: Tomcat default 200 threads → consumed under load. Fix:
+                increase <code>server.tomcat.threads.max</code> or enable virtual threads on 3.2+. [<a
+                    href="https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html">src5</a>]</li>
+            <li><strong>Virtual threads with pinned carriers</strong>: <code>synchronized</code> blocks pin virtual
+                threads to carrier threads. Under high concurrency, this re-introduces thread exhaustion. Fix: replace
+                <code>synchronized</code> with <code>ReentrantLock</code> in hot paths. [<a
+                    href="https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html">src5</a>]</li>
+            <li><strong>Connection pool too large for DB</strong>: <code>maximum-pool-size=200</code> across 10
+                instances = 2000 connections, exceeding most DB defaults (100-200). Fix: calculate
+                <code>pool_size = max_connections / instance_count</code>. [<a
+                    href="https://github.com/brettwooldridge/HikariCP">src3</a>]</li>
+        </ul>
+    </section>
+
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Check health details
+curl -s http://localhost:8080/actuator/health | jq
+
+# Check individual probe endpoints (K8s)
+curl -s http://localhost:8080/actuator/health/liveness | jq
+curl -s http://localhost:8080/actuator/health/readiness | jq
+
+# HikariCP metrics (requires micrometer)
+curl -s http://localhost:8080/actuator/metrics/hikaricp.connections.active | jq
+curl -s http://localhost:8080/actuator/metrics/hikaricp.connections.pending | jq
+curl -s http://localhost:8080/actuator/metrics/hikaricp.connections.timeout | jq
+
+# Tomcat threads
+curl -s http://localhost:8080/actuator/metrics/tomcat.threads.current | jq
+curl -s http://localhost:8080/actuator/metrics/tomcat.threads.busy | jq
+
+# JVM memory
+curl -s http://localhost:8080/actuator/metrics/jvm.memory.used | jq
+
+# Check if virtual threads are active (Spring Boot 3.2+)
+curl -s http://localhost:8080/actuator/metrics/executor.active | jq
+
+# Thread dump for stuck threads
+curl -s http://localhost:8080/actuator/threaddump | jq '.threads[] | select(.state=="WAITING" or .state=="TIMED_WAITING") | .threadName'
+
+# Kubernetes: check pod events for probe failures
+kubectl describe pod &lt;pod-name&gt; | grep -A5 "Events:"
+kubectl get events --field-selector involvedObject.name=&lt;pod-name&gt;</code></pre>
+    </section>
+
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Spring Boot</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Key Changes for 503 Debugging</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2.3+</td>
+                        <td>Maintenance</td>
+                        <td>Readiness/liveness probes, graceful shutdown introduced [<a
+                                href="https://docs.spring.io/spring-boot/reference/deployment/cloud.html">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2.4+</td>
+                        <td>Maintenance</td>
+                        <td>Startup probe support, K8s probe grouping</td>
+                    </tr>
+                    <tr>
+                        <td>3.0+</td>
+                        <td>Maintenance</td>
+                        <td>Jakarta EE 10 namespace (javax → jakarta), Tomcat 10.1</td>
+                    </tr>
+                    <tr>
+                        <td>3.2+</td>
+                        <td>Current</td>
+                        <td>Virtual threads GA, RestClient GA, improved observability [<a
+                                href="https://tomcat.apache.org/tomcat-10.1-doc/config/executor.html">src5</a>, <a
+                                href="https://www.baeldung.com/spring-rest-timeout">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3.3+</td>
+                        <td>Current</td>
+                        <td>Enhanced health group configuration, structured logging</td>
+                    </tr>
+                    <tr>
+                        <td>3.4+</td>
+                        <td>Current</td>
+                        <td>RestClient timeout via <code>ClientHttpRequestFactorySettings</code>, SSL bundle auto-reload
+                            [<a href="https://www.baeldung.com/spring-rest-timeout">src7</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Debug 503 When</th>
+                        <th scope="col">Look Elsewhere When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Actuator health shows DOWN</td>
+                        <td>502 Bad Gateway (upstream proxy error)</td>
+                        <td>Check nginx/ALB/Envoy logs</td>
+                    </tr>
+                    <tr>
+                        <td>Connection pool logs show exhaustion</td>
+                        <td>504 Gateway Timeout (proxy timeout)</td>
+                        <td>Increase proxy timeout settings</td>
+                    </tr>
+                    <tr>
+                        <td>K8s pod keeps restarting</td>
+                        <td>500 Internal Server Error (unhandled exception)</td>
+                        <td>Check application logs for stack trace</td>
+                    </tr>
+                    <tr>
+                        <td>Load increases → intermittent 503</td>
+                        <td>Consistent 503 on every request from startup</td>
+                        <td>Check application.properties misconfiguration</td>
+                    </tr>
+                    <tr>
+                        <td>After deploying new version</td>
+                        <td>503 from CDN or static assets</td>
+                        <td>Check CDN origin configuration</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Virtual threads (Spring Boot 3.2+ with <code>spring.threads.virtual.enabled=true</code>) can eliminate
+                thread-pool exhaustion but don't fix connection pool or downstream timeout problems. You may hit
+                connection pool limits faster because more concurrent requests proceed simultaneously.</li>
+            <li>Health endpoint 503 from K8s readiness is by design -- don't disable; fix the underlying health check.
+            </li>
+            <li>In Spring Boot 3.x, <code>management.health.readinessstate.enabled</code> defaults to true in K8s
+                environments (auto-detected via <code>KUBERNETES_SERVICE_HOST</code> env var).</li>
+            <li>RestClient (Spring Boot 3.2+) is the recommended replacement for RestTemplate. Since Boot 3.4, timeouts
+                can be configured via <code>ClientHttpRequestFactorySettings</code> rather than manual factory creation.
+            </li>
+            <li><code>spring.threads.virtual.enabled=true</code> causes <code>SimpleAsyncTaskExecutor</code> to be
+                used, which ignores <code>spring.task.execution.pool.*</code> properties.</li>
+        </ul>
+    </section>
+
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/spring-boot-npe/2026"
+            data-relationship="often_confused_with">Spring Boot NullPointerException</a>
+        <a href="/software/debugging/react-white-screen/2026"
+            data-relationship="related_to">React White Screen of Death</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a
+            href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

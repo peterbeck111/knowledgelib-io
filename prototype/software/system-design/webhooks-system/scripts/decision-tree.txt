@@ -1,0 +1,25 @@
+START: Building a webhooks system
+|
++-- Are you the SENDER (provider) or RECEIVER (consumer)?
+|   |
+|   +-- SENDER -->
+|   |   |
+|   |   +-- Expected volume?
+|   |   |   +-- <100 events/sec --> Simple: PostgreSQL + worker thread (see Step-by-Step)
+|   |   |   +-- 100-10K events/sec --> Standard: Message queue + worker pool (see Code Example 1)
+|   |   |   +-- >10K events/sec --> Scale: Partitioned queue + auto-scaling workers + circuit breakers
+|   |   |
+|   |   +-- Need strict ordering?
+|   |       +-- YES, per endpoint --> FIFO queue partitioned by endpoint_id
+|   |       +-- NO --> Parallel delivery workers (higher throughput)
+|   |
+|   +-- RECEIVER -->
+|       |
+|       +-- Verify signature (HMAC-SHA256) --> reject if invalid
+|       +-- Check idempotency key --> skip if already processed
+|       +-- Enqueue for async processing --> return 200 immediately
+|       +-- Process from queue --> update state idempotently
+|
++-- Need a managed solution?
+    +-- YES --> Svix, Hookdeck, or cloud provider (AWS EventBridge, Google Eventarc)
+    +-- NO --> Build with the architecture in Quick Reference above

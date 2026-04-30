@@ -1,0 +1,26 @@
+START
++-- Is the error recoverable?
+|   +-- YES
+|   |   +-- Language uses Result types (Rust, Go)?
+|   |   |   +-- Rust --> Return Result<T, E>, caller uses ? or match
+|   |   |   +-- Go --> Return (value, error), caller checks if err != nil
+|   |   +-- Language uses exceptions (Python, JS, Java, C#)?
+|   |       +-- Can the caller reasonably handle it?
+|   |       |   +-- YES --> Throw specific exception, document in signature
+|   |       |   +-- NO --> Let it propagate to a higher-level handler
+|   |       +-- Is it a validation/user-input error?
+|   |           +-- YES --> Return error object/Result, don't throw
+|   |           +-- NO --> Throw typed exception
+|   +-- NO (fatal/unrecoverable)
+|       +-- Rust --> panic!() -- process should crash
+|       +-- Go --> log.Fatal() or panic() with deferred cleanup
+|       +-- Python/JS/Java/C# --> Let exception propagate to top-level handler
++-- Should you log or propagate?
+|   +-- Low-level library/module --> Propagate (wrap with context), do NOT log
+|   +-- Application boundary (HTTP handler, CLI entrypoint) --> Log AND return error response
+|   +-- Background worker --> Log, report to error tracker, optionally retry
++-- Should you retry?
+    +-- Transient error (network timeout, rate limit, lock contention)?
+    |   +-- YES --> Retry with exponential backoff (see retry-exponential-backoff unit)
+    |   +-- NO (validation, auth, logic error) --> Do NOT retry, fail fast
+    +-- END

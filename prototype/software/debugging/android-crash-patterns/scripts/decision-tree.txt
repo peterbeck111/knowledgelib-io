@@ -1,0 +1,27 @@
+START
+├── Is it an ANR (dialog says "App isn't responding")?
+│   ├── YES → Check main thread state in traces.txt
+│   │   ├── Main thread BLOCKED on I/O → Move to Dispatchers.IO (Cause #2)
+│   │   ├── Main thread WAITING on lock → Fix lock contention or deadlock
+│   │   └── Main thread in long computation → Move to Dispatchers.Default
+│   └── NO ↓
+├── Is it a Java/Kotlin exception?
+│   ├── YES → Read the exception class name
+│   │   ├── NullPointerException → Cause #1: check null safety
+│   │   ├── OutOfMemoryError → Cause #3: profile heap with Android Profiler
+│   │   ├── IllegalStateException → Cause #4: check fragment/activity lifecycle
+│   │   ├── SecurityException → Cause #5: check runtime permissions
+│   │   ├── TransactionTooLargeException → Cause #7: reduce bundle size
+│   │   ├── IndexOutOfBoundsException → Cause #8: validate bounds
+│   │   ├── DeadObjectException → Cause #9: handle IPC failures
+│   │   ├── ClassCastException → Cause #10: use type checks
+│   │   └── ConcurrentModificationException → Cause #12: synchronize access
+│   └── NO ↓
+├── Is it a native crash (signal in logcat)?
+│   ├── YES → Read the signal number
+│   │   ├── SIGSEGV (signal 11) → Cause #6: null pointer or use-after-free in C/C++
+│   │   ├── SIGABRT (signal 6) → Cause #11: assertion failure or buffer overflow
+│   │   ├── SIGBUS → Misaligned memory access in native code
+│   │   └── SIGFPE → Division by zero in native code
+│   └── NO ↓
+└── DEFAULT → Enable StrictMode + Crashlytics; reproduce with adb logcat filtering

@@ -1,0 +1,48 @@
+# Input:  Understanding the difference between AND and OR selectors
+# Output: Two different policies demonstrating the YAML indentation trap
+
+# --- OR logic: two SEPARATE list items ---
+# Allows traffic from: (any pod in namespace labeled team=frontend)
+#                  OR  (any pod labeled role=client in THIS namespace)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: or-logic-example
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:          # First list item
+            matchLabels:
+              team: frontend
+        - podSelector:                # Second list item (OR)
+            matchLabels:
+              role: client
+---
+# --- AND logic: SINGLE list item with both selectors ---
+# Allows traffic from: pods labeled role=client
+#                  AND  in namespaces labeled team=frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: and-logic-example
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:          # Single list item
+            matchLabels:
+              team: frontend
+          podSelector:                # Same list item (AND)
+            matchLabels:
+              role: client

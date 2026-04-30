@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Materialized Views: Complete Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to materialized views across PostgreSQL, Oracle, SQL Server, and MySQL.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-materialized-views/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Materialized Views: Complete Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to materialized views across PostgreSQL, Oracle, SQL Server, and MySQL. Covers refresh strategies, decision trees, 4 code examples, 4 anti-patterns, and 8 common pitfalls. 7 sources, all cited.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-materialized-views/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Materialized Views: Complete Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to materialized views across PostgreSQL, Oracle, SQL Server, and MySQL. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.88">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/sql_materialized_views">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I use materialized views effectively?">
+  <meta name="ai:aliases" content="materialized view refresh strategies; when to use materialized views; materialized views vs regular views; postgres materialized view; SQL Server indexed views; Oracle materialized view refresh; materialized view performance optimization; REFRESH MATERIALIZED VIEW CONCURRENTLY">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-materialized-views/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="database_engine,data_freshness,base_table_size">
+  <meta name="ai:constraints" content="Materialized views store stale data by design; PostgreSQL non-concurrent REFRESH acquires exclusive lock; REFRESH CONCURRENTLY requires UNIQUE index on all rows; SQL Server indexed views require SCHEMABINDING; MySQL has no native MV support; Oracle FAST refresh requires MV logs">
+  <meta name="ai:skip_this_unit_if" content="Need real-time always-consistent results -> Use regular views with indexing; Query already fast and infrequent -> Direct query; Need to write through the view -> Updatable views">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Materialized Views: Complete Reference",
+    "headline": "Materialized Views: Complete Reference",
+    "description": "Complete guide to using materialized views effectively across PostgreSQL, Oracle, SQL Server, and MySQL. Covers creation, refresh strategies (CONCURRENTLY, FAST, indexed views, manual workarounds), decision trees, anti-patterns, and production best practices.",
+    "keywords": ["materialized views", "SQL", "PostgreSQL", "Oracle", "SQL Server", "MySQL", "database performance", "query optimization", "indexed views", "REFRESH CONCURRENTLY"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 9.3+, Oracle 8i+, SQL Server 2005+, or MySQL 5.7+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Documentation: CREATE MATERIALIZED VIEW",
+        "url": "https://www.postgresql.org/docs/current/rules-materializedviews.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Documentation: REFRESH MATERIALIZED VIEW",
+        "url": "https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Refreshing Materialized Views — Oracle Database Data Warehousing Guide",
+        "url": "https://docs.oracle.com/en/database/oracle/oracle-database/19/dwhsg/refreshing-materialized-views.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Create Indexed Views — SQL Server Documentation",
+        "url": "https://learn.microsoft.com/en-us/sql/relational-databases/views/create-indexed-views"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CREATE MATERIALIZED VIEW AS SELECT (Transact-SQL)",
+        "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/create-materialized-view-as-select-transact-sql"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MySQL 9.0 FAQ: Views",
+        "url": "https://dev.mysql.com/doc/refman/9.0/en/faqs-views.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SQL Materialized View: Enhancing Query Performance",
+        "url": "https://www.datacamp.com/tutorial/sql-materialized-view"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Materialized Views: Complete Reference",
+    "description": "Structured knowledge unit covering materialized view creation, refresh strategies, and best practices across PostgreSQL, Oracle, SQL Server, and MySQL. Includes decision trees, code examples, anti-patterns, and diagnostic commands.",
+    "keywords": ["materialized views", "SQL", "PostgreSQL", "Oracle", "SQL Server", "MySQL", "database performance", "query optimization"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Oracle Corporation"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "DataCamp"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Materialized Views: Complete Reference" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I use materialized views effectively?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "materialized view refresh strategies",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "when to use materialized views",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "materialized views vs regular views",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "postgres materialized view",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL Server indexed views",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup)."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Materialized Views: Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I use materialized views effectively?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-materialized-views/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.88 out of 1">0.88</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Materialized views precompute and store query results as a physical table, trading storage space and data freshness for dramatically faster read performance on expensive queries (often 100-1000x speedup).</li>
+    <li><strong>Key tool/command</strong>: <code>CREATE MATERIALIZED VIEW mv_name AS SELECT ...;</code> (PostgreSQL) / <code>CREATE VIEW ... WITH SCHEMABINDING</code> + <code>CREATE UNIQUE CLUSTERED INDEX</code> (SQL Server)</li>
+    <li><strong>Watch out for</strong>: Forgetting to refresh — stale data is the #1 source of bugs. In PostgreSQL, non-concurrent refresh blocks all reads on the view.</li>
+    <li><strong>Works with</strong>: PostgreSQL 9.3+ (native), Oracle 8i+ (native with FAST refresh), SQL Server 2005+ (indexed views), MySQL (manual workaround only).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Materialized views store stale data by design — never use for real-time transactional reads where consistency is required</li>
+    <li>PostgreSQL <code>REFRESH MATERIALIZED VIEW</code> (non-concurrent) acquires an exclusive lock — blocks all reads during refresh</li>
+    <li><code>REFRESH CONCURRENTLY</code> requires at least one <code>UNIQUE</code> index covering all rows (no <code>WHERE</code> clause, no expression indexes) [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</li>
+    <li>SQL Server indexed views require <code>SCHEMABINDING</code> — underlying table schema cannot be altered while the view exists [<a href="https://learn.microsoft.com/en-us/sql/relational-databases/views/create-indexed-views">src4</a>]</li>
+    <li>MySQL has no native materialized view support — all workarounds require manual refresh logic [<a href="https://dev.mysql.com/doc/refman/9.0/en/faqs-views.html">src6</a>]</li>
+    <li>Oracle FAST refresh requires materialized view logs on all base tables — logs consume storage and add write overhead [<a href="https://docs.oracle.com/en/database/oracle/oracle-database/19/dwhsg/refreshing-materialized-views.html">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Pattern</th><th scope="col">Refresh Cost</th><th scope="col">Storage Overhead</th><th scope="col">Trade-off</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dashboard aggregations (daily)</td><td>Full refresh on schedule</td><td>O(base_table)</td><td>Low-Medium</td><td>Simple; blocks reads briefly</td></tr>
+      <tr><td>Dashboard aggregations (live)</td><td>Concurrent refresh + cron</td><td>O(delta) comparison</td><td>Medium</td><td>No read blocking; needs unique index</td></tr>
+      <tr><td>Reporting on large joins</td><td>Full refresh nightly</td><td>O(join_result)</td><td>High</td><td>Massive read speedup; stale during day</td></tr>
+      <tr><td>Near-real-time analytics</td><td>Oracle ON COMMIT / trigger-based</td><td>O(delta) per commit</td><td>Medium</td><td>Fresh data; slows writes</td></tr>
+      <tr><td>Search/filter on computed cols</td><td>Indexed materialized view</td><td>O(index_maintenance)</td><td>Medium</td><td>Fast reads; write amplification</td></tr>
+      <tr><td>Remote/federated data caching</td><td>Materialized view on foreign table</td><td>O(network_transfer)</td><td>Matches result set</td><td>Eliminates network latency on reads</td></tr>
+      <tr><td>Time-series rollups (hourly)</td><td>Partitioned MV + incremental</td><td>O(partition)</td><td>High</td><td>Refresh only latest partition</td></tr>
+      <tr><td>MySQL workaround</td><td>Summary table + triggers/events</td><td>O(trigger_logic)</td><td>Matches result set</td><td>Full manual maintenance</td></tr>
+      <tr><td>High-availability refresh</td><td>Oracle out-of-place refresh</td><td>O(base_table)</td><td>2x during refresh</td><td>Zero downtime; temporary double storage</td></tr>
+      <tr><td>Multi-level aggregations</td><td>Nested/stacked MVs</td><td>O(each_level)</td><td>Multiplied per level</td><td>Complex dependency chain</td></tr>
+      <tr><td>Write-heavy OLTP tables</td><td>Avoid materialized views</td><td>N/A</td><td>N/A</td><td>Write overhead exceeds read benefit</td></tr>
+      <tr><td>Small tables (&lt;10K rows)</td><td>Regular view + indexes</td><td>N/A</td><td>None</td><td>MV adds complexity without benefit</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Do you need precomputed query results?
+├── Query &lt; 50ms already?
+│   ├── YES → Use a regular view or direct query (no MV needed)
+│   └── NO ↓
+├── Can you tolerate stale data?
+│   ├── NO → Use regular views with proper indexing, or application cache with invalidation
+│   └── YES ↓
+├── Which database engine?
+│   ├── PostgreSQL ↓
+│   │   ├── Need zero-downtime refresh?
+│   │   │   ├── YES → CREATE MATERIALIZED VIEW + UNIQUE INDEX + REFRESH CONCURRENTLY
+│   │   │   └── NO → CREATE MATERIALIZED VIEW + REFRESH (simpler, blocks reads)
+│   │   └── Refresh frequency?
+│   │       ├── Daily/hourly → cron job or pg_cron
+│   │       └── After each ETL load → trigger REFRESH in pipeline
+│   ├── Oracle ↓
+│   │   ├── Need real-time freshness?
+│   │   │   ├── YES → CREATE MATERIALIZED VIEW ... REFRESH FAST ON COMMIT (+ MV logs)
+│   │   │   └── NO → CREATE MATERIALIZED VIEW ... REFRESH FORCE ON DEMAND
+│   │   └── Large partitioned tables?
+│   │       └── YES → Use PCT (Partition Change Tracking) refresh
+│   ├── SQL Server ↓
+│   │   ├── Enterprise Edition?
+│   │   │   ├── YES → CREATE VIEW WITH SCHEMABINDING + CREATE UNIQUE CLUSTERED INDEX
+│   │   │   └── NO → Manual summary table pattern (indexed views auto-match only on Enterprise)
+│   │   └── Note: Indexed views auto-update on base table changes (no manual refresh)
+│   └── MySQL ↓
+│       └── Create summary table + scheduled EVENT or triggers for refresh
+└── DEFAULT → PostgreSQL MATERIALIZED VIEW with scheduled REFRESH is the most common pattern</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create the materialized view (PostgreSQL)</h3>
+  <p>Define the expensive query you want to precompute. The view is populated immediately on creation. [<a href="https://www.postgresql.org/docs/current/rules-materializedviews.html">src1</a>]</p>
+  <pre><code class="language-sql">CREATE MATERIALIZED VIEW mv_monthly_sales AS
+SELECT
+    date_trunc('month', order_date) AS month,
+    product_category,
+    COUNT(*) AS order_count,
+    SUM(total_amount) AS revenue,
+    AVG(total_amount) AS avg_order_value
+FROM orders
+JOIN order_items USING (order_id)
+JOIN products USING (product_id)
+WHERE order_date &gt;= '2024-01-01'
+GROUP BY 1, 2
+WITH DATA;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM mv_monthly_sales;</code> → expected: row count &gt; 0</p>
+
+  <h3>2. Add indexes for query performance</h3>
+  <p>Materialized views are physical tables — index them like any other table. A unique index is required for <code>REFRESH CONCURRENTLY</code>. [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</p>
+  <pre><code class="language-sql">-- Required for REFRESH CONCURRENTLY
+CREATE UNIQUE INDEX idx_mv_monthly_sales_pk
+    ON mv_monthly_sales (month, product_category);
+
+-- Additional indexes for common query patterns
+CREATE INDEX idx_mv_monthly_sales_category
+    ON mv_monthly_sales (product_category);
+
+CREATE INDEX idx_mv_monthly_sales_revenue
+    ON mv_monthly_sales (revenue DESC);</code></pre>
+  <p><strong>Verify</strong>: <code>\di+ mv_monthly_sales*</code> → expected: should list all three indexes</p>
+
+  <h3>3. Set up concurrent refresh</h3>
+  <p>Use <code>CONCURRENTLY</code> to avoid blocking reads during refresh. This compares old and new data, applying only deltas. [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</p>
+  <pre><code class="language-sql">REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT * FROM mv_monthly_sales ORDER BY month DESC LIMIT 5;</code> → expected: updated data</p>
+
+  <h3>4. Automate refresh with pg_cron</h3>
+  <p>Schedule periodic refresh using pg_cron (or external cron). [<a href="https://www.postgresql.org/docs/current/rules-materializedviews.html">src1</a>]</p>
+  <pre><code class="language-sql">-- Install pg_cron extension (requires superuser)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Refresh every hour at minute 0
+SELECT cron.schedule(
+    'refresh-monthly-sales',
+    '0 * * * *',
+    'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales'
+);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT * FROM cron.job WHERE jobname = 'refresh-monthly-sales';</code> → expected: scheduled job row</p>
+
+  <h3>5. Monitor view freshness</h3>
+  <p>Check when the view was last refreshed and whether it needs updating. [<a href="https://www.postgresql.org/docs/current/rules-materializedviews.html">src1</a>]</p>
+  <pre><code class="language-sql">SELECT schemaname, matviewname, hasindexes, ispopulated
+FROM pg_matviews
+WHERE matviewname = 'mv_monthly_sales';</code></pre>
+  <p><strong>Verify</strong>: <code>ispopulated</code> should be <code>true</code></p>
+
+  <h3>6. Handle refresh failures gracefully</h3>
+  <p>Wrap refresh in error handling for production pipelines. [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</p>
+  <pre><code class="language-sql">CREATE OR REPLACE FUNCTION refresh_mv_safely(view_name text)
+RETURNS void AS $$
+BEGIN
+    EXECUTE format('REFRESH MATERIALIZED VIEW CONCURRENTLY %I', view_name);
+    RAISE NOTICE 'Successfully refreshed %', view_name;
+EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'Failed to refresh %: %', view_name, SQLERRM;
+    BEGIN
+        EXECUTE format('REFRESH MATERIALIZED VIEW %I', view_name);
+        RAISE NOTICE 'Fallback refresh succeeded for %', view_name;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE EXCEPTION 'All refresh attempts failed for %: %', view_name, SQLERRM;
+    END;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT refresh_mv_safely('mv_monthly_sales');</code> → expected: success notice</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Materialized View with Concurrent Refresh</h3>
+  <pre><code class="language-sql">-- Input:  orders + products tables with millions of rows
+-- Output: precomputed category-level daily aggregations
+
+-- 1. Create the materialized view
+CREATE MATERIALIZED VIEW mv_daily_category_stats AS
+SELECT
+    order_date::date AS day,
+    p.category,
+    COUNT(DISTINCT o.customer_id) AS unique_customers,
+    COUNT(*) AS order_count,
+    SUM(oi.quantity * oi.unit_price) AS revenue
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY 1, 2
+WITH DATA;
+
+-- 2. Create unique index (required for CONCURRENTLY)
+CREATE UNIQUE INDEX ON mv_daily_category_stats (day, category);
+
+-- 3. Refresh without blocking reads
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_category_stats;
+
+-- 4. Query (uses indexes, sub-ms response)
+SELECT category, SUM(revenue) AS total_revenue
+FROM mv_daily_category_stats
+WHERE day &gt;= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY category
+ORDER BY total_revenue DESC;</code></pre>
+
+  <h3>Oracle: FAST Refresh with Materialized View Logs</h3>
+  <pre><code class="language-sql">-- Input:  sales table with frequent inserts
+-- Output: incrementally refreshed aggregation
+
+-- 1. Create materialized view log on base table
+CREATE MATERIALIZED VIEW LOG ON sales
+WITH ROWID, SEQUENCE (product_id, customer_id, sale_date, amount)
+INCLUDING NEW VALUES;
+
+-- 2. Create MV with FAST refresh ON DEMAND
+CREATE MATERIALIZED VIEW mv_product_sales
+BUILD IMMEDIATE
+REFRESH FAST ON DEMAND
+ENABLE QUERY REWRITE
+AS
+SELECT product_id, COUNT(*) AS sale_count,
+       SUM(amount) AS total_revenue, COUNT(*) AS cnt
+FROM sales GROUP BY product_id;
+
+-- 3. After new data loads, refresh incrementally
+EXEC DBMS_MVIEW.REFRESH('mv_product_sales', 'F');
+
+-- 4. Check staleness
+SELECT mview_name, staleness, last_refresh_type, last_refresh_date
+FROM user_mviews WHERE mview_name = 'MV_PRODUCT_SALES';</code></pre>
+
+  <h3>SQL Server: Indexed View (Materialized View Equivalent)</h3>
+  <pre><code class="language-sql">-- Input:  orders + order_items tables
+-- Output: automatically maintained materialized aggregation
+
+-- 1. Create the view WITH SCHEMABINDING (required)
+CREATE VIEW dbo.vw_category_revenue
+WITH SCHEMABINDING
+AS
+SELECT p.category, COUNT_BIG(*) AS order_count,
+       SUM(oi.quantity * oi.unit_price) AS total_revenue
+FROM dbo.order_items oi
+INNER JOIN dbo.products p ON oi.product_id = p.product_id
+GROUP BY p.category;
+GO
+
+-- 2. Materialize with unique clustered index
+CREATE UNIQUE CLUSTERED INDEX idx_vw_category_revenue
+ON dbo.vw_category_revenue (category);
+GO
+
+-- 3. Query (Enterprise auto-uses; Standard needs NOEXPAND)
+SELECT category, total_revenue
+FROM dbo.vw_category_revenue WITH (NOEXPAND)
+ORDER BY total_revenue DESC;</code></pre>
+
+  <h3>MySQL: Manual Materialized View Pattern</h3>
+  <pre><code class="language-sql">-- Input:  orders table (MySQL has no native MVs)
+-- Output: manually maintained summary table
+
+-- 1. Create the summary table
+CREATE TABLE mv_daily_sales (
+    sale_date DATE NOT NULL,
+    product_id INT NOT NULL,
+    total_quantity INT NOT NULL DEFAULT 0,
+    total_revenue DECIMAL(12,2) NOT NULL DEFAULT 0,
+    last_refreshed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (sale_date, product_id)
+) ENGINE=InnoDB;
+
+-- 2. Full refresh procedure
+DELIMITER //
+CREATE PROCEDURE refresh_mv_daily_sales()
+BEGIN
+    TRUNCATE TABLE mv_daily_sales;
+    INSERT INTO mv_daily_sales (sale_date, product_id, total_quantity, total_revenue)
+    SELECT DATE(order_date), product_id,
+           SUM(quantity), SUM(quantity * unit_price)
+    FROM orders GROUP BY DATE(order_date), product_id;
+END //
+DELIMITER ;
+
+-- 3. Automate with MySQL Event Scheduler
+SET GLOBAL event_scheduler = ON;
+CREATE EVENT refresh_daily_sales
+ON SCHEDULE EVERY 1 HOUR
+DO CALL refresh_mv_daily_sales();</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Refreshing without CONCURRENTLY on a production view</h3>
+  <pre><code class="language-sql">-- BAD — blocks all SELECT queries during refresh (can take minutes on large tables)
+REFRESH MATERIALIZED VIEW mv_dashboard_stats;</code></pre>
+
+  <h3>Correct: Use CONCURRENTLY with a unique index</h3>
+  <pre><code class="language-sql">-- GOOD — allows concurrent reads during refresh
+CREATE UNIQUE INDEX ON mv_dashboard_stats (report_date, department_id);
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_stats;</code></pre>
+
+  <h3>Wrong: No indexes on the materialized view</h3>
+  <pre><code class="language-sql">-- BAD — materialized view has no indexes, queries do sequential scans
+CREATE MATERIALIZED VIEW mv_user_activity AS
+SELECT user_id, COUNT(*) as actions, MAX(created_at) as last_active
+FROM activity_log GROUP BY user_id;
+
+-- This query seq-scans the entire MV
+SELECT * FROM mv_user_activity WHERE user_id = 12345;</code></pre>
+
+  <h3>Correct: Index materialized views like regular tables</h3>
+  <pre><code class="language-sql">-- GOOD — add indexes matching your query patterns
+CREATE MATERIALIZED VIEW mv_user_activity AS
+SELECT user_id, COUNT(*) as actions, MAX(created_at) as last_active
+FROM activity_log GROUP BY user_id;
+
+CREATE UNIQUE INDEX ON mv_user_activity (user_id);
+CREATE INDEX ON mv_user_activity (last_active DESC);
+
+-- Now uses index scan: sub-ms response
+SELECT * FROM mv_user_activity WHERE user_id = 12345;</code></pre>
+
+  <h3>Wrong: No refresh strategy for the materialized view</h3>
+  <pre><code class="language-sql">-- BAD — created the view but never refreshes it
+CREATE MATERIALIZED VIEW mv_inventory_levels AS
+SELECT product_id, SUM(quantity) AS stock
+FROM inventory GROUP BY product_id;
+-- ... weeks later, stock levels are completely wrong</code></pre>
+
+  <h3>Correct: Always pair MV creation with automated refresh</h3>
+  <pre><code class="language-sql">-- GOOD — materialized view + scheduled refresh + monitoring
+CREATE MATERIALIZED VIEW mv_inventory_levels AS
+SELECT product_id, SUM(quantity) AS stock
+FROM inventory GROUP BY product_id;
+
+CREATE UNIQUE INDEX ON mv_inventory_levels (product_id);
+
+-- Refresh every 15 minutes
+SELECT cron.schedule('refresh-inventory', '*/15 * * * *',
+    'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_inventory_levels');</code></pre>
+
+  <h3>Wrong: Oracle MV without logs attempting FAST refresh</h3>
+  <pre><code class="language-sql">-- BAD — FORCE silently falls back to COMPLETE refresh every time
+CREATE MATERIALIZED VIEW mv_sales_summary
+REFRESH FORCE ON DEMAND AS
+SELECT product_id, SUM(amount) FROM sales GROUP BY product_id;
+
+EXEC DBMS_MVIEW.REFRESH('mv_sales_summary', '?');</code></pre>
+
+  <h3>Correct: Create MV logs first for true incremental refresh</h3>
+  <pre><code class="language-sql">-- GOOD — MV log enables true incremental refresh
+CREATE MATERIALIZED VIEW LOG ON sales
+WITH ROWID, SEQUENCE (product_id, amount) INCLUDING NEW VALUES;
+
+CREATE MATERIALIZED VIEW mv_sales_summary
+REFRESH FAST ON DEMAND AS
+SELECT product_id, SUM(amount) AS total, COUNT(*) AS cnt
+FROM sales GROUP BY product_id;
+
+EXEC DBMS_MVIEW.REFRESH('mv_sales_summary', 'F');</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Stale data served to users</strong>: Materialized view data is a snapshot. If refresh fails silently, applications serve outdated results for days. Fix: Monitor refresh jobs and alert on failure; add <code>last_refreshed</code> column or check <code>pg_stat_user_tables</code>. [<a href="https://www.postgresql.org/docs/current/rules-materializedviews.html">src1</a>]</li>
+    <li><strong>REFRESH CONCURRENTLY fails with no unique index</strong>: PostgreSQL raises <code>ERROR: cannot refresh materialized view concurrently without at least one unique index</code>. Fix: <code>CREATE UNIQUE INDEX ON mv_name (col1, col2);</code> before using CONCURRENTLY. [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</li>
+    <li><strong>SQL Server COUNT vs COUNT_BIG</strong>: Indexed views require <code>COUNT_BIG(*)</code> instead of <code>COUNT(*)</code>. Using COUNT causes creation to fail. Fix: Always use <code>COUNT_BIG(*)</code> in indexed view definitions. [<a href="https://learn.microsoft.com/en-us/sql/relational-databases/views/create-indexed-views">src4</a>]</li>
+    <li><strong>SQL Server SCHEMABINDING locks schema changes</strong>: <code>WITH SCHEMABINDING</code> prevents <code>ALTER TABLE</code> on any referenced column. Fix: Drop and recreate indexed view around migrations. [<a href="https://learn.microsoft.com/en-us/sql/relational-databases/views/create-indexed-views">src4</a>]</li>
+    <li><strong>Oracle MV log bloat</strong>: Materialized view logs grow unboundedly if refresh doesn't run. Fix: Schedule regular refreshes and monitor log sizes; set <code>PURGE IMMEDIATE</code>. [<a href="https://docs.oracle.com/en/database/oracle/oracle-database/19/dwhsg/refreshing-materialized-views.html">src3</a>]</li>
+    <li><strong>PostgreSQL MV eats disk on refresh</strong>: Non-concurrent <code>REFRESH</code> writes an entirely new copy before swapping. A 10GB MV needs 20GB free during refresh. Fix: Monitor disk space; use <code>CONCURRENTLY</code> for delta-based updates. [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</li>
+    <li><strong>MySQL trigger-based MV slows writes</strong>: Implementing MVs via triggers adds latency to every write operation. Fix: Use scheduled <code>EVENT</code>-based refresh instead of triggers for write-heavy tables. [<a href="https://dev.mysql.com/doc/refman/9.0/en/faqs-views.html">src6</a>]</li>
+    <li><strong>Querying MV created WITH NO DATA</strong>: <code>CREATE MATERIALIZED VIEW ... WITH NO DATA</code> creates the structure without populating it. Querying raises <code>ERROR: materialized view has not been populated</code>. Fix: Run <code>REFRESH MATERIALIZED VIEW mv_name;</code> before first query. [<a href="https://www.postgresql.org/docs/current/rules-materializedviews.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-sql">-- PostgreSQL: List all materialized views and their state
+SELECT schemaname, matviewname, hasindexes, ispopulated
+FROM pg_matviews ORDER BY matviewname;
+
+-- PostgreSQL: Check materialized view size on disk
+SELECT pg_size_pretty(pg_total_relation_size('mv_monthly_sales')) AS total_size;
+
+-- PostgreSQL: Check indexes on a materialized view
+SELECT indexname, indexdef FROM pg_indexes
+WHERE tablename = 'mv_monthly_sales';
+
+-- PostgreSQL: Check if CONCURRENTLY is possible (has unique index?)
+SELECT i.relname AS index_name, ix.indisunique
+FROM pg_index ix
+JOIN pg_class i ON i.oid = ix.indexrelid
+JOIN pg_class t ON t.oid = ix.indrelid
+WHERE t.relname = 'mv_monthly_sales' AND ix.indisunique = true;
+
+-- Oracle: Check materialized view staleness and last refresh
+SELECT mview_name, staleness, last_refresh_type, last_refresh_date, compile_state
+FROM user_mviews ORDER BY mview_name;
+
+-- Oracle: Check materialized view log sizes
+SELECT log_owner, master, log_table, rowids, primary_key, filter_columns
+FROM all_mview_logs ORDER BY master;
+
+-- SQL Server: List indexed views
+SELECT v.name AS view_name, i.name AS index_name, i.type_desc
+FROM sys.views v
+JOIN sys.indexes i ON v.object_id = i.object_id
+WHERE i.type_desc = 'CLUSTERED' ORDER BY v.name;
+
+-- PostgreSQL: Check pg_cron refresh schedule
+SELECT jobid, schedule, command, active, jobname
+FROM cron.job WHERE command LIKE '%REFRESH%';</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Database</th><th scope="col">Version</th><th scope="col">MV Support</th><th scope="col">Key Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL 18+</td><td>Current (2025)</td><td>Native</td><td>Improved planner for MVs</td></tr>
+      <tr><td>PostgreSQL 9.4+</td><td>LTS/Stable</td><td>Native</td><td><code>REFRESH CONCURRENTLY</code> (requires unique index)</td></tr>
+      <tr><td>PostgreSQL 9.3</td><td>Original release</td><td>Native</td><td><code>CREATE MATERIALIZED VIEW</code> (no CONCURRENTLY)</td></tr>
+      <tr><td>Oracle 23ai</td><td>Current (2024)</td><td>Native + FAST + Query Rewrite</td><td>Automatic MV management improvements</td></tr>
+      <tr><td>Oracle 12cR2+</td><td>Stable</td><td>Native + FAST + PCT</td><td>ON STATEMENT refresh; out-of-place refresh</td></tr>
+      <tr><td>Oracle 8i+</td><td>Legacy</td><td>Native</td><td>Basic MVs with ON COMMIT/DEMAND</td></tr>
+      <tr><td>SQL Server 2022</td><td>Current</td><td>Indexed Views</td><td>Same SCHEMABINDING requirement</td></tr>
+      <tr><td>SQL Server 2005+</td><td>Stable</td><td>Indexed Views</td><td>WITH SCHEMABINDING + clustered index</td></tr>
+      <tr><td>Azure Synapse</td><td>Current</td><td>Native <code>CREATE MATERIALIZED VIEW</code></td><td>Different syntax from on-prem SQL Server</td></tr>
+      <tr><td>MySQL 9.0</td><td>Current</td><td>No native support</td><td>Summary tables + triggers/events</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Expensive aggregation queries run frequently (&gt;10x/day)</td><td>Base data changes every second and staleness is unacceptable</td><td>Regular views with optimized indexes</td></tr>
+      <tr><td>Dashboard/reporting queries with complex JOINs</td><td>Query is already fast (&lt;50ms) without materialization</td><td>Direct query or application-level caching</td></tr>
+      <tr><td>Read-heavy workloads with predictable query patterns</td><td>Write-heavy OLTP where MV maintenance exceeds read savings</td><td>Write-through cache (Redis/Memcached)</td></tr>
+      <tr><td>Foreign/remote data that is expensive to fetch</td><td>Small tables where full scan is trivial</td><td>Regular views (zero maintenance overhead)</td></tr>
+      <tr><td>Data warehouse / OLAP analytical queries</td><td>Schema changes frequently (SQL Server SCHEMABINDING)</td><td>CTEs or temporary tables per-session</td></tr>
+      <tr><td>Precomputing search indexes or denormalized data</td><td>Need to update data through the view</td><td>Updatable views or direct table access</td></tr>
+      <tr><td>Reducing load on a hot table during peak hours</td><td>Query results vary per user/session (not cacheable)</td><td>Per-request computation with connection pooling</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>PostgreSQL has no built-in auto-refresh</strong>: Unlike Oracle's ON COMMIT or SQL Server's auto-maintained indexed views, PostgreSQL materialized views require explicit refresh via <code>pg_cron</code>, external scheduler, or application-triggered refresh.</li>
+    <li><strong>REFRESH CONCURRENTLY is slower than full refresh for large changes</strong>: When most data changes, CONCURRENTLY must diff old and new result sets row-by-row. For full reloads, plain <code>REFRESH</code> is faster. [<a href="https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html">src2</a>]</li>
+    <li><strong>SQL Server indexed views auto-update on writes</strong>: Every INSERT/UPDATE/DELETE on base tables incurs maintenance overhead on the indexed view — beneficial for reads but harmful for write-heavy workloads. [<a href="https://learn.microsoft.com/en-us/sql/relational-databases/views/create-indexed-views">src4</a>]</li>
+    <li><strong>Oracle Query Rewrite can silently redirect queries</strong>: When <code>ENABLE QUERY REWRITE</code> is set, Oracle may transparently rewrite base table queries to use the MV. Monitor <code>STALENESS</code> in <code>USER_MVIEWS</code>. [<a href="https://docs.oracle.com/en/database/oracle/oracle-database/19/dwhsg/refreshing-materialized-views.html">src3</a>]</li>
+    <li><strong>Storage cost is real</strong>: A denormalized MV can be larger than the base tables. Always check <code>pg_total_relation_size()</code> or equivalent after creation.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/sql-query-optimization/2026" data-relationship="related_to">SQL Query Optimization</a>
+    <a href="/software/patterns/database-indexing-strategies/2026" data-relationship="related_to">Database Indexing Strategies</a>
+    <a href="/software/patterns/caching-patterns/2026" data-relationship="related_to">Caching Patterns</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+# .gitlab-ci.yml
+# Input:  Node.js project with package.json
+# Output: Linted, tested, built, and deployed application
+
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+default:
+  image: node:20-alpine
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+
+lint:
+  stage: lint
+  script:
+    - npm ci
+    - npm run lint
+
+test:
+  stage: test
+  script:
+    - npm ci
+    - npm test -- --coverage
+  artifacts:
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+  coverage: '/Lines\s*:\s*(\d+\.?\d*)%/'
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+
+deploy_production:
+  stage: deploy
+  script:
+    - echo "Deploying to production..."
+  environment:
+    name: production
+    url: https://example.com
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  needs: [build]

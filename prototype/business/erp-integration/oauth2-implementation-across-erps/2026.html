@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>OAuth 2.0 Implementation Across ERPs: Salesforce | knowledgelib.io</title>
+  <meta name="description" content="Cross-ERP OAuth 2.0 comparison -- grant types, token lifetimes, refresh behavior, scopes, and code examples for Salesforce JWT bearer, SAP XSUAA, Oracle...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/oauth2-implementation-across-erps/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="OAuth 2.0 Implementation Across ERPs: Salesforce | knowledgelib.io">
+  <meta property="og:description" content="Cross-ERP OAuth 2.0 comparison -- grant types, token lifetimes, refresh behavior, scopes, and code examples for Salesforce JWT bearer, SAP XSUAA, Oracle OCI IAM, Dynamics 365 Entra ID, NetSuite, and Workday. 8 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/oauth2-implementation-across-erps/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OAuth 2.0 Implementation Across ERPs: Salesforce | knowledgelib.io">
+  <meta name="twitter:description" content="Cross-ERP OAuth 2.0 comparison -- grant types, token lifetimes, refresh behavior, scopes, and code examples for Salesforce JWT bearer, SAP XSUAA, Oracle OCI IAM, Dynamics 365 Entra ID, NetSuite, and Workday. 8 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/oauth2-implementation-across-erps">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do OAuth 2.0 implementations differ across ERPs - Salesforce, SAP, Oracle, Workday, Dynamics 365, NetSuite?">
+  <meta name="ai:aliases" content="OAuth 2.0 grant types comparison ERP Salesforce SAP Oracle Workday D365; Which OAuth 2.0 flow for ERP server-to-server integration; ERP OAuth token lifetime refresh behavior comparison; JWT bearer vs client credentials for ERP API authentication">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/oauth2-implementation-across-erps/2026.md">
+  <meta name="ai:token_estimate" content="5800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Salesforce (API v62.0); SAP S/4HANA Cloud (2408); Oracle Fusion Cloud ERP (24B); Oracle NetSuite (2024.2+); Microsoft Dynamics 365 (Dataverse v9.2); Workday (v43.0+)">
+  <meta name="ai:inputs_needed" content="erp_system,integration_pattern,certificate_vs_secret">
+  <meta name="ai:constraints" content="Salesforce JWT requires X.509 cert on connected app, no refresh token; SAP scopes locked to communication scenarios; Oracle deprecated basic auth; NetSuite OAuth 2.0 REST-only, TBA still needed for SOAP; D365 secrets max 24-month expiry; Workday no client_credentials grant, must use refresh token + ISU">
+  <meta name="ai:skip_this_unit_if" content="Need broad auth comparison (not just OAuth) -> erp-authentication-comparison/2026; Need single-ERP OAuth deep-dive -> system-specific auth card; Need rate limits not auth -> erp-rate-limits-comparison/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "OAuth 2.0 Implementation Across ERPs: Salesforce, SAP, Oracle, D365, NetSuite, Workday",
+    "headline": "OAuth 2.0 Implementation Across ERPs: Salesforce, SAP, Oracle, D365, NetSuite, Workday",
+    "description": "Cross-ERP OAuth 2.0 comparison covering grant types, token lifetimes, refresh behavior, scopes, certificate vs secret auth, and code examples for 6 major ERP platforms.",
+    "keywords": ["OAuth 2.0", "ERP integration", "Salesforce JWT", "SAP XSUAA", "Oracle OCI IAM", "Dynamics 365 Entra ID", "NetSuite OAuth", "Workday OAuth", "API authentication"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, SAP S/4HANA 2408, Oracle Fusion 24B, NetSuite 2024.2+, Dynamics 365 Dataverse v9.2, Workday v43.0+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 JWT Bearer Flow for Server-to-Server Integration",
+        "url": "https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth with X.509 Client Certificates -- SAP BTP Connectivity",
+        "url": "https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Configure OAuth Using Oracle IDCS or IAM",
+        "url": "https://docs.oracle.com/en/cloud/saas/sales/faaps/Configure_OAuth_Using_Oracle_IDCS_or_IAM.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 Client Credentials Flow -- Microsoft Identity Platform",
+        "url": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite OAuth 2.0",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_157769826287.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Complete Guide to Workday REST API Integration and Security",
+        "url": "https://www.reco.ai/hub/workday-rest-api-integration-security"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 vs OAuth 1.0 for NetSuite in 2025",
+        "url": "https://lstconsultancy.com/oauth2-vs-oauth1-for-netsuite/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Why is OAuth still hard in 2026?",
+        "url": "https://nango.dev/blog/why-is-oauth-still-hard"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "OAuth 2.0 Implementation Across ERPs: Salesforce, SAP, Oracle, D365, NetSuite, Workday",
+    "description": "Cross-ERP OAuth 2.0 reference comparing grant types, token lifetimes, refresh behavior, scopes, certificate auth, and implementation patterns for 6 major ERP platforms.",
+    "keywords": ["OAuth 2.0", "ERP authentication", "API integration", "Salesforce", "SAP", "Oracle", "Dynamics 365", "NetSuite", "Workday"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Workday"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "OAuth 2.0 Implementation Across ERPs" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do OAuth 2.0 implementations differ across ERPs - Salesforce, SAP, Oracle, Workday, Dynamics 365, NetSuite?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP supports OAuth 2.0 but implementations vary wildly -- Salesforce uses JWT bearer with connected apps, SAP uses communication arrangements via BTP, Oracle requires OCI IAM confidential apps, Dynamics 365 uses Entra ID app registrations, NetSuite recently added OAuth 2.0 alongside legacy TBA, and Workday requires ISU-linked API clients."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OAuth 2.0 grant types comparison ERP Salesforce SAP Oracle Workday D365",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP supports OAuth 2.0 but implementations vary wildly -- Salesforce uses JWT bearer with connected apps, SAP uses communication arrangements via BTP, Oracle requires OCI IAM confidential apps, Dynamics 365 uses Entra ID app registrations, NetSuite recently added OAuth 2.0 alongside legacy TBA, and Workday requires ISU-linked API clients."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which OAuth 2.0 flow for ERP server-to-server integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP supports OAuth 2.0 but implementations vary wildly -- Salesforce uses JWT bearer with connected apps, SAP uses communication arrangements via BTP, Oracle requires OCI IAM confidential apps, Dynamics 365 uses Entra ID app registrations, NetSuite recently added OAuth 2.0 alongside legacy TBA, and Workday requires ISU-linked API clients."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ERP OAuth token lifetime refresh behavior comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP supports OAuth 2.0 but implementations vary wildly -- Salesforce uses JWT bearer with connected apps, SAP uses communication arrangements via BTP, Oracle requires OCI IAM confidential apps, Dynamics 365 uses Entra ID app registrations, NetSuite recently added OAuth 2.0 alongside legacy TBA, and Workday requires ISU-linked API clients."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "JWT bearer vs client credentials for ERP API authentication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP supports OAuth 2.0 but implementations vary wildly -- Salesforce uses JWT bearer with connected apps, SAP uses communication arrangements via BTP, Oracle requires OCI IAM confidential apps, Dynamics 365 uses Entra ID app registrations, NetSuite recently added OAuth 2.0 alongside legacy TBA, and Workday requires ISU-linked API clients."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>OAuth 2.0 Implementation Across ERPs: Salesforce, SAP, Oracle, D365, NetSuite, Workday</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do OAuth 2.0 implementations differ across ERPs - Salesforce, SAP, Oracle, Workday, Dynamics 365, NetSuite?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/oauth2-implementation-across-erps/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Salesforce, SAP S/4HANA, Oracle Fusion, NetSuite, Dynamics 365, Workday</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Every major ERP supports OAuth 2.0 but implementations vary wildly -- Salesforce uses JWT bearer with connected apps, SAP uses communication arrangements via BTP, Oracle requires OCI IAM confidential apps, Dynamics 365 uses Entra ID app registrations, NetSuite recently added OAuth 2.0 alongside legacy TBA, and Workday requires ISU-linked API clients.</li>
+    <li><strong>Key limit</strong>: Token lifetimes range from 1 hour (Dynamics 365) to session-based (Salesforce, 2h default) to non-expiring refresh tokens (Workday) -- each requires different token management strategies.</li>
+    <li><strong>Watch out for</strong>: Certificate rotation deadlines -- SAP XSUAA managed certs default to 7 days validity, Dynamics 365 client secrets max 24 months, Salesforce connected app certs must be manually rotated.</li>
+    <li><strong>Best for</strong>: Integration architects comparing OAuth 2.0 grant types, token behavior, and implementation complexity across ERP platforms to choose the right auth flow for cross-system integrations.</li>
+    <li><strong>Authentication</strong>: Use JWT bearer (Salesforce), client credentials via communication arrangement (SAP), confidential app client credentials (Oracle), Entra ID client credentials (D365), authorization code (NetSuite), or refresh token flow with ISU (Workday) for server-to-server.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card compares OAuth 2.0 implementations across the six dominant cloud ERP platforms as of March 2026. Each vendor has taken a fundamentally different approach -- from Salesforce's self-contained connected app model to Microsoft's centralized Entra ID identity platform. This card focuses exclusively on OAuth 2.0 grant types, token mechanics, and implementation patterns.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">OAuth 2.0 Provider</th><th scope="col">Primary Server-to-Server Flow</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>CRM/Platform</td><td>Built-in (Connected Apps)</td><td>JWT Bearer</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>ERP</td><td>SAP BTP / XSUAA</td><td>Client Credentials via Comm Arrangement</td></tr>
+      <tr><td>Oracle Fusion Cloud ERP</td><td>ERP</td><td>OCI IAM (ex-IDCS)</td><td>Client Credentials (confidential app)</td></tr>
+      <tr><td>NetSuite</td><td>ERP</td><td>Built-in</td><td>Authorization Code + Refresh</td></tr>
+      <tr><td>Dynamics 365</td><td>ERP/CRM</td><td>Microsoft Entra ID</td><td>Client Credentials</td></tr>
+      <tr><td>Workday</td><td>HCM/Finance</td><td>Built-in (API Clients)</td><td>Refresh Token (with ISU)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>Each ERP's OAuth 2.0 implementation determines which API surfaces you can access. Not all OAuth flows unlock all API surfaces.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">OAuth-Protected APIs</th><th scope="col">Non-OAuth APIs (legacy)</th><th scope="col">OAuth Required Since</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>REST, SOAP, Bulk, Streaming, Composite</td><td>Username-Password (deprecated)</td><td>Connected apps since 2013; JWT since 2016</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>OData v4, SOAP, REST (via BTP)</td><td>Communication user + basic auth (deprecated)</td><td>2020 (BTP mandatory for Public Cloud)</td></tr>
+      <tr><td>Oracle Fusion Cloud</td><td>REST, SOAP, BI Publisher, FBDI</td><td>Basic auth (deprecated for new integrations)</td><td>2023 (OCI IAM mandatory)</td></tr>
+      <tr><td>NetSuite</td><td>REST, RESTlets, SuiteAnalytics Connect</td><td>TBA (OAuth 1.0) for SuiteTalk SOAP</td><td>Optional; TBA deprecated for new integrations 2027.1</td></tr>
+      <tr><td>Dynamics 365</td><td>Dataverse Web API (OData v4), custom APIs</td><td>S2S with Azure AD (same mechanism)</td><td>Always required (Azure AD since inception)</td></tr>
+      <tr><td>Workday</td><td>REST API, SOAP (WWS via OAuth)</td><td>ISU with basic auth (still supported)</td><td>Optional; recommended since v35.0+</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Token Endpoint Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Token Endpoint Rate Limit</th><th scope="col">Token Request Method</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>1,800 token requests/hour per connected app</td><td>POST to /services/oauth2/token</td><td>Shared across all flows [<a href="https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5">src1</a>]</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>Fair-use / throttled per subaccount</td><td>POST to XSUAA /oauth/token</td><td>No hard limit; excessive requests return 429 [<a href="https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates">src2</a>]</td></tr>
+      <tr><td>Oracle Fusion Cloud</td><td>60 token requests/minute per app</td><td>POST to OCI IAM /oauth2/v1/token</td><td>Hard limit per confidential app [<a href="https://docs.oracle.com/en/cloud/saas/sales/faaps/Configure_OAuth_Using_Oracle_IDCS_or_IAM.html">src3</a>]</td></tr>
+      <tr><td>NetSuite</td><td>Included in API concurrency limits</td><td>POST to /services/rest/auth/oauth2/v1/token</td><td>Shares request budget [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_157769826287.html">src5</a>]</td></tr>
+      <tr><td>Dynamics 365</td><td>No published per-app token limit</td><td>POST to login.microsoftonline.com</td><td>Entra ID throttles at tenant level [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow">src4</a>]</td></tr>
+      <tr><td>Workday</td><td>Not published</td><td>POST to /ccx/oauth2/{tenant}/token</td><td>Governed by overall API throughput [<a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Daily API Limit</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>100,000 (Enterprise), 5M (Unlimited)</td><td>24h rolling</td><td>Developer: 15,000</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>Fair-use / throttled</td><td>Per-request</td><td>No edition tiering</td></tr>
+      <tr><td>Oracle Fusion Cloud</td><td>Throttled per service</td><td>Per-request</td><td>Burst limits vary by API surface</td></tr>
+      <tr><td>NetSuite</td><td>Concurrency-based (max 10-25)</td><td>Per-request</td><td>SuiteCloud Plus adds concurrency</td></tr>
+      <tr><td>Dynamics 365</td><td>6,000 req/5min/user, 60,000/5min/org</td><td>5-min window</td><td>Same for all editions</td></tr>
+      <tr><td>Workday</td><td>Not published; throttled</td><td>Per-request</td><td>Monitored by Workday ops</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+
+  <h3>OAuth 2.0 Grant Types by ERP</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Grant Type</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle Fusion</th><th scope="col">NetSuite</th><th scope="col">D365</th><th scope="col">Workday</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Authorization Code</td><td>Yes</td><td>Yes (via BTP)</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Client Credentials</td><td>No (use JWT)</td><td>Yes</td><td>Yes</td><td>No</td><td>Yes</td><td>No (use refresh)</td></tr>
+      <tr><td>JWT Bearer</td><td>Yes (primary S2S)</td><td>Yes (X.509)</td><td>No</td><td>No</td><td>Yes (cert-based)</td><td>No</td></tr>
+      <tr><td>Refresh Token</td><td>Yes (web server)</td><td>No (client creds)</td><td>Yes (7d default)</td><td>Yes (7d rolling)</td><td>No (client creds)</td><td>Yes (primary S2S)</td></tr>
+      <tr><td>Device Flow</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>Yes</td><td>No</td></tr>
+      <tr><td>SAML Bearer</td><td>Yes</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td>ROPC (Username-Password)</td><td>Deprecated</td><td>No</td><td>No</td><td>No</td><td>Yes (not recommended)</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Token Lifetime &amp; Refresh Behavior</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Access Token Lifetime</th><th scope="col">Refresh Token Lifetime</th><th scope="col">Refresh Behavior</th><th scope="col">MFA Impact</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Session timeout (default 2h, configurable)</td><td>Until revoked (web server flow)</td><td>New JWT per request for JWT bearer; refresh token for web server</td><td>MFA blocks ROPC; JWT/web server unaffected</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>12 min (XSUAA default)</td><td>Not issued (client credentials)</td><td>Must request new token; short TTL by design</td><td>N/A -- communication user</td></tr>
+      <tr><td>Oracle Fusion Cloud</td><td>1 hour (configurable)</td><td>7 days (configurable up to 100 days)</td><td>Standard refresh; offline_access scope required</td><td>N/A for confidential apps</td></tr>
+      <tr><td>NetSuite</td><td>60 min</td><td>7 days (rolling)</td><td>Rolling -- new refresh token with each access token request</td><td>N/A for machine integrations</td></tr>
+      <tr><td>Dynamics 365</td><td>60-75 min</td><td>Not issued (client credentials)</td><td>Request new token using credentials; MSAL handles caching</td><td>N/A for app-only context</td></tr>
+      <tr><td>Workday</td><td>Short-lived (minutes)</td><td>Non-expiring (optional), or 14 days</td><td>Refresh returns new access + new refresh token</td><td>N/A -- ISU is system account</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Scopes Comparison</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Scope Model</th><th scope="col">Example Scope</th><th scope="col">Granularity</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Predefined scope strings</td><td><code>api</code>, <code>refresh_token</code>, <code>full</code></td><td>Coarse -- per API surface</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>Communication scenario scopes</td><td>Defined per comm arrangement</td><td>Fine -- per business scenario</td></tr>
+      <tr><td>Oracle Fusion Cloud</td><td>OCI IAM scopes</td><td><code>urn:opc:idm:__myscopes__</code></td><td>Medium -- per application</td></tr>
+      <tr><td>NetSuite</td><td>REST/SuiteAnalytics scope</td><td><code>rest_webservices</code></td><td>Coarse -- per API surface</td></tr>
+      <tr><td>Dynamics 365</td><td>Entra ID .default scope</td><td><code>https://org.crm.dynamics.com/.default</code></td><td>Coarse -- all permissions</td></tr>
+      <tr><td>Workday</td><td>Domain security via ISU</td><td>Implicit from ISU permissions</td><td>Fine -- per security domain</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li><strong>Salesforce</strong>: JWT bearer issues a new access token per request; no token refresh. Connected app X.509 cert must be manually rotated -- no auto-rotation. Session timeout configurable by admin, never hardcode 2h. [<a href="https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5">src1</a>]</li>
+    <li><strong>SAP</strong>: XSUAA managed certificates default to 7-day validity. Must explicitly set longer validity (up to 1 year). Token endpoint URL differs for mTLS: <code>https://{subdomain}.authentication.cert.{landscape}/oauth/token</code>. [<a href="https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates">src2</a>]</li>
+    <li><strong>Oracle</strong>: IDCS merged into OCI IAM in 2023. Old docs reference IDCS URLs; new integrations must use OCI IAM domain URLs. Two confidential apps needed for Fusion Apps + OIC. [<a href="https://docs.oracle.com/en/cloud/saas/sales/faaps/Configure_OAuth_Using_Oracle_IDCS_or_IAM.html">src3</a>]</li>
+    <li><strong>NetSuite</strong>: OAuth 2.0 and TBA are different features. TBA deprecated for new integrations 2027.1. OAuth 2.0 does not require request signing (unlike TBA). [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_157769826287.html">src5</a>, <a href="https://lstconsultancy.com/oauth2-vs-oauth1-for-netsuite/">src7</a>]</li>
+    <li><strong>Dynamics 365</strong>: <code>.default</code> scope grants all configured permissions -- cannot request subset at token time. Client secrets max 24 months. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow">src4</a>]</li>
+    <li><strong>Workday</strong>: Refresh tokens are ISU-scoped. If ISU terminated or security policies change, all tokens for that ISU become invalid immediately. [<a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Salesforce JWT bearer flow cannot be used without a connected app. The connected app requires a digital certificate (self-signed for dev, CA-signed recommended for prod).</li>
+    <li>SAP S/4HANA Cloud Public Edition restricts to communication arrangement scopes. Custom OAuth scopes not supported.</li>
+    <li>Oracle Fusion Cloud basic auth deprecated for new integrations in 2023. All new integrations must use OAuth 2.0 via OCI IAM.</li>
+    <li>NetSuite cannot use OAuth 2.0 for SuiteTalk SOAP. TBA (OAuth 1.0) remains the only option for SOAP integrations.</li>
+    <li>Dynamics 365 client credentials flow does not issue refresh tokens. Must request new token when current expires (60-75 min).</li>
+    <li>Workday does not support client credentials grant. Server-to-server uses refresh token flow linked to ISU. Without valid refresh token, no programmatic access.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Choose OAuth 2.0 flow for ERP integration
+|
++-- Is this server-to-server (no user interaction)?
+|   |
+|   +-- Salesforce? -> JWT Bearer Flow (connected app + X.509 cert)
+|   +-- SAP S/4HANA Cloud? -> Client Credentials via Communication Arrangement
+|   +-- Oracle Fusion Cloud? -> Client Credentials (confidential app in OCI IAM)
+|   +-- NetSuite? -> Auth Code + Refresh Token (REST only; SOAP needs TBA)
+|   +-- Dynamics 365? -> Client Credentials (Entra ID app registration)
+|   +-- Workday? -> Refresh Token Flow (API Client + ISU)
+|
++-- Is this user-delegated (on behalf of user)?
+|   +-- Any ERP -> Authorization Code Flow
+|   +-- Salesforce -> Web Server Flow (with callback URL)
+|   +-- D365 -> Authorization Code + PKCE (public clients)
+|
++-- Is this a CLI or device?
+    +-- Salesforce -> Device Flow
+    +-- Dynamics 365 -> Device Code Flow
+    +-- Others -> Not supported; use auth code with browser redirect</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle Fusion</th><th scope="col">NetSuite</th><th scope="col">Dynamics 365</th><th scope="col">Workday</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth Provider</td><td>Built-in (Connected Apps)</td><td>SAP BTP / XSUAA</td><td>OCI IAM (ex-IDCS)</td><td>Built-in</td><td>Microsoft Entra ID</td><td>Built-in (API Clients)</td></tr>
+      <tr><td>Primary S2S Grant</td><td>JWT Bearer</td><td>Client Credentials</td><td>Client Credentials</td><td>Auth Code + Refresh</td><td>Client Credentials</td><td>Refresh Token</td></tr>
+      <tr><td>Certificate Auth</td><td>X.509 on connected app</td><td>X.509 via mTLS</td><td>X.509 assertion</td><td>Not supported</td><td>Certificate on app reg</td><td>Not supported</td></tr>
+      <tr><td>Token Lifetime</td><td>Session (~2h)</td><td>12 min</td><td>1h (configurable)</td><td>60 min</td><td>60-75 min</td><td>Minutes</td></tr>
+      <tr><td>Refresh Token</td><td>Web server only</td><td>No (client creds)</td><td>Yes (7d default)</td><td>Yes (7d rolling)</td><td>No (client creds)</td><td>Yes (non-expiring opt.)</td></tr>
+      <tr><td>Scope Model</td><td>Coarse (api, full)</td><td>Per-scenario</td><td>Per-app / custom</td><td>Per-API-surface</td><td>.default (all-or-nothing)</td><td>ISU security domains</td></tr>
+      <tr><td>Admin Portal</td><td>Setup > Connected Apps</td><td>BTP Cockpit</td><td>OCI Console > Identity</td><td>Setup > OAuth 2.0</td><td>Entra Admin Center</td><td>Workday > API Client</td></tr>
+      <tr><td>SDK/Library</td><td>jsforce, simple-salesforce</td><td>SAP Cloud SDK</td><td>OCI SDK</td><td>Standard HTTP</td><td>MSAL</td><td>Standard HTTP</td></tr>
+      <tr><td>Setup Complexity</td><td>Medium</td><td>High</td><td>Medium</td><td>Low</td><td>Low</td><td>Medium</td></tr>
+      <tr><td>PKCE Support</td><td>Yes</td><td>No</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Salesforce: Obtain Token via JWT Bearer Flow</h3>
+  <p>Create a connected app with a digital certificate, sign a JWT assertion, and exchange for an access token. [<a href="https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5">src1</a>]</p>
+  <pre><code class="language-python"># Input:  Connected app consumer key, X.509 private key PEM, Salesforce username
+# Output: Access token and instance_url
+
+import jwt, requests, time
+
+CONSUMER_KEY = "3MVG9..."
+PRIVATE_KEY = open("server.key", "r").read()
+USERNAME = "integration@company.com"
+LOGIN_URL = "https://login.salesforce.com"
+
+claim = {
+    "iss": CONSUMER_KEY, "sub": USERNAME,
+    "aud": LOGIN_URL, "exp": int(time.time()) + 300
+}
+assertion = jwt.encode(claim, PRIVATE_KEY, algorithm="RS256")
+
+response = requests.post(f"{LOGIN_URL}/services/oauth2/token", data={
+    "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    "assertion": assertion
+})
+token_data = response.json()
+access_token = token_data["access_token"]
+instance_url = token_data["instance_url"]  # CRITICAL: use for all API calls</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer {token}" {instance_url}/services/data/v62.0/limits</code> -> returns JSON with API limits</p>
+
+  <h3>2. SAP S/4HANA: Obtain Token via Client Credentials</h3>
+  <p>Request a token from the XSUAA endpoint using service key credentials. [<a href="https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates">src2</a>]</p>
+  <pre><code class="language-python"># Input:  XSUAA clientid, clientsecret, token URL from service key
+# Output: Access token (12-minute TTL)
+
+import requests
+
+response = requests.post(TOKEN_URL, data={
+    "grant_type": "client_credentials",
+    "client_id": CLIENT_ID,
+    "client_secret": CLIENT_SECRET
+})
+access_token = response.json()["access_token"]
+# Token expires in ~720 seconds (12 min) -- cache and refresh proactively</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer {token}" https://{host}/sap/opu/odata4/.../$metadata</code> -> returns OData metadata</p>
+
+  <h3>3. Oracle Fusion Cloud: Client Credentials via OCI IAM</h3>
+  <p>Register a confidential application in OCI IAM, then request a token. [<a href="https://docs.oracle.com/en/cloud/saas/sales/faaps/Configure_OAuth_Using_Oracle_IDCS_or_IAM.html">src3</a>]</p>
+  <pre><code class="language-python"># Input:  OCI IAM client_id, client_secret, token endpoint
+# Output: Access token (1-hour default)
+
+response = requests.post(TOKEN_URL, data={
+    "grant_type": "client_credentials",
+    "scope": "urn:opc:idm:__myscopes__"
+}, auth=(CLIENT_ID, CLIENT_SECRET))
+access_token = response.json()["access_token"]</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer {token}" https://{host}/fscmRestApi/resources/11.13.18.05/invoices?limit=1</code> -> returns invoice JSON</p>
+
+  <h3>4. Dynamics 365: Entra ID Client Credentials</h3>
+  <p>Register an app in Entra ID, grant D365 API permissions, request a token. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow">src4</a>]</p>
+  <pre><code class="language-python"># Input:  Entra tenant_id, client_id, client_secret, D365 org URL
+# Output: Access token (60-75 minute lifetime)
+
+response = requests.post(
+    f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token",
+    data={
+        "grant_type": "client_credentials",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "scope": f"{D365_URL}/.default"
+    }
+)
+access_token = response.json()["access_token"]
+# No refresh token -- request new token when expired</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer {token}" {D365_URL}/api/data/v9.2/WhoAmI</code> -> returns system user ID</p>
+
+  <h3>5. NetSuite: OAuth 2.0 Authorization Code + Refresh</h3>
+  <p>Enable OAuth 2.0 in SuiteCloud, create integration record, use refresh tokens for ongoing access. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_157769826287.html">src5</a>]</p>
+  <pre><code class="language-python"># Input:  client_id, client_secret, refresh_token
+# Output: New access + refresh token (rolling refresh)
+
+response = requests.post(TOKEN_URL, data={
+    "grant_type": "refresh_token",
+    "refresh_token": REFRESH_TOKEN,
+    "client_id": CLIENT_ID,
+    "client_secret": CLIENT_SECRET
+})
+data = response.json()
+access_token = data["access_token"]
+new_refresh_token = data["refresh_token"]  # MUST store -- old token now invalid</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer {token}" https://{id}.suitetalk.api.netsuite.com/services/rest/record/v1/customer?limit=1</code> -> returns customer JSON</p>
+
+  <h3>6. Workday: Refresh Token Flow with ISU</h3>
+  <p>Register API client, link to ISU, generate non-expiring refresh token, exchange for access tokens. [<a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</p>
+  <pre><code class="language-python"># Input:  client_id, client_secret, refresh_token, tenant
+# Output: Access token + new refresh token
+
+response = requests.post(
+    f"https://wd2-impl-services1.workday.com/ccx/oauth2/{TENANT}/token",
+    data={
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET
+    }
+)
+data = response.json()
+access_token = data["access_token"]
+new_refresh_token = data["refresh_token"]  # Store for next exchange</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer {token}" https://wd2-impl-services1.workday.com/ccx/api/v1/{tenant}/workers?limit=1</code> -> returns worker data</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>cURL: Token Acquisition for Each ERP</h3>
+  <pre><code class="language-bash"># --- Salesforce JWT Bearer ---
+curl -X POST https://login.salesforce.com/services/oauth2/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  -d "assertion=${JWT_ASSERTION}"
+
+# --- SAP S/4HANA Client Credentials ---
+curl -X POST "${XSUAA_TOKEN_URL}" \
+  -u "${CLIENT_ID}:${CLIENT_SECRET}" \
+  -d "grant_type=client_credentials"
+
+# --- Oracle Fusion Client Credentials ---
+curl -X POST "${OCI_IAM_TOKEN_URL}" \
+  -u "${CLIENT_ID}:${CLIENT_SECRET}" \
+  -d "grant_type=client_credentials" \
+  -d "scope=urn:opc:idm:__myscopes__"
+
+# --- Dynamics 365 Client Credentials ---
+curl -X POST "https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=${CLIENT_ID}" \
+  -d "client_secret=${CLIENT_SECRET}" \
+  -d "scope=${D365_URL}/.default"
+
+# --- NetSuite OAuth 2.0 Refresh ---
+curl -X POST "https://${ACCOUNT_ID}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token" \
+  -d "grant_type=refresh_token" \
+  -d "refresh_token=${REFRESH_TOKEN}" \
+  -d "client_id=${CLIENT_ID}" \
+  -d "client_secret=${CLIENT_SECRET}"
+
+# --- Workday Refresh Token ---
+curl -X POST "https://wd2-impl-services1.workday.com/ccx/oauth2/${TENANT}/token" \
+  -d "grant_type=refresh_token" \
+  -d "refresh_token=${REFRESH_TOKEN}" \
+  -d "client_id=${CLIENT_ID}" \
+  -d "client_secret=${CLIENT_SECRET}"</code></pre>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Error Code</th><th scope="col">ERP(s)</th><th scope="col">Meaning</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>invalid_grant</code></td><td>All</td><td>Token/assertion rejected</td><td>Regenerate assertion or refresh token; check cert validity</td></tr>
+      <tr><td><code>invalid_client</code></td><td>All</td><td>Client ID/secret wrong</td><td>Verify credentials match registered application</td></tr>
+      <tr><td><code>unauthorized_client</code></td><td>Salesforce, D365</td><td>App not authorized for this grant</td><td>Enable the specific OAuth flow in app config</td></tr>
+      <tr><td><code>invalid_scope</code></td><td>Oracle, D365</td><td>Scope not allowed</td><td>Add scope in OCI IAM or Entra admin center</td></tr>
+      <tr><td>429</td><td>SAP, Oracle</td><td>Rate limit on token endpoint</td><td>Cache tokens; exponential backoff</td></tr>
+      <tr><td><code>INVALID_LOGIN</code></td><td>Salesforce</td><td>JWT subject user inactive</td><td>Verify integration user is active with API access</td></tr>
+      <tr><td><code>expired_token</code></td><td>NetSuite, Workday</td><td>Refresh token expired</td><td>Re-authorize via authorization code flow</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Certificate expiry silently breaks integrations</strong>: Salesforce connected app certs and SAP XSUAA managed certs (7-day default!) expire without warning. Fix: <code>Implement certificate rotation monitoring with alerts at 30, 7, and 1 day before expiry</code>. [<a href="https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5">src1</a>, <a href="https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates">src2</a>]</li>
+    <li><strong>Refresh token rotation lost in transit</strong>: NetSuite and Workday issue new refresh tokens with each request. Crash between response and storage means permanent access loss. Fix: <code>Use transactional storage -- write new refresh token before using the access token</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_157769826287.html">src5</a>, <a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</li>
+    <li><strong>SAP 12-min token TTL breaks long-running jobs</strong>: Bulk migration jobs running 30+ minutes fail mid-execution. Fix: <code>Proactively refresh token before each batch in middleware</code>. [<a href="https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates">src2</a>]</li>
+    <li><strong>D365 client secret silent expiry</strong>: Secrets expire after configured lifetime (max 24 months). Fix: <code>Use certificate auth for production, or automate rotation with Azure Key Vault</code>. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow">src4</a>]</li>
+    <li><strong>Oracle IDCS-to-OCI IAM migration breaks URLs</strong>: Token endpoint format changed during merge. Fix: <code>Use OCI IAM domain URL format and test during migration window</code>. [<a href="https://docs.oracle.com/en/cloud/saas/sales/faaps/Configure_OAuth_Using_Oracle_IDCS_or_IAM.html">src3</a>]</li>
+    <li><strong>Workday ISU termination cascading failure</strong>: Terminated ISU invalidates all linked OAuth tokens immediately. Fix: <code>Never link ISUs to human employees; create dedicated service ISUs</code>. [<a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Storing OAuth tokens in plaintext config files</h3>
+  <pre><code class="language-python"># BAD -- tokens and secrets in plaintext .env or config.json
+config = {
+    "salesforce_token": "00D5e000000XXXX!AR...",
+    "sap_client_secret": "xsuaa-secret-value-here",
+    "d365_client_secret": "A1bC2dE3f..."
+}
+# Committed to Git, visible in CI logs, no rotation tracking</code></pre>
+
+  <h3>Correct: Use a secrets manager with rotation support</h3>
+  <pre><code class="language-python"># GOOD -- secrets from vault with automatic rotation
+import boto3  # or azure.keyvault, hashicorp vault
+
+secrets_client = boto3.client("secretsmanager")
+def get_secret(name):
+    return secrets_client.get_secret_value(SecretId=name)["SecretString"]
+
+salesforce_key = get_secret("erp/salesforce/private_key")
+sap_secret = get_secret("erp/sap/client_secret")
+# Rotation policies enforced at vault level</code></pre>
+
+  <h3>Wrong: Requesting a new token for every API call</h3>
+  <pre><code class="language-python"># BAD -- token request per API call wastes quota and adds latency
+def get_data(query):
+    token = get_new_token()  # ~200ms per call
+    return requests.get(url, headers={"Authorization": f"Bearer {token}"})</code></pre>
+
+  <h3>Correct: Cache tokens and refresh proactively</h3>
+  <pre><code class="language-python"># GOOD -- cache token, refresh before expiry
+class TokenCache:
+    def __init__(self):
+        self._token, self._expires_at = None, 0
+    def get_token(self):
+        if time.time() > (self._expires_at - 60):
+            self._token, self._expires_at = self._fetch_new_token()
+        return self._token</code></pre>
+
+  <h3>Wrong: Hardcoding ERP instance URLs</h3>
+  <pre><code class="language-python"># BAD -- breaks across environments, pod migrations
+API_URL = "https://na139.salesforce.com/services/data/v62.0/query"</code></pre>
+
+  <h3>Correct: Parse instance_url from token response</h3>
+  <pre><code class="language-python"># GOOD -- dynamic instance URL from OAuth response
+data = requests.post(login_url + "/services/oauth2/token", data={...}).json()
+instance_url = data["instance_url"]  # Salesforce tells you where to call</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Assuming all ERPs support client_credentials</strong>: Salesforce and Workday do not. Salesforce uses JWT bearer; Workday uses refresh tokens with ISU. Fix: <code>Abstract token acquisition per ERP using adapter pattern</code>. [<a href="https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5">src1</a>, <a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</li>
+    <li><strong>Not storing Salesforce instance_url</strong>: The URL can change during pod migrations. Fix: <code>Always use instance_url from each token response</code>. [<a href="https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5">src1</a>]</li>
+    <li><strong>Ignoring SAP's 12-minute token TTL</strong>: Middleware caching tokens for 1 hour fails 80% of the time with SAP. Fix: <code>Always respect expires_in from token response</code>. [<a href="https://help.sap.com/docs/connectivity/sap-btp-connectivity-cf/oauth-with-x-509-client-certificates">src2</a>]</li>
+    <li><strong>Using D365 client secrets in production</strong>: They expire (max 24 months) with weaker security. Fix: <code>Use certificate-based auth (client_assertion) in production</code>. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow">src4</a>]</li>
+    <li><strong>Losing NetSuite rolling refresh tokens</strong>: Each refresh invalidates the old token. Fix: <code>Persist new refresh token transactionally before making API calls</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_157769826287.html">src5</a>, <a href="https://lstconsultancy.com/oauth2-vs-oauth1-for-netsuite/">src7</a>]</li>
+    <li><strong>Using personal Workday accounts instead of ISU</strong>: Employee departure breaks all integrations. Fix: <code>Always create dedicated ISUs for each integration</code>. [<a href="https://www.reco.ai/hub/workday-rest-api-integration-security">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># --- Salesforce: Test JWT Bearer token ---
+python3 -c "
+import jwt, time, requests
+claim = {'iss':'${KEY}','sub':'${USER}','aud':'https://login.salesforce.com','exp':int(time.time())+300}
+a = jwt.encode(claim, open('server.key').read(), algorithm='RS256')
+r = requests.post('https://login.salesforce.com/services/oauth2/token',
+    data={'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer','assertion':a})
+print(r.status_code, r.json().get('access_token','ERROR')[:20]+'...')
+"
+
+# --- SAP: Test XSUAA client credentials ---
+curl -s -o /dev/null -w "%{http_code}" \
+  -u "${CLIENT_ID}:${CLIENT_SECRET}" \
+  -d "grant_type=client_credentials" "${XSUAA_TOKEN_URL}"
+# Expected: 200
+
+# --- Oracle: Test OCI IAM token ---
+curl -s -o /dev/null -w "%{http_code}" \
+  -u "${CLIENT_ID}:${CLIENT_SECRET}" \
+  -d "grant_type=client_credentials&amp;scope=urn:opc:idm:__myscopes__" \
+  "${OCI_IAM_TOKEN_URL}"
+# Expected: 200
+
+# --- Dynamics 365: Test Entra ID ---
+curl -s -o /dev/null -w "%{http_code}" \
+  -d "grant_type=client_credentials&amp;client_id=${CLIENT_ID}&amp;client_secret=${CLIENT_SECRET}&amp;scope=${D365_URL}/.default" \
+  "https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token"
+# Expected: 200
+
+# --- NetSuite: Test OAuth 2.0 refresh ---
+curl -s -o /dev/null -w "%{http_code}" \
+  -d "grant_type=refresh_token&amp;refresh_token=${REFRESH_TOKEN}&amp;client_id=${CLIENT_ID}&amp;client_secret=${CLIENT_SECRET}" \
+  "https://${ACCOUNT_ID}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token"
+# Expected: 200
+
+# --- Workday: Test refresh token ---
+curl -s -o /dev/null -w "%{http_code}" \
+  -d "grant_type=refresh_token&amp;refresh_token=${REFRESH_TOKEN}&amp;client_id=${CLIENT_ID}&amp;client_secret=${CLIENT_SECRET}" \
+  "https://wd2-impl-services1.workday.com/ccx/oauth2/${TENANT}/token"
+# Expected: 200</code></pre>
+  </section>
+
+  <!-- Version History & Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">OAuth Milestone</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>JWT Bearer flow GA</td><td>2016</td><td>Current</td><td>No breaking changes since introduction</td></tr>
+      <tr><td>Salesforce</td><td>Device flow GA</td><td>2020</td><td>Current</td><td>CLI/IoT devices</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>XSUAA OAuth mandatory (Public Cloud)</td><td>2020</td><td>Current</td><td>Communication arrangements required</td></tr>
+      <tr><td>SAP</td><td>X.509 mTLS for XSUAA</td><td>2022</td><td>Current</td><td>Alternative to client secret</td></tr>
+      <tr><td>Oracle Fusion</td><td>IDCS OAuth GA</td><td>2018</td><td>Migrating to OCI IAM</td><td>IDCS merged into OCI IAM 2023</td></tr>
+      <tr><td>Oracle Fusion</td><td>Basic auth deprecated (new integrations)</td><td>2023</td><td>Current</td><td>Existing basic auth still works</td></tr>
+      <tr><td>NetSuite</td><td>OAuth 2.0 GA</td><td>2021</td><td>Current</td><td>REST APIs only</td></tr>
+      <tr><td>NetSuite</td><td>TBA deprecated for new integrations</td><td>2027.1</td><td>Planned</td><td>Existing TBA continues</td></tr>
+      <tr><td>Dynamics 365</td><td>Entra ID rebrand (from Azure AD)</td><td>2023</td><td>Current</td><td>No protocol changes</td></tr>
+      <tr><td>Dynamics 365</td><td>Federated identity credentials</td><td>2024</td><td>Current</td><td>Cross-cloud workloads (GCP, AWS)</td></tr>
+      <tr><td>Workday</td><td>OAuth 2.0 API clients GA</td><td>2020</td><td>Current</td><td>Requires ISU linkage</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Comparing OAuth 2.0 flows across multiple ERPs</td><td>Need detailed single-ERP OAuth walkthrough</td><td>System-specific auth card</td></tr>
+      <tr><td>Deciding which grant type for server-to-server ERP integration</td><td>Need non-OAuth auth comparison (SAML, certs, basic)</td><td><a href="/business/erp-integration/erp-authentication-comparison/2026">erp-authentication-comparison</a></td></tr>
+      <tr><td>Building a universal integration adapter for multiple ERPs</td><td>Need rate limits or API capabilities (not auth)</td><td>System-specific API capability cards</td></tr>
+      <tr><td>Planning certificate/secret rotation across ERPs</td><td>Need SSO/SAML for end-user login</td><td>Vendor SSO documentation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle Fusion</th><th scope="col">NetSuite</th><th scope="col">Dynamics 365</th><th scope="col">Workday</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth Provider</td><td>Built-in</td><td>SAP BTP/XSUAA</td><td>OCI IAM</td><td>Built-in</td><td>Entra ID</td><td>Built-in</td><td>SF, NS, WD self-contained</td></tr>
+      <tr><td>S2S Grant</td><td>JWT Bearer</td><td>Client Credentials</td><td>Client Credentials</td><td>Auth Code+Refresh</td><td>Client Credentials</td><td>Refresh Token</td><td>No universal grant</td></tr>
+      <tr><td>Token TTL</td><td>~2h (session)</td><td>12 min</td><td>1h</td><td>60 min</td><td>60-75 min</td><td>Minutes</td><td>SAP shortest by far</td></tr>
+      <tr><td>Refresh Token</td><td>Web server only</td><td>N/A</td><td>7d default</td><td>7d rolling</td><td>N/A</td><td>Non-expiring opt.</td><td>Rolling (NS/WD) vs static</td></tr>
+      <tr><td>Certificate Auth</td><td>X.509 on app</td><td>X.509 mTLS</td><td>X.509 assertion</td><td>No</td><td>Certificate on app</td><td>No</td><td>SAP requires mTLS endpoint</td></tr>
+      <tr><td>Setup Complexity</td><td>Medium</td><td>High</td><td>Medium</td><td>Low</td><td>Low</td><td>Medium</td><td>SAP highest (BTP dependency)</td></tr>
+      <tr><td>SDK Support</td><td>jsforce</td><td>SAP Cloud SDK</td><td>OCI SDK</td><td>HTTP only</td><td>MSAL</td><td>HTTP only</td><td>MSAL best abstraction</td></tr>
+      <tr><td>Admin Consent</td><td>Profile pre-auth</td><td>Comm arrangement</td><td>IAM admin grant</td><td>Admin consent</td><td>Entra admin consent</td><td>ISU policies</td><td>Each model different</td></tr>
+      <tr><td>Multi-tenant</td><td>Per-org app</td><td>Per-subaccount</td><td>Per-IAM-domain</td><td>Per-account-id</td><td>Per-Entra-tenant</td><td>Per-tenant</td><td>URL patterns all differ</td></tr>
+      <tr><td>PKCE Support</td><td>Yes</td><td>No</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td><td>Required for public clients</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Token lifetimes and rate limits are subject to change with each ERP release. Values reflect March 2026 configurations. Always verify against current vendor docs.</li>
+    <li>SAP S/4HANA on-premise uses a completely different OAuth implementation (via SAP Gateway) vs cloud (BTP/XSUAA). This card covers cloud only.</li>
+    <li>Oracle's IDCS-to-OCI IAM migration is ongoing. Some tenants still use IDCS endpoints; check your specific tenant.</li>
+    <li>NetSuite OAuth 2.0 requires SuiteCloud feature enabled by admin. Not enabled by default on all accounts.</li>
+    <li>Dynamics 365 Entra ID (formerly Azure AD) rebranding changed no protocol behavior, but old docs may reference Azure AD URLs.</li>
+    <li>Workday token endpoint URLs vary by data center (wd2, wd3, wd5) and environment type (impl vs prod). Always use the exact URL from your tenant config.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/erp-authentication-comparison/2026" data-relationship="related_to">ERP Authentication Comparison: OAuth, Certificates &amp; Service Accounts</a>
+    <a href="/business/erp-integration/salesforce-oauth-authentication/2026" data-relationship="related_to">Salesforce OAuth Authentication Deep-Dive</a>
+    <a href="/business/erp-integration/dynamics-365-authentication/2026" data-relationship="related_to">Dynamics 365 Authentication</a>
+    <a href="/business/erp-integration/workday-authentication-isu-oauth/2026" data-relationship="related_to">Workday Authentication: ISU &amp; OAuth</a>
+    <a href="/business/erp-integration/sap-authentication-methods/2026" data-relationship="related_to">SAP Authentication Methods</a>
+    <a href="/business/erp-integration/oracle-erp-cloud-authentication/2026" data-relationship="related_to">Oracle ERP Cloud Authentication</a>
+    <a href="/business/erp-integration/netsuite-tba-vs-oauth2/2026" data-relationship="solves">NetSuite TBA vs OAuth 2.0</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

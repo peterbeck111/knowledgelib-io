@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Cursor vs Offset vs Keyset vs nextRecordsUrl | knowledgelib.io</title>
+  <meta name="description" content="Compare pagination patterns across 8 ERP APIs: Salesforce nextRecordsUrl, SAP $skiptoken, Oracle offset/limit, NetSuite (1K-page cap), Dynamics 365...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/pagination-patterns-comparison/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Cursor vs Offset vs Keyset vs nextRecordsUrl | knowledgelib.io">
+  <meta property="og:description" content="Compare pagination patterns across 8 ERP APIs: Salesforce nextRecordsUrl, SAP $skiptoken, Oracle offset/limit, NetSuite (1K-page cap), Dynamics 365 @odata.nextLink, Workday, IFS Cloud, Acumatica. Performance at scale, code examples, anti-patterns.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/pagination-patterns-comparison/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-03">
+  <meta property="article:modified_time" content="2026-03-03">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cursor vs Offset vs Keyset vs nextRecordsUrl | knowledgelib.io">
+  <meta name="twitter:description" content="Compare pagination patterns across 8 ERP APIs: Salesforce nextRecordsUrl, SAP $skiptoken, Oracle offset/limit, NetSuite (1K-page cap), Dynamics 365 @odata.nextLink, Workday, IFS Cloud, Acumatica.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.86">
+  <meta name="ai:last_verified" content="2026-03-03">
+  <meta name="ai:domain" content="business/erp-integration/pagination-patterns-comparison">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do pagination patterns differ across ERPs - cursor vs offset vs keyset vs nextRecordsUrl?">
+  <meta name="ai:aliases" content="ERP API pagination comparison cursor offset keyset; Salesforce nextRecordsUrl vs SAP $skip vs Oracle offset pagination; Which ERP pagination method scales best for large datasets?; Deep pagination performance across ERP REST APIs">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/pagination-patterns-comparison/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-03">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-03">
+  <meta name="ai:systems" content="Salesforce (API v62.0); SAP S/4HANA (2408/2502); Oracle ERP Cloud (24D/25A); NetSuite (2025.1); Dynamics 365 F&O (10.0.40+); Workday (2025R1); IFS Cloud (24R2); Acumatica (2024 R2)">
+  <meta name="ai:inputs_needed" content="data_volume,consistency_requirement,navigation_pattern">
+  <meta name="ai:constraints" content="Salesforce: fixed 2,000 records/page; SAP $skip/$top unsafe under concurrent writes; Oracle: 500 records/page max, unordered by default; NetSuite: 1,000-page cap; D365: $skip deprecated; Workday RaaS: no pagination; Offset O(n) at >100K records">
+  <meta name="ai:skip_this_unit_if" content="User needs general REST API comparison -> business/erp-integration/erp-rest-api-comparison/2026; User needs rate limits -> business/erp-integration/erp-rate-limits-comparison/2026; User needs bulk import -> business/erp-integration/erp-bulk-import-comparison/2026">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "ERP API Pagination Patterns Comparison: Cursor vs Offset vs Keyset vs nextRecordsUrl",
+    "headline": "ERP API Pagination Patterns Comparison: Cursor vs Offset vs Keyset vs nextRecordsUrl",
+    "description": "Comprehensive comparison of pagination patterns across 8 ERP APIs including Salesforce nextRecordsUrl cursor, SAP $skiptoken server-driven paging, Oracle offset/limit, NetSuite with 1,000-page cap, Dynamics 365 @odata.nextLink, Workday, IFS Cloud, and Acumatica. Covers performance at scale, code examples, anti-patterns, and failure points.",
+    "keywords": ["ERP pagination", "API pagination", "cursor pagination", "offset pagination", "keyset pagination", "nextRecordsUrl", "$skiptoken", "Salesforce", "SAP", "Oracle", "NetSuite", "Dynamics 365", "Workday", "IFS Cloud", "Acumatica"],
+    "dateModified": "2026-03-03",
+    "datePublished": "2026-03-03",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, SAP S/4HANA 2408/2502, Oracle ERP Cloud 24D/25A, NetSuite 2025.1, Dynamics 365 10.0.40+, Workday 2025R1, IFS Cloud 24R2, Acumatica 2024 R2",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Processing Large Amounts of Data with APIs (Part 1 of 2)",
+        "url": "https://developer.salesforce.com/blogs/2022/12/processing-large-amounts-of-data-with-apis-part-1-of-2"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Fetch data in chunks using pagination from S/4 HANA Cloud's OData API",
+        "url": "https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-members/fetch-data-in-chunks-using-pagination-from-s-4-hana-cloud-s-odata-api/ba-p/13572611"
+      },
+      {
+        "@type": "WebPage",
+        "name": "REST API for Common Features in Oracle Fusion Cloud Applications",
+        "url": "https://docs.oracle.com/en/cloud/saas/applications-common/24c/farca/Manage_Collections.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite Collection Paging",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156414087576.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pagination Methods in Dynamics 365 Integration: An In-Depth Guide",
+        "url": "https://www.hellosmart.ca/2023/09/pagination-methods-in-dynamics-365.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Scaling Workday Integrations With MuleSoft: A Guide to Parallel Pagination",
+        "url": "https://blogs.mulesoft.com/dev-guides/workday-integrations-and-parallel-pagination/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Implement REST API Pagination: Offset, Cursor, Keyset",
+        "url": "https://www.stainless.com/sdk-api-best-practices/how-to-implement-rest-api-pagination-offset-cursor-keyset"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Use $skiptoken for server side paging - OData",
+        "url": "https://learn.microsoft.com/en-us/odata/webapi/skiptoken-for-server-side-paging"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "ERP API Pagination Patterns Comparison: Cursor vs Offset vs Keyset vs nextRecordsUrl",
+    "description": "Cross-system comparison of API pagination patterns across 8 ERP platforms: Salesforce, SAP S/4HANA, Oracle ERP Cloud, NetSuite, Dynamics 365, Workday, IFS Cloud, Acumatica. Includes pagination type, max page size, deep pagination support, performance characteristics, code examples.",
+    "keywords": ["ERP pagination", "API pagination comparison", "cursor vs offset", "keyset pagination", "ERP integration"],
+    "temporalCoverage": "2025/2026",
+    "dateModified": "2026-03-03",
+    "datePublished": "2026-03-03",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Workday"},
+      {"@type": "Organization", "name": "IFS"},
+      {"@type": "Organization", "name": "Acumatica"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Pagination Patterns Comparison" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do pagination patterns differ across ERPs - cursor vs offset vs keyset vs nextRecordsUrl?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP uses a different pagination pattern -- Salesforce uses server-side cursor (nextRecordsUrl), SAP and D365 use OData $skiptoken for server-driven paging, Oracle uses offset/limit, and NetSuite uses offset with a hard 1,000-page cap. Cursor-based pagination scales; offset-based breaks past 100K records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ERP API pagination comparison cursor offset keyset",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP uses a different pagination pattern -- Salesforce uses server-side cursor (nextRecordsUrl), SAP and D365 use OData $skiptoken for server-driven paging, Oracle uses offset/limit, and NetSuite uses offset with a hard 1,000-page cap. Cursor-based pagination scales; offset-based breaks past 100K records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce nextRecordsUrl vs SAP $skip vs Oracle offset pagination",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP uses a different pagination pattern -- Salesforce uses server-side cursor (nextRecordsUrl), SAP and D365 use OData $skiptoken for server-driven paging, Oracle uses offset/limit, and NetSuite uses offset with a hard 1,000-page cap. Cursor-based pagination scales; offset-based breaks past 100K records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which ERP pagination method scales best for large datasets?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP uses a different pagination pattern -- Salesforce uses server-side cursor (nextRecordsUrl), SAP and D365 use OData $skiptoken for server-driven paging, Oracle uses offset/limit, and NetSuite uses offset with a hard 1,000-page cap. Cursor-based pagination scales; offset-based breaks past 100K records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Deep pagination performance across ERP REST APIs",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every major ERP uses a different pagination pattern -- Salesforce uses server-side cursor (nextRecordsUrl), SAP and D365 use OData $skiptoken for server-driven paging, Oracle uses offset/limit, and NetSuite uses offset with a hard 1,000-page cap. Cursor-based pagination scales; offset-based breaks past 100K records."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>ERP API Pagination Patterns Comparison: Cursor vs Offset vs Keyset vs nextRecordsUrl</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do pagination patterns differ across ERPs - cursor vs offset vs keyset vs nextRecordsUrl?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/pagination-patterns-comparison/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Salesforce, SAP S/4HANA, Oracle ERP Cloud, NetSuite, D365, Workday, IFS, Acumatica</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.86 out of 1">0.86</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-03</span></span>
+    <span><strong>Freshness:</strong> 2026-03-03</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Every major ERP uses a different pagination pattern -- Salesforce uses server-side cursor (nextRecordsUrl), SAP and D365 use OData $skiptoken, Oracle uses offset/limit, and NetSuite uses offset with a hard 1,000-page cap. Cursor-based pagination scales; offset-based breaks past 100K records.</li>
+    <li><strong>Key limit</strong>: NetSuite caps total retrievable records at pageSize x 1,000 pages -- if you have 500K records with page size 100, you can only retrieve 100K.</li>
+    <li><strong>Watch out for</strong>: Offset pagination under concurrent writes causes duplicate or missing records on every ERP -- Salesforce and D365 solve this with cursor/skiptoken; SAP, Oracle, NetSuite do not by default.</li>
+    <li><strong>Best for</strong>: This card answers "which pagination approach does my target ERP support and how does it scale?" -- use before designing any data extraction integration.</li>
+    <li><strong>Authentication</strong>: Pagination tokens are session-scoped -- if your OAuth token expires mid-pagination, most ERPs invalidate the cursor/offset state and you must restart.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This comparison card covers pagination patterns across 8 ERP systems. The focus is on outbound data retrieval pagination (reading data from the ERP), not inbound bulk import patterns.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Pagination Pattern</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>CRM + Platform</td><td>REST API v62.0</td><td>Server-side cursor (nextRecordsUrl)</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>ERP</td><td>OData V2/V4</td><td>$skip/$top (client) + $skiptoken (server-driven)</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>ERP</td><td>REST</td><td>Offset/limit with hasMore</td></tr>
+      <tr><td>Oracle NetSuite</td><td>ERP</td><td>REST + SuiteQL</td><td>Offset/limit with 1,000-page cap</td></tr>
+      <tr><td>Dynamics 365 F&amp;O</td><td>ERP</td><td>OData V4</td><td>@odata.nextLink + $skiptoken</td></tr>
+      <tr><td>Workday</td><td>HCM + Finance</td><td>REST + SOAP + RaaS</td><td>Page/offset (REST), no pagination (RaaS)</td></tr>
+      <tr><td>IFS Cloud</td><td>ERP</td><td>OData V4</td><td>$skip/$top + server-driven paging</td></tr>
+      <tr><td>Acumatica</td><td>ERP</td><td>REST</td><td>$top/$skip + filter-based keyset</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Pagination Method</th><th scope="col">Default Page Size</th><th scope="col">Max Page Size</th><th scope="col">Stateful?</th><th scope="col">Deep Pagination?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>nextRecordsUrl (cursor)</td><td>2,000</td><td>2,000 (fixed)</td><td>Yes (server cursor)</td><td>Yes -- O(1)</td></tr>
+      <tr><td>SAP S/4HANA ($skiptoken)</td><td>Server-driven</td><td>Server-controlled</td><td>Server-controlled</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>SAP S/4HANA ($skip/$top)</td><td>Client-driven</td><td>Client-set</td><td>~10,000</td><td>No</td><td>No -- O(n)</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>offset/limit</td><td>25</td><td>500</td><td>No</td><td>No -- O(n)</td></tr>
+      <tr><td>NetSuite REST</td><td>offset/limit</td><td>1,000</td><td>1,000</td><td>No</td><td>Limited (1K pages)</td></tr>
+      <tr><td>Dynamics 365</td><td>@odata.nextLink</td><td>10,000</td><td>10,000</td><td>Yes ($skiptoken)</td><td>Yes</td></tr>
+      <tr><td>Workday REST</td><td>page/offset</td><td>10</td><td>100</td><td>No</td><td>No</td></tr>
+      <tr><td>Workday RaaS</td><td>None</td><td>Full report</td><td>Full report</td><td>N/A</td><td>N/A</td></tr>
+      <tr><td>IFS Cloud</td><td>$skip/$top + nextLink</td><td>Server-controlled</td><td>~10,000</td><td>Mixed</td><td>Partial</td></tr>
+      <tr><td>Acumatica</td><td>$top/$skip</td><td>100</td><td>No hard cap</td><td>No</td><td>No -- O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Pagination-Specific Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Pagination Limit</th><th scope="col">Implication</th><th scope="col">Workaround</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Query locator expires after 15 min idle</td><td>Must consume pages within 15 min</td><td>Reduce per-page processing time; parallelize downstream</td></tr>
+      <tr><td>SAP S/4HANA</td><td>$skiptoken tied to session</td><td>Invalidated on session expiry</td><td>Re-authenticate and restart from last known position</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>500 records per page max</td><td>200 pages for 100K records</td><td>Add restrictive filters; use BICC for bulk</td></tr>
+      <tr><td>NetSuite</td><td>1,000 pages max total</td><td>Hard cap on retrievable records</td><td>Date-range chunking or Saved Search CSV</td></tr>
+      <tr><td>Dynamics 365</td><td>10,000 per page max; 6K req/5min throttle</td><td>Throughput ceiling ~2M records/5min</td><td>Use Data Management Framework for full exports</td></tr>
+      <tr><td>Workday RaaS</td><td>No pagination; full report in one call</td><td>Reports &gt;50K rows timeout</td><td>WQL API or split with prompt parameters</td></tr>
+      <tr><td>Acumatica</td><td>No page limit; linear degradation</td><td>Offset 100K+ takes 10s+ per page</td><td>Filter-based keyset (LastModifiedDate &gt; X)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Concurrent Pagination Sessions</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Max Concurrent</th><th scope="col">Shared With</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>No explicit limit</td><td>All REST API calls</td><td>Each page costs 1 API call from 100K/24h pool</td></tr>
+      <tr><td>SAP S/4HANA</td><td>Tenant-specific</td><td>All OData requests</td><td>Contact SAP for exact limits</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>No documented limit</td><td>All REST API calls</td><td>Throttled by overall throughput</td></tr>
+      <tr><td>NetSuite</td><td>5-20 (by tier)</td><td>All SuiteTalk/REST</td><td>Standard: 5, Premium: 15, Enterprise: 20</td></tr>
+      <tr><td>Dynamics 365</td><td>Per-user throttled</td><td>All OData requests</td><td>6K req/5min per user per web server</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Token-Pagination Coupling</th><th scope="col">Impact of Token Expiry</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>nextRecordsUrl tied to session</td><td>Token expiry invalidates all open query locators</td></tr>
+      <tr><td>SAP S/4HANA</td><td>$skiptoken valid within session</td><td>Must re-authenticate and restart</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>Stateless -- no coupling</td><td>Resume with new token at same offset</td></tr>
+      <tr><td>NetSuite</td><td>Stateless -- no coupling</td><td>Resume with new token at same offset</td></tr>
+      <tr><td>Dynamics 365</td><td>$skiptoken may be session-scoped</td><td>@odata.nextLink may fail after refresh</td></tr>
+      <tr><td>Acumatica</td><td>Stateless -- no coupling</td><td>Resume with new token at same offset</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Salesforce query locators expire after 15 minutes of inactivity regardless of OAuth token validity. [<a href="https://developer.salesforce.com/blogs/2022/12/processing-large-amounts-of-data-with-apis-part-1-of-2">src1</a>]</li>
+    <li>Dynamics 365 @odata.nextLink URLs embed server-specific routing -- do NOT modify the nextLink URL. [<a href="https://www.hellosmart.ca/2023/09/pagination-methods-in-dynamics-365.html">src5</a>]</li>
+    <li>NetSuite TBA signatures must be regenerated per request -- cannot reuse Authorization header across pages. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156414087576.html">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Salesforce: Page size is server-controlled at 2,000 records -- cannot request larger pages</li>
+    <li>SAP S/4HANA: Client-driven $skip/$top is not safe under concurrent writes -- rows shift</li>
+    <li>Oracle ERP Cloud: Results using offset/limit are NOT ordered by default -- must add orderBy</li>
+    <li>NetSuite: 1,000-page cap means max records = page_size x 1,000</li>
+    <li>Dynamics 365: $skip is deprecated for server-driven paging in favor of $skiptoken</li>
+    <li>Workday: RaaS has zero pagination -- reports &gt;50K rows timeout</li>
+    <li>Acumatica: No hard limit on $skip but database scan time grows linearly</li>
+    <li>All systems: Offset-based pagination has O(n) performance degradation</li>
+  </ul>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Need to paginate through ERP data
+|
++-- Which ERP?
+|   +-- Salesforce --> nextRecordsUrl cursor (2,000/page, O(1))
+|   |   +-- &gt;10M records? --> Bulk API 2.0 instead
+|   +-- SAP S/4HANA --> Server-driven $skiptoken (Prefer header)
+|   |   +-- &gt;100K records? --> CDS views or BICC
+|   +-- Oracle ERP Cloud --> offset/limit + orderBy (REQUIRED)
+|   |   +-- &gt;100K records? --> BICC or BI Publisher
+|   +-- NetSuite --> offset/limit (1,000 page cap!)
+|   |   +-- &gt;pageSize*1000? --> Date-range chunking
+|   +-- Dynamics 365 --> Follow @odata.nextLink (never construct manually)
+|   |   +-- &gt;500K records? --> Data Management Framework
+|   +-- Workday REST --> page/offset (max 100/page)
+|   |   +-- RaaS reports --> No pagination; chunk with prompts
+|   +-- IFS Cloud --> OData V4 server-driven paging
+|   +-- Acumatica --> &lt;50K: $top/$skip; &gt;50K: filter-based keyset
+|
++-- Performance: &lt;10K: any method; 10K-100K: prefer cursor; &gt;100K: cursor required; &gt;1M: bulk API</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Cross-System Pagination Comparison</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle ERP</th><th scope="col">NetSuite</th><th scope="col">D365</th><th scope="col">Workday</th><th scope="col">IFS</th><th scope="col">Acumatica</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Primary Pattern</strong></td><td>Cursor</td><td>$skiptoken</td><td>Offset</td><td>Offset</td><td>$skiptoken</td><td>Page/offset</td><td>$skiptoken</td><td>$top/$skip</td></tr>
+      <tr><td><strong>Default Page Size</strong></td><td>2,000</td><td>Server</td><td>25</td><td>1,000</td><td>10,000</td><td>10</td><td>Server</td><td>100</td></tr>
+      <tr><td><strong>Max Page Size</strong></td><td>2,000</td><td>~10,000</td><td>500</td><td>1,000</td><td>10,000</td><td>100</td><td>~10,000</td><td>No cap</td></tr>
+      <tr><td><strong>Deep Paging (&gt;100K)</strong></td><td>Excellent</td><td>Good</td><td>Poor</td><td>Capped</td><td>Good</td><td>Very poor</td><td>Good</td><td>Poor</td></tr>
+      <tr><td><strong>Data Consistency</strong></td><td>Strong</td><td>Strong</td><td>Weak</td><td>Weak</td><td>Strong</td><td>Weak</td><td>Strong</td><td>Weak</td></tr>
+      <tr><td><strong>Stateful</strong></td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>Yes</td><td>No</td><td>Mixed</td><td>No</td></tr>
+      <tr><td><strong>Cursor Expiry</strong></td><td>15 min</td><td>Session</td><td>N/A</td><td>N/A</td><td>Session</td><td>N/A</td><td>Session</td><td>N/A</td></tr>
+      <tr><td><strong>Total Record Cap</strong></td><td>None*</td><td>None</td><td>None</td><td>~1M</td><td>None</td><td>~50K RaaS</td><td>None</td><td>None</td></tr>
+      <tr><td><strong>Resumable</strong></td><td>No</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td><td>Yes</td><td>Depends</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Pagination Pattern Types</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">How It Works</th><th scope="col">Time Complexity</th><th scope="col">Consistency</th><th scope="col">Jump to Page N?</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Cursor / nextRecordsUrl</strong></td><td>Server returns opaque token for next set</td><td>O(1) per page</td><td>Strong</td><td>No</td><td>Large, volatile datasets</td></tr>
+      <tr><td><strong>Offset / $skip</strong></td><td>Client specifies row offset</td><td>O(n)</td><td>Weak</td><td>Yes</td><td>Small, static datasets</td></tr>
+      <tr><td><strong>Keyset / filter-based</strong></td><td>Filter by last-seen value</td><td>O(1) per page</td><td>Strong if sorted</td><td>No</td><td>Medium-large, sorted data</td></tr>
+      <tr><td><strong>$skiptoken (OData)</strong></td><td>Server-generated opaque position token</td><td>O(1) per page</td><td>Strong</td><td>No</td><td>OData APIs (SAP, D365, IFS)</td></tr>
+      <tr><td><strong>Page number</strong></td><td>Client requests page N</td><td>O(n)</td><td>Weak</td><td>Yes</td><td>Small REST APIs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Salesforce: Paginate with nextRecordsUrl</h3>
+  <p>Salesforce REST API returns a nextRecordsUrl field when results exceed 2,000 records. This URL contains a server-side query locator acting as a cursor. [<a href="https://developer.salesforce.com/blogs/2022/12/processing-large-amounts-of-data-with-apis-part-1-of-2">src1</a>]</p>
+  <pre><code class="language-python">import requests
+
+def paginate_salesforce(instance_url, access_token, soql_query):
+    headers = {"Authorization": f"Bearer {access_token}"}
+    url = f"{instance_url}/services/data/v62.0/query"
+    params = {"q": soql_query}
+    all_records = []
+    while True:
+        resp = requests.get(url, headers=headers, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        all_records.extend(data["records"])
+        if data["done"]:
+            break
+        url = f"{instance_url}{data['nextRecordsUrl']}"
+        params = {}
+    return all_records</code></pre>
+  <p><strong>Verify</strong>: <code>data["totalSize"]</code> should match <code>len(all_records)</code></p>
+
+  <h3>2. SAP S/4HANA: Server-Driven $skiptoken Paging</h3>
+  <p>Set Prefer: odata.maxpagesize=N header. Response includes @odata.nextLink with $skiptoken. [<a href="https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-members/fetch-data-in-chunks-using-pagination-from-s-4-hana-cloud-s-odata-api/ba-p/13572611">src2</a>]</p>
+  <pre><code class="language-python">import requests
+
+def paginate_sap_odata(base_url, access_token, entity_set, page_size=1000):
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Prefer": f"odata.maxpagesize={page_size}",
+        "Accept": "application/json"
+    }
+    url = f"{base_url}/sap/opu/odata4/sap/{entity_set}"
+    all_records = []
+    while url:
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        all_records.extend(data.get("value", []))
+        url = data.get("@odata.nextLink")  # Don't modify this URL
+    return all_records</code></pre>
+  <p><strong>Verify</strong>: Compare count against <code>GET {entity_set}/$count</code></p>
+
+  <h3>3. Oracle ERP Cloud: Offset/Limit with orderBy</h3>
+  <p>Always include orderBy -- results are non-deterministic without it. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/24c/farca/Manage_Collections.html">src3</a>]</p>
+  <pre><code class="language-python">import requests
+
+def paginate_oracle_erp(base_url, access_token, resource, page_size=500):
+    headers = {"Authorization": f"Bearer {access_token}"}
+    all_records, offset = [], 0
+    while True:
+        params = {"limit": page_size, "offset": offset,
+                  "orderBy": "CreationDate:asc", "totalResults": "true"}
+        resp = requests.get(f"{base_url}/fscmRestApi/resources/latest/{resource}",
+                           headers=headers, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        all_records.extend(data.get("items", []))
+        if not data.get("hasMore", False):
+            break
+        offset += page_size
+    return all_records</code></pre>
+  <p><strong>Verify</strong>: <code>data["totalResults"]</code> matches <code>len(all_records)</code></p>
+
+  <h3>4. Dynamics 365: Follow @odata.nextLink</h3>
+  <p>D365 returns @odata.nextLink with $skiptoken. Never construct pagination URLs manually. [<a href="https://www.hellosmart.ca/2023/09/pagination-methods-in-dynamics-365.html">src5</a>, <a href="https://learn.microsoft.com/en-us/odata/webapi/skiptoken-for-server-side-paging">src8</a>]</p>
+  <pre><code class="language-python">import requests
+
+def paginate_dynamics365(base_url, access_token, entity, max_page_size=10000):
+    headers = {"Authorization": f"Bearer {access_token}",
+               "Prefer": f"odata.maxpagesize={max_page_size}"}
+    url = f"{base_url}/data/{entity}"
+    all_records = []
+    while url:
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        all_records.extend(data.get("value", []))
+        url = data.get("@odata.nextLink")
+    return all_records</code></pre>
+  <p><strong>Verify</strong>: <code>GET {entity}/$count</code> matches <code>len(all_records)</code></p>
+
+  <h3>5. Acumatica: Filter-Based Keyset for Large Datasets</h3>
+  <p>For &gt;50K records, avoid $skip and use filter-based keyset by sorting on a unique field.</p>
+  <pre><code class="language-python">import requests
+
+def paginate_acumatica_keyset(base_url, cookies, entity, page_size=100):
+    all_records, last_id = [], ""
+    while True:
+        params = {"$top": page_size, "$orderby": "InventoryID"}
+        if last_id:
+            params["$filter"] = f"InventoryID gt '{last_id}'"
+        resp = requests.get(f"{base_url}/entity/Default/24.200.001/{entity}",
+                           cookies=cookies, params=params)
+        resp.raise_for_status()
+        records = resp.json()
+        if not records:
+            break
+        all_records.extend(records)
+        last_id = records[-1]["InventoryID"]["value"]
+    return all_records</code></pre>
+  <p><strong>Verify</strong>: Compare against Acumatica Generic Inquiry count</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>cURL: Test Pagination for Each ERP</h3>
+  <pre><code class="language-bash"># Salesforce: Query with cursor pagination
+curl -s -H "Authorization: Bearer $SF_TOKEN" \
+  "$SF_INSTANCE/services/data/v62.0/query?q=SELECT+Id,Name+FROM+Account" \
+  | jq '{totalSize: .totalSize, done: .done, nextUrl: .nextRecordsUrl}'
+
+# SAP S/4HANA: Server-driven paging
+curl -s -H "Authorization: Bearer $SAP_TOKEN" \
+  -H "Prefer: odata.maxpagesize=100" \
+  "$SAP_URL/sap/opu/odata4/sap/API_BUSINESS_PARTNER/A_BusinessPartner" \
+  | jq '{count: (.value | length), nextLink: ."@odata.nextLink"}'
+
+# Oracle ERP Cloud: Offset pagination (always include orderBy!)
+curl -s -H "Authorization: Bearer $ORA_TOKEN" \
+  "$ORA_URL/fscmRestApi/resources/latest/invoices?limit=500&amp;offset=0&amp;orderBy=InvoiceId:asc&amp;totalResults=true" \
+  | jq '{totalResults: .totalResults, hasMore: .hasMore}'
+
+# NetSuite: Check for 1,000-page cap risk
+curl -s -H "Authorization: $NS_AUTH" \
+  "https://$NS_ACCOUNT.suitetalk.api.netsuite.com/services/rest/record/v1/customer?limit=1" \
+  | jq '.totalResults'
+
+# Dynamics 365: Follow @odata.nextLink
+curl -s -H "Authorization: Bearer $D365_TOKEN" \
+  -H "Prefer: odata.maxpagesize=5000" \
+  "$D365_URL/data/SalesOrderHeaders" \
+  | jq '{count: (.value | length), nextLink: ."@odata.nextLink"}'</code></pre>
+  </section>
+
+  <!-- Error Handling -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Error</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>QUERY_TIMEOUT</td><td>Query locator expired (&gt;15 min)</td><td>Reduce processing time; restart query</td></tr>
+      <tr><td>Salesforce</td><td>INVALID_QUERY_LOCATOR</td><td>Expired nextRecordsUrl</td><td>Re-execute original SOQL</td></tr>
+      <tr><td>SAP S/4HANA</td><td>400 Bad Request on $skip</td><td>$skip exceeds available records</td><td>Check $count; use $skiptoken</td></tr>
+      <tr><td>Oracle ERP</td><td>500 Internal Server Error</td><td>DB timeout at high offset</td><td>Add filters; use BICC for bulk</td></tr>
+      <tr><td>NetSuite</td><td>SSS_REQUEST_LIMIT_EXCEEDED</td><td>Concurrency/governance limit</td><td>Backoff; reduce concurrent sessions</td></tr>
+      <tr><td>Dynamics 365</td><td>429 Too Many Requests</td><td>Exceeded 6K req/5min</td><td>Respect Retry-After; use $batch</td></tr>
+      <tr><td>Workday</td><td>408 Request Timeout</td><td>RaaS report too large</td><td>Split with prompts; use WQL</td></tr>
+      <tr><td>Acumatica</td><td>Timeout</td><td>DB scan at large $skip</td><td>Switch to filter-based keyset</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Salesforce cursor expiry mid-extraction</strong>: Downstream processing taking &gt;15 min per page kills the cursor. Fix: <code>Buffer all pages locally first, then process</code>. [<a href="https://developer.salesforce.com/blogs/2022/12/processing-large-amounts-of-data-with-apis-part-1-of-2">src1</a>]</li>
+    <li><strong>SAP duplicate records with $skip/$top</strong>: Concurrent writes shift row positions. Fix: <code>Use Prefer: odata.maxpagesize=N for $skiptoken-based paging</code>. [<a href="https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-members/fetch-data-in-chunks-using-pagination-from-s-4-hana-cloud-s-odata-api/ba-p/13572611">src2</a>]</li>
+    <li><strong>Oracle silent data inconsistency</strong>: No orderBy causes non-deterministic results. Fix: <code>Always orderBy on unique, immutable column</code>. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/24c/farca/Manage_Collections.html">src3</a>]</li>
+    <li><strong>NetSuite 1,000-page ceiling</strong>: Integration silently stops at page 1,000. Fix: <code>Date-range chunking within lastmodifieddate windows</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156414087576.html">src4</a>]</li>
+    <li><strong>D365 $skip deprecation breakage</strong>: Manual $skip construction breaks on update. Fix: <code>Always follow @odata.nextLink from response</code>. [<a href="https://www.hellosmart.ca/2023/09/pagination-methods-in-dynamics-365.html">src5</a>, <a href="https://learn.microsoft.com/en-us/odata/webapi/skiptoken-for-server-side-paging">src8</a>]</li>
+    <li><strong>Workday RaaS timeout</strong>: Reports &gt;50K rows fail before returning data. Fix: <code>Add prompts (date ranges) to chunk, or use WQL API</code>. [<a href="https://blogs.mulesoft.com/dev-guides/workday-integrations-and-parallel-pagination/">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using $skip/$top for deep pagination on SAP</h3>
+  <pre><code class="language-python"># BAD -- O(n) scan + data consistency issues at high offsets
+offset = 0
+while True:
+    url = f"{base_url}/API_BUSINESS_PARTNER?$top=1000&amp;$skip={offset}"
+    data = requests.get(url, headers=headers).json()
+    records.extend(data["value"])
+    if len(data["value"]) &lt; 1000: break
+    offset += 1000  # At 500K: 30+ second queries</code></pre>
+
+  <h3>Correct: Server-driven $skiptoken paging</h3>
+  <pre><code class="language-python"># GOOD -- O(1) per page, consistent results
+headers["Prefer"] = "odata.maxpagesize=1000"
+url = f"{base_url}/API_BUSINESS_PARTNER"
+while url:
+    data = requests.get(url, headers=headers).json()
+    records.extend(data["value"])
+    url = data.get("@odata.nextLink")  # Contains $skiptoken</code></pre>
+
+  <h3>Wrong: Oracle offset without orderBy</h3>
+  <pre><code class="language-python"># BAD -- non-deterministic results; records may duplicate or disappear
+params = {"limit": 500, "offset": offset}
+data = requests.get(f"{url}/invoices", params=params).json()</code></pre>
+
+  <h3>Correct: Always include orderBy</h3>
+  <pre><code class="language-python"># GOOD -- deterministic page ordering on unique column
+params = {"limit": 500, "offset": offset, "orderBy": "InvoiceId:asc"}
+data = requests.get(f"{url}/invoices", params=params).json()</code></pre>
+
+  <h3>Wrong: Ignoring NetSuite 1,000-page cap</h3>
+  <pre><code class="language-python"># BAD -- silently stops at page 1,000 even with more data
+while True:
+    data = requests.get(f"{url}?limit=100&amp;offset={offset}").json()
+    all_records.extend(data["items"])
+    if not data["hasMore"]: break  # False positive at page 1,000!
+    offset += 100</code></pre>
+
+  <h3>Correct: Date-range chunking for NetSuite</h3>
+  <pre><code class="language-python"># GOOD -- chunk by date to stay under 1,000-page cap per window
+current = start_date
+while current &lt; end_date:
+    chunk_end = min(current + timedelta(days=7), end_date)
+    records = paginate_within_cap(
+        f"{url}?q=lastModifiedDate BETWEEN '{current}' AND '{chunk_end}'",
+        page_size=1000)
+    all_records.extend(records)
+    current = chunk_end</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Assuming all ERPs support cursor pagination</strong>: Only Salesforce and OData-based systems (SAP, D365, IFS) offer true cursor/$skiptoken. Oracle and NetSuite are offset-only. Fix: <code>Check this comparison table before designing integration</code>. [<a href="https://www.stainless.com/sdk-api-best-practices/how-to-implement-rest-api-pagination-offset-cursor-keyset">src7</a>]</li>
+    <li><strong>Constructing pagination URLs manually</strong>: D365 and SAP nextLink URLs are opaque. Fix: <code>Use the complete nextLink URL as-is</code>. [<a href="https://www.hellosmart.ca/2023/09/pagination-methods-in-dynamics-365.html">src5</a>, <a href="https://learn.microsoft.com/en-us/odata/webapi/skiptoken-for-server-side-paging">src8</a>]</li>
+    <li><strong>Not handling token expiry during long pagination</strong>: 500K records on Salesforce takes ~250 pages. Fix: <code>Refresh tokens proactively before expiry</code>. [<a href="https://developer.salesforce.com/blogs/2022/12/processing-large-amounts-of-data-with-apis-part-1-of-2">src1</a>]</li>
+    <li><strong>Using max page sizes to "optimize"</strong>: 10,000/page on D365 increases timeout risk. Fix: <code>Use 500-2,000 for reliable throughput</code>. [<a href="https://www.hellosmart.ca/2023/09/pagination-methods-in-dynamics-365.html">src5</a>]</li>
+    <li><strong>Ignoring the NetSuite 1,000-page cap</strong>: hasMore=false is a false negative at page 1,000. Fix: <code>Verify retrieved count; implement date-range chunking</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156414087576.html">src4</a>]</li>
+    <li><strong>Running offset pagination on volatile data</strong>: Inserts/deletes between requests cause gaps. Fix: <code>Use cursor where available; paginate on immutable columns otherwise</code>. [<a href="https://www.stainless.com/sdk-api-best-practices/how-to-implement-rest-api-pagination-offset-cursor-keyset">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Salesforce: Pre-check record count
+curl -s -H "Authorization: Bearer $SF_TOKEN" \
+  "$SF_INSTANCE/services/data/v62.0/query?q=SELECT+COUNT()+FROM+Account" \
+  | jq '.records[0].expr0'
+
+# SAP S/4HANA: Get entity count
+curl -s -H "Authorization: Bearer $SAP_TOKEN" \
+  "$SAP_URL/sap/opu/odata4/sap/API_BUSINESS_PARTNER/A_BusinessPartner/\$count"
+
+# Oracle ERP Cloud: Get total results
+curl -s -H "Authorization: Bearer $ORA_TOKEN" \
+  "$ORA_URL/fscmRestApi/resources/latest/invoices?limit=1&amp;totalResults=true" \
+  | jq '.totalResults'
+
+# NetSuite: Assess page cap risk
+curl -s -H "Authorization: $NS_AUTH" \
+  "https://$NS_ACCOUNT.suitetalk.api.netsuite.com/services/rest/record/v1/customer?limit=1" \
+  | jq '.totalResults'
+
+# Dynamics 365: Count entities
+curl -s -H "Authorization: Bearer $D365_TOKEN" \
+  "$D365_URL/data/SalesOrderHeaders/\$count"</code></pre>
+  </section>
+
+  <!-- Version History -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Feature</th><th scope="col">Introduced</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>nextRecordsUrl cursor</td><td>API v20+ (2010)</td><td>Stable</td><td>Unchanged for 15+ years</td></tr>
+      <tr><td>Salesforce</td><td>GraphQL cursors</td><td>v56.0 (2022)</td><td>GA</td><td>Alternative for complex queries</td></tr>
+      <tr><td>SAP S/4HANA</td><td>OData V4 $skiptoken</td><td>2020</td><td>Current</td><td>Preferred over $skip/$top</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>REST offset/limit</td><td>2017</td><td>Current</td><td>No cursor alternative planned</td></tr>
+      <tr><td>NetSuite</td><td>REST API pagination</td><td>2019.2</td><td>Current</td><td>1,000-page cap since launch</td></tr>
+      <tr><td>Dynamics 365</td><td>$skiptoken adoption</td><td>2023+</td><td>Current</td><td>Replacing $skip</td></tr>
+      <tr><td>Workday</td><td>WQL pagination</td><td>2022</td><td>Current</td><td>Alternative to RaaS</td></tr>
+      <tr><td>IFS Cloud</td><td>OData V4 paging</td><td>22R1</td><td>Current</td><td>Standard OData pattern</td></tr>
+      <tr><td>Acumatica</td><td>REST $top/$skip</td><td>2019 R1</td><td>Current</td><td>No cursor alternative</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Extracting &lt;100K records for sync</td><td>Extracting &gt;1M records for migration</td><td>Bulk API (SF), BICC (Oracle), DMF (D365)</td></tr>
+      <tr><td>Incremental data sync</td><td>Initial full data load</td><td>Bulk export APIs or file-based import</td></tr>
+      <tr><td>Feeding dashboards with fresh data</td><td>Historical analytics over full dataset</td><td>Data warehouse / BICC / Prism Analytics</td></tr>
+      <tr><td>Moderate-volume scheduled integrations</td><td>High-frequency event processing</td><td>CDC / Platform Events / webhooks</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle ERP</th><th scope="col">NetSuite</th><th scope="col">D365</th><th scope="col">Workday</th><th scope="col">IFS</th><th scope="col">Acumatica</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Pagination Type</strong></td><td>Cursor</td><td>$skiptoken</td><td>Offset</td><td>Offset</td><td>$skiptoken</td><td>Page/offset</td><td>$skiptoken</td><td>$skip + keyset</td></tr>
+      <tr><td><strong>Consistency</strong></td><td>Strong</td><td>Strong</td><td>None</td><td>None</td><td>Strong</td><td>None</td><td>Strong</td><td>None</td></tr>
+      <tr><td><strong>Perf at 100K</strong></td><td>Excellent</td><td>Good</td><td>Degraded</td><td>Capped</td><td>Good</td><td>N/A</td><td>Good</td><td>Degraded</td></tr>
+      <tr><td><strong>Perf at 1M</strong></td><td>Good</td><td>Good</td><td>Very poor</td><td>Impossible</td><td>Good</td><td>N/A</td><td>Good</td><td>Very poor</td></tr>
+      <tr><td><strong>Max Retrievable</strong></td><td>Unlimited*</td><td>Unlimited</td><td>Unlimited**</td><td>~1M</td><td>Unlimited</td><td>~50K RaaS</td><td>Unlimited</td><td>Unlimited**</td></tr>
+      <tr><td><strong>Resumable</strong></td><td>No</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td><td>Yes</td><td>Depends</td><td>Yes</td></tr>
+      <tr><td><strong>Random Access</strong></td><td>No</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+      <tr><td><strong>Standard</strong></td><td>Proprietary</td><td>OData V4</td><td>REST</td><td>REST</td><td>OData V4</td><td>Proprietary</td><td>OData V4</td><td>REST</td></tr>
+      <tr><td><strong>Learning Curve</strong></td><td>Low</td><td>Medium</td><td>Low</td><td>Low</td><td>Medium</td><td>High</td><td>Medium</td><td>Low</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>*Subject to daily API call quota. **Subject to timeout at very high offsets.</p>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Pagination patterns change with API versions -- SAP's shift from $skip to $skiptoken and D365's deprecation of manual $skip are recent examples.</li>
+    <li>Performance numbers (O(1) vs O(n)) are theoretical -- actual performance depends on indexes, query complexity, and server load.</li>
+    <li>"Stateless" offset pagination is only safe if data does not change between requests.</li>
+    <li>NetSuite's 1,000-page cap is not documented prominently -- many developers discover it in production.</li>
+    <li>Workday RaaS "no pagination" is architectural, not a bug -- use WQL or smaller scopes.</li>
+    <li>Token/cursor expiry times may be configurable by admins -- never hardcode assumptions.</li>
+    <li>This covers cloud/SaaS deployments. On-premise versions may differ.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/erp-rest-api-comparison/2026" data-relationship="related_to">ERP REST API Comparison</a>
+    <a href="/business/erp-integration/erp-rate-limits-comparison/2026" data-relationship="related_to">ERP Rate Limits Comparison</a>
+    <a href="/business/erp-integration/erp-bulk-import-comparison/2026" data-relationship="alternative_to">ERP Bulk Import Comparison</a>
+    <a href="/business/erp-integration/change-data-capture-erp/2026" data-relationship="solves">Change Data Capture Across ERPs</a>
+    <a href="/business/erp-integration/batch-vs-realtime-integration/2026" data-relationship="often_confused_with">Batch vs Real-Time Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

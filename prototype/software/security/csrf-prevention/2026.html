@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>CSRF Prevention: Cross-Site Request Forgery | knowledgelib.io</title>
+  <meta name="description" content="Complete CSRF prevention guide covering synchronizer tokens, signed double-submit cookies, Fetch Metadata validation, SameSite cookies, and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/csrf-prevention/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="CSRF Prevention: Cross-Site Request Forgery | knowledgelib.io">
+  <meta property="og:description" content="Complete CSRF prevention guide covering synchronizer tokens, signed double-submit cookies, Fetch Metadata validation, SameSite cookies, and framework-specific defenses for Django, Express, and Spring. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/csrf-prevention/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CSRF Prevention: Cross-Site Request Forgery | knowledgelib.io">
+  <meta name="twitter:description" content="Complete CSRF prevention guide covering synchronizer tokens, signed double-submit cookies, Fetch Metadata validation, SameSite cookies, and framework-specific defenses for Django, Express, and Spring. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/CSRF Prevention">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I prevent Cross-Site Request Forgery (CSRF)?">
+  <meta name="ai:aliases" content="CSRF protection best practices; cross-site request forgery mitigation; anti-CSRF token implementation; SameSite cookie CSRF defense; synchronizer token pattern; double submit cookie CSRF; CWE-352 prevention; how to stop CSRF in Django Express Spring">
+  <meta name="ai:raw" content="/api/v1/units/software/security/csrf-prevention/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="framework,request_type">
+  <meta name="ai:constraints" content="NEVER use GET for state-changing operations; XSS defeats ALL CSRF defenses; SameSite cookies are defense-in-depth NOT standalone; CSRF tokens MUST use constant-time comparison; NEVER transmit tokens in URL query strings; csurf npm package is deprecated with known bypasses">
+  <meta name="ai:skip_this_unit_if" content="Need XSS prevention → software/security/xss-prevention/2026; Need SQL injection prevention → software/security/sql-injection-prevention/2026; Stateless API with JWT → software/patterns/jwt-implementation/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "CSRF Prevention: Cross-Site Request Forgery Defense Guide",
+    "headline": "CSRF Prevention: Cross-Site Request Forgery Defense Guide",
+    "description": "Complete guide to preventing Cross-Site Request Forgery (CSRF) attacks with synchronizer tokens, signed double-submit cookies, Fetch Metadata headers, SameSite cookies, and framework-specific defenses for Django, Express, and Spring.",
+    "keywords": ["CSRF prevention", "cross-site request forgery", "anti-CSRF token", "SameSite cookies", "synchronizer token pattern", "double submit cookie", "CWE-352", "web security"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "csrf-csrf 3.x (Express), Django CsrfViewMiddleware, Spring Security 6.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Cross-Site Request Forgery Prevention Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to prevent CSRF vulnerabilities",
+        "url": "https://portswigger.net/web-security/csrf/preventing"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cross-site request forgery (CSRF)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-352: Cross-Site Request Forgery (CSRF)",
+        "url": "https://cwe.mitre.org/data/definitions/352.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cross Site Request Forgery (CSRF) :: Spring Security",
+        "url": "https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cross Site Request Forgery protection",
+        "url": "https://docs.djangoproject.com/en/6.0/ref/csrf/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Protect your resources from web attacks with Fetch Metadata",
+        "url": "https://web.dev/articles/fetch-metadata"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "CSRF Prevention: Cross-Site Request Forgery Defense Guide",
+    "description": "Structured knowledge unit on preventing Cross-Site Request Forgery (CSRF) attacks with token patterns, SameSite cookies, Fetch Metadata validation, and framework-specific code examples.",
+    "keywords": ["CSRF prevention", "cross-site request forgery", "anti-CSRF token", "SameSite cookies", "CWE-352", "web security"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "PortSwigger"},
+      {"@type": "Organization", "name": "MDN Web Docs"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "Spring"},
+      {"@type": "Organization", "name": "Django Software Foundation"},
+      {"@type": "Organization", "name": "Google Web Dev"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "CSRF Prevention" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I prevent Cross-Site Request Forgery (CSRF)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CSRF protection best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cross-site request forgery mitigation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "anti-CSRF token implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SameSite cookie CSRF defense",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "synchronizer token pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>CSRF Prevention: Cross-Site Request Forgery Defense Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I prevent Cross-Site Request Forgery (CSRF)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/csrf-prevention/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Combine CSRF tokens (synchronizer or signed double-submit cookie pattern) with SameSite cookie attributes and Fetch Metadata header validation for layered CSRF defense -- no single technique is sufficient alone.</li>
+    <li><strong>Key tool/command</strong>: <code>{% csrf_token %}</code> (Django), <code>csrf-csrf</code> middleware (Express), <code>http.csrf(Customizer.withDefaults())</code> (Spring Security) -- use your framework's built-in CSRF protection.</li>
+    <li><strong>Watch out for</strong>: XSS vulnerabilities defeat ALL CSRF protections -- an attacker who can inject scripts can read and submit tokens.</li>
+    <li><strong>Works with</strong>: All major web frameworks have built-in CSRF support. SameSite cookies supported in all modern browsers (Chrome 51+, Firefox 60+, Safari 12+, Edge 16+). Fetch Metadata supported since March 2023.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER use GET requests for state-changing operations -- CSRF tokens cannot protect GET endpoints</li>
+    <li>XSS defeats ALL CSRF defenses -- fix XSS first before relying on CSRF tokens</li>
+    <li>SameSite cookies are defense-in-depth, NOT a standalone CSRF solution</li>
+    <li>CSRF tokens MUST be compared using constant-time comparison to prevent timing attacks</li>
+    <li>NEVER transmit CSRF tokens in URL query strings -- they leak via Referer headers and server logs</li>
+    <li>The deprecated csurf npm package has known bypasses -- use csrf-csrf or framework-native protection instead</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Attack Vectors &amp; Defenses</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Attack Vector</th><th scope="col">Risk</th><th scope="col">Vulnerable Pattern</th><th scope="col">Secure Pattern</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Hidden form POST</td><td>Critical</td><td>Form action targets victim site, browser auto-sends session cookie</td><td>Require CSRF token in hidden field, validate server-side</td></tr>
+      <tr><td>2</td><td>Auto-submitting form via JS</td><td>Critical</td><td><code>&lt;form&gt;</code> + <code>document.forms[0].submit()</code> on attacker page</td><td>SameSite=Strict cookie + CSRF token validation</td></tr>
+      <tr><td>3</td><td>Image tag GET</td><td>High</td><td><code>&lt;img src="https://bank.com/transfer?to=attacker"&gt;</code></td><td>Never use GET for state changes; validate Sec-Fetch-Site</td></tr>
+      <tr><td>4</td><td>XHR/fetch from attacker origin</td><td>High</td><td>No CORS preflight for simple requests (application/x-www-form-urlencoded)</td><td>Require custom header (X-CSRF-Token) or application/json Content-Type</td></tr>
+      <tr><td>5</td><td>Subdomain cookie tossing</td><td>High</td><td>Naive double-submit cookie without HMAC signing</td><td>Use signed double-submit cookie with HMAC and session binding</td></tr>
+      <tr><td>6</td><td>Login CSRF</td><td>Medium</td><td>No CSRF protection on login form</td><td>Use pre-session token for unauthenticated forms</td></tr>
+      <tr><td>7</td><td>Cross-origin WebSocket</td><td>Medium</td><td>WebSocket handshake carries cookies without origin check</td><td>Validate Origin header on WebSocket upgrade</td></tr>
+      <tr><td>8</td><td>Flash/Silverlight-based (legacy)</td><td>Low</td><td>Outdated plugins bypass SameSite restrictions</td><td>Deprecated; ensure plugins are disabled</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Prevention Methods Comparison</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Method</th><th scope="col">Strength</th><th scope="col">Stateful?</th><th scope="col">Framework Support</th><th scope="col">Limitations</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Synchronizer Token Pattern</td><td>Strong</td><td>Yes (server session)</td><td>Django, Rails, Spring, ASP.NET</td><td>Requires server-side session storage</td></tr>
+      <tr><td>2</td><td>Signed Double-Submit Cookie</td><td>Strong</td><td>No (stateless)</td><td>csrf-csrf (Express), custom</td><td>Must HMAC-sign with server secret; naive version is vulnerable</td></tr>
+      <tr><td>3</td><td>Fetch Metadata (Sec-Fetch-Site)</td><td>Strong</td><td>No</td><td>Express middleware, custom</td><td>Legacy browsers without Fetch Metadata need fallback</td></tr>
+      <tr><td>4</td><td>Custom Request Headers</td><td>Moderate</td><td>No</td><td>Angular (X-XSRF-TOKEN), Axios</td><td>Only works for AJAX; forms cannot set custom headers</td></tr>
+      <tr><td>5</td><td>SameSite Cookies</td><td>Moderate</td><td>No</td><td>All browsers (default Lax)</td><td>Bypassed by same-site cross-origin attacks</td></tr>
+      <tr><td>6</td><td>Origin/Referer Validation</td><td>Moderate</td><td>No</td><td>Manual implementation</td><td>Referer can be stripped; Origin absent in some requests</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What type of state-changing requests does your app make?
+&#9500;&#9472;&#9472; HTML form submissions (POST)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Synchronizer Token Pattern (hidden field + server session)
+&#9474;   &#9474;         Django: {% csrf_token %}, Spring: _csrf.token, Rails: authenticity_token
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; AJAX/fetch only (SPA architecture)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Require custom header (X-CSRF-Token) or use application/json Content-Type
+&#9474;   &#9474;         + signed double-submit cookie for stateless validation
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Both forms and AJAX?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Synchronizer token for forms + custom header with same token for AJAX
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Stateless API with JWT (no session cookies)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; CSRF protection not needed (no cookies = no CSRF risk)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Microservices behind API gateway?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Validate Fetch Metadata (Sec-Fetch-Site) at gateway level
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Synchronizer Token Pattern + SameSite=Lax cookies + Fetch Metadata</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Set SameSite attribute on all session cookies</h3>
+  <p>SameSite prevents the browser from sending cookies with cross-site requests. Set it to Strict where possible, Lax as minimum. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-http">Set-Cookie: sessionid=abc123; SameSite=Lax; Secure; HttpOnly; Path=/
+Set-Cookie: __Host-sessionid=abc123; SameSite=Strict; Secure; HttpOnly; Path=/</code></pre>
+  <p><strong>Verify</strong>: Browser DevTools &gt; Application &gt; Cookies -- confirm SameSite attribute is set. Test cross-site form submission -- cookie should NOT be sent with POST.</p>
+
+  <h3>2. Implement framework-native CSRF token protection</h3>
+  <p>Use your framework's built-in CSRF middleware rather than building your own. [<a href="https://docs.djangoproject.com/en/6.0/ref/csrf/">src6</a>]</p>
+  <pre><code class="language-python"># Django settings.py -- enabled by default
+MIDDLEWARE = [
+    'django.middleware.csrf.CsrfViewMiddleware',
+]
+# Templates: &lt;form method="post"&gt;{% csrf_token %} ... &lt;/form&gt;</code></pre>
+  <p><strong>Verify</strong>: Submit a form without the CSRF token -- should receive 403 Forbidden.</p>
+
+  <h3>3. Add Fetch Metadata validation middleware</h3>
+  <p>Fetch Metadata headers let you reject cross-site requests at the server level before any application logic runs. [<a href="https://web.dev/articles/fetch-metadata">src7</a>]</p>
+  <pre><code class="language-javascript">function fetchMetadataPolicy(req, res, next) {
+  const site = req.headers['sec-fetch-site'];
+  if (!site) return next();
+  if (['same-origin', 'same-site', 'none'].includes(site)) return next();
+  if (req.headers['sec-fetch-mode'] === 'navigate'
+      &amp;&amp; req.method === 'GET') return next();
+  res.status(403).json({ error: 'Cross-site request blocked' });
+}
+app.use(fetchMetadataPolicy);</code></pre>
+  <p><strong>Verify</strong>: Send a cross-origin POST from a different domain -- should receive 403.</p>
+
+  <h3>4. Validate Origin and Referer headers</h3>
+  <p>Check that the Origin (or Referer) header matches your expected domain on state-changing requests. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">ALLOWED_ORIGINS = {'https://example.com', 'https://www.example.com'}
+
+def validate_origin(request):
+    origin = request.headers.get('Origin')
+    if origin and origin not in ALLOWED_ORIGINS:
+        return False
+    return True</code></pre>
+  <p><strong>Verify</strong>: Set Origin header to <code>https://evil.com</code> in a request tool -- should be rejected.</p>
+
+  <h3>5. Protect login and unauthenticated forms</h3>
+  <p>Login forms are vulnerable to CSRF (login CSRF) even without an active session. Use a pre-session token. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">from django.views.decorators.csrf import csrf_protect
+
+@csrf_protect
+def login_view(request):
+    if request.method == 'POST':
+        # CsrfViewMiddleware validates token before session exists
+        pass</code></pre>
+  <p><strong>Verify</strong>: Submit the login form without <code>csrfmiddlewaretoken</code> -- should return 403.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python/Django: Complete CSRF Protection</h3>
+  <pre><code class="language-python"># settings.py
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+]
+CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SECURE = True
+
+# views.py
+from django.shortcuts import render
+
+def transfer(request):
+    if request.method == 'POST':
+        # Token validated by CsrfViewMiddleware
+        amount = request.POST['amount']
+        recipient = request.POST['recipient']
+    return render(request, 'transfer.html')
+
+# For AJAX: read token from cookie or hidden field
+# fetch('/api/transfer', {
+#   method: 'POST',
+#   headers: { 'X-CSRFToken': csrfToken },
+#   body: JSON.stringify({ amount: 100 })
+# });</code></pre>
+
+  <h3>Node.js/Express: Signed Double-Submit Cookie</h3>
+  <pre><code class="language-javascript">const express = require('express');            // ^4.18.0
+const { doubleCsrf } = require('csrf-csrf');   // ^3.0.0
+const cookieParser = require('cookie-parser'); // ^1.4.0
+const app = express();
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+
+const { doubleCsrfProtection, generateToken } = doubleCsrf({
+  getSecret: () =&gt; process.env.CSRF_SECRET,
+  cookieName: '__Host-csrf',
+  cookieOptions: {
+    sameSite: 'strict', secure: true,
+    httpOnly: true, path: '/'
+  },
+  getTokenFromRequest: (req) =&gt;
+    req.headers['x-csrf-token'] || req.body._csrf
+});
+app.use(doubleCsrfProtection);
+
+app.get('/form', (req, res) =&gt; {
+  const token = generateToken(req, res);
+  res.send(`&lt;form method="POST" action="/transfer"&gt;
+    &lt;input type="hidden" name="_csrf" value="${token}"&gt;
+    &lt;button type="submit"&gt;Transfer&lt;/button&gt;
+  &lt;/form&gt;`);
+});</code></pre>
+
+  <h3>Java/Spring Boot: Built-in CSRF with Thymeleaf</h3>
+  <pre><code class="language-java">// SecurityConfig.java -- Spring Security 6.x
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.csrf(csrf -&gt; csrf
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+    );
+    return http.build();
+}
+// Thymeleaf auto-injects hidden _csrf field in th:action forms
+// For AJAX: read token from meta tag, set in X-CSRF-TOKEN header
+
+// For stateless JWT APIs (no session cookies):
+// http.csrf(csrf -&gt; csrf.disable())
+//   .sessionManagement(sm -&gt;
+//     sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using GET for state-changing operations</h3>
+  <pre><code class="language-html">&lt;!-- BAD -- GET requests are not protected by CSRF tokens --&gt;
+&lt;a href="/api/delete-account?confirm=true"&gt;Delete Account&lt;/a&gt;
+&lt;!-- Attacker embeds: &lt;img src="/api/delete-account?confirm=true"&gt; --&gt;</code></pre>
+
+  <h3>Correct: Use POST with CSRF token for state changes</h3>
+  <pre><code class="language-html">&lt;!-- GOOD -- POST with CSRF token --&gt;
+&lt;form method="POST" action="/api/delete-account"&gt;
+  &lt;input type="hidden" name="csrf_token" value="{{csrf_token}}"&gt;
+  &lt;button type="submit"&gt;Delete Account&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+  <h3>Wrong: Naive double-submit cookie without HMAC signing</h3>
+  <pre><code class="language-javascript">// BAD -- unsigned double-submit cookie vulnerable to cookie tossing
+const token = crypto.randomBytes(32).toString('hex');
+res.cookie('csrf', token);
+// Attacker on subdomain sets their own csrf cookie + matching value</code></pre>
+
+  <h3>Correct: Signed double-submit cookie with HMAC</h3>
+  <pre><code class="language-javascript">// GOOD -- HMAC-signed token bound to session
+const crypto = require('crypto');
+function generateCsrfToken(sessionId, secret) {
+  const random = crypto.randomBytes(16).toString('hex');
+  const hmac = crypto.createHmac('sha256', secret)
+    .update(sessionId + random).digest('hex');
+  return hmac + '.' + random;
+}
+function validateCsrfToken(token, sessionId, secret) {
+  const [hmac, random] = token.split('.');
+  const expected = crypto.createHmac('sha256', secret)
+    .update(sessionId + random).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expected));
+}</code></pre>
+
+  <h3>Wrong: Disabling CSRF protection for convenience</h3>
+  <pre><code class="language-java">// BAD -- disabling CSRF on session-based app
+http.csrf(csrf -&gt; csrf.disable());
+// "It works now!" -- and so do CSRF attacks</code></pre>
+
+  <h3>Correct: Disable only for stateless JWT APIs</h3>
+  <pre><code class="language-java">// GOOD -- disable CSRF only when session cookies are not used
+http
+  .csrf(csrf -&gt; csrf.disable())
+  .sessionManagement(sm -&gt;
+    sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+  .oauth2ResourceServer(oauth2 -&gt; oauth2.jwt(Customizer.withDefaults()));
+// No session cookie = no CSRF risk</code></pre>
+
+  <h3>Wrong: Using the deprecated csurf package</h3>
+  <pre><code class="language-javascript">// BAD -- csurf deprecated (Sep 2022) with known bypasses
+const csurf = require('csurf');  // DO NOT USE
+app.use(csurf());</code></pre>
+
+  <h3>Correct: Use csrf-csrf or framework-native protection</h3>
+  <pre><code class="language-javascript">// GOOD -- csrf-csrf implements signed double-submit cookie
+const { doubleCsrf } = require('csrf-csrf');  // ^3.0.0
+const { doubleCsrfProtection } = doubleCsrf({
+  getSecret: () =&gt; process.env.CSRF_SECRET,
+  cookieName: '__Host-csrf',
+  cookieOptions: { sameSite: 'strict', secure: true, httpOnly: true }
+});
+app.use(doubleCsrfProtection);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>SameSite=Lax allows GET requests</strong>: Lax only blocks cross-site POST/PUT/DELETE. If your app changes state via GET, SameSite=Lax provides no protection. Fix: Never use GET for state changes. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>CSRF token in cookie only</strong>: Placing the token only in a cookie (not also in a form field or header) provides zero protection -- browsers auto-send cookies. Fix: Token must appear in both a cookie AND a request body/header. [<a href="https://portswigger.net/web-security/csrf/preventing">src2</a>]</li>
+    <li><strong>Missing CSRF on login forms</strong>: Login CSRF allows an attacker to log the victim into the attacker's account. Fix: Apply CSRF protection to login and other pre-authentication forms. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>XSS negates CSRF protection</strong>: An XSS vulnerability lets the attacker read CSRF tokens from the DOM and submit forged requests. Fix: Prevent XSS first. [<a href="https://cwe.mitre.org/data/definitions/352.html">src4</a>]</li>
+    <li><strong>Cross-origin same-site attacks</strong>: SameSite cookies protect against cross-site but NOT cross-origin same-site requests. Fix: Use CSRF tokens + <code>__Host-</code> cookie prefix. [<a href="https://portswigger.net/web-security/csrf/preventing">src2</a>]</li>
+    <li><strong>Referer stripping breaks validation</strong>: Privacy extensions strip the Referer header, causing false rejections. Fix: Use Origin header as primary check; fall back to Referer. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>BREACH attack on CSRF tokens</strong>: Compression + encryption can leak CSRF token bytes. Fix: Use per-request token masking (Django and Spring do this automatically). [<a href="https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check SameSite attribute on cookies
+curl -sI -b cookies.txt https://your-site.com/login | grep -i set-cookie
+
+# Test CSRF protection -- submit without token (should fail)
+curl -X POST https://your-site.com/api/transfer \
+  -H "Cookie: sessionid=valid_session" \
+  -d "amount=100&amp;recipient=attacker"
+# Expected: 403 Forbidden
+
+# Verify Origin header validation
+curl -X POST https://your-site.com/api/transfer \
+  -H "Origin: https://evil.com" \
+  -H "Cookie: sessionid=valid_session" \
+  -d "amount=100"
+# Expected: 403 Forbidden
+
+# Scan for CSRF vulnerabilities with OWASP ZAP
+docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+  -t https://your-site.com -r report.html
+
+# Find forms missing CSRF tokens
+grep -rn '&lt;form' --include="*.html" . | grep -v 'csrf\|_token'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Framework</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">CSRF Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SameSite Cookies</td><td>Chrome 80+ (Feb 2020)</td><td>Default Lax</td><td>Browser default SameSite=Lax for all cookies</td></tr>
+      <tr><td>Fetch Metadata (Sec-Fetch-*)</td><td>Chrome 76+, Firefox 90+, Safari 16.1+</td><td>Supported</td><td>&gt;98% global browser coverage</td></tr>
+      <tr><td>Django CsrfViewMiddleware</td><td>Django 1.2+ (current: 6.0)</td><td>Built-in, enabled by default</td><td>Synchronizer token + Origin validation + BREACH masking</td></tr>
+      <tr><td>Spring Security CSRF</td><td>Spring Security 4.0+ (current: 6.x)</td><td>Built-in, enabled by default</td><td>Synchronizer token + CookieCsrfTokenRepository + BREACH protection</td></tr>
+      <tr><td>Express csrf-csrf</td><td>v3.x</td><td>Active, recommended</td><td>Signed double-submit cookie pattern</td></tr>
+      <tr><td>Express csurf</td><td>Deprecated Sep 2022</td><td>Archived, DO NOT USE</td><td>Known cookie tossing bypass</td></tr>
+      <tr><td>Rails protect_from_forgery</td><td>Rails 2.0+ (current: 8.x)</td><td>Built-in, enabled by default</td><td>Synchronizer token + Origin check</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>App uses session cookies for authentication</td><td>API uses stateless JWT tokens (no cookies)</td><td>Standard Authorization header validation</td></tr>
+      <tr><td>HTML forms submit state-changing requests</td><td>All requests use application/json with custom headers</td><td>CORS preflight provides implicit CSRF protection</td></tr>
+      <tr><td>App has both browser and API consumers</td><td>Server-to-server communication only (no browser)</td><td>Mutual TLS or API key authentication</td></tr>
+      <tr><td>Login forms need protection from login CSRF</td><td>Static read-only site with no state changes</td><td>No CSRF protection needed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>XSS is a strictly more powerful attack than CSRF -- if an attacker has XSS, they can bypass all CSRF defenses by reading tokens from the DOM</li>
+    <li>SameSite=Lax is now the browser default, which blocks most naive CSRF attacks, but sophisticated attackers can still exploit same-site cross-origin scenarios</li>
+    <li>Mobile apps using WebView may not enforce SameSite cookies consistently -- test CSRF protection specifically in your mobile WebView environment</li>
+    <li>Fetch Metadata headers are not sent to non-HTTPS URLs -- your site must use HTTPS for this defense to work</li>
+    <li>Some CDNs and reverse proxies may strip Sec-Fetch-* headers -- verify they are forwarded to your application</li>
+    <li>CSRF protection must be applied to ALL state-changing endpoints, including file uploads, settings changes, and API endpoints -- not just financial transactions</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention</a>
+    <a href="/software/patterns/session-management/2026" data-relationship="related_to">Session Management Patterns</a>
+    <a href="/software/security/sql-injection-prevention/2026" data-relationship="often_confused_with">SQL Injection Prevention</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

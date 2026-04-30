@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Find and Fix Memory Leaks in Python | knowledgelib.io</title>
+    <meta name="description" content="Complete debugging guide for Python memory leaks: 10 ranked causes, tracemalloc snapshots, objgraph reference tracing, gc.collect, weakref patterns,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/python-memory-leaks/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Find and Fix Memory Leaks in Python | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete debugging guide for Python memory leaks: 10 ranked causes, tracemalloc snapshots, objgraph reference tracing, gc.collect, weakref patterns, memray profiling, free-threaded Python 3.13t/3.14t GC changes, 3 code examples, 3 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/python-memory-leaks/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Find and Fix Memory Leaks in Python | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete debugging guide for Python memory leaks: 10 ranked causes, tracemalloc snapshots, objgraph reference tracing, gc.collect, weakref patterns, memray profiling, free-threaded Python 3.13t/3.14t GC changes, 3 code examples, 3 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/python_memory_leaks">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I find and fix memory leaks in Python?">
+    <meta name="ai:aliases"
+        content="Python memory leak; Python memory usage growing; Python process memory increasing; Python tracemalloc; Python objgraph; Python gc collect; Python reference cycle; Python MemoryError; Python RSS growing; Python memray profiling">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/python-memory-leaks/2026.md">
+    <meta name="ai:token_estimate" content="5200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="python_version,app_type,growth_pattern">
+    <meta name="ai:constraints"
+        content="tracemalloc only tracks Python-level allocations — C extensions invisible; Free-threaded Python 3.13t/3.14t uses different GC; gc.collect() only collects cycles not straight refs; Never gc.disable() without replacement; memray Linux/macOS only; tracemalloc.start(N) frame depth tradeoff">
+    <meta name="ai:skip_this_unit_if"
+        content="Process OOM-killed by container → software/debugging/docker-oomkilled/2026; Memory spike on single operation → use streaming; High CPU not memory → software/debugging/python-cpu-profiling/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Find and Fix Memory Leaks in Python",
+    "headline": "How to Find and Fix Memory Leaks in Python",
+    "description": "Complete debugging guide for Python memory leaks covering 10 ranked causes, tracemalloc, objgraph, gc module, weakref, memray profiling, free-threaded Python GC changes, and Django/Flask/FastAPI patterns.",
+    "keywords": ["Python memory leak", "tracemalloc", "objgraph", "gc.collect", "weakref", "memray", "reference cycle", "free-threaded Python", "Python 3.14"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Python 3.4+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Python — tracemalloc", "url": "https://docs.python.org/3/library/tracemalloc.html" },
+      { "@type": "WebPage", "name": "Python — gc module", "url": "https://docs.python.org/3/library/gc.html" },
+      { "@type": "WebPage", "name": "Python — weakref", "url": "https://docs.python.org/3/library/weakref.html" },
+      { "@type": "WebPage", "name": "Real Python — Memory Management", "url": "https://realpython.com/python-memory-management/" },
+      { "@type": "WebPage", "name": "Bloomberg — Debugging Memory Leaks", "url": "https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/" },
+      { "@type": "WebPage", "name": "objgraph documentation", "url": "https://mg.pov.lt/objgraph/" },
+      { "@type": "WebPage", "name": "memray — Memory Profiler", "url": "https://github.com/bloomberg/memray" },
+      { "@type": "WebPage", "name": "Quansight Labs — Free-Threaded GC", "url": "https://labs.quansight.org/blog/free-threaded-gc-3-14" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Find and Fix Memory Leaks in Python",
+    "description": "Structured debugging reference for Python memory leaks with ranked causes, profiling tools, free-threaded GC implications, and pattern fixes.",
+    "keywords": ["Python", "memory leak", "tracemalloc", "garbage collector", "memray", "free-threaded"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Python Software Foundation"},
+      {"@type": "Organization", "name": "Bloomberg Engineering"},
+      {"@type": "Organization", "name": "Quansight Labs"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Find and Fix Memory Leaks in Python" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I find and fix memory leaks in Python?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Python uses reference counting + cyclic garbage collection. Memory leaks occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded caches/lists growing forever, (2) reference cycles with __del__, (3) global/class-level mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by Python's GC."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Python memory leak",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Python uses reference counting + cyclic garbage collection. Memory leaks occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded caches/lists growing forever, (2) reference cycles with __del__, (3) global/class-level mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by Python's GC."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Python memory usage growing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Python uses reference counting + cyclic garbage collection. Memory leaks occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded caches/lists growing forever, (2) reference cycles with __del__, (3) global/class-level mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by Python's GC."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Python process memory increasing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Python uses reference counting + cyclic garbage collection. Memory leaks occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded caches/lists growing forever, (2) reference cycles with __del__, (3) global/class-level mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by Python's GC."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Python tracemalloc",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Python uses reference counting + cyclic garbage collection. Memory leaks occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded caches/lists growing forever, (2) reference cycles with __del__, (3) global/class-level mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by Python's GC."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Python objgraph",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Python uses reference counting + cyclic garbage collection. Memory leaks occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded caches/lists growing forever, (2) reference cycles with __del__, (3) global/class-level mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by Python's GC."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Find and Fix Memory Leaks in Python</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I find and fix memory leaks in Python?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/python-memory-leaks/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Python uses reference counting + cyclic garbage collection. Memory leaks
+                occur when objects remain referenced longer than needed. The 5 most common causes: (1) unbounded
+                caches/lists growing forever, (2) reference cycles with <code>__del__</code>, (3) global/class-level
+                mutable state, (4) unclosed resources (files, DB connections), (5) C extension memory not tracked by
+                Python's GC.</li>
+            <li><strong>Key tool/command</strong>: <code>tracemalloc</code> (built-in) — take two snapshots and compare:
+                <code>tracemalloc.start(); snap1 = tracemalloc.take_snapshot(); ...code...; snap2 = tracemalloc.take_snapshot(); print(snap2.compare_to(snap1, 'lineno'))</code>.
+                For production: <code>memray</code> (Bloomberg's profiler).</li>
+            <li><strong>Watch out for</strong>: <code>functools.lru_cache</code> without <code>maxsize</code> — defaults
+                to 128 entries but can still grow large. Unbounded <code>@lru_cache(maxsize=None)</code> is a common
+                leak source.</li>
+            <li><strong>Works with</strong>: Python 3.4+ (tracemalloc), Python 3.7+ (memray, Linux/macOS only). Applies
+                to all applications: Django, Flask, FastAPI, data pipelines, long-running scripts. Free-threaded builds
+                (3.13t/3.14t) have different GC behavior — see Constraints.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints — agents: read before recommending any action -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>tracemalloc is Python-only</strong>: It does not track allocations made by C extensions (numpy,
+                pandas, Pillow, etc.). If RSS grows but tracemalloc shows no growth, the leak is in native code — use
+                memray or valgrind instead. [<a href="https://docs.python.org/3/library/tracemalloc.html">src1</a>, <a
+                    href="https://github.com/bloomberg/memray">src7</a>]</li>
+            <li><strong>Free-threaded GC differs</strong>: Python 3.13t/3.14t use a different garbage collector with
+                stop-the-world pauses instead of incremental collection. <code>gc.collect()</code> behavior and timing
+                differ from GIL-enabled builds. Test memory debugging workflows on the same build you deploy. [<a
+                    href="https://docs.python.org/3/library/gc.html">src2</a>, <a
+                    href="https://labs.quansight.org/blog/free-threaded-gc-3-14">src8</a>]</li>
+            <li><strong>gc.collect() cannot fix straight references</strong>: It only collects reference cycles. Objects
+                with non-zero reference counts from non-cyclic references stay alive — you must <code>del</code> all
+                references manually. [<a href="https://docs.python.org/3/library/gc.html">src2</a>]</li>
+            <li><strong>Never disable GC without a plan</strong>: <code>gc.disable()</code> causes all cyclic garbage to
+                accumulate indefinitely. Only disable if you explicitly call <code>gc.collect()</code> at controlled
+                intervals. [<a href="https://docs.python.org/3/library/gc.html">src2</a>]</li>
+            <li><strong>memray requires Linux/macOS</strong>: No native Windows support. On Windows, use tracemalloc,
+                memory_profiler, or run under WSL. [<a href="https://github.com/bloomberg/memray">src7</a>]</li>
+            <li><strong>tracemalloc frame depth trades off</strong>: <code>tracemalloc.start(N)</code> stores N frames
+                per allocation. N=1 for production (minimal overhead), N=10-25 for debugging (significant overhead and
+                memory use). [<a href="https://docs.python.org/3/library/tracemalloc.html">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Unbounded caches/lists/dicts</td>
+                        <td>~25% of cases</td>
+                        <td>Memory grows linearly with requests/iterations</td>
+                        <td>Add max size or TTL; use <code>lru_cache(maxsize=N)</code> [<a
+                                href="https://realpython.com/python-memory-management/">src4</a>, <a
+                                href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Reference cycles with <code>__del__</code></td>
+                        <td>~15% of cases</td>
+                        <td>Objects in <code>gc.garbage</code> list; GC can't collect</td>
+                        <td>Remove <code>__del__</code>; use <code>weakref.finalize()</code> instead [<a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>, <a
+                                href="https://docs.python.org/3/library/weakref.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Global/class-level mutable state</td>
+                        <td>~15% of cases</td>
+                        <td>Memory grows across requests in web apps</td>
+                        <td>Move state to instance level; clear between requests [<a
+                                href="https://realpython.com/python-memory-management/">src4</a>, <a
+                                href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Closures capturing large objects</td>
+                        <td>~10% of cases</td>
+                        <td><code>tracemalloc</code> shows function allocation growing</td>
+                        <td>Capture only needed values, not entire objects [<a
+                                href="https://realpython.com/python-memory-management/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Unclosed file handles/connections</td>
+                        <td>~8% of cases</td>
+                        <td>OS file descriptor limit reached; RSS grows</td>
+                        <td>Use <code>with</code> statement (context managers) [<a
+                                href="https://realpython.com/python-memory-management/">src4</a>, <a
+                                href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>C extension / ctypes memory</td>
+                        <td>~7% of cases</td>
+                        <td><code>tracemalloc</code> shows low but RSS is high</td>
+                        <td>Call extension's free/cleanup; use <code>memray</code> to trace native allocs [<a
+                                href="https://docs.python.org/3/library/tracemalloc.html">src1</a>, <a
+                                href="https://github.com/bloomberg/memray">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Event handlers / callbacks accumulating</td>
+                        <td>~6% of cases</td>
+                        <td>Listener list grows; objects never GC'd</td>
+                        <td>Use <code>weakref</code> for callbacks; remove listeners explicitly [<a
+                                href="https://docs.python.org/3/library/weakref.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Thread-local storage not cleaned</td>
+                        <td>~5% of cases</td>
+                        <td>Memory grows per thread in thread pools</td>
+                        <td>Clear thread-locals; use <code>threading.local()</code> carefully [<a
+                                href="https://realpython.com/python-memory-management/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Pandas/NumPy copies not freed</td>
+                        <td>~5% of cases</td>
+                        <td>DataFrame copies accumulate in memory</td>
+                        <td>Use <code>del df; gc.collect()</code>; avoid unnecessary copies [<a
+                                href="https://realpython.com/python-memory-management/">src4</a>, <a
+                                href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Logging handlers with large buffers</td>
+                        <td>~4% of cases</td>
+                        <td>Log records accumulate in <code>MemoryHandler</code></td>
+                        <td>Set buffer limits; use <code>StreamHandler</code> for production [<a
+                                href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Is memory growing slowly over time?
+│   ├── YES → Likely a leak in application code ↓
+│   └── NO → Spike on specific operation?
+│       ├── YES → Profile that operation with tracemalloc [src1]
+│       └── NO → Check total dataset size vs available RAM
+├── Does tracemalloc show the growth?
+│   ├── YES → tracemalloc snapshot comparison shows the allocation site [src1]
+│   │   ├── Is it a cache/dict/list growing? → Add max size or TTL [src4]
+│   │   ├── Is it closures? → Refactor to capture less [src4]
+│   │   └── Is it in a library? → Check for known issues, update library
+│   └── NO → Memory growth is outside Python's allocator
+│       ├── C extension? → Use memray or valgrind [src7]
+│       └── Check RSS vs Python heap
+├── Are there objects in gc.garbage?
+│   ├── YES → Reference cycles with __del__. Remove __del__ or use weakref.finalize [src2, src3]
+│   └── NO ↓
+├── Use objgraph to find what's holding references
+│   └── objgraph.show_backrefs(obj) shows the reference chain [src6]
+├── Is it a web application (Django/Flask/FastAPI)?
+│   ├── YES → Check middleware, global state, request-scoped caching [src4]
+│   └── NO → Check long-running loop, accumulating data structures
+└── Using free-threaded Python (3.13t/3.14t)?
+    ├── YES → GC uses stop-the-world collector; expect ~15-20% more memory [src8]
+    └── NO → Standard GC applies</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Confirm there's actually a memory leak</h3>
+        <p>Not all memory growth is a leak — Python's memory allocator may hold freed memory for reuse. [<a
+                href="https://realpython.com/python-memory-management/">src4</a>]</p>
+        <pre><code class="language-python">import os, psutil
+
+def get_memory_mb():
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss / 1024 / 1024
+
+print(f"Memory: {get_memory_mb():.1f} MB")</code></pre>
+        <p><strong>Verify</strong>: Run your application for several minutes/hours. If RSS grows continuously without
+            plateauing, you have a leak.</p>
+
+        <h3>2. Use tracemalloc to find the allocation source</h3>
+        <p><code>tracemalloc</code> is built into Python and shows exactly which lines allocate the most memory. [<a
+                href="https://docs.python.org/3/library/tracemalloc.html">src1</a>]</p>
+        <pre><code class="language-python">import tracemalloc
+
+tracemalloc.start()
+snapshot1 = tracemalloc.take_snapshot()
+
+# ... run your code ...
+
+snapshot2 = tracemalloc.take_snapshot()
+top_stats = snapshot2.compare_to(snapshot1, 'lineno')
+print("\n=== Top 10 memory increases ===")
+for stat in top_stats[:10]:
+    print(stat)</code></pre>
+        <p><strong>Verify</strong>: The output shows file:line → size increase, pointing you directly to the leaking
+            code.</p>
+
+        <h3>3. Use objgraph to trace reference chains</h3>
+        <p>When you know <em>what</em> is leaking but not <em>why</em> it's kept alive, <code>objgraph</code> shows the
+            reference chain. [<a href="https://mg.pov.lt/objgraph/">src6</a>]</p>
+        <pre><code class="language-python">import objgraph
+
+objgraph.show_most_common_types(limit=15)
+objgraph.show_growth(limit=10)
+
+leaking_objects = objgraph.by_type('MyClassName')
+if leaking_objects:
+    objgraph.show_backrefs(leaking_objects[-1], max_depth=5, filename='refs.png')</code></pre>
+        <p><strong>Verify</strong>: The reference graph shows the chain from the leaking object back to a root
+            reference.</p>
+
+        <h3>4. Check for reference cycles</h3>
+        <p>Python's GC handles most cycles, but <code>__del__</code> methods can prevent collection. [<a
+                href="https://docs.python.org/3/library/gc.html">src2</a>]</p>
+        <pre><code class="language-python">import gc
+
+gc.set_debug(gc.DEBUG_SAVEALL)
+collected = gc.collect()
+print(f"Collected {collected} objects")
+
+if gc.garbage:
+    print(f"WARNING: {len(gc.garbage)} uncollectable objects!")
+    for obj in gc.garbage[:5]:
+        print(f"  Type: {type(obj)}, repr: {repr(obj)[:100]}")</code></pre>
+        <p><strong>Verify</strong>: If <code>gc.garbage</code> is non-empty, you have <code>__del__</code> methods
+            creating uncollectable cycles.</p>
+
+        <h3>5. Fix unbounded caches</h3>
+        <p>The most common cause: data structures that grow without limit. [<a
+                href="https://realpython.com/python-memory-management/">src4</a>, <a
+                href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]</p>
+        <pre><code class="language-python">from functools import lru_cache
+
+# FIX — Use lru_cache with maxsize
+@lru_cache(maxsize=1000)
+def get_user(user_id):
+    return db.fetch(user_id)</code></pre>
+        <p><strong>Verify</strong>: Memory plateaus after reaching cache maxsize.</p>
+
+        <h3>6. Use weakref to break reference chains</h3>
+        <p>When you need references that don't prevent garbage collection. [<a
+                href="https://docs.python.org/3/library/weakref.html">src3</a>]</p>
+        <pre><code class="language-python">import weakref
+
+class EventBus:
+    def __init__(self):
+        self._listeners = []
+
+    def subscribe(self, callback):
+        ref = weakref.ref(callback, self._remove_dead)
+        self._listeners.append(ref)
+
+    def _remove_dead(self, ref):
+        self._listeners = [r for r in self._listeners if r() is not None]
+
+    def emit(self, *args):
+        for ref in self._listeners[:]:
+            callback = ref()
+            if callback is not None:
+                callback(*args)</code></pre>
+        <p><strong>Verify</strong>: Objects are collected when no other strong references exist.</p>
+
+        <h3>7. Profile in production with memray</h3>
+        <p>For production systems where overhead matters. Linux/macOS only. [<a
+                href="https://github.com/bloomberg/memray">src7</a>]</p>
+        <pre><code class="language-bash"># Install and run
+pip install memray
+python -m memray run -o output.bin your_script.py
+python -m memray flamegraph output.bin -o flamegraph.html
+python -m memray summary output.bin
+# Attach to running process
+python -m memray attach PID</code></pre>
+        <p><strong>Verify</strong>: Flame graph shows allocation hotspots with file names and line numbers.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Memory leak detector for long-running applications</h3>
+        <pre><code class="language-python"># Input:  Long-running service with gradually increasing memory
+# Output: Automatic leak detection with periodic snapshots
+
+import tracemalloc, time, threading, logging
+
+logger = logging.getLogger(__name__)
+
+class MemoryLeakDetector:
+    def __init__(self, interval=60, top_n=5, growth_threshold_mb=10):
+        self.interval = interval
+        self.top_n = top_n
+        self.threshold = growth_threshold_mb * 1024 * 1024
+        self._baseline = None
+        self._running = False
+
+    def start(self):
+        tracemalloc.start(25)
+        self._baseline = tracemalloc.take_snapshot()
+        self._running = True
+        thread = threading.Thread(target=self._monitor, daemon=True)
+        thread.start()
+        logger.info("Memory leak detector started")
+
+    def _monitor(self):
+        while self._running:
+            time.sleep(self.interval)
+            snapshot = tracemalloc.take_snapshot()
+            stats = snapshot.compare_to(self._baseline, 'lineno')
+            total_growth = sum(s.size_diff for s in stats if s.size_diff &gt; 0)
+            if total_growth &gt; self.threshold:
+                logger.warning(
+                    f"Memory grew by {total_growth / 1024 / 1024:.1f} MB since baseline!"
+                )
+                for stat in stats[:self.top_n]:
+                    logger.warning(f"  {stat}")
+
+    def stop(self):
+        self._running = False
+        tracemalloc.stop()
+
+# Usage
+detector = MemoryLeakDetector(interval=30, growth_threshold_mb=50)
+detector.start()</code></pre>
+
+        <h3>Django middleware for per-request memory tracking</h3>
+        <pre><code class="language-python"># Input:  Django app with memory growing across requests
+# Output: Middleware that logs memory usage per request
+
+import tracemalloc, logging, psutil, os
+
+logger = logging.getLogger('memory')
+
+class MemoryTrackingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.request_count = 0
+        tracemalloc.start()
+
+    def __call__(self, request):
+        self.request_count += 1
+        rss_before = psutil.Process(os.getpid()).memory_info().rss
+        snapshot_before = tracemalloc.take_snapshot()
+
+        response = self.get_response(request)
+
+        rss_after = psutil.Process(os.getpid()).memory_info().rss
+        rss_diff = (rss_after - rss_before) / 1024 / 1024
+
+        if self.request_count % 100 == 0 or rss_diff &gt; 5:
+            snapshot_after = tracemalloc.take_snapshot()
+            stats = snapshot_after.compare_to(snapshot_before, 'lineno')
+            top = '; '.join(str(s) for s in stats[:3])
+            logger.info(
+                f"[Req #{self.request_count}] {request.path} "
+                f"RSS: {rss_after/1024/1024:.0f}MB (delta {rss_diff:+.1f}MB) Top: {top}"
+            )
+        return response</code></pre>
+
+        <h3>Automatic memory cleanup utility</h3>
+        <pre><code class="language-python"># Input:  Data pipeline processing large files in a loop
+# Output: Context manager that ensures cleanup after each batch
+
+import gc, tracemalloc, contextlib
+
+@contextlib.contextmanager
+def memory_guard(label="operation", warn_mb=100):
+    """Context manager that tracks and cleans up memory."""
+    gc.collect()
+    if tracemalloc.is_tracing():
+        snap_before = tracemalloc.take_snapshot()
+    try:
+        yield
+    finally:
+        gc.collect()
+        if tracemalloc.is_tracing():
+            snap_after = tracemalloc.take_snapshot()
+            stats = snap_after.compare_to(snap_before, 'filename')
+            growth = sum(s.size_diff for s in stats if s.size_diff &gt; 0)
+            if growth &gt; warn_mb * 1024 * 1024:
+                print(f"WARNING: [{label}] Memory grew by {growth/1024/1024:.1f} MB")
+                for s in stats[:3]:
+                    print(f"  {s}")
+
+# Usage
+tracemalloc.start()
+for batch_file in glob.glob("data/*.csv"):
+    with memory_guard(f"Processing {batch_file}", warn_mb=50):
+        df = pd.read_csv(batch_file)
+        process(df)
+        del df</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Unbounded cache with no eviction</h3>
+        <pre><code class="language-python"># BAD — dictionary grows forever [src4, src5]
+_user_cache = {}
+
+def get_user(user_id):
+    if user_id not in _user_cache:
+        _user_cache[user_id] = db.query(f"SELECT * FROM users WHERE id = {user_id}")
+    return _user_cache[user_id]</code></pre>
+
+        <h3>Correct: Bounded cache with maxsize</h3>
+        <pre><code class="language-python"># GOOD — LRU eviction prevents unbounded growth [src4, src5]
+from functools import lru_cache
+
+@lru_cache(maxsize=500)
+def get_user(user_id):
+    return db.query(f"SELECT * FROM users WHERE id = %s", (user_id,))
+# Clear when needed: get_user.cache_clear()</code></pre>
+
+        <h3>Wrong: Using __del__ with circular references</h3>
+        <pre><code class="language-python"># BAD — __del__ prevents GC from collecting the cycle [src2, src3]
+class Node:
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.children = []
+        if parent:
+            parent.children.append(self)
+
+    def __del__(self):
+        print(f"Deleting {self}")</code></pre>
+
+        <h3>Correct: Use weakref.finalize or context manager</h3>
+        <pre><code class="language-python"># GOOD — weakref breaks the cycle, finalize runs cleanup [src2, src3]
+import weakref
+
+class Node:
+    def __init__(self, parent=None):
+        self.parent = weakref.ref(parent) if parent else None
+        self.children = []
+        if parent:
+            parent.children.append(self)
+        weakref.finalize(self, Node._cleanup, id(self))
+
+    @staticmethod
+    def _cleanup(node_id):
+        print(f"Cleaned up node {node_id}")</code></pre>
+
+        <h3>Wrong: Not closing resources in long-running processes</h3>
+        <pre><code class="language-python"># BAD — file handles accumulate, eventually hitting OS limits [src4]
+def process_files(file_list):
+    results = []
+    for path in file_list:
+        f = open(path)  # Never closed!
+        results.append(f.read())
+    return results</code></pre>
+
+        <h3>Correct: Use context managers</h3>
+        <pre><code class="language-python"># GOOD — resources automatically cleaned up [src4]
+def process_files(file_list):
+    results = []
+    for path in file_list:
+        with open(path) as f:
+            results.append(f.read())
+    return results</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>@lru_cache(maxsize=None)</code> is unbounded</strong>: This creates an infinite cache that
+                never evicts. Use <code>maxsize=N</code> for a bounded LRU cache, or regularly call
+                <code>cache_clear()</code>. [<a href="https://realpython.com/python-memory-management/">src4</a>]</li>
+            <li><strong><code>del</code> doesn't free memory immediately</strong>: <code>del</code> just decrements the
+                reference count. If other references exist, the object stays alive. Use <code>gc.collect()</code> after
+                <code>del</code> for cycles. [<a href="https://docs.python.org/3/library/gc.html">src2</a>]</li>
+            <li><strong><code>__del__</code> prevents cycle collection</strong>: If objects in a reference cycle have
+                <code>__del__</code>, CPython can't determine safe deletion order and puts them in
+                <code>gc.garbage</code>. Use <code>weakref.finalize()</code>. [<a
+                    href="https://docs.python.org/3/library/gc.html">src2</a>, <a
+                    href="https://docs.python.org/3/library/weakref.html">src3</a>]</li>
+            <li><strong>Pandas <code>.copy()</code> vs view confusion</strong>: Some Pandas operations return views (no
+                extra memory) and some return copies (double memory). Use <code>df.copy()</code> explicitly when needed,
+                <code>del df</code> when done. [<a
+                    href="https://www.bloomberg.com/company/stories/debugging-memory-leaks-python/">src5</a>]</li>
+            <li><strong><code>tracemalloc</code> overhead</strong>: <code>tracemalloc.start(N)</code> stores N frames
+                per allocation. Higher N = more useful traces but more overhead. Use 1 for production, 10-25 for
+                debugging. [<a href="https://docs.python.org/3/library/tracemalloc.html">src1</a>]</li>
+            <li><strong>RSS does not equal Python heap</strong>: Resident Set Size includes memory from C extensions,
+                shared libraries, and the OS. <code>tracemalloc</code> only tracks Python allocations. If RSS grows but
+                <code>tracemalloc</code> doesn't, suspect C extensions. [<a
+                    href="https://docs.python.org/3/library/tracemalloc.html">src1</a>, <a
+                    href="https://github.com/bloomberg/memray">src7</a>]</li>
+            <li><strong>Free-threaded Python uses more memory</strong>: Python 3.13t/3.14t free-threaded builds use
+                approximately 15-20% more memory than GIL-enabled builds due to per-thread overhead and the different GC
+                implementation. Factor this into baseline measurements. [<a
+                    href="https://labs.quansight.org/blog/free-threaded-gc-3-14">src8</a>]</li>
+            <li><strong>Django <code>DEBUG=True</code> stores all queries</strong>:
+                <code>django.db.connection.queries</code> grows indefinitely in long-running processes when
+                <code>DEBUG=True</code>. Always set <code>DEBUG=False</code> in production. [<a
+                    href="https://realpython.com/python-memory-management/">src4</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Monitor process memory (Linux)
+watch -n 1 "ps -p PID -o rss,vsz,pid,comm"
+
+# Python: check current memory usage
+python -c "
+import tracemalloc, gc
+tracemalloc.start()
+gc.collect()
+snap = tracemalloc.take_snapshot()
+for stat in snap.statistics('filename')[:10]:
+    print(stat)
+"
+
+# Check for uncollectable objects
+python -c "import gc; gc.set_debug(gc.DEBUG_SAVEALL); gc.collect(); print(f'Garbage: {len(gc.garbage)} objects')"
+
+# Install profiling tools
+pip install objgraph psutil memory-profiler memray
+
+# memray: profile a script
+python -m memray run -o output.bin script.py
+python -m memray flamegraph output.bin
+
+# memory_profiler: line-by-line
+python -m memory_profiler script.py
+
+# objgraph: show common types
+python -c "import objgraph; objgraph.show_most_common_types(limit=20)"
+
+# Check gc stats
+python -c "import gc; print(gc.get_stats())"</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Python 3.14 (Oct 2025)</td>
+                        <td>Free-threading supported</td>
+                        <td>PEP 779 promotes free-threading to supported status; new stop-the-world GC; ~5-10%
+                            single-thread overhead in free-threaded mode [<a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>, <a
+                                href="https://labs.quansight.org/blog/free-threaded-gc-3-14">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.13 (Oct 2024)</td>
+                        <td>Free-threading experimental</td>
+                        <td>Experimental <code>--disable-gil</code> build (PEP 703); immortal objects expanded [<a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>, <a
+                                href="https://labs.quansight.org/blog/free-threaded-gc-3-14">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.12</td>
+                        <td>Improved GC</td>
+                        <td>Immortal objects (PEP 683); reduced GC overhead for long-lived objects; per-interpreter GIL
+                            (PEP 684) [<a href="https://docs.python.org/3/library/gc.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.11</td>
+                        <td>Zero-cost exceptions</td>
+                        <td><code>tracemalloc</code> improvements; faster <code>gc.collect()</code> [<a
+                                href="https://docs.python.org/3/library/tracemalloc.html">src1</a>, <a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.10</td>
+                        <td>Stable</td>
+                        <td><code>gc.freeze()</code> improved for fork safety [<a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.9</td>
+                        <td>Stable</td>
+                        <td><code>gc.get_objects(generation)</code> to inspect specific generations [<a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.7</td>
+                        <td>memray support</td>
+                        <td><code>memray</code> requires 3.7+; <code>tracemalloc</code> mature [<a
+                                href="https://docs.python.org/3/library/tracemalloc.html">src1</a>, <a
+                                href="https://github.com/bloomberg/memray">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.4</td>
+                        <td><code>tracemalloc</code> introduced</td>
+                        <td>Built-in memory allocation tracing [<a
+                                href="https://docs.python.org/3/library/tracemalloc.html">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Python 3.3</td>
+                        <td>GC improvements</td>
+                        <td>Better handling of <code>__del__</code> in cycles (PEP 442) [<a
+                                href="https://docs.python.org/3/library/gc.html">src2</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>RSS / heap grows continuously</td>
+                        <td>Memory spikes during a known large operation</td>
+                        <td>Optimize the operation or use streaming</td>
+                    </tr>
+                    <tr>
+                        <td>Application crashes with <code>MemoryError</code></td>
+                        <td>Total data doesn't fit in RAM</td>
+                        <td>Use chunked processing, databases, or disk</td>
+                    </tr>
+                    <tr>
+                        <td>Memory doesn't decrease after GC</td>
+                        <td>Process uses expected memory for its dataset</td>
+                        <td>Normal behavior — not a leak</td>
+                    </tr>
+                    <tr>
+                        <td>Web app memory grows across requests</td>
+                        <td>Memory drops when requests finish</td>
+                        <td>Normal per-request allocation</td>
+                    </tr>
+                    <tr>
+                        <td>Container gets OOMKilled repeatedly</td>
+                        <td>Container memory limit is too low for workload</td>
+                        <td>Increase container memory limit</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Python's memory allocator (<code>pymalloc</code>) doesn't return freed memory to the OS in small chunks.
+                After freeing many small objects, RSS may not decrease even though the memory is available for reuse by
+                Python. This is normal, not a leak.</li>
+            <li><code>gc.collect()</code> only collects reference cycles. Objects with non-zero reference counts from
+                straight references (no cycle) can't be collected — you must remove all references manually.</li>
+            <li>In multiprocessing (<code>fork</code>), child processes share memory pages with the parent until they
+                write (copy-on-write). Memory usage <em>appears</em> doubled but isn't actually until modifications
+                occur.</li>
+            <li><code>numpy</code> and <code>pandas</code> allocate memory outside Python's tracked heap (via C).
+                <code>tracemalloc</code> won't show their allocations. Use <code>memray</code> or check RSS directly.
+            </li>
+            <li>Django's <code>DEBUG = True</code> stores all SQL queries in <code>django.db.connection.queries</code>,
+                which grows indefinitely in long-running processes. Always set <code>DEBUG = False</code> in production.
+            </li>
+            <li>Free-threaded Python 3.13t/3.14t builds use a fundamentally different garbage collector. Memory
+                profiling results from GIL-enabled builds may not be representative of free-threaded behavior. Always
+                profile on the same build you deploy to production. [<a
+                    href="https://labs.quansight.org/blog/free-threaded-gc-3-14">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/nodejs-memory-leaks/2026" data-relationship="related_to">Node.js Memory Leaks</a>
+        <a href="/software/debugging/python-importerror/2026" data-relationship="related_to">Python
+            ImportError/ModuleNotFoundError</a>
+        <a href="/software/debugging/docker-oomkilled/2026" data-relationship="solves">Docker OOMKilled</a>
+        <a href="/software/debugging/django-n-plus-1/2026" data-relationship="often_confused_with">Django N+1 Query
+            Problems</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

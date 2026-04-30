@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>API Key Management: Generation, Storage, Rotation | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to API key management: generation with CSPRNG, SHA-256 hashing for storage, prefix design (Stripe model), rotation without downtime,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/api-key-management/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="API Key Management: Generation, Storage, Rotation | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to API key management: generation with CSPRNG, SHA-256 hashing for storage, prefix design (Stripe model), rotation without downtime, scoping, and rate limiting. Code examples in Node.js, Python, Go. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/api-key-management/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="API Key Management: Generation, Storage, Rotation | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to API key management: generation with CSPRNG, SHA-256 hashing for storage, prefix design (Stripe model), rotation without downtime, scoping, and rate limiting. Code examples in Node.js, Python, Go. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.88">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/api_key_management">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement API key management?">
+  <meta name="ai:aliases" content="API key generation best practices; how to store API keys securely; API key rotation strategy; API key hashing and storage; implement API key authentication; API key prefix design pattern; secure API key lifecycle management; API key scoping and permissions">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/api-key-management/2026.md">
+  <meta name="ai:token_estimate" content="3400">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="key_type, auth_model, rotation_needs">
+  <meta name="ai:constraints" content="Hash keys before storage — never store plaintext API keys; Prefix keys for identification (e.g., sk_live_, pk_test_); Support key rotation without downtime; Transmit keys only over HTTPS in headers; Scope keys to minimum required permissions">
+  <meta name="ai:skip_this_unit_if" content="Need OAuth 2.0 client credentials flow -> OAuth 2.0 client credentials documentation; Need JWT-based user authentication -> software/system-design/auth-system/2026; Need secret management for deployment -> HashiCorp Vault or AWS Secrets Manager docs">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "API Key Management: Generation, Storage, Rotation & Security",
+    "headline": "API Key Management: Generation, Storage, Rotation & Security",
+    "description": "Complete guide to implementing secure API key management: cryptographic key generation, SHA-256 hashing for storage, Stripe-style prefix design, zero-downtime rotation, per-key scoping and rate limiting. Covers Node.js, Python, and Go with anti-patterns and diagnostic commands.",
+    "keywords": ["API key management", "API key generation", "API key hashing", "API key rotation", "API security", "OWASP", "Stripe API keys", "Bearer token", "SHA-256", "CSPRNG"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Any HTTP API framework (Express, Flask, Gin, etc.)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "OWASP Key Management Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Key_Management_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "API Keys — Stripe Documentation",
+        "url": "https://docs.stripe.com/keys"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best practices for managing secret API keys — Stripe",
+        "url": "https://docs.stripe.com/keys-best-practices"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best practices for managing API keys — Google Cloud",
+        "url": "https://docs.cloud.google.com/docs/authentication/api-keys-best-practices"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Manage access keys for IAM users — AWS",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practices for Building Secure API Keys",
+        "url": "https://www.freecodecamp.org/news/best-practices-for-building-api-keys-97c26eabfea9/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OWASP API Security Top 10",
+        "url": "https://owasp.org/www-project-api-security/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "API Key Management: Generation, Storage, Rotation & Security",
+    "description": "Structured knowledge unit covering API key lifecycle management: generation, hashing, storage, rotation, revocation, scoping, and rate limiting patterns across Node.js, Python, and Go.",
+    "keywords": ["API key management", "API key generation", "API key hashing", "API key rotation", "API security"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "Stripe"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "freeCodeCamp"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "API Key Management" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement API key management?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "API key generation best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to store API keys securely",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "API key rotation strategy",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "API key hashing and storage",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "implement API key authentication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>API Key Management: Generation, Storage, Rotation &amp; Security</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement API key management?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/api-key-management/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.88 out of 1">0.88</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: API keys identify callers and enforce rate limits — they are not a substitute for authentication on their own; combine with OAuth or HMAC for sensitive operations.</li>
+    <li><strong>Key tool/command</strong>: <code>crypto.randomBytes(32).toString('hex')</code> (Node.js) or <code>secrets.token_hex(32)</code> (Python)</li>
+    <li><strong>Watch out for</strong>: Storing plaintext API keys in your database — always hash with SHA-256 before storage, showing the raw key only once at creation.</li>
+    <li><strong>Works with</strong>: Any HTTP API, any language. Patterns are framework-agnostic.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Hash keys before storage — never store plaintext API keys in your database. Use SHA-256 (for fast lookup) or bcrypt (for extra brute-force resistance). [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Key_Management_Cheat_Sheet.html">src1</a>]</li>
+    <li>Prefix keys for identification (e.g., <code>sk_live_</code>, <code>pk_test_</code>) — enables quick classification, leak scanning in git repos, and environment separation. [<a href="https://docs.stripe.com/keys">src2</a>]</li>
+    <li>Support key rotation without downtime — allow two active keys per client during the transition window, then revoke the old key. [<a href="https://docs.stripe.com/keys-best-practices">src3</a>]</li>
+    <li>Transmit keys only over HTTPS and only in headers (<code>Authorization: Bearer &lt;key&gt;</code>) — never in URL query parameters. [<a href="https://owasp.org/www-project-api-security/">src7</a>]</li>
+    <li>Scope keys to minimum required permissions — every key should have explicit API and resource restrictions. [<a href="https://docs.cloud.google.com/docs/authentication/api-keys-best-practices">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Aspect</th><th scope="col">Best Practice</th><th scope="col">Example</th><th scope="col">Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Generation</td><td>Use CSPRNG, 32+ bytes (256 bits entropy)</td><td><code>crypto.randomBytes(32)</code></td><td>Prevents brute-force and prediction attacks</td></tr>
+      <tr><td>Format</td><td>Prefix + base62/hex payload</td><td><code>sk_live_a1b2c3...</code> (Stripe style)</td><td>Prefix enables leak detection and environment routing</td></tr>
+      <tr><td>Storage</td><td>Hash with SHA-256, store only the digest</td><td><code>SHA-256(key)</code> in DB, raw key shown once</td><td>Compromised DB does not expose usable keys</td></tr>
+      <tr><td>Transmission</td><td><code>Authorization: Bearer &lt;key&gt;</code> header over HTTPS</td><td>Never in URL query params</td><td>URLs are logged in server logs, proxies, and browser history</td></tr>
+      <tr><td>Rotation</td><td>Dual-key overlap window (7-30 days)</td><td>Create new key, migrate, revoke old</td><td>Zero-downtime rotation without breaking consumers</td></tr>
+      <tr><td>Revocation</td><td>Immediate hard-delete or soft-delete with TTL</td><td>Delete hash from DB, return 401 on next use</td><td>Limits blast radius of compromised keys</td></tr>
+      <tr><td>Scoping</td><td>Per-key permission set (read/write/admin)</td><td>Google Cloud API restrictions</td><td>Least privilege — limits damage from a leaked key</td></tr>
+      <tr><td>Rate Limiting</td><td>Per-key rate limit, not just per-IP</td><td>100 req/min per key, 429 on exceed</td><td>Prevents abuse and identifies heavy consumers</td></tr>
+      <tr><td>Logging</td><td>Log key prefix + action, never the full key</td><td><code>sk_live_a1b2...</code> accessed <code>/api/v1/users</code></td><td>Audit trail without exposing secrets</td></tr>
+      <tr><td>Expiration</td><td>Set TTL (90 days default), require renewal</td><td><code>expires_at</code> column in DB</td><td>Limits window of exposure for forgotten keys</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Need to identify callers + enforce rate limits only?
+│   ├── YES → Simple API key (single secret, SHA-256 hashed)
+│   └── NO ↓
+├── Need to verify request integrity (signed payloads)?
+│   ├── YES → Key + Secret pair with HMAC-SHA256 signing
+│   └── NO ↓
+├── Need delegated user-level access with scopes?
+│   ├── YES → OAuth 2.0 (API key for client ID, OAuth for user auth)
+│   └── NO ↓
+├── Need both client-side (browser) and server-side keys?
+│   ├── YES → Publishable + Secret key pair (Stripe model)
+│   └── NO ↓
+└── DEFAULT → Single secret API key with SHA-256 hashing + prefix</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Design your key format</h3>
+  <p>Choose a prefix scheme that encodes key type + environment. The prefix is the only part you store in plaintext alongside the hash. [<a href="https://docs.stripe.com/keys">src2</a>]</p>
+  <pre><code>Format: {type}_{environment}_{random_payload}
+
+Examples:
+  sk_live_a8f2e9c1b4d7...   (secret key, production)
+  sk_test_7e3b1a9d5f2c...   (secret key, sandbox)
+  pk_live_c4d8a2f1e6b9...   (publishable key, production)
+  pk_test_9b1e7c3d5a8f...   (publishable key, sandbox)</code></pre>
+  <p><strong>Verify</strong>: Your regex <code>^(sk|pk)_(live|test)_[a-f0-9]{64}$</code> should match all generated keys.</p>
+
+  <h3>2. Generate cryptographically secure keys</h3>
+  <p>Use your language's CSPRNG. Never use <code>Math.random()</code> or <code>random.random()</code>. [<a href="https://www.freecodecamp.org/news/best-practices-for-building-api-keys-97c26eabfea9/">src6</a>]</p>
+  <pre><code class="language-javascript">const crypto = require('crypto');
+const prefix = 'sk_live_';
+const payload = crypto.randomBytes(32).toString('hex'); // 64 hex chars
+const apiKey = `${prefix}${payload}`;
+// Result: sk_live_a8f2e9c1b4d7...  (78 chars total)</code></pre>
+  <p><strong>Verify</strong>: <code>node -e "console.log(crypto.randomBytes(32).toString('hex'))"</code> should produce a different value each run.</p>
+
+  <h3>3. Hash and store the key</h3>
+  <p>Store only the SHA-256 hash in your database. Return the raw key to the user exactly once. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Key_Management_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-javascript">const crypto = require('crypto');
+
+function hashApiKey(rawKey) {
+  return crypto.createHash('sha256').update(rawKey).digest('hex');
+}
+
+// On key creation:
+const rawKey = generateApiKey();       // sk_live_a8f2e9...
+const keyHash = hashApiKey(rawKey);    // Store this in DB
+const prefix = rawKey.slice(0, 12);    // sk_live_a8f2 — store for identification</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT key_hash FROM api_keys WHERE prefix = 'sk_live_a8f2'</code> returns a 64-char hex string, not the raw key.</p>
+
+  <h3>4. Validate keys on every request</h3>
+  <p>Extract from header, hash, and look up. [<a href="https://owasp.org/www-project-api-security/">src7</a>]</p>
+  <pre><code class="language-javascript">async function validateApiKey(req) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader?.startsWith('Bearer ')) return null;
+
+  const rawKey = authHeader.slice(7);
+  const keyHash = hashApiKey(rawKey);
+
+  const keyRecord = await db.query(
+    'SELECT * FROM api_keys WHERE key_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()',
+    [keyHash]
+  );
+  return keyRecord.rows[0] || null;
+}</code></pre>
+  <p><strong>Verify</strong>: Send a request with <code>Authorization: Bearer &lt;valid-key&gt;</code> — should return 200. Invalid key — should return 401.</p>
+
+  <h3>5. Implement key rotation</h3>
+  <p>Allow two active keys per client. Create the new key, let the client migrate, then revoke the old one. [<a href="https://docs.stripe.com/keys-best-practices">src3</a>]</p>
+  <pre><code class="language-sql">-- Rotation: create new key (old stays active)
+INSERT INTO api_keys (key_hash, prefix, client_id, scopes, expires_at)
+VALUES ($1, $2, $3, $4, NOW() + INTERVAL '90 days');
+
+-- After client confirms migration: revoke old key
+UPDATE api_keys SET revoked_at = NOW() WHERE id = $old_key_id;</code></pre>
+  <p><strong>Verify</strong>: Both old and new keys return 200 during the overlap window. After revocation, old key returns 401.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js: Complete API Key Service</h3>
+  <pre><code class="language-javascript">// Input:  client_id, scopes array
+// Output: { rawKey, prefix, keyHash, expiresAt }
+
+const crypto = require('crypto');
+
+class ApiKeyService {
+  generateKey(type = 'sk', env = 'live') {
+    const payload = crypto.randomBytes(32).toString('hex');
+    const rawKey = `${type}_${env}_${payload}`;
+    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+    const prefix = rawKey.slice(0, 12);
+    return { rawKey, prefix, keyHash };
+  }
+
+  async createKey(clientId, scopes = ['read'], ttlDays = 90) {
+    const { rawKey, prefix, keyHash } = this.generateKey();
+    const expiresAt = new Date(Date.now() + ttlDays * 86400000);
+    await this.db.query(
+      `INSERT INTO api_keys (key_hash, prefix, client_id, scopes, expires_at)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [keyHash, prefix, clientId, scopes, expiresAt]
+    );
+    return { rawKey, prefix, expiresAt }; // rawKey shown once only
+  }
+
+  async validateKey(rawKey) {
+    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+    const result = await this.db.query(
+      `SELECT client_id, scopes, expires_at FROM api_keys
+       WHERE key_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()`,
+      [keyHash]
+    );
+    return result.rows[0] || null;
+  }
+}</code></pre>
+
+  <h3>Python: API Key Generation and Validation</h3>
+  <pre><code class="language-python"># Input:  client_id, scopes list
+# Output: dict with raw_key, prefix, key_hash, expires_at
+
+import secrets
+import hashlib
+from datetime import datetime, timedelta
+
+def generate_api_key(key_type="sk", env="live"):
+    """Generate a prefixed API key with 256-bit entropy."""
+    payload = secrets.token_hex(32)  # 64 hex chars, 256 bits
+    raw_key = f"{key_type}_{env}_{payload}"
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    prefix = raw_key[:12]
+    return {"raw_key": raw_key, "prefix": prefix, "key_hash": key_hash}
+
+def validate_api_key(raw_key: str, db_cursor) -> dict | None:
+    """Validate an API key by hashing and looking up the digest."""
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    db_cursor.execute(
+        "SELECT client_id, scopes, expires_at FROM api_keys "
+        "WHERE key_hash = %s AND revoked_at IS NULL AND expires_at > NOW()",
+        (key_hash,)
+    )
+    return db_cursor.fetchone()</code></pre>
+
+  <h3>Go: API Key Generation</h3>
+  <pre><code class="language-go">// Input:  keyType string, env string
+// Output: ApiKey struct with RawKey, Prefix, KeyHash
+
+package apikeys
+
+import (
+    "crypto/rand"
+    "crypto/sha256"
+    "encoding/hex"
+    "fmt"
+)
+
+type ApiKey struct {
+    RawKey  string
+    Prefix  string
+    KeyHash string
+}
+
+func GenerateApiKey(keyType, env string) (*ApiKey, error) {
+    payload := make([]byte, 32) // 256-bit entropy
+    if _, err := rand.Read(payload); err != nil {
+        return nil, fmt.Errorf("CSPRNG failed: %w", err)
+    }
+    rawKey := fmt.Sprintf("%s_%s_%s", keyType, env, hex.EncodeToString(payload))
+    hash := sha256.Sum256([]byte(rawKey))
+    return &amp;ApiKey{
+        RawKey:  rawKey,
+        Prefix:  rawKey[:12],
+        KeyHash: hex.EncodeToString(hash[:]),
+    }, nil
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Storing plaintext API keys</h3>
+  <pre><code class="language-javascript">// BAD — raw key stored in database
+await db.query(
+  'INSERT INTO api_keys (api_key, client_id) VALUES ($1, $2)',
+  [rawApiKey, clientId]  // rawApiKey in plaintext!
+);</code></pre>
+
+  <h3>Correct: Storing hashed API keys</h3>
+  <pre><code class="language-javascript">// GOOD — only the SHA-256 hash is stored
+const keyHash = crypto.createHash('sha256').update(rawApiKey).digest('hex');
+await db.query(
+  'INSERT INTO api_keys (key_hash, prefix, client_id) VALUES ($1, $2, $3)',
+  [keyHash, rawApiKey.slice(0, 12), clientId]
+);</code></pre>
+
+  <h3>Wrong: Passing API keys in URL query parameters</h3>
+  <pre><code>GET /api/v1/users?api_key=sk_live_a8f2e9c1b4d7... HTTP/1.1</code></pre>
+
+  <h3>Correct: Passing API keys in Authorization header</h3>
+  <pre><code>GET /api/v1/users HTTP/1.1
+Authorization: Bearer sk_live_a8f2e9c1b4d7...</code></pre>
+
+  <h3>Wrong: Using Math.random() for key generation</h3>
+  <pre><code class="language-javascript">// BAD — predictable, not cryptographically secure
+const key = 'sk_live_' + Math.random().toString(36).substring(2);</code></pre>
+
+  <h3>Correct: Using CSPRNG for key generation</h3>
+  <pre><code class="language-javascript">// GOOD — cryptographically secure random bytes
+const key = 'sk_live_' + crypto.randomBytes(32).toString('hex');</code></pre>
+
+  <h3>Wrong: No expiration or rotation policy</h3>
+  <pre><code class="language-sql">-- BAD — keys live forever
+CREATE TABLE api_keys (
+  id SERIAL PRIMARY KEY,
+  key_hash TEXT NOT NULL,
+  client_id TEXT NOT NULL
+  -- no expires_at, no revoked_at!
+);</code></pre>
+
+  <h3>Correct: Built-in expiration and revocation</h3>
+  <pre><code class="language-sql">-- GOOD — keys have lifecycle management
+CREATE TABLE api_keys (
+  id SERIAL PRIMARY KEY,
+  key_hash TEXT NOT NULL UNIQUE,
+  prefix VARCHAR(12) NOT NULL,
+  client_id TEXT NOT NULL,
+  scopes TEXT[] DEFAULT '{"read"}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  revoked_at TIMESTAMPTZ,
+  last_used_at TIMESTAMPTZ
+);
+CREATE INDEX idx_api_keys_hash ON api_keys (key_hash) WHERE revoked_at IS NULL;</code></pre>
+
+  <h3>Wrong: Using same keys across environments</h3>
+  <pre><code class="language-bash"># BAD — production key used in staging
+STAGING_API_KEY=sk_live_a8f2e9c1...   # This is a PRODUCTION key!</code></pre>
+
+  <h3>Correct: Environment-specific keys with prefixes</h3>
+  <pre><code class="language-bash"># GOOD — prefix makes environment obvious
+STAGING_API_KEY=sk_test_7e3b1a9d...   # Clearly a test key
+PROD_API_KEY=sk_live_a8f2e9c1...      # Clearly a production key</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Key logged in server access logs</strong>: If keys are in URL parameters, they appear in Nginx/Apache logs, CDN logs, and browser history. Fix: always use the <code>Authorization</code> header. [<a href="https://owasp.org/www-project-api-security/">src7</a>]</li>
+    <li><strong>No rate limiting per key</strong>: Without per-key rate limits, a single compromised key can DDoS your service. Fix: implement <code>429 Too Many Requests</code> with per-key counters (Redis <code>INCR</code> + <code>EXPIRE</code>). [<a href="https://owasp.org/www-project-api-security/">src7</a>]</li>
+    <li><strong>Showing the raw key again after creation</strong>: If your API has a "show key" endpoint, you are storing the key in a reversible way. Fix: show the key exactly once at creation; for forgotten keys, generate a new one. [<a href="https://www.freecodecamp.org/news/best-practices-for-building-api-keys-97c26eabfea9/">src6</a>]</li>
+    <li><strong>Not invalidating keys on team member departure</strong>: When an employee leaves, their personal API keys remain active. Fix: tie keys to user accounts and revoke on deprovisioning. [<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html">src5</a>]</li>
+    <li><strong>Missing audit trail</strong>: Without logging which key accessed what, you cannot investigate breaches. Fix: log key prefix + endpoint + timestamp on every request. [<a href="https://docs.cloud.google.com/docs/authentication/api-keys-best-practices">src4</a>]</li>
+    <li><strong>Unused keys accumulating</strong>: Keys that haven't been used in 90+ days are forgotten attack surface. Fix: automated alerts for stale keys, with a revocation workflow. [<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check if keys are being sent in URL params (Nginx access log)
+grep 'api_key=' /var/log/nginx/access.log | head -20
+
+# Count active (non-expired, non-revoked) keys per client
+psql -c "SELECT client_id, COUNT(*) FROM api_keys WHERE revoked_at IS NULL AND expires_at > NOW() GROUP BY client_id ORDER BY count DESC;"
+
+# Find keys unused for 90+ days (revocation candidates)
+psql -c "SELECT prefix, client_id, last_used_at FROM api_keys WHERE last_used_at &lt; NOW() - INTERVAL '90 days' AND revoked_at IS NULL;"
+
+# Verify a key hash matches (debugging)
+echo -n "sk_live_yourkeyhere" | sha256sum
+
+# Check for leaked keys in git history
+git log -p --all -S 'sk_live_' -- '*.js' '*.py' '*.env'
+
+# AWS: list access keys and their age
+aws iam list-access-keys --user-name &lt;username&gt;</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Platform</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OWASP API Security Top 10 (2023)</td><td>Current</td><td>API2:2023 Broken Authentication</td><td>API keys for identification, not sole authentication</td></tr>
+      <tr><td>Stripe Key Design (2011-present)</td><td>Industry standard</td><td>Prefixed keys, restricted keys (2020)</td><td>Most widely copied key format</td></tr>
+      <tr><td>AWS IAM Access Keys</td><td>Current</td><td>Rotation every 90 days recommended</td><td>AWS recommends STS temporary credentials over long-lived keys</td></tr>
+      <tr><td>Google Cloud API Keys</td><td>Current</td><td>Application + API restrictions (2019)</td><td>HTTP referrer, IP, and API-level scoping</td></tr>
+      <tr><td>RFC 6750 (Bearer Tokens)</td><td>Current</td><td>Defines Authorization: Bearer header</td><td>Standard transport mechanism for API keys</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Identifying API consumers for rate limiting and analytics</td><td>Authenticating end users with sessions</td><td>OAuth 2.0 + session tokens</td></tr>
+      <tr><td>Simple server-to-server authentication (trusted parties)</td><td>Delegating limited access on behalf of a user</td><td>OAuth 2.0 authorization code flow</td></tr>
+      <tr><td>Public-facing APIs needing per-client throttling</td><td>Request integrity/tampering protection required</td><td>HMAC-SHA256 signed requests</td></tr>
+      <tr><td>Internal microservice identification (low sensitivity)</td><td>Highly sensitive financial or health data APIs</td><td>Mutual TLS (mTLS) or OAuth 2.0 client credentials</td></tr>
+      <tr><td>Rate limiting and usage tracking per consumer</td><td>Fine-grained, per-resource, per-action authorization</td><td>RBAC/ABAC with JWT claims</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>API keys alone do not authenticate users — they identify callers. For user-level auth, combine with OAuth 2.0 or session tokens. OWASP API Security Top 10 (API2:2023) explicitly warns against using API keys as the sole authentication mechanism.</li>
+    <li>SHA-256 without salt is acceptable for high-entropy keys (256-bit random). For lower-entropy keys or regulatory compliance, use bcrypt or Argon2 instead.</li>
+    <li>Key prefixes are not secret — they are intentionally stored in plaintext for identification. Do not rely on prefix secrecy for any security property.</li>
+    <li>Cloud provider key management (AWS IAM, Google Cloud API keys) follows the same principles but with platform-specific tooling. The patterns in this unit are implementation-agnostic.</li>
+    <li>Automated key rotation (e.g., AWS Secrets Manager rotation Lambdas) adds complexity — only adopt if you have more than ~50 keys to manage or compliance requires it.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/auth-system/2026" data-relationship="related_to">Authentication &amp; Authorization System Design</a>
+    <a href="/software/system-design/api-gateway/2026" data-relationship="related_to">API Gateway Design</a>
+    <a href="/software/debugging/ssl-tls-certificate-errors/2026" data-relationship="solves">SSL/TLS Certificate Errors</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

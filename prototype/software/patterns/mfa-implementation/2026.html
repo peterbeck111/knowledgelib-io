@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Multi-Factor Authentication (MFA): Complete | knowledgelib.io</title>
+  <meta name="description" content="Complete MFA implementation guide covering TOTP (RFC 6238), WebAuthn/FIDO2, SMS OTP, and push notifications.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/mfa-implementation/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Multi-Factor Authentication (MFA): Complete | knowledgelib.io">
+  <meta property="og:description" content="Complete MFA implementation guide covering TOTP (RFC 6238), WebAuthn/FIDO2, SMS OTP, and push notifications. Decision tree, code examples in Node.js and Python, anti-patterns, and NIST SP 800-63B compliance. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/mfa-implementation/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Multi-Factor Authentication (MFA): Complete | knowledgelib.io">
+  <meta name="twitter:description" content="Complete MFA implementation guide covering TOTP (RFC 6238), WebAuthn/FIDO2, SMS OTP, and push notifications. Decision tree, code examples in Node.js and Python, anti-patterns, and NIST SP 800-63B compliance. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/Multi-Factor Authentication">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement Multi-Factor Authentication?">
+  <meta name="ai:aliases" content="MFA implementation guide; two-factor authentication setup; 2FA implementation Node.js Python; TOTP implementation; WebAuthn FIDO2 integration; add MFA to web application; multi-factor authentication best practices; OTP verification flow">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/mfa-implementation/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="mfa_method, framework, recovery_flow">
+  <meta name="ai:constraints" content="TOTP secrets must be encrypted at rest (AES-256-GCM); Rate-limit verification to 3-5 attempts/minute; Backup codes are one-time-use -- hash like passwords; SMS must not be sole second factor; WebAuthn rpID must match effective domain; TOTP window tolerance max +/- 1 step">
+  <meta name="ai:skip_this_unit_if" content="Need passwordless-only login -> WebAuthn/passkeys-only flow; Need SSO federation with IdP-managed MFA -> OAuth2/OIDC with IdP-enforced MFA; Need machine-to-machine API auth -> Mutual TLS or API key + HMAC">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Multi-Factor Authentication (MFA): Complete Reference",
+    "headline": "Multi-Factor Authentication (MFA): Complete Reference",
+    "description": "Complete implementation guide for Multi-Factor Authentication covering TOTP (RFC 6238), WebAuthn/FIDO2 passkeys, SMS OTP, and push notifications. Includes decision tree, step-by-step setup, code examples in Node.js and Python, anti-patterns, and NIST SP 800-63B/63-4 compliance guidance.",
+    "keywords": ["MFA", "multi-factor authentication", "TOTP", "WebAuthn", "FIDO2", "2FA", "two-factor authentication", "RFC 6238", "NIST 800-63B", "passkeys", "security keys", "otplib", "pyotp", "SimpleWebAuthn"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "otplib v12+, pyotp v2.9+, @simplewebauthn/server v11+, Node.js 18+, Python 3.9+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "NIST SP 800-63B: Digital Identity Guidelines",
+        "url": "https://pages.nist.gov/800-63-3/sp800-63b.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NIST SP 800-63B-4: Digital Identity Guidelines (2025 revision)",
+        "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-63B-4.pdf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "RFC 6238: TOTP -- Time-Based One-Time Password Algorithm",
+        "url": "https://datatracker.ietf.org/doc/html/rfc6238"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Web Authentication: An API for accessing Public Key Credentials (Level 2)",
+        "url": "https://www.w3.org/TR/webauthn-2/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OWASP Multifactor Authentication Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "FIDO2: Web Authentication (WebAuthn) Specifications",
+        "url": "https://fidoalliance.org/specifications/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SimpleWebAuthn: WebAuthn, Simplified",
+        "url": "https://github.com/MasterKale/SimpleWebAuthn"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Multi-Factor Authentication (MFA): Complete Reference",
+    "description": "Structured implementation guide for Multi-Factor Authentication covering TOTP, WebAuthn/FIDO2, SMS OTP, push notifications, with decision tree, code examples, anti-patterns, and NIST compliance guidance.",
+    "keywords": ["MFA", "multi-factor authentication", "TOTP", "WebAuthn", "FIDO2", "2FA", "RFC 6238", "NIST 800-63B"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "NIST"},
+      {"@type": "Organization", "name": "IETF"},
+      {"@type": "Organization", "name": "W3C"},
+      {"@type": "Organization", "name": "FIDO Alliance"},
+      {"@type": "Organization", "name": "OWASP"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Multi-Factor Authentication (MFA)" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement Multi-Factor Authentication?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MFA implementation guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "two-factor authentication setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "2FA implementation Node.js Python",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "TOTP implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "WebAuthn FIDO2 integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Multi-Factor Authentication (MFA): Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement Multi-Factor Authentication?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/mfa-implementation/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Implement TOTP (RFC 6238) as the default MFA method for broad compatibility, and add WebAuthn/FIDO2 for phishing-resistant authentication on modern platforms.</li>
+    <li><strong>Key tool/command</strong>: <code>otplib</code> (Node.js) / <code>pyotp</code> (Python) for TOTP; <code>@simplewebauthn/server</code> for WebAuthn.</li>
+    <li><strong>Watch out for</strong>: Storing TOTP secrets in plaintext -- always encrypt at rest with AES-256-GCM and rate-limit verification to 3-5 attempts/minute.</li>
+    <li><strong>Works with</strong>: Any web framework; TOTP works on all platforms; WebAuthn requires HTTPS and a modern browser (Chrome 67+, Firefox 60+, Safari 14+).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>TOTP shared secrets must be encrypted at rest (AES-256-GCM or equivalent) -- never store in plaintext [<a href="https://pages.nist.gov/800-63-3/sp800-63b.html">src1</a>]</li>
+    <li>Rate-limit verification attempts to 3-5 per minute per user -- TOTP codes have only 10^6 combinations per 30-second window [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</li>
+    <li>Backup/recovery codes are one-time-use -- hash them with bcrypt/argon2, never store plaintext [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html">src5</a>]</li>
+    <li>SMS OTP must not be the sole second factor -- NIST SP 800-63-4 deprecated SMS as a standalone authenticator due to SIM-swap and SS7 attacks [<a href="https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-63B-4.pdf">src2</a>]</li>
+    <li>WebAuthn relying party ID (rpID) must exactly match the effective domain or a registrable suffix -- misconfiguration causes silent registration failure [<a href="https://www.w3.org/TR/webauthn-2/">src4</a>]</li>
+    <li>TOTP clock drift tolerance should be +/- 1 step (30 seconds) maximum -- wider windows significantly increase brute-force attack surface [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">MFA Method</th><th scope="col">Security Level</th><th scope="col">UX Friction</th><th scope="col">Phishing Resistant</th><th scope="col">Implementation Complexity</th><th scope="col">NIST AAL</th><th scope="col">Key Standard</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>TOTP (Authenticator App)</td><td>High</td><td>Low</td><td>No</td><td>Low</td><td>AAL2</td><td>RFC 6238</td></tr>
+      <tr><td>WebAuthn/FIDO2 (Passkeys)</td><td>Very High</td><td>Very Low</td><td>Yes</td><td>Medium</td><td>AAL2-AAL3</td><td>W3C WebAuthn L2</td></tr>
+      <tr><td>SMS OTP</td><td>Low</td><td>Medium</td><td>No</td><td>Low</td><td>Restricted (deprecated)</td><td>--</td></tr>
+      <tr><td>Email OTP</td><td>Low</td><td>High</td><td>No</td><td>Very Low</td><td>Deprecated in SP 800-63-4</td><td>--</td></tr>
+      <tr><td>Push Notification</td><td>High</td><td>Very Low</td><td>Partial (fatigue attacks)</td><td>High</td><td>AAL2</td><td>Proprietary</td></tr>
+      <tr><td>Hardware Security Key (U2F)</td><td>Very High</td><td>Low</td><td>Yes</td><td>Medium</td><td>AAL3</td><td>FIDO U2F / CTAP2</td></tr>
+      <tr><td>Backup Codes</td><td>N/A (recovery only)</td><td>Low</td><td>No</td><td>Very Low</td><td>N/A</td><td>--</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Factor Categories</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Factor Type</th><th scope="col">Examples</th><th scope="col">Storage/Transmission</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Knowledge (something you know)</td><td>Password, PIN, security question</td><td>Hashed (argon2id)</td></tr>
+      <tr><td>Possession (something you have)</td><td>Phone (TOTP app), security key, smart card</td><td>Challenge-response / HMAC</td></tr>
+      <tr><td>Inherence (something you are)</td><td>Fingerprint, face, iris</td><td>Biometric template (on-device)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
++-- Need phishing resistance?
+|   +-- YES --> WebAuthn/FIDO2 (passkeys or hardware keys)
+|   +-- NO v
++-- Users have smartphones?
+|   +-- YES --> TOTP via authenticator app (Google Authenticator, Authy, 1Password)
+|   +-- NO v
++-- Enterprise with MDM?
+|   +-- YES --> Push notification (Duo, Okta Verify, Microsoft Authenticator)
+|   +-- NO v
++-- SMS/Email only as last resort?
+|   +-- YES --> SMS OTP (always pair with rate limiting + fraud detection)
+|   +-- NO v
++-- DEFAULT --> TOTP as primary + WebAuthn as optional upgrade path</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Generate and store TOTP secret</h3>
+  <p>Create a cryptographically random 160-bit (20-byte) secret per user. Encrypt it before storing in your database. [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</p>
+  <pre><code class="language-javascript">// Node.js -- using otplib v12+
+const { authenticator } = require('otplib');
+const crypto = require('crypto');
+
+// Generate a base32-encoded secret (160-bit)
+const secret = authenticator.generateSecret(20);
+
+// Encrypt before storing (AES-256-GCM)
+function encryptSecret(plaintext, encryptionKey) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', encryptionKey, iv);
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const tag = cipher.getAuthTag().toString('hex');
+  return `${iv.toString('hex')}:${tag}:${encrypted}`;
+}</code></pre>
+  <p><strong>Verify</strong>: <code>authenticator.generate(secret)</code> returns a 6-digit string.</p>
+
+  <h3>2. Generate QR code for authenticator app enrollment</h3>
+  <p>Build an <code>otpauth://</code> URI and render it as a QR code for the user to scan. [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</p>
+  <pre><code class="language-javascript">const QRCode = require('qrcode');
+
+const otpauthUrl = authenticator.keyuri(
+  user.email,           // account label
+  'YourAppName',        // issuer
+  secret                // base32 secret
+);
+
+const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+// Render qrCodeDataUrl in &lt;img src="..."&gt; for user to scan</code></pre>
+  <p><strong>Verify</strong>: Scan the QR code with Google Authenticator -- it shows the app name and generates 6-digit codes.</p>
+
+  <h3>3. Verify TOTP code and enable MFA</h3>
+  <p>Accept the user's first TOTP code to confirm enrollment before enabling MFA on their account. [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</p>
+  <pre><code class="language-javascript">const isValid = authenticator.check(userSubmittedToken, secret);
+
+if (isValid) {
+  // Generate 10 backup codes
+  const backupCodes = Array.from({ length: 10 }, () =&gt;
+    crypto.randomBytes(4).toString('hex')
+  );
+  // Hash each backup code before storing
+  const hashedCodes = await Promise.all(
+    backupCodes.map(code =&gt; bcrypt.hash(code, 12))
+  );
+  // Store hashedCodes, set mfa_enabled = true
+  // Show backupCodes to user ONCE (never again)
+}</code></pre>
+  <p><strong>Verify</strong>: Submit a valid 6-digit code from authenticator -- returns <code>isValid === true</code>.</p>
+
+  <h3>4. Enforce MFA on login flow</h3>
+  <p>After password verification, require MFA verification before issuing a session. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html">src5</a>]</p>
+  <pre><code class="language-javascript">app.post('/login', async (req, res) =&gt; {
+  const { email, password, mfaToken } = req.body;
+  const user = await verifyPassword(email, password);
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+  if (user.mfa_enabled) {
+    if (!mfaToken) {
+      return res.status(200).json({
+        mfa_required: true,
+        mfa_challenge_token: signTempToken(user.id, '5m')
+      });
+    }
+    // Rate-limit: 3 attempts per 60 seconds
+    const attempts = await getMfaAttempts(user.id, 60);
+    if (attempts &gt;= 3) {
+      return res.status(429).json({ error: 'Too many attempts' });
+    }
+    await recordMfaAttempt(user.id);
+
+    const secret = decryptSecret(user.mfa_secret_encrypted, KEY);
+    if (!authenticator.check(mfaToken, secret)) {
+      return res.status(401).json({ error: 'Invalid MFA code' });
+    }
+  }
+  const session = await createSession(user.id, { mfa_verified: true });
+  res.json({ session_token: session.token });
+});</code></pre>
+  <p><strong>Verify</strong>: Login without MFA token returns <code>{ mfa_required: true }</code>. Valid TOTP completes login.</p>
+
+  <h3>5. Implement WebAuthn registration (optional upgrade)</h3>
+  <p>Add WebAuthn as a phishing-resistant second factor using SimpleWebAuthn. [<a href="https://www.w3.org/TR/webauthn-2/">src4</a>] [<a href="https://github.com/MasterKale/SimpleWebAuthn">src7</a>]</p>
+  <pre><code class="language-javascript">const { generateRegistrationOptions, verifyRegistrationResponse } = require('@simplewebauthn/server');
+
+app.get('/webauthn/register/options', async (req, res) =&gt; {
+  const user = req.authenticatedUser;
+  const existingDevices = await getUserAuthenticators(user.id);
+  const options = await generateRegistrationOptions({
+    rpName: 'YourAppName',
+    rpID: 'yourdomain.com',
+    userID: user.id,
+    userName: user.email,
+    attestationType: 'none',
+    excludeCredentials: existingDevices.map(dev =&gt; ({
+      id: dev.credentialID, type: 'public-key',
+    })),
+    authenticatorSelection: {
+      residentKey: 'preferred',
+      userVerification: 'preferred',
+    },
+  });
+  req.session.currentChallenge = options.challenge;
+  res.json(options);
+});</code></pre>
+  <p><strong>Verify</strong>: Endpoint returns JSON with <code>challenge</code>, <code>rp</code>, <code>user</code>, and <code>pubKeyCredParams</code> fields.</p>
+
+  <h3>6. Implement WebAuthn assertion (login verification)</h3>
+  <p>Verify the WebAuthn assertion during login after password authentication. [<a href="https://www.w3.org/TR/webauthn-2/">src4</a>] [<a href="https://github.com/MasterKale/SimpleWebAuthn">src7</a>]</p>
+  <pre><code class="language-javascript">const { generateAuthenticationOptions, verifyAuthenticationResponse } = require('@simplewebauthn/server');
+
+app.post('/webauthn/authenticate/verify', async (req, res) =&gt; {
+  const expectedChallenge = req.session.currentChallenge;
+  const authn = await getAuthenticatorById(req.body.id);
+  const verification = await verifyAuthenticationResponse({
+    response: req.body,
+    expectedChallenge,
+    expectedOrigin: 'https://yourdomain.com',
+    expectedRPID: 'yourdomain.com',
+    authenticator: authn,
+  });
+  if (verification.verified) {
+    await updateAuthenticatorCounter(authn.credentialID, verification.authenticationInfo.newCounter);
+    // Issue session with mfa_verified: true
+  }
+});</code></pre>
+  <p><strong>Verify</strong>: Authenticate with registered security key -- <code>verification.verified === true</code>.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js (otplib): TOTP Setup and Verification</h3>
+  <pre><code class="language-javascript">// Input:  User email, app name, encryption key
+// Output: QR code data URL, encrypted secret
+
+const { authenticator } = require('otplib'); // v12.0.1
+const QRCode = require('qrcode');            // v1.5.3
+const crypto = require('crypto');
+
+authenticator.options = { digits: 6, step: 30, window: 1 };
+
+async function setupTOTP(userEmail, appName, encryptionKey) {
+  const secret = authenticator.generateSecret(20);
+  const uri = authenticator.keyuri(userEmail, appName, secret);
+  const qr = await QRCode.toDataURL(uri);
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', encryptionKey, iv);
+  let enc = cipher.update(secret, 'utf8', 'hex') + cipher.final('hex');
+  const tag = cipher.getAuthTag().toString('hex');
+  return { qrCodeDataUrl: qr, encryptedSecret: `${iv.toString('hex')}:${tag}:${enc}` };
+}
+
+function verifyTOTP(token, secret) {
+  return authenticator.check(token, secret);
+}</code></pre>
+
+  <h3>Python (pyotp): TOTP Setup and Verification</h3>
+  <pre><code class="language-python"># Input:  User email, issuer name
+# Output: Provisioning URI, base32 secret, verification result
+
+import pyotp  # v2.9.0
+from cryptography.fernet import Fernet  # v42.0.0
+
+def setup_totp(user_email: str, issuer: str) -&gt; dict:
+    secret = pyotp.random_base32(length=32)
+    totp = pyotp.TOTP(secret)
+    uri = totp.provisioning_uri(name=user_email, issuer_name=issuer)
+    return {"secret": secret, "provisioning_uri": uri}
+
+def verify_totp(token: str, secret: str) -&gt; bool:
+    totp = pyotp.TOTP(secret)
+    return totp.verify(token, valid_window=1)
+
+def encrypt_secret(secret: str, key: bytes) -&gt; str:
+    return Fernet(key).encrypt(secret.encode()).decode()
+
+def decrypt_secret(encrypted: str, key: bytes) -&gt; str:
+    return Fernet(key).decrypt(encrypted.encode()).decode()</code></pre>
+
+  <h3>WebAuthn (SimpleWebAuthn): Browser-Side Registration</h3>
+  <pre><code class="language-javascript">// Input:  Registration options from server
+// Output: Registration response to send back to server
+
+import { startRegistration } from '@simplewebauthn/browser'; // v11+
+
+async function registerWebAuthn() {
+  const optionsRes = await fetch('/webauthn/register/options');
+  const options = await optionsRes.json();
+  const registration = await startRegistration(options);
+  const verifyRes = await fetch('/webauthn/register/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registration),
+  });
+  const result = await verifyRes.json();
+  if (result.verified) console.log('WebAuthn registration successful');
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Storing TOTP secrets in plaintext</h3>
+  <pre><code class="language-javascript">// BAD -- plaintext secret; if DB is breached, all MFA is compromised
+await db.query(
+  'INSERT INTO users (email, totp_secret) VALUES ($1, $2)',
+  [email, secret]
+);</code></pre>
+
+  <h3>Correct: Encrypting TOTP secrets at rest</h3>
+  <pre><code class="language-javascript">// GOOD -- encrypted; DB breach does not expose secrets
+const encryptedSecret = encryptSecret(secret, ENCRYPTION_KEY);
+await db.query(
+  'INSERT INTO users (email, totp_secret_encrypted) VALUES ($1, $2)',
+  [email, encryptedSecret]
+);</code></pre>
+
+  <h3>Wrong: No rate limiting on MFA verification</h3>
+  <pre><code class="language-javascript">// BAD -- unlimited attempts allow brute-force of 1M combinations
+app.post('/verify-mfa', (req, res) =&gt; {
+  const isValid = authenticator.check(req.body.token, user.secret);
+  res.json({ valid: isValid });
+});</code></pre>
+
+  <h3>Correct: Rate-limited MFA verification</h3>
+  <pre><code class="language-javascript">// GOOD -- 3 attempts per 60 seconds + audit logging
+app.post('/verify-mfa', rateLimit({ windowMs: 60000, max: 3 }), (req, res) =&gt; {
+  const isValid = authenticator.check(req.body.token, user.secret);
+  if (!isValid) auditLog('mfa_failed', { userId: user.id, ip: req.ip });
+  res.json({ valid: isValid });
+});</code></pre>
+
+  <h3>Wrong: Using SMS as the sole second factor</h3>
+  <pre><code class="language-javascript">// BAD -- SMS-only is vulnerable to SIM swap and SS7 interception
+async function verifyMFA(user, code) {
+  const sent = await twilioClient.verify.services(sid)
+    .verificationChecks.create({ to: user.phone, code });
+  return sent.status === 'approved';
+}</code></pre>
+
+  <h3>Correct: SMS as fallback with TOTP as primary</h3>
+  <pre><code class="language-javascript">// GOOD -- TOTP primary, SMS only as fallback with audit trail
+async function verifyMFA(user, code, method) {
+  if (method === 'totp') {
+    return authenticator.check(code, decryptSecret(user.totp_secret));
+  }
+  if (method === 'sms' &amp;&amp; !user.totp_enabled) {
+    const result = await verifySmsOtp(user.phone, code);
+    auditLog('sms_mfa_used', { userId: user.id, reason: 'totp_not_enrolled' });
+    return result;
+  }
+  return false;
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Clock drift breaks TOTP</strong>: Server and user device clocks diverge by more than 30 seconds, causing valid codes to be rejected. Fix: Use <code>window: 1</code> in otplib and ensure server NTP is synced. [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</li>
+    <li><strong>QR code encoding errors</strong>: Using the wrong <code>otpauth://</code> URI format causes authenticator apps to reject the secret. Fix: Always use the library's <code>keyuri()</code> method; never construct the URI manually. [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</li>
+    <li><strong>Backup codes stored unhashed</strong>: If the database is compromised, attackers can bypass MFA using recovery codes. Fix: Hash each backup code with bcrypt (cost 12+) or argon2id before storage. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html">src5</a>]</li>
+    <li><strong>MFA bypass via session fixation</strong>: Attacker reuses a pre-MFA session token. Fix: Regenerate session ID after MFA verification and bind MFA status to the new session. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html">src5</a>]</li>
+    <li><strong>WebAuthn rpID mismatch</strong>: Setting <code>rpID</code> to <code>www.example.com</code> when authenticating from <code>example.com</code> silently fails. Fix: Set <code>rpID</code> to the registrable domain (<code>example.com</code>). [<a href="https://www.w3.org/TR/webauthn-2/">src4</a>]</li>
+    <li><strong>TOTP replay attack</strong>: Accepting the same code twice within its validity window. Fix: Track last-used timestamp per user and reject codes with equal or earlier timestamps. [<a href="https://datatracker.ietf.org/doc/html/rfc6238">src3</a>]</li>
+    <li><strong>Push notification fatigue attack</strong>: Repeated push prompts until user accidentally approves. Fix: Implement number matching instead of simple approve/deny. [<a href="https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-63B-4.pdf">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test TOTP generation locally (Node.js)
+node -e "const {authenticator}=require('otplib'); const s=authenticator.generateSecret(); console.log('Secret:',s,'Token:',authenticator.generate(s))"
+
+# Verify server NTP synchronization (critical for TOTP)
+timedatectl status | grep "synchronized"
+
+# Check otplib / pyotp version
+npm list otplib 2&gt;/dev/null || pip show pyotp 2&gt;/dev/null
+
+# Test WebAuthn endpoint availability
+curl -s https://yourdomain.com/webauthn/register/options -H "Authorization: Bearer TOKEN" | jq '.challenge'
+
+# Verify HTTPS is enabled (required for WebAuthn)
+curl -sI https://yourdomain.com | grep -i "strict-transport-security"
+
+# Check rate limit headers on MFA endpoint
+curl -sI -X POST https://yourdomain.com/verify-mfa | grep -i "x-ratelimit"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Library</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>NIST SP 800-63-4</td><td>4.0</td><td>Current (Aug 2025)</td><td>Deprecated email OTP, downgraded SMS, added passkey support at AAL2</td></tr>
+      <tr><td>NIST SP 800-63-3</td><td>3.0</td><td>Superseded</td><td>Original MFA assurance levels (AAL1-AAL3)</td></tr>
+      <tr><td>RFC 6238 (TOTP)</td><td>1.0</td><td>Active (2011)</td><td>Stable -- no revisions planned</td></tr>
+      <tr><td>W3C WebAuthn</td><td>Level 2</td><td>Current (2021)</td><td>Added cross-origin iframes, large blob storage</td></tr>
+      <tr><td>W3C WebAuthn</td><td>Level 3</td><td>Draft (2024)</td><td>Conditional mediation, related origin requests</td></tr>
+      <tr><td>otplib (Node.js)</td><td>12.x</td><td>Current</td><td>Modular architecture, tree-shaking support</td></tr>
+      <tr><td>pyotp (Python)</td><td>2.9.x</td><td>Current</td><td>Steam guard support, type hints</td></tr>
+      <tr><td>SimpleWebAuthn</td><td>11.x</td><td>Current</td><td>ESM-first, Deno/Bun support</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Protecting user accounts with sensitive data (financial, health, PII)</td><td>Machine-to-machine API authentication</td><td>Mutual TLS or API key + HMAC signing</td></tr>
+      <tr><td>Compliance requires MFA (PCI DSS, HIPAA, SOC 2, NIST 800-171)</td><td>Single-use anonymous interactions (no account)</td><td>No authentication needed</td></tr>
+      <tr><td>Login from untrusted devices or networks</td><td>Users on shared/kiosk devices without personal authenticators</td><td>Device certificates or SSO with IdP-managed MFA</td></tr>
+      <tr><td>Step-up authentication for high-risk operations</td><td>Internal microservice calls behind a service mesh</td><td>Service mesh mTLS (Istio, Linkerd)</td></tr>
+      <tr><td>Enterprise or B2B applications with compliance requirements</td><td>Friction-sensitive consumer onboarding</td><td>Progressive MFA (offer after first login, require after risk signal)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>NIST SP 800-63-4 (August 2025) significantly changed the MFA landscape: email OTP is deprecated, SMS is restricted, and passkeys are now explicitly accepted at AAL2. Implementations built to SP 800-63-3 may need updates.</li>
+    <li>WebAuthn requires HTTPS and a secure context. It will not work on <code>http://localhost</code> in production-like testing -- use <code>localhost</code> (special-cased by browsers) or a proper TLS certificate.</li>
+    <li>TOTP is not phishing-resistant: a real-time phishing proxy (e.g., Evilginx) can capture and replay TOTP codes within their validity window. For phishing resistance, WebAuthn is the only standards-based option.</li>
+    <li>Biometric data in WebAuthn never leaves the user's device -- the server only stores public keys and credential IDs. Do not attempt to store or transmit biometric templates.</li>
+    <li>Backup code UX matters: users who do not save their backup codes during enrollment will be locked out when they lose their authenticator. Consider requiring confirmation of at least one backup code during setup.</li>
+    <li>Push notification MFA is vulnerable to "MFA fatigue" attacks (repeated prompts until user approves). Microsoft and Okta now recommend number matching as the default.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/session-management/2026" data-relationship="related_to">Session Management</a>
+    <a href="/software/patterns/jwt-implementation/2026" data-relationship="related_to">JWT Implementation</a>
+    <a href="/software/patterns/rbac-implementation/2026" data-relationship="related_to">Role-Based Access Control</a>
+    <a href="/software/patterns/oauth2-authorization-code-pkce/2026" data-relationship="alternative_to">OAuth2 Authorization Code with PKCE</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

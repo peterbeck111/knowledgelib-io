@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SQL Recursive CTE Queries for Hierarchies | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to recursive CTE queries for hierarchical data (org charts, BOM, MLM) across PostgreSQL, MySQL, and SQL Server.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-recursive-cte/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SQL Recursive CTE Queries for Hierarchies | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to recursive CTE queries for hierarchical data (org charts, BOM, MLM) across PostgreSQL, MySQL, and SQL Server. Decision matrix with 12 patterns, 3 code examples, 4 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-recursive-cte/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Recursive CTE Queries for Hierarchies | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to recursive CTE queries for hierarchical data (org charts, BOM, MLM) across PostgreSQL, MySQL, and SQL Server. Decision matrix with 12 patterns, 3 code examples, 4 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/patterns/sql_recursive_cte">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I write recursive CTE queries for hierarchies (org charts, MLM, BOM)?">
+  <meta name="ai:aliases" content="SQL recursive common table expression; WITH RECURSIVE query for tree traversal; hierarchical query SQL adjacency list; bill of materials recursive SQL query; org chart SQL query parent child; SQL self-referencing table hierarchy traversal">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-recursive-cte/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="database_engine,hierarchy_type,read_write_ratio">
+  <meta name="ai:constraints" content="MySQL requires WITH RECURSIVE keyword; SQL Server defaults MAXRECURSION to 100; MySQL recursive member cannot use aggregates/GROUP BY/window functions; Always implement cycle detection or depth limits for cyclic data; Never use UNION (dedup) without understanding sort cost">
+  <meta name="ai:skip_this_unit_if" content="Need DAG/graph with multiple parents per node -> Use closure table or graph database; Hierarchy has millions of nodes and read perf is critical -> Consider nested set or materialized path">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SQL Recursive CTE Queries for Hierarchies",
+    "headline": "SQL Recursive CTE Queries for Hierarchies (Org Charts, BOM, MLM)",
+    "description": "Comprehensive reference for writing recursive CTE queries to traverse hierarchical data in SQL. Covers adjacency list, nested set, materialized path, and closure table patterns across PostgreSQL, MySQL, and SQL Server with code examples, anti-patterns, and a decision matrix.",
+    "keywords": ["recursive CTE", "WITH RECURSIVE", "SQL hierarchy", "adjacency list", "org chart SQL", "bill of materials SQL", "nested set", "materialized path", "closure table", "common table expression"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 8.4+, MySQL 8.0+, SQL Server 2005+, SQLite 3.8.3+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL 18: WITH Queries (Common Table Expressions)",
+        "url": "https://www.postgresql.org/docs/current/queries-with.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MySQL 8.4 Reference Manual: WITH (Common Table Expressions)",
+        "url": "https://dev.mysql.com/doc/refman/8.4/en/with.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Recursive Queries Using Common Table Expressions (SQL Server)",
+        "url": "https://learn.microsoft.com/en-us/sql/t-sql/queries/recursive-common-table-expression-transact-sql"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Hierarchical and Recursive Queries in SQL",
+        "url": "https://en.wikipedia.org/wiki/Hierarchical_and_recursive_queries_in_SQL"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Nested Set Model",
+        "url": "https://en.wikipedia.org/wiki/Nested_set_model"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Work with Recursive CTEs (BigQuery)",
+        "url": "https://cloud.google.com/bigquery/docs/recursive-ctes"
+      },
+      {
+        "@type": "WebPage",
+        "name": "From Trees to Tables: Storing Hierarchical Data in Relational Databases",
+        "url": "https://medium.com/@rishabhdevmanu/from-trees-to-tables-storing-hierarchical-data-in-relational-databases-a5e5e6e1bd64"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SQL Recursive CTE Queries for Hierarchies",
+    "description": "Structured knowledge unit covering recursive CTE patterns for hierarchical SQL queries including org charts, bill of materials, and category trees across PostgreSQL, MySQL, and SQL Server.",
+    "keywords": ["recursive CTE", "WITH RECURSIVE", "SQL hierarchy", "adjacency list", "org chart", "bill of materials", "common table expression"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Oracle Corporation (MySQL)"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Google Cloud"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SQL Recursive CTE Queries for Hierarchies" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I write recursive CTE queries for hierarchies (org charts, MLM, BOM)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use WITH RECURSIVE to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL recursive common table expression",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use WITH RECURSIVE to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "WITH RECURSIVE query for tree traversal",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use WITH RECURSIVE to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "hierarchical query SQL adjacency list",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use WITH RECURSIVE to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "bill of materials recursive SQL query",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use WITH RECURSIVE to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "org chart SQL query parent child",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use WITH RECURSIVE to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SQL Recursive CTE Queries for Hierarchies</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I write recursive CTE queries for hierarchies (org charts, MLM, BOM)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-recursive-cte/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use <code>WITH RECURSIVE</code> to traverse adjacency-list hierarchies (org charts, BOM, categories) by defining an anchor query for root nodes and a recursive member that joins children to already-found rows, terminating when no new rows are produced.</li>
+    <li><strong>Key tool/command</strong>: <code>WITH RECURSIVE cte AS (SELECT ... UNION ALL SELECT ... FROM cte JOIN ...) SELECT * FROM cte</code></li>
+    <li><strong>Watch out for</strong>: Infinite recursion in cyclic data -- always add a depth counter (<code>WHERE depth &lt; N</code>) or cycle detection.</li>
+    <li><strong>Works with</strong>: PostgreSQL 8.4+, MySQL 8.0+, SQL Server 2005+, SQLite 3.8.3+, Oracle 11g R2+, BigQuery.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>MySQL requires the <code>RECURSIVE</code> keyword in <code>WITH RECURSIVE</code>; omitting it causes "Table doesn't exist" errors. PostgreSQL and SQL Server accept <code>WITH</code> alone but <code>RECURSIVE</code> is best practice for portability. [<a href="https://dev.mysql.com/doc/refman/8.4/en/with.html">src2</a>]</li>
+    <li>SQL Server defaults to <code>MAXRECURSION 100</code> -- queries exceeding 100 levels error out. Override with <code>OPTION (MAXRECURSION 0)</code> for unlimited (dangerous) or a specific limit. [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/recursive-common-table-expression-transact-sql">src3</a>]</li>
+    <li>MySQL defaults <code>cte_max_recursion_depth</code> to 1000. Increase per session with <code>SET SESSION cte_max_recursion_depth = N</code>. [<a href="https://dev.mysql.com/doc/refman/8.4/en/with.html">src2</a>]</li>
+    <li>Recursive members in MySQL must not use aggregate functions, <code>GROUP BY</code>, window functions, <code>DISTINCT</code>, <code>ORDER BY</code>, or subqueries referencing the CTE. PostgreSQL is more permissive. [<a href="https://dev.mysql.com/doc/refman/8.4/en/with.html">src2</a>]</li>
+    <li>In MySQL, the CTE must not appear on the right side of a <code>LEFT JOIN</code> in the recursive member. [<a href="https://dev.mysql.com/doc/refman/8.4/en/with.html">src2</a>]</li>
+    <li>Always test with <code>LIMIT</code> or a depth cap before running on production data to avoid runaway queries.</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table (PATTERNS decision matrix) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Pattern</th><th scope="col">Time</th><th scope="col">Space</th><th scope="col">Trade-off</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Simple parent-child tree (org chart)</td><td>Recursive CTE + adjacency list</td><td>O(n*d)</td><td>O(n)</td><td>Easy writes, recursive reads</td></tr>
+      <tr><td>BOM with quantity rollup</td><td>Recursive CTE + SUM in outer query</td><td>O(n*d)</td><td>O(n)</td><td>Aggregate outside CTE only (MySQL)</td></tr>
+      <tr><td>Find all ancestors (bottom-up)</td><td>Recursive CTE anchored at leaf</td><td>O(d)</td><td>O(d)</td><td>Reverse direction anchor</td></tr>
+      <tr><td>Depth-limited subtree</td><td>Recursive CTE + WHERE depth &lt; N</td><td>O(n) bounded</td><td>O(n)</td><td>Prevents runaway on bad data</td></tr>
+      <tr><td>Full path string (breadcrumb)</td><td>Recursive CTE + string concat</td><td>O(n*d)</td><td>O(n * path_len)</td><td>Path grows with depth</td></tr>
+      <tr><td>Cycle-safe graph traversal</td><td>CYCLE clause (PG 14+) or path array</td><td>O(n*d)</td><td>O(n*d)</td><td>Prevents infinite loops</td></tr>
+      <tr><td>Tree ordering (depth-first)</td><td>SEARCH DEPTH FIRST (PG 14+) or path sort</td><td>O(n*d + n log n)</td><td>O(n*d)</td><td>Correct visual tree ordering</td></tr>
+      <tr><td>Tree ordering (breadth-first)</td><td>Depth counter + ORDER BY depth</td><td>O(n*d + n log n)</td><td>O(n)</td><td>Level-by-level processing</td></tr>
+      <tr><td>Read-heavy flat hierarchy (&lt;6 levels)</td><td>Materialized path + LIKE queries</td><td>O(n) or O(log n)</td><td>O(n * path_len)</td><td>Fast reads, costly moves</td></tr>
+      <tr><td>Read-heavy deep hierarchy</td><td>Nested set model (lft/rgt)</td><td>O(1) subtree, O(n) rebuild</td><td>O(n)</td><td>Fastest reads, expensive writes</td></tr>
+      <tr><td>Balanced read-write</td><td>Closure table</td><td>O(d) insert, O(1) subtree</td><td>O(n*d) rows</td><td>Extra table, best flexibility</td></tr>
+      <tr><td>Very large trees (&gt;1M nodes)</td><td>Recursive CTE + keyset pagination</td><td>O(page * d)</td><td>O(page_size)</td><td>Avoids loading entire tree</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Which storage model is already in place?
+|   |-- ADJACENCY LIST (parent_id column) --> Use recursive CTE (this unit)
+|   |-- NESTED SET (lft/rgt columns) --> Use range queries, no recursion needed
+|   |-- MATERIALIZED PATH (/1/3/7/) --> Use LIKE or ltree, no recursion needed
+|   |-- CLOSURE TABLE --> Use direct joins, no recursion needed
+|   +-- NO TABLE YET --> continue below
+|
+|-- Read/write ratio?
+|   |-- READ-HEAVY (>90% reads, rare moves)
+|   |   |-- Depth &lt; 10 levels? --> Materialized path + index
+|   |   +-- Depth >= 10 levels? --> Nested set or closure table
+|   |-- WRITE-HEAVY (frequent inserts/moves)
+|   |   +-- Adjacency list + recursive CTE (this unit)
+|   +-- BALANCED
+|       +-- Closure table (best flexibility)
+|
+|-- Database engine?
+|   |-- PostgreSQL 14+ --> Use SEARCH/CYCLE clauses
+|   |-- PostgreSQL &lt;14 --> Manual path array + is_cycle boolean
+|   |-- MySQL 8.0+ --> WITH RECURSIVE; aggregate outside CTE
+|   |-- SQL Server --> WITH (no RECURSIVE keyword); OPTION(MAXRECURSION N)
+|   +-- SQLite 3.8.3+ --> WITH RECURSIVE; no built-in cycle detection
+|
++-- DEFAULT --> Adjacency list + recursive CTE</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create the adjacency-list table</h3>
+  <p>Design the table with a self-referencing foreign key. Root nodes have NULL in the parent column. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE employees (
+    id         INT PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    title      VARCHAR(100),
+    manager_id INT REFERENCES employees(id),
+    INDEX idx_manager (manager_id)
+);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT * FROM employees WHERE manager_id IS NULL;</code> -- returns root node(s)</p>
+
+  <h3>2. Write the anchor member</h3>
+  <p>The anchor selects starting point(s) -- typically root nodes or a specific subtree root. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</p>
+  <pre><code class="language-sql">SELECT id, name, title, manager_id, 0 AS depth
+FROM employees
+WHERE manager_id IS NULL</code></pre>
+  <p><strong>Verify</strong>: Returns exactly the expected root node(s)</p>
+
+  <h3>3. Write the recursive member</h3>
+  <p>Join the base table to the CTE to find children of already-discovered nodes. Always increment the depth counter. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>] [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/recursive-common-table-expression-transact-sql">src3</a>]</p>
+  <pre><code class="language-sql">SELECT e.id, e.name, e.title, e.manager_id, cte.depth + 1
+FROM employees e
+INNER JOIN org_tree cte ON e.manager_id = cte.id
+WHERE cte.depth &lt; 20</code></pre>
+  <p><strong>Verify</strong>: Each iteration returns one level deeper; eventually returns 0 rows</p>
+
+  <h3>4. Combine into a complete recursive CTE</h3>
+  <p>Wrap anchor and recursive member with <code>WITH RECURSIVE</code> and <code>UNION ALL</code>. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</p>
+  <pre><code class="language-sql">WITH RECURSIVE org_tree AS (
+    SELECT id, name, title, manager_id, 0 AS depth
+    FROM employees WHERE manager_id IS NULL
+    UNION ALL
+    SELECT e.id, e.name, e.title, e.manager_id, ot.depth + 1
+    FROM employees e
+    INNER JOIN org_tree ot ON e.manager_id = ot.id
+    WHERE ot.depth &lt; 20
+)
+SELECT * FROM org_tree ORDER BY depth, name;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM org_tree;</code> -- matches total employee count</p>
+
+  <h3>5. Add path tracking for breadcrumbs</h3>
+  <p>Build a full path string. Syntax varies by engine. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</p>
+  <pre><code class="language-sql">WITH RECURSIVE org_tree AS (
+    SELECT id, name, manager_id, 0 AS depth,
+           ARRAY[name] AS path
+    FROM employees WHERE manager_id IS NULL
+    UNION ALL
+    SELECT e.id, e.name, e.manager_id, ot.depth + 1,
+           ot.path || e.name
+    FROM employees e
+    INNER JOIN org_tree ot ON e.manager_id = ot.id
+)
+SELECT *, array_to_string(path, ' > ') AS breadcrumb
+FROM org_tree ORDER BY path;</code></pre>
+  <p><strong>Verify</strong>: Breadcrumb shows <code>CEO > VP Sales > Regional Manager > Rep</code></p>
+
+  <h3>6. Add cycle detection for graphs</h3>
+  <p>Use PostgreSQL 14+ CYCLE clause or manual path-based detection. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</p>
+  <pre><code class="language-sql">WITH RECURSIVE graph_walk AS (
+    SELECT id, parent_id, name, 0 AS depth
+    FROM nodes WHERE id = 1
+    UNION ALL
+    SELECT n.id, n.parent_id, n.name, gw.depth + 1
+    FROM nodes n
+    INNER JOIN graph_walk gw ON n.parent_id = gw.id
+) CYCLE id SET is_cycle USING path
+SELECT * FROM graph_walk WHERE NOT is_cycle;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM graph_walk WHERE is_cycle;</code> -- shows detected cycles</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Org Chart with Depth-First Ordering</h3>
+  <pre><code class="language-sql">-- Input:  employees table with (id, name, title, manager_id)
+-- Output: full org tree with depth, path, and visual indentation
+WITH RECURSIVE org_tree AS (
+    SELECT id, name, title, manager_id, 0 AS depth,
+           ARRAY[id] AS path, name::text AS breadcrumb
+    FROM employees WHERE manager_id IS NULL
+    UNION ALL
+    SELECT e.id, e.name, e.title, e.manager_id, ot.depth + 1,
+           ot.path || e.id, ot.breadcrumb || ' > ' || e.name
+    FROM employees e
+    INNER JOIN org_tree ot ON e.manager_id = ot.id
+    WHERE ot.depth &lt; 50
+)
+SELECT id, repeat('  ', depth) || name AS indented_name,
+       title, depth, breadcrumb
+FROM org_tree ORDER BY path;</code></pre>
+
+  <h3>MySQL 8.0+: Bill of Materials with Quantity Rollup</h3>
+  <pre><code class="language-sql">-- Input:  bom table with (assembly_id, component_id, quantity)
+-- Output: all components for assembly 1 with total quantities
+WITH RECURSIVE bom_tree AS (
+    SELECT component_id, assembly_id, quantity, 1 AS depth,
+           CAST(CONCAT('/', assembly_id, '/', component_id)
+                AS CHAR(1000)) AS path
+    FROM bom WHERE assembly_id = 1
+    UNION ALL
+    SELECT b.component_id, b.assembly_id,
+           b.quantity * bt.quantity, bt.depth + 1,
+           CONCAT(bt.path, '/', b.component_id)
+    FROM bom b
+    INNER JOIN bom_tree bt ON b.assembly_id = bt.component_id
+    WHERE bt.depth &lt; 20
+)
+SELECT component_id, SUM(quantity) AS total_needed,
+       MAX(depth) AS max_depth
+FROM bom_tree GROUP BY component_id
+ORDER BY total_needed DESC;</code></pre>
+
+  <h3>SQL Server: Category Tree with MAXRECURSION</h3>
+  <pre><code class="language-sql">-- Input:  categories table with (id, name, parent_id)
+-- Output: full category tree with level and path
+WITH category_tree AS (
+    SELECT id, name, parent_id, 0 AS level,
+           CAST(name AS NVARCHAR(MAX)) AS full_path
+    FROM categories WHERE parent_id IS NULL
+    UNION ALL
+    SELECT c.id, c.name, c.parent_id, ct.level + 1,
+           CAST(ct.full_path + N' > ' + c.name AS NVARCHAR(MAX))
+    FROM categories c
+    INNER JOIN category_tree ct ON c.parent_id = ct.id
+)
+SELECT id, name, level, full_path
+FROM category_tree
+ORDER BY full_path
+OPTION (MAXRECURSION 200);</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: No depth limit on recursive CTE</h3>
+  <pre><code class="language-sql">-- BAD -- infinite recursion if data has cycles
+WITH RECURSIVE tree AS (
+    SELECT id, parent_id FROM nodes WHERE id = 1
+    UNION ALL
+    SELECT n.id, n.parent_id
+    FROM nodes n JOIN tree t ON n.parent_id = t.id
+)
+SELECT * FROM tree;</code></pre>
+
+  <h3>Correct: Always include a depth safety cap</h3>
+  <pre><code class="language-sql">-- GOOD -- depth limit prevents runaway recursion
+WITH RECURSIVE tree AS (
+    SELECT id, parent_id, 0 AS depth FROM nodes WHERE id = 1
+    UNION ALL
+    SELECT n.id, n.parent_id, t.depth + 1
+    FROM nodes n JOIN tree t ON n.parent_id = t.id
+    WHERE t.depth &lt; 100
+)
+SELECT * FROM tree;</code></pre>
+
+  <h3>Wrong: Aggregate inside MySQL recursive member</h3>
+  <pre><code class="language-sql">-- BAD -- MySQL error: aggregate in recursive member
+WITH RECURSIVE rollup AS (
+    SELECT id, parent_id, cost FROM items WHERE id = 1
+    UNION ALL
+    SELECT i.id, i.parent_id, SUM(i.cost)
+    FROM items i JOIN rollup r ON i.parent_id = r.id
+    GROUP BY i.id
+)
+SELECT * FROM rollup;</code></pre>
+
+  <h3>Correct: Aggregate in the outer query</h3>
+  <pre><code class="language-sql">-- GOOD -- aggregate after recursion completes
+WITH RECURSIVE rollup AS (
+    SELECT id, parent_id, cost, 0 AS depth
+    FROM items WHERE id = 1
+    UNION ALL
+    SELECT i.id, i.parent_id, i.cost, r.depth + 1
+    FROM items i JOIN rollup r ON i.parent_id = r.id
+    WHERE r.depth &lt; 50
+)
+SELECT parent_id, SUM(cost) AS total_cost
+FROM rollup GROUP BY parent_id;</code></pre>
+
+  <h3>Wrong: UNION instead of UNION ALL (unnecessary dedup)</h3>
+  <pre><code class="language-sql">-- BAD -- UNION forces expensive sort+dedup every iteration
+WITH RECURSIVE tree AS (
+    SELECT id, parent_id FROM nodes WHERE id = 1
+    UNION
+    SELECT n.id, n.parent_id
+    FROM nodes n JOIN tree t ON n.parent_id = t.id
+)
+SELECT * FROM tree;</code></pre>
+
+  <h3>Correct: UNION ALL for trees with unique keys</h3>
+  <pre><code class="language-sql">-- GOOD -- UNION ALL avoids unnecessary sort
+WITH RECURSIVE tree AS (
+    SELECT id, parent_id, 0 AS depth FROM nodes WHERE id = 1
+    UNION ALL
+    SELECT n.id, n.parent_id, t.depth + 1
+    FROM nodes n JOIN tree t ON n.parent_id = t.id
+    WHERE t.depth &lt; 100
+)
+SELECT * FROM tree;</code></pre>
+
+  <h3>Wrong: Projecting parent column instead of child</h3>
+  <pre><code class="language-sql">-- BAD -- projects t.id (parent) instead of n.id (child) = infinite loop
+WITH RECURSIVE tree AS (
+    SELECT id FROM nodes WHERE id = 1
+    UNION ALL
+    SELECT t.id
+    FROM nodes n JOIN tree t ON n.parent_id = t.id
+)
+SELECT * FROM tree;</code></pre>
+
+  <h3>Correct: Always project the child row's columns</h3>
+  <pre><code class="language-sql">-- GOOD -- projects n.id (the discovered child node)
+WITH RECURSIVE tree AS (
+    SELECT id, 0 AS depth FROM nodes WHERE id = 1
+    UNION ALL
+    SELECT n.id, t.depth + 1
+    FROM nodes n JOIN tree t ON n.parent_id = t.id
+    WHERE t.depth &lt; 100
+)
+SELECT * FROM tree;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Infinite recursion from cyclic data</strong>: A parent_id pointing back to an ancestor creates an endless loop. Fix: Add <code>WHERE depth &lt; N</code> and use PostgreSQL's <code>CYCLE</code> clause or manual path-array detection. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</li>
+    <li><strong>MySQL "Table doesn't exist" error</strong>: Forgetting the RECURSIVE keyword. Fix: Always write <code>WITH RECURSIVE cte_name AS (...)</code>. [<a href="https://dev.mysql.com/doc/refman/8.4/en/with.html">src2</a>]</li>
+    <li><strong>SQL Server MAXRECURSION 100 error</strong>: Default limit terminates at 100 levels. Fix: <code>OPTION (MAXRECURSION N)</code> where N is your expected max depth. [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/recursive-common-table-expression-transact-sql">src3</a>]</li>
+    <li><strong>Column type truncation in MySQL</strong>: MySQL infers CTE column types from the anchor only. Fix: <code>CAST(column AS CHAR(1000))</code> in the anchor member. [<a href="https://dev.mysql.com/doc/refman/8.4/en/with.html">src2</a>]</li>
+    <li><strong>Wrong join direction</strong>: Joining CTE.id = table.id instead of CTE.id = table.parent_id traverses the wrong direction. Fix: Double-check FK vs PK columns. [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/recursive-common-table-expression-transact-sql">src3</a>]</li>
+    <li><strong>Missing index on parent_id</strong>: Each recursive iteration does a full table scan without it. Fix: <code>CREATE INDEX idx_parent ON table(parent_id);</code> [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</li>
+    <li><strong>Multiplied rows in BOM queries</strong>: Components appearing in multiple assemblies duplicate correctly, but misunderstood output leads to wrong totals. Fix: Aggregate in outer query with <code>GROUP BY component_id</code>. [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/recursive-common-table-expression-transact-sql">src3</a>]</li>
+    <li><strong>UNION vs UNION ALL performance</strong>: UNION forces sort/dedup every iteration. Fix: Use <code>UNION ALL</code> for trees; reserve UNION only for graphs needing dedup. [<a href="https://www.postgresql.org/docs/current/queries-with.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Engine</th><th scope="col">Version</th><th scope="col">Recursive CTE Support</th><th scope="col">Key Limitation</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL</td><td>8.4+ (2009)</td><td>Full; SEARCH/CYCLE in 14 (2021)</td><td>None significant</td></tr>
+      <tr><td>MySQL</td><td>8.0+ (2018)</td><td>Full</td><td>No aggregates/window in recursive member; depth limit 1000</td></tr>
+      <tr><td>SQL Server</td><td>2005+</td><td>Full</td><td>MAXRECURSION default 100; no SEARCH/CYCLE</td></tr>
+      <tr><td>SQLite</td><td>3.8.3+ (2014)</td><td>Full</td><td>No built-in cycle detection</td></tr>
+      <tr><td>Oracle</td><td>11g R2+ (2009)</td><td>Full (or CONNECT BY)</td><td>CONNECT BY is legacy</td></tr>
+      <tr><td>BigQuery</td><td>2023+</td><td>Full</td><td>Requires UNION ALL</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Adjacency list is already the data model</td><td>Hierarchy has >1M nodes, only need subtree reads</td><td>Nested set or materialized path</td></tr>
+      <tr><td>Writes are frequent (inserts, moves, deletes)</td><td>Need O(1) "is A ancestor of B?" checks</td><td>Nested set model (lft/rgt range check)</td></tr>
+      <tr><td>Hierarchy depth is unknown or variable</td><td>DB doesn't support recursive CTEs (MySQL &lt;8.0)</td><td>Application-level recursion</td></tr>
+      <tr><td>Need aggregate over subtrees (BOM cost rollup)</td><td>Simple 2-3 level hierarchy with fixed depth</td><td>Multiple self-joins</td></tr>
+      <tr><td>Data may contain cycles needing detection</td><td>Read latency is critical, hierarchy rarely changes</td><td>Closure table</td></tr>
+      <tr><td>Building breadcrumb paths or full-path strings</td><td>Only need direct children (one level)</td><td>Simple WHERE parent_id = ?</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>PostgreSQL's SEARCH and CYCLE clauses (v14+) are syntactic sugar expanded to manual path/array tracking. They are not faster, but less error-prone and more readable.</li>
+    <li>MySQL determines CTE column types solely from the anchor member. Recursive string concatenation silently truncates unless you CAST to a large type in the anchor.</li>
+    <li>SQL Server's <code>OPTION (MAXRECURSION 0)</code> removes all limits. Always combine with <code>WHERE depth &lt; N</code> as a secondary safety net.</li>
+    <li>Recursive CTEs are evaluated iteratively, not truly recursively. Performance scales linearly with tree size but degrades on very wide trees due to joins at each level.</li>
+    <li>No major SQL engine parallelizes recursive member iterations. Each level depends on the previous, making this inherently sequential per level.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="related_to">PostgreSQL Slow Query Debugging</a>
+    <a href="/software/debugging/mysql-deadlocks/2026" data-relationship="related_to">MySQL Deadlock Debugging</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

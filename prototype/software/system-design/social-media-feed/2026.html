@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Social Media Feed System Design | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a scalable social media feed (Twitter/Instagram clone).">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/social-media-feed/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Social Media Feed System Design | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a scalable social media feed (Twitter/Instagram clone). Covers hybrid fan-out architecture, Redis timeline caching, feed ranking, and scaling to 100M+ DAU. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/social-media-feed/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Social Media Feed System Design | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a scalable social media feed (Twitter/Instagram clone). Covers hybrid fan-out architecture, Redis timeline caching, feed ranking, and scaling to 100M+ DAU. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.91">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/social_media_feed">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a social media feed system (Twitter/Instagram clone)?">
+  <meta name="ai:aliases" content="How to build a Twitter-like news feed at scale; Design a scalable social media timeline system; Fan-out-on-write vs fan-out-on-read for feeds; System design interview: design Instagram feed">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/social-media-feed/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale, feed_type, media_type">
+  <meta name="ai:constraints" content="Fan-out-on-write must be disabled for users with >500K followers; Timeline cache must have TTL and size cap (800 tweets); Never store media blobs in primary database; Feed ranking models require A/B testing infrastructure">
+  <meta name="ai:skip_this_unit_if" content="Building a simple chronological feed for <10K users -> Standard relational query with pagination is sufficient; Designing a recommendation-only feed (no follow graph) -> Recommendation system design (collaborative filtering)">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Social Media Feed System Design",
+    "headline": "Social Media Feed System Design",
+    "description": "Complete system design guide for building a scalable social media feed (Twitter/Instagram clone). Covers hybrid fan-out-on-write/read architecture, Redis timeline caching, Kafka-based async fan-out, ML feed ranking, and scaling strategies from 10K to 100M+ DAU.",
+    "keywords": ["system design", "social media feed", "Twitter architecture", "Instagram feed", "fan-out-on-write", "fan-out-on-read", "Redis timeline", "news feed", "feed ranking", "scalability"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Redis, Kafka, PostgreSQL/Cassandra, Python/Go, S3/GCS, CDN",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Designing a Scalable News Feed System (Step-by-Step)",
+        "url": "https://blog.algomaster.io/p/designing-a-scalable-news-feed-system"
+      },
+      {
+        "@type": "WebPage",
+        "name": "System Design Primer: Design Twitter",
+        "url": "https://github.com/donnemartin/system-design-primer/blob/master/solutions/system_design/twitter/README.md"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Twitter's Tough Architectural Decision",
+        "url": "https://softwareengineeringwk.substack.com/p/twitter-architecture"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How Instagram Suggests New Content",
+        "url": "https://engineering.fb.com/2020/12/10/web/how-instagram-suggests-new-content/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Scaling Instagram Explore Recommendations System",
+        "url": "https://engineering.fb.com/2023/08/09/ml-applications/scaling-instagram-explore-recommendations-system/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Design Social Media News Feed",
+        "url": "https://www.designgurus.io/blog/design-social-media-news-feed"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Social Media Feed System Design - Architecture, Algorithms & Best Practices",
+        "url": "https://javatechonline.com/social-media-feed-system-design/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Social Media Feed System Design",
+    "description": "Structured knowledge unit covering social media feed system design architecture, including fan-out strategies, Redis timeline caching, feed ranking, and scaling patterns for Twitter/Instagram-style platforms.",
+    "keywords": ["system design", "social media feed", "fan-out-on-write", "fan-out-on-read", "Redis", "Kafka", "feed ranking", "timeline architecture"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "AlgoMaster"},
+      {"@type": "Organization", "name": "System Design Primer"},
+      {"@type": "Organization", "name": "Meta Engineering"},
+      {"@type": "Organization", "name": "Design Gurus"},
+      {"@type": "Organization", "name": "JavaTechOnline"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Social Media Feed System Design" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a social media feed system (Twitter/Instagram clone)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A social media feed requires a hybrid fan-out architecture -- fan-out-on-write for normal users (precompute timelines into Redis) and fan-out-on-read for celebrity accounts (>500K followers) to avoid write amplification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to build a Twitter-like news feed at scale",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A social media feed requires a hybrid fan-out architecture -- fan-out-on-write for normal users (precompute timelines into Redis) and fan-out-on-read for celebrity accounts (>500K followers) to avoid write amplification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Design a scalable social media timeline system",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A social media feed requires a hybrid fan-out architecture -- fan-out-on-write for normal users (precompute timelines into Redis) and fan-out-on-read for celebrity accounts (>500K followers) to avoid write amplification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Fan-out-on-write vs fan-out-on-read for feeds",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A social media feed requires a hybrid fan-out architecture -- fan-out-on-write for normal users (precompute timelines into Redis) and fan-out-on-read for celebrity accounts (>500K followers) to avoid write amplification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "System design interview: design Instagram feed",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A social media feed requires a hybrid fan-out architecture -- fan-out-on-write for normal users (precompute timelines into Redis) and fan-out-on-read for celebrity accounts (>500K followers) to avoid write amplification."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Social Media Feed System Design</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a social media feed system (Twitter/Instagram clone)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/social-media-feed/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A social media feed requires a hybrid fan-out architecture -- fan-out-on-write for normal users (precompute timelines into Redis) and fan-out-on-read for celebrity accounts (&gt;500K followers) to avoid write amplification.</li>
+    <li><strong>Key tool/command</strong>: <code>LPUSH user:{id}:timeline {tweet_id}</code> (Redis list per user for O(1) feed reads)</li>
+    <li><strong>Watch out for</strong>: Unbounded fan-out for high-follower accounts -- a single celebrity tweet can generate millions of writes and lag the entire pipeline.</li>
+    <li><strong>Works with</strong>: Any stack; core patterns are language-agnostic. Redis + Kafka + PostgreSQL/Cassandra is the most battle-tested combination.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Fan-out-on-write must be disabled for users with &gt;500K followers to avoid write amplification storms</li>
+    <li>Timeline cache must have a TTL and size cap (e.g. 800 tweets per user) to bound memory usage</li>
+    <li>Never store media blobs in the primary database; use object storage (S3/GCS) with CDN delivery</li>
+    <li>Feed ranking models require A/B testing infrastructure before production deployment</li>
+    <li>Eventual consistency is acceptable for feed delivery (seconds-level lag), but like/reply counts need at-least-once delivery guarantees</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Gateway</td><td>Rate limiting, auth, routing</td><td>Nginx, Kong, AWS API Gateway</td><td>Horizontal scaling behind LB</td></tr>
+      <tr><td>Post Service</td><td>Create/store posts and metadata</td><td>Python/Go + PostgreSQL</td><td>Shard by user_id, master-slave replication</td></tr>
+      <tr><td>Fan-Out Service</td><td>Distribute posts to follower timelines</td><td>Go/Java workers + Kafka consumers</td><td>Partition Kafka by user_id, scale consumers horizontally</td></tr>
+      <tr><td>Timeline Service</td><td>Serve precomputed home feeds</td><td>Node.js/Go + Redis</td><td>Redis Cluster with consistent hashing</td></tr>
+      <tr><td>Social Graph Service</td><td>Manage follow/unfollow relationships</td><td>Go/Java + Graph DB or Redis</td><td>Adjacency list in Redis, Neo4j for deep queries</td></tr>
+      <tr><td>User Service</td><td>Profiles, auth, preferences</td><td>Any framework + PostgreSQL</td><td>Read replicas, cache hot profiles</td></tr>
+      <tr><td>Media Service</td><td>Upload, process, serve images/video</td><td>Python/Go + S3/GCS + CDN</td><td>Pre-signed uploads, CDN edge caching</td></tr>
+      <tr><td>Search Service</td><td>Full-text search on posts</td><td>Elasticsearch, Apache Solr</td><td>Sharded index, scatter-gather queries</td></tr>
+      <tr><td>Notification Service</td><td>Push/email/in-app alerts on engagement</td><td>Go/Python + Kafka + FCM/APNs</td><td>Async via message queue, batch delivery</td></tr>
+      <tr><td>Ranking Service</td><td>ML-based feed personalization</td><td>Python + TensorFlow/PyTorch</td><td>Feature store + model serving (TF Serving, Triton)</td></tr>
+      <tr><td>CDN</td><td>Static asset and media delivery</td><td>CloudFront, Cloudflare, Fastly</td><td>Edge PoPs, cache invalidation via purge API</td></tr>
+      <tr><td>Message Queue</td><td>Async communication between services</td><td>Apache Kafka, RabbitMQ, SQS</td><td>Partitioned topics, consumer groups</td></tr>
+      <tr><td>Cache Layer</td><td>Reduce DB load for hot data</td><td>Redis, Memcached</td><td>Redis Cluster, LRU eviction, ~800 items/timeline</td></tr>
+      <tr><td>Object Storage</td><td>Persistent media file storage</td><td>AWS S3, Google Cloud Storage</td><td>Lifecycle policies, cross-region replication</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Expected DAU?
+|   |-- &lt;10K users
+|   |   --&gt; Simple pull-based feed: query DB at read time, paginate with cursor
+|   |-- 10K - 1M users
+|   |   --&gt; Fan-out-on-write for all users
+|   |   --&gt; Precompute timelines into Redis on every post
+|   |-- 1M - 100M users
+|   |   |-- Any user with &gt;500K followers?
+|   |   |   |-- YES --&gt; Hybrid: fan-out-on-write for normal, fan-out-on-read for celebrities
+|   |   |   |-- NO --&gt; Pure fan-out-on-write with Redis Cluster
+|   |   |-- Feed type?
+|   |   |   |-- Chronological --&gt; Sort by timestamp in Redis sorted set
+|   |   |   |-- Ranked --&gt; Add Ranking Service with ML model
+|   |   |   |-- Hybrid --&gt; Chronological base + lightweight re-ranking
+|   |-- &gt;100M users
+|       --&gt; Full hybrid fan-out + ML ranking pipeline
+|       --&gt; Multi-region deployment with geo-sharding
+|       --&gt; Edge caching for feed responses</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define the data model and API contracts</h3>
+  <p>Design the core entities: Users, Posts, Follows, Likes, Comments. Define REST or gRPC endpoints for create-post, get-timeline, follow/unfollow. [<a href="https://blog.algomaster.io/p/designing-a-scalable-news-feed-system">src1</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE users (
+    user_id    BIGINT PRIMARY KEY,
+    username   VARCHAR(64) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE posts (
+    post_id    BIGINT PRIMARY KEY,
+    author_id  BIGINT NOT NULL REFERENCES users(user_id),
+    content    TEXT NOT NULL,
+    media_url  TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    like_count INT DEFAULT 0
+);
+
+CREATE TABLE follows (
+    follower_id BIGINT NOT NULL,
+    followee_id BIGINT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (follower_id, followee_id)
+);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM information_schema.tables WHERE table_name IN ('users','posts','follows');</code> --> expected: <code>3</code></p>
+
+  <h3>2. Build the post ingestion pipeline</h3>
+  <p>When a user creates a post, write it to the Posts table, then publish an event to Kafka for async fan-out. [<a href="https://github.com/donnemartin/system-design-primer/blob/master/solutions/system_design/twitter/README.md">src2</a>]</p>
+  <pre><code class="language-python">producer = KafkaProducer(bootstrap_servers=["kafka:9092"])
+
+def create_post(author_id, content, media_url=None):
+    post = db.insert_post(author_id, content, media_url)
+    producer.send("post-created",
+        key=str(author_id).encode(),
+        value=json.dumps({"post_id": post["post_id"], "author_id": author_id}).encode()
+    )
+    return post</code></pre>
+  <p><strong>Verify</strong>: <code>kafka-console-consumer --topic post-created --from-beginning</code> --> expected: JSON with post_id</p>
+
+  <h3>3. Implement the fan-out service</h3>
+  <p>Kafka consumers read post-created events, look up followers, and push post_id into each follower's Redis timeline. Skip fan-out for celebrities. [<a href="https://softwareengineeringwk.substack.com/p/twitter-architecture">src3</a>]</p>
+  <pre><code class="language-python">CELEBRITY_THRESHOLD = 500_000
+
+for message in consumer:
+    event = message.value
+    followers = get_followers(event["author_id"])
+    if len(followers) > CELEBRITY_THRESHOLD:
+        continue  # handled at read time
+    pipe = redis.pipeline(transaction=False)
+    for fid in followers:
+        pipe.lpush(f"user:{fid}:timeline", event["post_id"])
+        pipe.ltrim(f"user:{fid}:timeline", 0, 799)
+    pipe.execute()</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli LRANGE user:42:timeline 0 9</code> --> expected: list with new post_id</p>
+
+  <h3>4. Build the timeline read path</h3>
+  <p>Read precomputed Redis list, hydrate post objects, merge celebrity tweets at serve time. [<a href="https://github.com/donnemartin/system-design-primer/blob/master/solutions/system_design/twitter/README.md">src2</a>] [<a href="https://softwareengineeringwk.substack.com/p/twitter-architecture">src3</a>]</p>
+  <pre><code class="language-python">def get_home_timeline(user_id, cursor=0, limit=20):
+    post_ids = redis.lrange(f"user:{user_id}:timeline", cursor, cursor + limit - 1)
+    for celeb_id in get_followed_celebrities(user_id):
+        celeb_posts = db.query_recent_posts(celeb_id, limit)
+        post_ids.extend(celeb_posts)
+    posts = hydrate_posts(list(dict.fromkeys(post_ids)))
+    posts.sort(key=lambda p: p["created_at"], reverse=True)
+    return posts[:limit]</code></pre>
+  <p><strong>Verify</strong>: <code>curl /api/v1/timeline?user_id=42&amp;limit=10</code> --> expected: JSON array of posts</p>
+
+  <h3>5. Add feed ranking</h3>
+  <p>Insert a ranking layer scoring posts by engagement probability using a lightweight ML model. [<a href="https://engineering.fb.com/2020/12/10/web/how-instagram-suggests-new-content/">src4</a>] [<a href="https://engineering.fb.com/2023/08/09/ml-applications/scaling-instagram-explore-recommendations-system/">src5</a>]</p>
+  <pre><code class="language-python">def rank_feed(user_id, candidates):
+    features = extract_features(user_id, candidates)
+    scores = ranking_model.predict(features)
+    for post, score in zip(candidates, scores):
+        post["rank_score"] = float(score)
+    candidates.sort(key=lambda p: p["rank_score"], reverse=True)
+    return candidates</code></pre>
+  <p><strong>Verify</strong>: Compare ranked vs chronological output -- ranked feed should prioritize higher-engagement posts</p>
+
+  <h3>6. Configure media storage and CDN</h3>
+  <p>Set up pre-signed uploads to S3, configure CDN for delivery, cache feed API responses at the edge. [<a href="https://blog.algomaster.io/p/designing-a-scalable-news-feed-system">src1</a>] [<a href="https://www.designgurus.io/blog/design-social-media-news-feed">src6</a>]</p>
+  <pre><code class="language-python">def generate_upload_url(user_id, filename):
+    key = f"media/{user_id}/{filename}"
+    return s3.generate_presigned_url("put_object",
+        Params={"Bucket": "feed-media", "Key": key},
+        ExpiresIn=3600
+    )</code></pre>
+  <p><strong>Verify</strong>: Upload test image via pre-signed URL, fetch via CDN --> expected: 200 OK</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Feed Generation with Hybrid Fan-Out</h3>
+  <pre><code class="language-python"># Input:  user_id (int), cursor (int), limit (int)
+# Output: list of post dicts sorted by rank score
+
+import redis
+
+r = redis.Redis(host="redis-cluster", port=6379, decode_responses=True)
+
+def generate_feed(user_id, cursor=0, limit=20):
+    """Hybrid feed: precomputed timeline + celebrity merge + ranking."""
+    tl_key = f"user:{user_id}:timeline"
+    post_ids = r.lrange(tl_key, cursor, cursor + limit * 2)
+    celeb_followees = get_followed_celebrities(user_id)
+    for cid in celeb_followees:
+        celeb_posts = r.lrange(f"user:{cid}:posts", 0, limit - 1)
+        post_ids.extend(celeb_posts)
+    post_ids = list(dict.fromkeys(post_ids))
+    posts = batch_hydrate(post_ids)
+    ranked = rank_feed(user_id, posts)
+    return ranked[cursor:cursor + limit]</code></pre>
+
+  <h3>Python: Redis Timeline Caching</h3>
+  <pre><code class="language-python"># Input:  author_id (int), post_id (int), follower_ids (list[int])
+# Output: None (updates Redis timelines)
+
+import redis
+
+r = redis.Redis(host="redis-cluster", port=6379, decode_responses=True)
+MAX_TIMELINE_SIZE = 800
+TIMELINE_TTL = 7 * 24 * 3600  # 7 days
+
+def fan_out_to_timelines(author_id, post_id, follower_ids):
+    pipe = r.pipeline(transaction=False)
+    for fid in follower_ids:
+        key = f"user:{fid}:timeline"
+        pipe.lpush(key, post_id)
+        pipe.ltrim(key, 0, MAX_TIMELINE_SIZE - 1)
+        pipe.expire(key, TIMELINE_TTL)
+    pipe.execute()</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Fan-out-on-write for all users regardless of follower count</h3>
+  <pre><code class="language-python"># BAD -- celebrity with 10M followers causes 10M Redis writes per tweet
+def fan_out(author_id, post_id):
+    followers = get_all_followers(author_id)  # could be 10M+
+    for fid in followers:
+        redis.lpush(f"user:{fid}:timeline", post_id)
+    # Result: single tweet takes minutes, OOM risk</code></pre>
+
+  <h3>Correct: Hybrid fan-out with celebrity threshold</h3>
+  <pre><code class="language-python"># GOOD -- skip fan-out for high-follower accounts, merge at read time
+CELEBRITY_THRESHOLD = 500_000
+
+def fan_out(author_id, post_id):
+    followers = get_all_followers(author_id)
+    if len(followers) > CELEBRITY_THRESHOLD:
+        return  # handled at read time
+    pipe = redis.pipeline(transaction=False)
+    for fid in followers:
+        pipe.lpush(f"user:{fid}:timeline", post_id)
+        pipe.ltrim(f"user:{fid}:timeline", 0, 799)
+    pipe.execute()</code></pre>
+
+  <h3>Wrong: Storing media files in the database</h3>
+  <pre><code class="language-python"># BAD -- blobs in PostgreSQL cause table bloat and slow queries
+def save_post(content, image_bytes):
+    db.execute("INSERT INTO posts (content, image_data) VALUES (%s, %s)",
+        (content, image_bytes))  # 5MB image in a row!</code></pre>
+
+  <h3>Correct: Store media in object storage, reference by URL</h3>
+  <pre><code class="language-python"># GOOD -- database stores only the URL reference
+def save_post(content, image_file):
+    key = f"media/{uuid4()}.jpg"
+    s3.upload_fileobj(image_file, "feed-media", key)
+    cdn_url = f"https://cdn.example.com/{key}"
+    db.execute("INSERT INTO posts (content, media_url) VALUES (%s, %s)",
+        (content, cdn_url))</code></pre>
+
+  <h3>Wrong: Unbounded timeline cache with no eviction</h3>
+  <pre><code class="language-python"># BAD -- Redis memory grows without bound
+def add_to_timeline(user_id, post_id):
+    redis.lpush(f"user:{user_id}:timeline", post_id)
+    # No LTRIM, no TTL -- grows forever, exhausts Redis memory</code></pre>
+
+  <h3>Correct: Capped timeline with TTL and eviction</h3>
+  <pre><code class="language-python"># GOOD -- bounded memory usage per user
+def add_to_timeline(user_id, post_id):
+    key = f"user:{user_id}:timeline"
+    pipe = redis.pipeline()
+    pipe.lpush(key, post_id)
+    pipe.ltrim(key, 0, 799)
+    pipe.expire(key, 7 * 24 * 3600)
+    pipe.execute()</code></pre>
+
+  <h3>Wrong: Synchronous fan-out blocking the post API</h3>
+  <pre><code class="language-python"># BAD -- user waits for fan-out to complete
+@app.post("/api/posts")
+def create_post(request):
+    post = db.insert_post(request.data)
+    for fid in get_followers(post.author_id):  # blocks for seconds
+        redis.lpush(f"user:{fid}:timeline", post.id)
+    return {"status": "ok"}  # user waited 5+ seconds</code></pre>
+
+  <h3>Correct: Async fan-out via message queue</h3>
+  <pre><code class="language-python"># GOOD -- return immediately, fan-out asynchronously
+@app.post("/api/posts")
+def create_post(request):
+    post = db.insert_post(request.data)
+    kafka.send("post-created", {"post_id": post.id, "author_id": post.author_id})
+    return {"status": "ok"}  # instant response</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Hot partition on celebrity user_id</strong>: Kafka partitioning by author_id concentrates all celebrity activity on one partition. Fix: <code>use dedicated topic or random partitioning for high-follower accounts</code>. [<a href="https://softwareengineeringwk.substack.com/p/twitter-architecture">src3</a>]</li>
+    <li><strong>Thundering herd on timeline rebuild</strong>: When a popular user returns after inactivity, rebuilding their timeline from DB spikes load. Fix: <code>rate-limit rebuilds and use a circuit breaker</code>. [<a href="https://github.com/donnemartin/system-design-primer/blob/master/solutions/system_design/twitter/README.md">src2</a>]</li>
+    <li><strong>Stale celebrity tweets in merged feed</strong>: Fan-out-on-read celebrity tweets fetched from lagging read replica. Fix: <code>query primary for celebrity posts or cache with short TTL</code>. [<a href="https://softwareengineeringwk.substack.com/p/twitter-architecture">src3</a>]</li>
+    <li><strong>Feed pagination drift</strong>: New posts during pagination cause duplicates or missing items. Fix: <code>use cursor-based pagination (last_seen_post_id) instead of offset</code>. [<a href="https://blog.algomaster.io/p/designing-a-scalable-news-feed-system">src1</a>]</li>
+    <li><strong>Engagement count inconsistency</strong>: Like/retweet counts in caches show different numbers on refresh. Fix: <code>use Redis INCR for counters with periodic DB reconciliation</code>. [<a href="https://www.designgurus.io/blog/design-social-media-news-feed">src6</a>]</li>
+    <li><strong>Cache stampede on cold start</strong>: First request after cache miss triggers expensive DB query while concurrent requests pile up. Fix: <code>cache warming on deploy + single-flight cache population</code>. [<a href="https://javatechonline.com/social-media-feed-system-design/">src7</a>]</li>
+    <li><strong>Over-fetching in hydration</strong>: Fetching full post objects when the feed only needs a subset of fields. Fix: <code>use projection queries or field selection in hydration</code>. [<a href="https://blog.algomaster.io/p/designing-a-scalable-news-feed-system">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Building a follow-graph-based feed (Twitter, Instagram, LinkedIn)</td><td>Content is purely algorithmic with no follow graph (TikTok For You)</td><td>Recommendation engine with collaborative filtering</td></tr>
+      <tr><td>DAU &gt; 10K and feed latency matters (&lt;200ms)</td><td>Small team project or MVP with &lt;1K users</td><td>Simple SQL query with pagination</td></tr>
+      <tr><td>Posts are short-lived and time-sensitive (news, social updates)</td><td>Content is long-form and rarely updated (blog, wiki)</td><td>CMS with traditional caching</td></tr>
+      <tr><td>Real-time or near-real-time delivery is required</td><td>Batch-processed feeds updated hourly are acceptable</td><td>Batch ETL pipeline with scheduled materialization</td></tr>
+      <tr><td>Multiple content types (text, images, video, polls)</td><td>Single content type with simple ordering</td><td>Standard list API with sorting</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Fan-out-on-write memory cost scales linearly with average follower count; at 500 avg followers and 100M users, expect ~40TB Redis if naively storing tweet IDs (mitigate with TTL + size caps + active-user-only caching)</li>
+    <li>Ranking models introduce latency (10-50ms per request); keep model inference on the critical path only if p99 latency budget allows</li>
+    <li>GDPR/privacy regulations require the ability to delete a user's posts from all follower timelines within a defined time window; fan-out-on-write makes this harder (you must fan-out deletions too)</li>
+    <li>The hybrid fan-out threshold (e.g. 500K followers) is not universal; tune it based on your write throughput capacity and acceptable fan-out latency SLA</li>
+    <li>Multi-region deployment requires choosing between global consistency (higher latency) and regional feeds (users may see different content when traveling)</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/chat-system/2026" data-relationship="related_to">Chat System Design</a>
+    <a href="/software/system-design/notification-system/2026" data-relationship="related_to">Notification System Design</a>
+    <a href="/software/system-design/search-engine/2026" data-relationship="often_confused_with">Search Engine Design</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

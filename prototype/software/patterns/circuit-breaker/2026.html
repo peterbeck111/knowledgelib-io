@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Circuit Breaker Pattern: Implementation Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete implementation guide for the circuit breaker pattern in distributed systems.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/circuit-breaker/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Circuit Breaker Pattern: Implementation Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete implementation guide for the circuit breaker pattern in distributed systems. Covers 3-state machine (closed, open, half-open), threshold tuning, code examples in Node.js (opossum), Python (pybreaker), Java (Resilience4j), and Go, plus 4 anti-patterns and 7 common pitfalls. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/circuit-breaker/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Circuit Breaker Pattern: Implementation Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete implementation guide for the circuit breaker pattern in distributed systems. Covers 3-state machine (closed, open, half-open), threshold tuning, code examples in Node.js (opossum), Python (pybreaker), Java (Resilience4j), and Go, plus 4 anti-patterns and 7 common pitfalls. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/circuit_breaker">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement the circuit breaker pattern?">
+  <meta name="ai:aliases" content="circuit breaker pattern implementation; circuit breaker microservices; fail fast pattern; cascade failure prevention; circuit breaker state machine; resilience pattern circuit breaker; service call protection pattern; circuit breaker vs retry">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/circuit-breaker/2026.md">
+  <meta name="ai:token_estimate" content="3600">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="language_framework,failure_threshold,recovery_strategy,monitoring_needs">
+  <meta name="ai:constraints" content="One breaker per service/endpoint; NEVER threshold of 1; resetTimeout must exceed downstream recovery time; ALWAYS implement fallback; Combine with call timeouts; NEVER on local/in-process calls">
+  <meta name="ai:skip_this_unit_if" content="Transient single-request failures -> software/patterns/retry-exponential-backoff/2026; Limit concurrent requests to protect own service -> software/patterns/bulkhead-pattern/2026; Rate limiting to stay under API quota -> software/patterns/api-rate-limiting/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Circuit Breaker Pattern: Implementation Guide",
+    "headline": "Circuit Breaker Pattern: Implementation Guide",
+    "description": "Complete implementation guide for the circuit breaker pattern in distributed systems. Covers the 3-state machine (closed, open, half-open), threshold tuning strategies, code examples in Node.js, Python, Java, and Go, anti-patterns, common pitfalls, and decision trees for when to use circuit breakers.",
+    "keywords": ["circuit breaker", "resilience pattern", "fault tolerance", "microservices", "cascade failure", "fail fast", "opossum", "pybreaker", "resilience4j", "distributed systems"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "opossum ^8.1 (Node.js), pybreaker >=1.2 (Python), Resilience4j 2.2 (Java), gobreaker 0.7 (Go)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "CircuitBreaker",
+        "url": "https://martinfowler.com/bliki/CircuitBreaker.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Circuit Breaker pattern - Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Resilience4j CircuitBreaker",
+        "url": "https://resilience4j.readme.io/docs/circuitbreaker"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Opossum - Node.js Circuit Breaker",
+        "url": "https://github.com/nodeshift/opossum"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PyBreaker - Python Circuit Breaker",
+        "url": "https://github.com/danielfm/pybreaker"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Release It! Design and Deploy Production-Ready Software",
+        "url": "https://pragprog.com/titles/mnee2/release-it-second-edition/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Implementing the Circuit Breaker pattern - .NET Microservices",
+        "url": "https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-circuit-breaker-pattern"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Circuit Breaker Pattern: Implementation Guide",
+    "description": "Structured knowledge unit covering circuit breaker pattern implementation for distributed systems. Includes state machine reference, configuration parameters, code examples in 4 languages, anti-patterns, and decision trees.",
+    "keywords": ["circuit breaker", "resilience pattern", "fault tolerance", "microservices", "distributed systems"],
+    "temporalCoverage": "2007/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Martin Fowler"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Resilience4j"},
+      {"@type": "Organization", "name": "Nodeshift"},
+      {"@type": "Organization", "name": "Pragmatic Programmers"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Circuit Breaker Pattern" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement the circuit breaker pattern?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "circuit breaker pattern implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "circuit breaker microservices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "fail fast pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cascade failure prevention",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "circuit breaker state machine",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Circuit Breaker Pattern: Implementation Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement the circuit breaker pattern?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/circuit-breaker/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Prevent cascade failures in distributed systems by wrapping remote calls in a 3-state machine (closed, open, half-open) that fails fast when a downstream service is unhealthy.</li>
+    <li><strong>Key tool/command</strong>: <code>new CircuitBreaker(asyncFn, { timeout: 3000, errorThresholdPercentage: 50, resetTimeout: 30000 })</code></li>
+    <li><strong>Watch out for</strong>: Using the same circuit breaker instance for multiple unrelated services -- each service needs its own breaker with tuned thresholds.</li>
+    <li><strong>Works with</strong>: Any language/platform. Libraries: opossum (Node.js), pybreaker (Python), Resilience4j (Java), Polly (.NET), gobreaker (Go).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>MUST create one circuit breaker instance per remote service/endpoint -- sharing a breaker across unrelated services masks failures</li>
+    <li>NEVER set failure threshold to 1 -- a single failure is not a pattern; minimum recommended is 3-5 failures</li>
+    <li>Open-state timeout (resetTimeout) MUST be long enough for the downstream service to recover -- too short causes repeated half-open probes that worsen load</li>
+    <li>ALWAYS implement a fallback strategy (cached response, default value, or graceful degradation) -- circuit breaker without fallback just returns errors faster</li>
+    <li>Circuit breaker MUST be combined with timeouts on the underlying call -- without timeouts, slow calls hang indefinitely and never trip the breaker</li>
+    <li>NEVER apply circuit breakers to local/in-process calls -- the overhead outweighs any benefit; breakers are for network boundaries only</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>State Machine</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">State</th><th scope="col">Behavior</th><th scope="col">Transition Trigger</th><th scope="col">Action</th><th scope="col">Monitoring</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Closed</strong></td><td>All requests pass through to downstream service</td><td>Failure count/rate exceeds threshold</td><td>Trips to Open</td><td>Track success/failure counts</td></tr>
+      <tr><td><strong>Open</strong></td><td>All requests fail immediately (no downstream call)</td><td>Reset timeout expires</td><td>Transitions to Half-Open</td><td>Alert on state change</td></tr>
+      <tr><td><strong>Half-Open</strong></td><td>Limited probe requests pass through</td><td>Probe succeeds</td><td>Closes circuit (resets counters)</td><td>Track probe results</td></tr>
+      <tr><td><strong>Half-Open</strong></td><td>Limited probe requests pass through</td><td>Probe fails</td><td>Re-opens circuit</td><td>Increment open duration</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Configuration Parameters</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Purpose</th><th scope="col">Typical Default</th><th scope="col">Aggressive</th><th scope="col">Conservative</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>failureThreshold</code></td><td>Failures before tripping</td><td>5</td><td>3</td><td>10</td></tr>
+      <tr><td><code>failureRateThreshold</code></td><td>Failure % before tripping</td><td>50%</td><td>25%</td><td>75%</td></tr>
+      <tr><td><code>resetTimeout</code></td><td>Seconds before half-open probe</td><td>30s</td><td>10s</td><td>60s</td></tr>
+      <tr><td><code>successThreshold</code></td><td>Successful probes to close</td><td>1</td><td>1</td><td>3</td></tr>
+      <tr><td><code>timeout</code></td><td>Max wait per request</td><td>3000ms</td><td>1000ms</td><td>10000ms</td></tr>
+      <tr><td><code>slidingWindowSize</code></td><td>Calls evaluated for failure rate</td><td>10</td><td>5</td><td>100</td></tr>
+      <tr><td><code>slidingWindowType</code></td><td>Count-based vs time-based</td><td>count</td><td>count</td><td>time (60s)</td></tr>
+      <tr><td><code>halfOpenRequests</code></td><td>Concurrent probes in half-open</td><td>1</td><td>1</td><td>3-5</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Should I add a circuit breaker?
+├── Is the call to a remote/network service?
+│   ├── NO -> Do NOT use circuit breaker (local calls don't need it)
+│   └── YES ↓
+├── Can the downstream service experience sustained failures?
+│   ├── NO (transient only) -> Use retry with backoff instead
+│   └── YES ↓
+├── Would repeated calls to a failing service cause harm?
+│   ├── NO -> Simple timeout + retry may suffice
+│   └── YES ↓
+├── Do you need a fallback response?
+│   ├── YES -> Circuit breaker + fallback function
+│   └── NO -> Circuit breaker + fail-fast error
+│
+THRESHOLD TUNING:
+├── Is the service critical (payments, auth)?
+│   ├── YES -> Conservative: failureThreshold=10, resetTimeout=60s
+│   └── NO ↓
+├── Is the service high-throughput (>100 req/s)?
+│   ├── YES -> Use percentage-based: failureRateThreshold=50%, slidingWindow=100
+│   └── NO -> Count-based: failureThreshold=5, resetTimeout=30s
+│
+RECOVERY STRATEGY:
+├── Does downstream have gradual warm-up needs?
+│   ├── YES -> Gradual recovery: increase halfOpenRequests over time
+│   └── NO -> Standard half-open: single probe request</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Identify the remote call to protect</h3>
+  <p>Determine which downstream service calls are susceptible to sustained failures. Focus on calls where the downstream can become completely unavailable, slow responses cascade to callers, and there is a meaningful fallback. [<a href="https://martinfowler.com/bliki/CircuitBreaker.html">src1</a>]</p>
+  <pre><code>Candidate calls:
+- External API calls (payment gateways, third-party APIs)
+- Database queries to remote clusters
+- Inter-service calls in microservices
+- Message broker publish operations</code></pre>
+  <p><strong>Verify</strong>: Review your service dependency graph and identify calls with timeout &gt; 1s or historical failure rates &gt; 1%.</p>
+
+  <h3>2. Choose a circuit breaker library</h3>
+  <p>Select the library for your language/framework. [<a href="https://resilience4j.readme.io/docs/circuitbreaker">src3</a>] [<a href="https://github.com/nodeshift/opossum">src4</a>] [<a href="https://github.com/danielfm/pybreaker">src5</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead><tr><th scope="col">Language</th><th scope="col">Library</th><th scope="col">Install</th></tr></thead>
+    <tbody>
+      <tr><td>Node.js</td><td>opossum</td><td><code>npm install opossum@^8.1</code></td></tr>
+      <tr><td>Python</td><td>pybreaker</td><td><code>pip install pybreaker&gt;=1.2</code></td></tr>
+      <tr><td>Java</td><td>Resilience4j</td><td><code>io.github.resilience4j:resilience4j-circuitbreaker:2.2.0</code></td></tr>
+      <tr><td>.NET</td><td>Polly</td><td><code>dotnet add package Polly</code></td></tr>
+      <tr><td>Go</td><td>gobreaker</td><td><code>go get github.com/sony/gobreaker</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Verify</strong>: <code>npm list opossum</code> / <code>pip show pybreaker</code> / check build.gradle</p>
+
+  <h3>3. Configure thresholds based on service characteristics</h3>
+  <p>Start with sensible defaults, then tune based on production metrics. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src2</a>]</p>
+  <pre><code>General starting point:
+- failureThreshold: 5 (or 50% failure rate)
+- resetTimeout: 30 seconds
+- timeout per call: 3 seconds
+- successThreshold: 1 (probes to close)
+
+Adjust based on:
+- SLA of downstream service
+- Recovery time of downstream (must be &lt; resetTimeout)
+- Acceptable error rate for your users</code></pre>
+  <p><strong>Verify</strong>: Run load test with downstream killed -- circuit should open within <code>failureThreshold</code> failed calls.</p>
+
+  <h3>4. Implement the fallback strategy</h3>
+  <p>Every circuit breaker must have a fallback. The fallback fires when the circuit is open or when the call fails. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src2</a>] [<a href="https://pragprog.com/titles/mnee2/release-it-second-edition/">src6</a>]</p>
+  <pre><code>Fallback strategies (pick one):
+1. Cached response    - Return last known good value
+2. Default value      - Return safe static default
+3. Degraded service   - Call a simpler backup endpoint
+4. Queue for retry    - Accept request, process later
+5. Graceful error     - Return meaningful error with ETA</code></pre>
+  <p><strong>Verify</strong>: Force circuit open and confirm fallback returns expected response.</p>
+
+  <h3>5. Add monitoring and alerting</h3>
+  <p>Circuit breaker state changes are critical operational events. [<a href="https://resilience4j.readme.io/docs/circuitbreaker">src3</a>]</p>
+  <pre><code>Must-have metrics:
+- circuit.state (gauge: 0=closed, 1=half-open, 2=open)
+- circuit.calls.total (counter, by outcome: success/failure/rejected)
+- circuit.calls.duration (histogram)
+- circuit.state_change (event, with from/to states)
+
+Alert on:
+- Circuit opens (immediate notification)
+- Circuit stays open &gt; 5 minutes (escalation)
+- High rejection rate in half-open state</code></pre>
+  <p><strong>Verify</strong>: Trip the circuit intentionally and verify alerts fire within expected timeframe.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js (opossum): HTTP Service Call Protection</h3>
+  <pre><code class="language-javascript">// Input:  HTTP endpoint that may fail
+// Output: Response data or fallback value
+const CircuitBreaker = require('opossum');  // ^8.1.3
+const axios = require('axios');             // ^1.7.0
+
+async function fetchUserProfile(userId) {
+  const res = await axios.get(
+    `https://api.users.example.com/v1/users/${userId}`,
+    { timeout: 3000 }
+  );
+  return res.data;
+}
+
+const breaker = new CircuitBreaker(fetchUserProfile, {
+  timeout: 5000,
+  errorThresholdPercentage: 50,
+  resetTimeout: 30000,
+  volumeThreshold: 5,
+  rollingCountTimeout: 10000,
+});
+
+breaker.fallback((userId) =&gt; ({
+  id: userId, name: 'Unknown', cached: true
+}));
+
+breaker.on('open',    () =&gt; console.warn('[CB] Circuit OPENED'));
+breaker.on('close',   () =&gt; console.info('[CB] Circuit CLOSED'));
+breaker.on('halfOpen',() =&gt; console.info('[CB] Circuit HALF-OPEN'));
+
+const profile = await breaker.fire('user-123');</code></pre>
+
+  <h3>Python (pybreaker): Database Call Protection</h3>
+  <pre><code class="language-python"># Input:  Database query that may fail
+# Output: Query result or fallback
+import pybreaker  # &gt;=1.2.0
+
+class MonitorListener(pybreaker.CircuitBreakerListener):
+    def state_change(self, cb, old_state, new_state):
+        print(f"[CB] {cb.name}: {old_state.name} -&gt; {new_state.name}")
+
+db_breaker = pybreaker.CircuitBreaker(
+    fail_max=5, reset_timeout=30,
+    exclude=[ValueError],
+    listeners=[MonitorListener()],
+    name="postgres-primary",
+)
+
+@db_breaker
+def get_user(user_id: str) -&gt; dict:
+    conn = psycopg2.connect("host=db.example.com dbname=app")
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+    return cur.fetchone()
+
+try:
+    user = get_user("user-123")
+except pybreaker.CircuitBreakerError:
+    user = {"id": "user-123", "cached": True}</code></pre>
+
+  <h3>Java (Resilience4j): REST Client Protection</h3>
+  <pre><code class="language-java">// Input:  REST API call that may fail
+// Output: API response or fallback
+CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+    .failureRateThreshold(50)
+    .slowCallRateThreshold(80)
+    .slowCallDurationThreshold(Duration.ofSeconds(3))
+    .waitDurationInOpenState(Duration.ofSeconds(30))
+    .permittedNumberOfCallsInHalfOpenState(3)
+    .slidingWindowType(SlidingWindowType.COUNT_BASED)
+    .slidingWindowSize(10)
+    .minimumNumberOfCalls(5)
+    .recordExceptions(IOException.class, TimeoutException.class)
+    .ignoreExceptions(IllegalArgumentException.class)
+    .build();
+
+CircuitBreaker breaker = CircuitBreakerRegistry.of(config)
+    .circuitBreaker("userService");
+
+Supplier&lt;UserProfile&gt; decorated = CircuitBreaker
+    .decorateSupplier(breaker, () -&gt; client.getProfile(userId));
+
+Try&lt;UserProfile&gt; result = Try.ofSupplier(decorated)
+    .recover(t -&gt; new UserProfile(userId, "Unknown", true));</code></pre>
+
+  <h3>Go: Manual Circuit Breaker Implementation</h3>
+  <pre><code class="language-go">// Input:  Any function that calls a remote service
+// Output: Result or error (ErrCircuitOpen when tripped)
+type CircuitBreaker struct {
+    mu               sync.Mutex
+    state            State  // Closed, Open, HalfOpen
+    failureCount     int
+    failureThreshold int
+    successThreshold int
+    resetTimeout     time.Duration
+    lastFailure      time.Time
+}
+
+func (cb *CircuitBreaker) Execute(fn func() (interface{}, error)) (interface{}, error) {
+    cb.mu.Lock()
+    if cb.state == Open &amp;&amp; time.Since(cb.lastFailure) &gt; cb.resetTimeout {
+        cb.state = HalfOpen
+        cb.successCount = 0
+    }
+    if cb.state == Open {
+        cb.mu.Unlock()
+        return nil, ErrCircuitOpen
+    }
+    cb.mu.Unlock()
+
+    result, err := fn()
+    cb.mu.Lock()
+    defer cb.mu.Unlock()
+    if err != nil {
+        cb.failureCount++
+        cb.lastFailure = time.Now()
+        if cb.failureCount &gt;= cb.failureThreshold { cb.state = Open }
+        return result, err
+    }
+    // Success handling: close circuit if enough probes succeed
+    if cb.state == HalfOpen {
+        cb.successCount++
+        if cb.successCount &gt;= cb.successThreshold {
+            cb.state = Closed; cb.failureCount = 0
+        }
+    } else { cb.failureCount = 0 }
+    return result, nil
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Sharing one circuit breaker across multiple services</h3>
+  <pre><code class="language-javascript">// BAD -- one breaker for all services masks which one is failing
+const breaker = new CircuitBreaker(makeRequest);
+await breaker.fire('https://api-a.example.com/data');
+await breaker.fire('https://api-b.example.com/data');
+// If API-A fails, API-B also gets blocked!</code></pre>
+
+  <h3>Correct: One breaker per downstream service</h3>
+  <pre><code class="language-javascript">// GOOD -- isolated failure domains
+const breakerA = new CircuitBreaker(
+  (url) =&gt; axios.get(url), { name: 'api-a', resetTimeout: 30000 }
+);
+const breakerB = new CircuitBreaker(
+  (url) =&gt; axios.get(url), { name: 'api-b', resetTimeout: 30000 }
+);
+await breakerA.fire('https://api-a.example.com/data');
+await breakerB.fire('https://api-b.example.com/data');</code></pre>
+
+  <h3>Wrong: Circuit breaker without timeout on the underlying call</h3>
+  <pre><code class="language-python"># BAD -- slow calls hang forever, breaker never trips on timeouts
+@db_breaker
+def fetch_data():
+    return requests.get("https://slow-api.example.com/data")
+    # No timeout! A 5-minute hang won't trigger the breaker</code></pre>
+
+  <h3>Correct: Always set a timeout on the protected call</h3>
+  <pre><code class="language-python"># GOOD -- timeout ensures slow calls are counted as failures
+@db_breaker
+def fetch_data():
+    return requests.get(
+        "https://slow-api.example.com/data",
+        timeout=3  # 3 second timeout
+    )</code></pre>
+
+  <h3>Wrong: Same threshold for all services</h3>
+  <pre><code class="language-java">// BAD -- payment service and logging service get identical config
+CircuitBreakerConfig oneConfigForAll = CircuitBreakerConfig.custom()
+    .failureRateThreshold(50)
+    .waitDurationInOpenState(Duration.ofSeconds(30))
+    .build();
+// Payment failures at 50% is WAY too late; logging at 50% is too early</code></pre>
+
+  <h3>Correct: Tune thresholds per service criticality</h3>
+  <pre><code class="language-java">// GOOD -- critical services get tighter thresholds
+CircuitBreakerConfig paymentConfig = CircuitBreakerConfig.custom()
+    .failureRateThreshold(20)   // trip early for payments
+    .waitDurationInOpenState(Duration.ofSeconds(60))
+    .build();
+
+CircuitBreakerConfig loggingConfig = CircuitBreakerConfig.custom()
+    .failureRateThreshold(80)   // logging can tolerate more failures
+    .waitDurationInOpenState(Duration.ofSeconds(10))
+    .build();</code></pre>
+
+  <h3>Wrong: No fallback when circuit opens</h3>
+  <pre><code class="language-javascript">// BAD -- user gets a raw error
+try {
+  const data = await breaker.fire(userId);
+} catch (err) {
+  throw err;  // CircuitBreakerError reaches the user as a 500
+}</code></pre>
+
+  <h3>Correct: Always provide a meaningful fallback</h3>
+  <pre><code class="language-javascript">// GOOD -- graceful degradation
+breaker.fallback((userId) =&gt; ({
+  id: userId, name: 'User', source: 'cache', stale: true,
+  message: 'Profile temporarily unavailable, showing cached data'
+}));
+const data = await breaker.fire(userId);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Threshold set too low (1-2 failures)</strong>: Single transient errors trip the circuit needlessly, causing unnecessary service disruption. Fix: Set <code>failureThreshold &gt;= 5</code> or use percentage-based (50%) with a minimum call volume. [<a href="https://martinfowler.com/bliki/CircuitBreaker.html">src1</a>]</li>
+    <li><strong>resetTimeout shorter than downstream recovery time</strong>: If the downstream needs 60s to restart but your resetTimeout is 10s, repeated half-open probes add load to a recovering service. Fix: Set <code>resetTimeout</code> to at least 2x the expected downstream recovery time. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src2</a>]</li>
+    <li><strong>Not excluding expected exceptions</strong>: Business logic exceptions (validation errors, not-found) should not count as circuit breaker failures. Fix: Use <code>exclude</code> or <code>ignoreExceptions</code> config to filter non-infrastructure errors. [<a href="https://resilience4j.readme.io/docs/circuitbreaker">src3</a>]</li>
+    <li><strong>Testing only the happy path</strong>: Circuit breaker logic is only exercised during failures -- if you never test failure scenarios, you discover bugs in production. Fix: Write integration tests that simulate downstream failure and verify circuit state transitions. [<a href="https://pragprog.com/titles/mnee2/release-it-second-edition/">src6</a>]</li>
+    <li><strong>Forgetting to monitor state changes</strong>: Without observability, you cannot tell if a circuit is open, how long it stayed open, or how often it trips. Fix: Emit metrics on every state change and set alerts for circuit open events. [<a href="https://resilience4j.readme.io/docs/circuitbreaker">src3</a>]</li>
+    <li><strong>Circuit breaker on synchronous in-process calls</strong>: Adding circuit breakers around local function calls adds latency and complexity with no benefit. Fix: Reserve circuit breakers for network boundaries (HTTP, gRPC, database, message broker). [<a href="https://martinfowler.com/bliki/CircuitBreaker.html">src1</a>]</li>
+    <li><strong>Not handling half-open correctly</strong>: Allowing full traffic in half-open state defeats the purpose. Fix: Limit half-open to 1-3 probe requests before deciding. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check circuit breaker state via Spring Boot Actuator
+curl -s http://localhost:8080/actuator/circuitbreakers | jq '.circuitBreakers'
+
+# Check Resilience4j metrics in Prometheus format
+curl -s http://localhost:8080/actuator/prometheus | grep resilience4j_circuitbreaker
+
+# Check circuit breaker events (last 5)
+curl -s http://localhost:8080/actuator/circuitbreakerevents | jq '.circuitBreakerEvents[-5:]'
+
+# Load test to verify circuit trips under failure
+hey -n 100 -c 10 http://localhost:3000/api/protected-endpoint</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Library</th><th scope="col">Current Version</th><th scope="col">Breaking Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>opossum (Node.js)</td><td>8.x</td><td>v8: ESM support, dropped Node &lt;18</td><td>v6-&gt;v7: callback API removed</td></tr>
+      <tr><td>pybreaker (Python)</td><td>1.2.x</td><td>None recent</td><td>Supports Python 3.8+</td></tr>
+      <tr><td>Resilience4j (Java)</td><td>2.2.x</td><td>v2.0: replaced deprecated Hystrix patterns</td><td>Spring Boot 3.x compatible</td></tr>
+      <tr><td>Polly (.NET)</td><td>8.x</td><td>v8: new pipeline-based API</td><td>v7-&gt;v8: policy syntax changed</td></tr>
+      <tr><td>gobreaker (Go)</td><td>0.7.x</td><td>None</td><td>Stable API since v0.5</td></tr>
+      <tr><td>Hystrix (Java)</td><td>1.5.18</td><td><strong>EOL</strong> -- maintenance mode since 2018</td><td>Migrate to Resilience4j</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Remote service calls that can experience sustained outages</td><td>Transient single-request failures</td><td>Retry with exponential backoff</td></tr>
+      <tr><td>Preventing cascade failures across microservices</td><td>Protecting local/in-process function calls</td><td>Direct error handling</td></tr>
+      <tr><td>Downstream has known recovery time (restarts, scaling events)</td><td>Rate limiting your own outbound requests</td><td>Token bucket / leaky bucket rate limiter</td></tr>
+      <tr><td>You need fast failure when a dependency is down</td><td>Isolating concurrent request pools</td><td>Bulkhead pattern</td></tr>
+      <tr><td>Protecting against slow responses that consume thread/connection pools</td><td>Simple request timeout</td><td>Timeout pattern (often combined with CB)</td></tr>
+      <tr><td>Multiple callers hit the same failing service</td><td>The operation is idempotent and cheap to retry</td><td>Simple retry</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Circuit breaker and retry are complementary, not alternatives -- use retry for transient failures (inside the circuit breaker), and the circuit breaker for sustained failures. The retry should respect circuit breaker state and stop retrying when the circuit is open.</li>
+    <li>In distributed systems with multiple instances, each instance maintains its own circuit breaker state by default. For coordinated tripping, you need a shared state store (Redis, etc.), which adds complexity.</li>
+    <li>Percentage-based thresholds require a minimum volume of calls to be meaningful. A single failed call out of 2 total is 50% but should not trip the circuit. Always configure <code>minimumNumberOfCalls</code> alongside percentage thresholds.</li>
+    <li>Half-open state is the most dangerous phase -- if your probe request is expensive or has side effects, the half-open probe itself can cause problems. Use lightweight health check endpoints for probes when possible.</li>
+    <li>Circuit breakers add latency to every call (state check, metrics recording). For ultra-low-latency paths (&lt;1ms), measure the overhead. Modern libraries add &lt;0.1ms but this can matter at extreme scale.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/retry-exponential-backoff/2026" data-relationship="depends_on">Retry with Exponential Backoff</a>
+    <a href="/software/patterns/idempotency-patterns/2026" data-relationship="related_to">Idempotency Patterns</a>
+    <a href="/software/patterns/api-rate-limiting/2026" data-relationship="related_to">API Rate Limiting</a>
+    <a href="/software/system-design/api-gateway/2026" data-relationship="related_to">API Gateway Design</a>
+    <a href="/software/patterns/bulkhead-pattern/2026" data-relationship="alternative_to">Bulkhead Pattern</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

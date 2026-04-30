@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Design a CI/CD Pipeline Architecture | knowledgelib.io</title>
+  <meta name="description" content="Complete CI/CD pipeline architecture guide: 12-component architecture table, platform decision tree (GitHub Actions vs GitLab CI vs Jenkins), DORA...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/cicd-pipeline/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Design a CI/CD Pipeline Architecture | knowledgelib.io">
+  <meta property="og:description" content="Complete CI/CD pipeline architecture guide: 12-component architecture table, platform decision tree (GitHub Actions vs GitLab CI vs Jenkins), DORA metrics benchmarks, 2 full YAML examples, 4 anti-pattern pairs, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/cicd-pipeline/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Design a CI/CD Pipeline Architecture | knowledgelib.io">
+  <meta name="twitter:description" content="Complete CI/CD pipeline architecture guide: 12-component architecture table, platform decision tree (GitHub Actions vs GitLab CI vs Jenkins), DORA metrics benchmarks, 2 full YAML examples, 4 anti-pattern pairs, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/cicd_pipeline">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a CI/CD pipeline architecture?">
+  <meta name="ai:aliases" content="CI/CD pipeline design; continuous integration continuous deployment architecture; CI/CD pipeline best practices; how to set up CI/CD; CI/CD pipeline components; build deploy pipeline architecture; DevOps pipeline design patterns; GitHub Actions vs GitLab CI vs Jenkins">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/cicd-pipeline/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="platform,scale,workload">
+  <meta name="ai:constraints" content="Never store secrets in pipeline YAML or version control; Build artifacts exactly once and promote through environments; Fast-feedback stages must complete in under 10 minutes; Never deploy to production without at least one gate; Pin all CI tool versions to SHA or exact version; Quarantine flaky tests immediately">
+  <meta name="ai:skip_this_unit_if" content="Migrating between specific CI/CD platforms -> software/migrations/jenkins-to-github-actions/2026; Kubernetes-specific deployment strategies -> software/system-design/kubernetes-deployment-strategies/2026; Docker container build optimization -> software/debugging/docker-container-wont-start/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Design a CI/CD Pipeline Architecture",
+    "headline": "How to Design a CI/CD Pipeline Architecture",
+    "description": "Complete CI/CD pipeline architecture reference covering 12-component architecture table, platform decision tree for GitHub Actions vs GitLab CI vs Jenkins vs CircleCI, DORA metrics benchmarks for elite teams, full YAML pipeline examples, anti-patterns, and 6 hard constraints agents must respect.",
+    "keywords": ["CI/CD", "continuous integration", "continuous deployment", "pipeline architecture", "GitHub Actions", "GitLab CI", "Jenkins", "DORA metrics", "DevOps", "deployment pipeline", "build automation", "shift-left security"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "GitHub Actions, GitLab CI, Jenkins 2.x+, or equivalent CI/CD platform",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Understanding GitHub Actions",
+        "url": "https://docs.github.com/en/actions/about-github-actions/understanding-github-actions"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pipeline Architecture - GitLab Docs",
+        "url": "https://docs.gitlab.com/ci/pipelines/pipeline_architectures/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Architecting for Scale - Jenkins",
+        "url": "https://www.jenkins.io/doc/book/scaling/architecting-for-scale/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DORA Metrics - Atlassian",
+        "url": "https://www.atlassian.com/devops/frameworks/dora-metrics"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CircleCI Concepts",
+        "url": "https://circleci.com/docs/guides/about-circleci/concepts/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SLSA v1.0 Specification",
+        "url": "https://slsa.dev/spec/v1.0/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Deployment Pipeline Anti-Patterns",
+        "url": "https://continuousdelivery.com/2010/09/deployment-pipeline-anti-patterns/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Design a CI/CD Pipeline Architecture",
+    "description": "Structured CI/CD pipeline architecture reference with 12-component architecture table, platform comparison decision tree, DORA metrics benchmarks, full pipeline YAML examples for GitHub Actions and GitLab CI, anti-patterns, and diagnostic commands.",
+    "keywords": ["CI/CD", "continuous integration", "continuous deployment", "pipeline architecture", "GitHub Actions", "GitLab CI", "Jenkins", "DORA metrics", "DevOps"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "GitHub"},
+      {"@type": "Organization", "name": "GitLab"},
+      {"@type": "Organization", "name": "Jenkins"},
+      {"@type": "Organization", "name": "Atlassian (DORA)"},
+      {"@type": "Organization", "name": "CircleCI"},
+      {"@type": "Organization", "name": "OpenSSF (SLSA)"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "CI/CD Pipeline Architecture" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a CI/CD pipeline architecture?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting < 10 min for the fast-feedback loop and < 1 day total lead time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CI/CD pipeline design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting < 10 min for the fast-feedback loop and < 1 day total lead time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "continuous integration continuous deployment architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting < 10 min for the fast-feedback loop and < 1 day total lead time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CI/CD pipeline best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting < 10 min for the fast-feedback loop and < 1 day total lead time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to set up CI/CD",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting < 10 min for the fast-feedback loop and < 1 day total lead time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CI/CD pipeline components",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting < 10 min for the fast-feedback loop and < 1 day total lead time."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>How to Design a CI/CD Pipeline Architecture</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a CI/CD pipeline architecture?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/cicd-pipeline/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A well-designed CI/CD pipeline connects source control triggers to isolated runners, executes build/test/security stages with fast feedback, produces signed immutable artifacts, and promotes them through environments with explicit gates -- targeting &lt; 10 min for the fast-feedback loop and &lt; 1 day total lead time.</li>
+    <li><strong>Key tool/command</strong>: <code>.github/workflows/ci.yml</code> (GitHub Actions) or <code>.gitlab-ci.yml</code> (GitLab CI) -- declarative YAML defining stages, jobs, and deployment gates.</li>
+    <li><strong>Watch out for</strong>: Building artifacts multiple times (once per environment) instead of building once and promoting -- this is the #1 source of &quot;works in staging, fails in prod&quot; bugs.</li>
+    <li><strong>Works with</strong>: GitHub Actions, GitLab CI, Jenkins 2.x+, CircleCI, Azure DevOps, AWS CodePipeline, Tekton. Concepts are platform-agnostic.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never store secrets in pipeline YAML or version control -- use platform secret stores with short-lived credentials</li>
+    <li>Build artifacts exactly once and promote the same binary/image through all environments</li>
+    <li>Fast-feedback stages (lint, unit tests, SAST) must complete in under 10 minutes</li>
+    <li>Never deploy to production without at least one automated or manual gate</li>
+    <li>Pin all CI tool versions, runner images, and action references to SHA or exact version tags</li>
+    <li>Quarantine flaky tests immediately -- &gt;2% flake rate erodes CI trust and leads to ignored failures</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table: system design component architecture -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Source Control Trigger</td><td>Detects code changes, initiates pipeline</td><td>GitHub webhooks, GitLab push events, Jenkins SCM polling</td><td>Event-driven (no polling); branch filters to limit triggers</td></tr>
+      <tr><td>Pipeline Orchestrator</td><td>Defines stages, manages job dependencies, gates</td><td>GitHub Actions, GitLab CI, Jenkins Pipeline, CircleCI, Tekton</td><td>Declarative YAML; parallel job execution; DAG-based scheduling</td></tr>
+      <tr><td>Build Runner / Executor</td><td>Executes pipeline jobs in isolated environments</td><td>GitHub-hosted runners, GitLab shared runners, Jenkins agents, self-hosted runners</td><td>Auto-scaling runner pools; ephemeral containers; spot/preemptible instances</td></tr>
+      <tr><td>Artifact Registry</td><td>Stores immutable build outputs (images, packages)</td><td>Docker Hub, GitHub Packages, GitLab Container Registry, AWS ECR, Artifactory</td><td>Content-addressable storage; geo-replicated registries; retention policies</td></tr>
+      <tr><td>Test Framework</td><td>Validates correctness at unit, integration, E2E levels</td><td>Jest, pytest, JUnit, Cypress, Playwright</td><td>Parallel test sharding; intelligent test selection; flaky test quarantine</td></tr>
+      <tr><td>Security Scanner (SAST/DAST)</td><td>Shift-left vulnerability detection</td><td>Snyk, Semgrep, Trivy, CodeQL, SonarQube</td><td>Run SAST in parallel with unit tests; DAST on staging only</td></tr>
+      <tr><td>Secret Manager</td><td>Provides credentials to pipeline without exposure</td><td>GitHub Secrets, GitLab CI Variables, HashiCorp Vault, AWS Secrets Manager</td><td>OIDC federation for cloud providers; short-lived tokens; no static keys</td></tr>
+      <tr><td>Deployment Controller</td><td>Manages rollout strategy to target environments</td><td>Kubernetes (kubectl/Helm), ArgoCD, AWS CodeDeploy, Terraform</td><td>Canary/blue-green via progressive delivery; automated rollback on metric degradation</td></tr>
+      <tr><td>Artifact Signer / SBOM</td><td>Supply chain integrity and provenance</td><td>Sigstore/Cosign, SLSA provenance, Syft (SBOM), in-toto attestations</td><td>Keyless signing via OIDC; SLSA Level 3 with isolated builders</td></tr>
+      <tr><td>Notification / Observability</td><td>Pipeline status feedback and metrics</td><td>Slack/Teams webhooks, Datadog CI Visibility, Grafana, DORA dashboards</td><td>Track 4 DORA metrics; alert on failure rate spikes; pipeline duration trends</td></tr>
+      <tr><td>Environment Manager</td><td>Manages staging, preview, production targets</td><td>Kubernetes namespaces, Terraform workspaces, Vercel/Netlify preview deploys</td><td>Ephemeral preview environments per PR; auto-cleanup on merge</td></tr>
+      <tr><td>Cache Layer</td><td>Speeds up repeated builds by reusing dependencies</td><td>GitHub Actions cache, GitLab CI cache, S3-backed caches, Turborepo</td><td>Cache by lockfile hash; layer caching for Docker; distributed remote caches</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <h3>Platform Selection</h3>
+  <pre><code>START: Choose your CI/CD platform
+|
++-- Already using GitHub for source control?
+|   +-- YES --&gt; GitHub Actions (native integration, largest marketplace)
+|   +-- NO  |
+|
++-- Need built-in container registry + security scanning + GitOps?
+|   +-- YES --&gt; GitLab CI (all-in-one DevOps platform)
+|   +-- NO  |
+|
++-- Require maximum customization + plugin ecosystem?
+|   +-- YES --&gt; Is your team willing to manage infrastructure?
+|   |   +-- YES --&gt; Jenkins (self-hosted, 1800+ plugins)
+|   |   +-- NO  --&gt; CircleCI or GitHub Actions (managed)
+|   +-- NO  |
+|
++-- Enterprise with Azure/Microsoft ecosystem?
+|   +-- YES --&gt; Azure DevOps Pipelines
+|   +-- NO  |
+|
++-- AWS-native infrastructure with CodeCommit/CodeBuild?
+|   +-- YES --&gt; AWS CodePipeline + CodeBuild + CodeDeploy
+|   +-- NO  |
+|
++-- Kubernetes-native, want pipelines-as-code in K8s?
+|   +-- YES --&gt; Tekton Pipelines
+|   +-- NO  --&gt; GitHub Actions (safest default for most teams)</code></pre>
+
+  <h3>Scaling Decision</h3>
+  <pre><code>+-- Team size &lt; 5, deploys weekly?
+|   +-- Single workflow file, manual deploy gate
+|
++-- Team 5-20, deploys daily?
+|   +-- Multi-stage pipeline, automated staging deploy, manual prod approval
+|
++-- Team 20+, multiple deploys/day?
+|   +-- Monorepo: path-based triggers + parallel jobs
+|   +-- Microservices: per-service pipelines + shared reusable workflows
+|
++-- Enterprise 100+, continuous deployment?
+|   +-- GitOps (ArgoCD/Flux) + progressive delivery (Argo Rollouts/Flagger)
+|   +-- DORA metrics dashboard + deployment frequency tracking</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define pipeline stages and fast-feedback loop</h3>
+  <p>Structure your pipeline into discrete stages that run in order, with fast checks first. The goal is to catch 80% of issues in the first 5 minutes. [<a href="https://docs.github.com/en/actions/about-github-actions/understanding-github-actions">src1</a>] [<a href="https://docs.gitlab.com/ci/pipelines/pipeline_architectures/">src2</a>]</p>
+  <pre><code class="language-yaml"># Canonical stage ordering (platform-agnostic concept)
+stages:
+  - lint          # &lt; 1 min: code style, formatting
+  - security      # &lt; 2 min: SAST, secret scanning (parallel with lint)
+  - build         # &lt; 3 min: compile, bundle, create artifact
+  - unit-test     # &lt; 5 min: fast unit tests (parallel shards)
+  - integration   # &lt; 10 min: API tests, DB tests
+  - staging       # deploy to staging, run smoke tests
+  - approval      # manual gate or automated canary check
+  - production    # deploy to production
+  - post-deploy   # smoke tests, DAST, notification</code></pre>
+  <p><strong>Verify</strong>: Pipeline stages are sequential; jobs within a stage can run in parallel. Lint + security should complete before build starts.</p>
+
+  <h3>2. Configure source control triggers</h3>
+  <p>Set up event-based triggers that only run relevant pipeline stages. Avoid running full pipelines on every push to every branch. [<a href="https://docs.github.com/en/actions/about-github-actions/understanding-github-actions">src1</a>]</p>
+  <pre><code class="language-yaml"># GitHub Actions trigger configuration
+on:
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  push:
+    branches: [main]
+  release:
+    types: [published]</code></pre>
+  <p><strong>Verify</strong>: Push to a documentation-only branch should NOT trigger the pipeline. Push to main should trigger full pipeline.</p>
+
+  <h3>3. Implement build-once, promote-everywhere</h3>
+  <p>Build your artifact exactly once, tag it with the commit SHA, and promote that exact artifact through environments. [<a href="https://continuousdelivery.com/2010/09/deployment-pipeline-anti-patterns/">src7</a>]</p>
+  <pre><code class="language-bash"># Build and tag with commit SHA
+docker build -t myapp:${GITHUB_SHA} .
+docker tag myapp:${GITHUB_SHA} registry.example.com/myapp:${GITHUB_SHA}
+docker push registry.example.com/myapp:${GITHUB_SHA}
+
+# In staging: deploy the exact SHA
+kubectl set image deployment/myapp app=registry.example.com/myapp:${GITHUB_SHA}
+
+# In production: promote the SAME image (no rebuild)
+kubectl set image deployment/myapp app=registry.example.com/myapp:${GITHUB_SHA}</code></pre>
+  <p><strong>Verify</strong>: <code>docker inspect registry.example.com/myapp:${SHA}</code> returns identical image ID in both staging and production.</p>
+
+  <h3>4. Add automated quality gates</h3>
+  <p>Each environment promotion requires passing a quality gate. Combine automated checks with optional manual approval for production. [<a href="https://www.atlassian.com/devops/frameworks/dora-metrics">src4</a>]</p>
+  <pre><code class="language-yaml"># GitHub Actions: require status checks before merge
+# Settings &gt; Branches &gt; Branch protection rules &gt; Require status checks:
+#   - lint
+#   - test
+#   - security-scan
+# Settings &gt; Environments &gt; production &gt; Required reviewers: 1</code></pre>
+  <p><strong>Verify</strong>: A PR with failing tests cannot be merged. Production deployment requires explicit approval.</p>
+
+  <h3>5. Integrate security scanning (shift-left)</h3>
+  <p>Add SAST, dependency scanning, and secret detection as parallel stages that run alongside unit tests. [<a href="https://slsa.dev/spec/v1.0/">src6</a>]</p>
+  <pre><code class="language-yaml"># Run security checks in parallel with tests
+security:
+  parallel:
+    - sast: semgrep --config=auto .
+    - deps: trivy fs --severity HIGH,CRITICAL .
+    - secrets: gitleaks detect --source .
+    - sbom: syft . -o spdx-json &gt; sbom.json</code></pre>
+  <p><strong>Verify</strong>: <code>trivy fs .</code> returns exit code 0 (no HIGH/CRITICAL vulnerabilities). <code>gitleaks detect</code> returns exit code 0 (no leaked secrets).</p>
+
+  <h3>6. Set up DORA metrics tracking</h3>
+  <p>Track the four DORA metrics to measure pipeline health. Elite teams target: deployment frequency multiple times/day, lead time &lt; 1 day, change failure rate &lt; 15%, recovery time &lt; 1 hour. [<a href="https://www.atlassian.com/devops/frameworks/dora-metrics">src4</a>]</p>
+  <pre><code class="language-bash"># Key metrics to instrument:
+# 1. Deployment Frequency: count deployments per day/week
+# 2. Lead Time for Changes: time from commit to production deploy
+# 3. Change Failure Rate: % of deployments causing incidents
+# 4. Mean Time to Recovery: time from incident to resolution</code></pre>
+  <p><strong>Verify</strong>: Dashboard shows deployment frequency trend. Lead time from commit to production is tracked.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>GitHub Actions: Complete CI/CD Pipeline</h3>
+  <pre><code class="language-yaml"># .github/workflows/ci-cd.yml
+# Input:  Push to main or PR to main
+# Output: Tested, scanned, built artifact deployed to staging/production
+
+name: CI/CD Pipeline
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.1.0
+        with: { node-version: '22' }
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.1.0
+        with: { node-version: '22' }
+      - run: npm ci
+      - run: npm test -- --shard=${{ matrix.shard }}/4
+
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: github/codeql-action/init@v3
+        with: { languages: javascript }
+      - uses: github/codeql-action/analyze@v3
+
+  build:
+    needs: [lint, test, security]
+    runs-on: ubuntu-24.04
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: docker/login-action@v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5.6.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=sha,prefix=
+      - uses: docker/build-push-action@v6.12.0
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/main'
+    needs: [build]
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - run: |
+          kubectl set image deployment/myapp \
+            app=${{ needs.build.outputs.image-tag }}
+
+  deploy-production:
+    needs: [deploy-staging]
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://myapp.example.com
+    steps:
+      - run: |
+          kubectl set image deployment/myapp \
+            app=${{ needs.build.outputs.image-tag }}</code></pre>
+
+  <h3>GitLab CI: Complete CI/CD Pipeline</h3>
+  <pre><code class="language-yaml"># .gitlab-ci.yml
+# Input:  Merge request or push to main
+# Output: Tested, scanned, built artifact deployed through environments
+
+stages:
+  - validate
+  - build
+  - test
+  - staging
+  - production
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+lint:
+  stage: validate
+  image: node:22-alpine
+  script:
+    - npm ci --cache .npm
+    - npm run lint
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths: [.npm]
+
+sast:
+  stage: validate
+  include:
+    - template: Security/SAST.gitlab-ci.yml
+
+build:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+unit-test:
+  stage: test
+  image: node:22-alpine
+  parallel: 4
+  script:
+    - npm ci
+    - npm test -- --shard=$CI_NODE_INDEX/$CI_NODE_TOTAL
+  artifacts:
+    reports:
+      junit: junit.xml
+
+deploy-staging:
+  stage: staging
+  environment:
+    name: staging
+    url: https://staging.myapp.example.com
+  script:
+    - kubectl set image deployment/myapp app=$IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-production:
+  stage: production
+  environment:
+    name: production
+    url: https://myapp.example.com
+  script:
+    - kubectl set image deployment/myapp app=$IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  needs:
+    - deploy-staging</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Rebuilding artifacts per environment</h3>
+  <pre><code class="language-yaml"># BAD -- rebuilds for each environment; staging and production binaries may differ
+deploy-staging:
+  script:
+    - docker build -t myapp:staging .  # build #1
+    - docker push myapp:staging
+
+deploy-production:
+  script:
+    - docker build -t myapp:production .  # build #2 -- NOT the same binary!
+    - docker push myapp:production</code></pre>
+
+  <h3>Correct: Build once, promote the artifact</h3>
+  <pre><code class="language-yaml"># GOOD -- single build, same image promoted through environments
+build:
+  script:
+    - docker build -t myapp:${CI_COMMIT_SHA} .  # build once
+    - docker push myapp:${CI_COMMIT_SHA}
+
+deploy-staging:
+  script:
+    - kubectl set image deployment/myapp app=myapp:${CI_COMMIT_SHA}  # same image
+
+deploy-production:
+  script:
+    - kubectl set image deployment/myapp app=myapp:${CI_COMMIT_SHA}  # same image</code></pre>
+
+  <h3>Wrong: Storing secrets in pipeline YAML</h3>
+  <pre><code class="language-yaml"># BAD -- secrets in plaintext, committed to version control
+env:
+  DATABASE_URL: "postgres://admin:p4ssw0rd@db.example.com:5432/prod"
+  AWS_SECRET_ACCESS_KEY: "AKIA..."</code></pre>
+
+  <h3>Correct: Using platform secret stores with OIDC</h3>
+  <pre><code class="language-yaml"># GOOD -- secrets injected at runtime, never in source control
+jobs:
+  deploy:
+    permissions:
+      id-token: write  # enables OIDC
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789:role/deploy
+          aws-region: us-east-1
+      # No static credentials -- uses short-lived OIDC token</code></pre>
+
+  <h3>Wrong: Monolithic pipeline that runs everything sequentially</h3>
+  <pre><code class="language-yaml"># BAD -- 45-minute sequential pipeline; lint failure blocks everything
+steps:
+  - run: npm run lint
+  - run: npm test
+  - run: npm run e2e
+  - run: docker build .
+  - run: trivy image myapp
+  - run: kubectl apply -f k8s/
+  # Total: 45 minutes, sequential, no parallelism</code></pre>
+
+  <h3>Correct: Parallel stages with fast-feedback first</h3>
+  <pre><code class="language-yaml"># GOOD -- parallel execution, fast feedback in &lt; 5 minutes
+jobs:
+  lint:           # 1 min, runs immediately
+    ...
+  security-scan:  # 2 min, runs in parallel with lint
+    ...
+  unit-test:      # 4 min, runs in parallel with lint
+    ...
+  build:          # 3 min, waits for lint + test + security
+    needs: [lint, unit-test, security-scan]
+  e2e-test:       # 10 min, waits for build
+    needs: [build]
+  deploy:         # 2 min, waits for e2e
+    needs: [e2e-test]
+  # Total: ~20 min with parallelism (vs 45 min sequential)</code></pre>
+
+  <h3>Wrong: Using floating version tags for CI tools</h3>
+  <pre><code class="language-yaml"># BAD -- @v3 could change without warning, breaking your pipeline
+- uses: actions/checkout@v3      # could be v3.0.0 today, v3.9.9 tomorrow
+- uses: docker/build-push-action@latest  # completely unpinned</code></pre>
+
+  <h3>Correct: Pinning to exact SHA or version</h3>
+  <pre><code class="language-yaml"># GOOD -- deterministic, reproducible builds
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+- uses: docker/build-push-action@v6.12.0  # exact version</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>No caching strategy</strong>: Every build downloads dependencies from scratch, adding 2-5 minutes per run. Fix: cache <code>node_modules</code>, <code>.m2</code>, pip cache keyed by lockfile hash. [<a href="https://docs.github.com/en/actions/about-github-actions/understanding-github-actions">src1</a>]</li>
+    <li><strong>Flaky tests ignored</strong>: Tests intermittently fail but nobody fixes them, eroding CI trust until developers routinely re-run pipelines. Fix: quarantine flaky tests immediately; track flake rate as a team metric. [<a href="https://continuousdelivery.com/2010/09/deployment-pipeline-anti-patterns/">src7</a>]</li>
+    <li><strong>No branch protection</strong>: Developers push directly to main, bypassing CI entirely. Fix: require status checks (lint, test, security) to pass before merge. [<a href="https://docs.github.com/en/actions/about-github-actions/understanding-github-actions">src1</a>]</li>
+    <li><strong>Secrets in logs</strong>: Pipeline logs expose environment variables or command output containing credentials. Fix: mark secrets as masked in CI settings; never <code>echo $SECRET</code>; audit log output. [<a href="https://www.jenkins.io/doc/book/scaling/architecting-for-scale/">src3</a>]</li>
+    <li><strong>No rollback plan</strong>: Production deployment fails with no automated way to revert. Fix: keep the previous artifact tag; automate rollback on health check failure (<code>kubectl rollout undo</code>). [<a href="https://www.atlassian.com/devops/frameworks/dora-metrics">src4</a>]</li>
+    <li><strong>Over-triggering</strong>: Every push to every branch triggers the full pipeline, wasting runner minutes. Fix: use path filters, branch filters, and <code>[skip ci]</code> conventions. [<a href="https://docs.gitlab.com/ci/pipelines/pipeline_architectures/">src2</a>]</li>
+    <li><strong>Shared mutable state in tests</strong>: Integration tests share a database or filesystem, causing ordering-dependent failures. Fix: use per-test database schemas or containers; clean state before each test. [<a href="https://continuousdelivery.com/2010/09/deployment-pipeline-anti-patterns/">src7</a>]</li>
+    <li><strong>No pipeline observability</strong>: Teams have no visibility into pipeline duration trends, failure rates, or bottlenecks. Fix: track the 4 DORA metrics; set up CI dashboards (Datadog CI Visibility, GitHub Actions insights). [<a href="https://www.atlassian.com/devops/frameworks/dora-metrics">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check GitHub Actions workflow syntax
+gh workflow list
+gh run list --limit 5
+
+# View recent pipeline runs and their status
+gh run view &lt;run-id&gt; --log-failed
+
+# Verify Docker image exists in registry
+docker manifest inspect registry.example.com/myapp:${SHA}
+
+# Check Kubernetes deployment rollout status
+kubectl rollout status deployment/myapp --timeout=300s
+
+# Measure DORA: deployment frequency (last 30 days)
+gh api repos/{owner}/{repo}/deployments --paginate | jq '[.[] | select(.created_at &gt; "2026-01-23")] | length'
+
+# Check for secrets accidentally committed
+gitleaks detect --source . --verbose</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Current Version</th><th scope="col">Key Feature</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GitHub Actions</td><td>v2 (2024+)</td><td>Reusable workflows, OIDC, larger runners</td><td>Largest marketplace; 2000+ free minutes/month (public repos unlimited)</td></tr>
+      <tr><td>GitLab CI</td><td>17.x (2025)</td><td>CI Components catalog, SLSA provenance</td><td>Built-in container registry, SAST, DAST; all-in-one platform</td></tr>
+      <tr><td>Jenkins</td><td>2.479+ (2025)</td><td>Declarative Pipeline, Pipeline as Code</td><td>Requires self-hosting; 1800+ plugins; highest customization</td></tr>
+      <tr><td>CircleCI</td><td>Cloud (2025)</td><td>Orbs, intelligent test splitting, Docker layer caching</td><td>Managed; strong Docker support; credit-based pricing</td></tr>
+      <tr><td>Azure DevOps</td><td>2025</td><td>YAML pipelines, template expressions</td><td>Deep Azure/Microsoft integration; hybrid self-hosted agents</td></tr>
+      <tr><td>Tekton</td><td>0.60+ (2025)</td><td>Kubernetes-native, CRD-based pipelines</td><td>Cloud-native; steep learning curve; ideal for K8s-first teams</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Building any software project with &gt;1 developer</td><td>Solo developer with manual deploys to a single server</td><td>Simple shell script or manual deploy</td></tr>
+      <tr><td>You need reproducible, auditable builds</td><td>Prototyping or hackathon with no production target</td><td>Direct git push to hosting (Vercel, Netlify auto-deploy)</td></tr>
+      <tr><td>Compliance requires build provenance (SOC2, SLSA)</td><td>The project has no tests and no build step</td><td>Add tests first, then add CI/CD</td></tr>
+      <tr><td>Team targets DORA elite metrics (daily deploys, &lt;1h recovery)</td><td>Deploying static files with no build process</td><td>Static site hosts with git-triggered deploys</td></tr>
+      <tr><td>Microservices with independent release cycles</td><td>Tightly coupled monolith deploying everything together</td><td>Single pipeline with all-or-nothing deploy</td></tr>
+      <tr><td>Multiple environments (dev, staging, production)</td><td>Single environment with no promotion path</td><td>Direct deployment script</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Pipeline YAML syntax and features vary significantly between platforms -- a GitHub Actions workflow is not portable to GitLab CI without rewriting. The architecture concepts (stages, gates, artifact promotion) are portable; the implementation is not.</li>
+    <li>Self-hosted runners (Jenkins agents, GitHub self-hosted runners) require patching, monitoring, and security hardening -- they become attack vectors if compromised, as they have access to secrets and deployment credentials.</li>
+    <li>DORA metrics are team-level indicators, not individual developer metrics. Using deployment frequency to evaluate individual performance leads to gaming rather than genuine improvement.</li>
+    <li>&quot;CI/CD&quot; is often used loosely to mean just CI (automated testing). True CD (continuous deployment to production) requires significant investment in automated testing, monitoring, and rollback capabilities. Most teams practice CI + continuous delivery (manual production gate), not continuous deployment.</li>
+    <li>Cost can escalate quickly with managed CI/CD: GitHub Actions charges per-minute for private repos, CircleCI uses credits, and GitLab CI shared runners have quotas. Self-hosted runners trade money for operational overhead.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/jenkins-to-github-actions/2026" data-relationship="related_to">Jenkins to GitHub Actions Migration</a>
+    <a href="/software/migrations/circleci-to-github-actions/2026" data-relationship="related_to">CircleCI to GitHub Actions Migration</a>
+    <a href="/software/migrations/docker-compose-to-kubernetes/2026" data-relationship="related_to">Docker Compose to Kubernetes Migration</a>
+    <a href="/software/debugging/docker-container-wont-start/2026" data-relationship="related_to">Docker Container Won't Start</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

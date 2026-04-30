@@ -1,0 +1,108 @@
+{
+  "id": "software/system-design/rate-limiter/2026",
+  "category": "software",
+  "subcategory": "system-design",
+  "topic": "rate-limiter",
+  "version_tag": "2026",
+  "canonical_question": "How do I design a distributed rate limiter?",
+  "aliases": [
+    "distributed rate limiting",
+    "API rate limiter design",
+    "token bucket algorithm",
+    "sliding window rate limiter",
+    "rate limiting system design interview",
+    "Redis rate limiter",
+    "leaky bucket algorithm",
+    "API throttling architecture",
+    "rate limiter microservices",
+    "distributed rate limiting Redis"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.93,
+  "token_estimate": 3800,
+  "source_count": 7,
+  "md_path": "/software/system-design/rate-limiter/2026.md",
+  "html_path": "/software/system-design/rate-limiter/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": null,
+    "next_review": "2026-08-23",
+    "change_sensitivity": "low"
+  },
+  "constraints": [
+    "All counter operations (read-check-increment) must be atomic — use Redis Lua scripts or CAS operations to prevent race conditions",
+    "Clock skew across distributed nodes causes inconsistent windowing — use a centralized time source or wall-clock-aligned windows",
+    "Redis single-instance is a SPOF — always deploy with master-replica replication and Sentinel or Cluster for production",
+    "Never fail-open by default in security-critical contexts (DDoS, auth brute-force) — design explicit fail-open vs fail-closed policy per limiter",
+    "Memory grows linearly with unique keys — set TTL on all rate limit keys and monitor Redis memory usage"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need application-level circuit breaking (service unavailable, not rate exceeded)",
+      "use_instead": "Circuit breaker pattern — different failure domain (availability vs throttling)"
+    },
+    {
+      "condition": "Need DDoS mitigation at network layer (L3/L4)",
+      "use_instead": "CDN/edge rate limiting (Cloudflare, AWS Shield) — L7 rate limiting does not protect against volumetric attacks"
+    },
+    {
+      "condition": "Single-server rate limiting only (no distributed coordination needed)",
+      "use_instead": "In-process rate limiter (e.g., Guava RateLimiter, golang.org/x/time/rate) — simpler, no Redis dependency"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      {
+        "id": "software/debugging/postgresql-connection-pool/2026",
+        "label": "PostgreSQL Connection Pool Exhaustion"
+      },
+      {
+        "id": "software/migrations/monolith-to-microservices/2026",
+        "label": "Monolith to Microservices Migration"
+      }
+    ],
+    "solves": [
+      {
+        "id": "software/system-design/api-gateway/2026",
+        "label": "API Gateway Design"
+      }
+    ],
+    "alternative_to": [
+      {
+        "id": "software/system-design/circuit-breaker/2026",
+        "label": "Circuit Breaker Pattern"
+      }
+    ],
+    "often_confused_with": [
+      {
+        "id": "software/system-design/load-balancer/2026",
+        "label": "Load Balancer Design (distributes traffic, does not limit it)"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "algorithm_choice",
+      "question": "What is your primary concern: burst tolerance, strict accuracy, or simplicity?",
+      "type": "choice",
+      "options": ["Burst tolerance (token bucket)", "Strict accuracy (sliding window log)", "Simplicity (fixed window)", "Smooth output rate (leaky bucket)", "Not sure — recommend based on scale"]
+    },
+    {
+      "key": "scale",
+      "question": "What is your expected request volume?",
+      "type": "choice",
+      "options": ["<1K requests/sec", "1K-100K requests/sec", ">100K requests/sec"]
+    },
+    {
+      "key": "deployment",
+      "question": "Where will rate limiting be enforced?",
+      "type": "choice",
+      "options": ["API gateway/reverse proxy", "Application middleware", "Sidecar/service mesh", "Edge/CDN"]
+    }
+  ]
+}

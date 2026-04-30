@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SQL Temporal Queries: Gaps and Islands Patterns | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to SQL gaps and islands patterns: ROW_NUMBER difference, LAG/LEAD detection, DENSE_RANK for duplicates, overlapping date range merging.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-temporal-gaps-islands/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SQL Temporal Queries: Gaps and Islands Patterns | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to SQL gaps and islands patterns: ROW_NUMBER difference, LAG/LEAD detection, DENSE_RANK for duplicates, overlapping date range merging. 11-pattern decision matrix, 4 code examples, 3 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-temporal-gaps-islands/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Temporal Queries: Gaps and Islands Patterns | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to SQL gaps and islands patterns: ROW_NUMBER difference, LAG/LEAD detection, DENSE_RANK for duplicates, overlapping date range merging. 11-pattern decision matrix, 4 code examples, 3 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/patterns/sql_temporal_gaps_islands">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I write SQL temporal queries for gaps and islands problems?">
+  <meta name="ai:aliases" content="SQL gaps and islands detection; find missing date ranges in SQL; identify consecutive sequences in SQL; merge overlapping date ranges SQL; SQL contiguous range detection">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-temporal-gaps-islands/2026.md">
+  <meta name="ai:token_estimate" content="3200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="data_type,problem_type,database">
+  <meta name="ai:constraints" content="Window functions require SQL:2003+ compliant database; PARTITION BY must match logical grouping; ORDER BY must be deterministic; NULL values break LAG/LEAD comparisons">
+  <meta name="ai:skip_this_unit_if" content="Looking for time-series aggregation (bucketing by fixed intervals) -> SQL DATE_TRUNC / time_bucket window aggregation; Need to detect duplicates rather than consecutive ranges -> SQL deduplication patterns (GROUP BY / DISTINCT ON)">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SQL Temporal Queries: Gaps and Islands Patterns",
+    "headline": "SQL Temporal Queries: Gaps and Islands Patterns",
+    "description": "Comprehensive reference for SQL gaps and islands query patterns. Covers ROW_NUMBER difference technique, DENSE_RANK for duplicates, LAG/LEAD gap detection, overlapping date range merging, and session detection. Includes 11-pattern decision matrix, 4 tested code examples, 3 anti-pattern pairs, and performance considerations across PostgreSQL, MySQL, SQL Server, and Oracle.",
+    "keywords": ["SQL", "gaps and islands", "window functions", "ROW_NUMBER", "DENSE_RANK", "LAG", "LEAD", "temporal queries", "PostgreSQL", "date ranges", "consecutive sequences"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "SQL:2003 window functions (PostgreSQL 9.4+, MySQL 8.0+, SQL Server 2012+, Oracle 12c+, SQLite 3.25+)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Introduction to Gaps and Islands Analysis",
+        "url": "https://www.red-gate.com/simple-talk/databases/sql-server/t-sql-programming-sql-server/introduction-to-gaps-and-islands-analysis/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Solving Gaps and Islands with Enhanced Window Functions",
+        "url": "https://www.itprotoday.com/sql-server/solving-gaps-and-islands-enhanced-window-functions"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Islands T-SQL Challenge — Performance Analysis",
+        "url": "https://sqlperformance.com/2022/04/t-sql-queries/islands-t-sql-challenge"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Solving the Gaps and Islands Problem in Postgres",
+        "url": "https://spin.atomicobject.com/2021/09/27/gaps-islands-problem-postgres/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Improve Your SQL Skills: Master the Gaps & Islands Problem",
+        "url": "https://mattboegner.com/improve-your-sql-skills-master-the-gaps-islands-problem/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Gap and Island SQL — Advanced Query Pattern Explained",
+        "url": "https://www.practicewindowfunctions.com/learn/gap_and_island"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Gaps and Islands Across Date Ranges",
+        "url": "https://bertwagner.com/posts/gaps-and-islands/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SQL Temporal Queries: Gaps and Islands Patterns",
+    "description": "Decision matrix and code examples for SQL gaps and islands query patterns covering integer gaps, date islands, overlapping range merging, and session detection across PostgreSQL, MySQL, SQL Server, and Oracle.",
+    "keywords": ["SQL", "gaps and islands", "window functions", "temporal queries", "ROW_NUMBER", "DENSE_RANK", "LAG", "LEAD"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Red Gate / Simple Talk"},
+      {"@type": "Organization", "name": "ITPro Today (Itzik Ben-Gan)"},
+      {"@type": "Organization", "name": "SQLPerformance.com"},
+      {"@type": "Organization", "name": "Atomic Object"},
+      {"@type": "Organization", "name": "Matt Boegner"},
+      {"@type": "Organization", "name": "Practice Window Functions"},
+      {"@type": "Organization", "name": "Bert Wagner"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SQL Temporal Queries: Gaps and Islands Patterns" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I write SQL temporal queries for gaps and islands problems?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL gaps and islands detection",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "find missing date ranges in SQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "identify consecutive sequences in SQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "merge overlapping date ranges SQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL contiguous range detection",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SQL Temporal Queries: Gaps and Islands Patterns</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I write SQL temporal queries for gaps and islands problems?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-temporal-gaps-islands/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Gaps and islands problems are solved by computing a grouping key from the difference between a data value and a window function rank, then aggregating per group.</li>
+    <li><strong>Key tool/command</strong>: <code>ROW_NUMBER() OVER (ORDER BY col) - col</code> for integer islands; <code>LAG()</code> + running <code>SUM()</code> for date/timestamp islands.</li>
+    <li><strong>Watch out for</strong>: Forgetting to PARTITION BY your grouping column; this merges islands across unrelated groups.</li>
+    <li><strong>Works with</strong>: PostgreSQL 9.4+, MySQL 8.0+, SQL Server 2012+, Oracle 12c+, SQLite 3.25+ (any database with window function support).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Window functions require SQL:2003+ compliant databases; MySQL &lt; 8.0 and SQLite &lt; 3.25 do not support them</li>
+    <li>ORDER BY in window functions must be deterministic; add a tiebreaker column (e.g., primary key) if the sequence column has duplicates</li>
+    <li>NULL values in LAG/LEAD comparisons evaluate to NULL, not FALSE; use <code>COALESCE()</code> or <code>IS DISTINCT FROM</code> to handle NULLs</li>
+    <li>PARTITION BY must match your logical entity grouping (e.g., per-user, per-device); omitting it merges all rows into one partition</li>
+    <li>For overlapping date ranges, standard gap detection fails; use the running-maximum technique instead</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table (PATTERNS decision matrix) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Pattern</th><th scope="col">Window Functions</th><th scope="col">Time</th><th scope="col">Space</th><th scope="col">Trade-off</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Integer gaps (missing IDs)</td><td>LEAD difference</td><td><code>LEAD()</code></td><td>O(n)</td><td>O(1)</td><td>Simplest; integers only</td></tr>
+      <tr><td>Integer islands (consecutive IDs)</td><td>ROW_NUMBER difference</td><td><code>ROW_NUMBER()</code></td><td>O(n)</td><td>O(1)</td><td>Fast; fails with duplicates</td></tr>
+      <tr><td>Integer islands with duplicates</td><td>DENSE_RANK difference</td><td><code>DENSE_RANK()</code></td><td>O(n)</td><td>O(1)</td><td>Handles duplicates correctly</td></tr>
+      <tr><td>Date gaps (missing days)</td><td>LAG + date arithmetic</td><td><code>LAG()</code></td><td>O(n)</td><td>O(1)</td><td>Requires known interval</td></tr>
+      <tr><td>Date islands (consecutive days)</td><td>LAG + running SUM</td><td><code>LAG()</code>, <code>SUM()</code></td><td>O(n)</td><td>O(n)</td><td>Most flexible for dates</td></tr>
+      <tr><td>Timestamp islands (activity sessions)</td><td>LAG + threshold + SUM</td><td><code>LAG()</code>, <code>SUM()</code></td><td>O(n)</td><td>O(n)</td><td>Configurable gap threshold</td></tr>
+      <tr><td>Overlapping date range merging</td><td>Running MAX end date</td><td><code>MAX()</code>, <code>LAG()</code></td><td>O(n)</td><td>O(n)</td><td>Handles overlaps correctly</td></tr>
+      <tr><td>Partitioned islands (per-entity)</td><td>Any pattern + PARTITION BY</td><td>varies</td><td>O(n)</td><td>O(n)</td><td>Add PARTITION BY to all window fns</td></tr>
+      <tr><td>Islands with row numbering</td><td>No-sort optimized</td><td><code>ROW_NUMBER()</code>, <code>LAG()</code>, <code>MAX()</code></td><td>O(n)</td><td>O(n)</td><td>Best serial performance</td></tr>
+      <tr><td>Gaps in date series</td><td>Generate series + LEFT JOIN</td><td><code>generate_series()</code></td><td>O(n)</td><td>O(n)</td><td>PostgreSQL-specific; clearest</td></tr>
+      <tr><td>Multi-column islands</td><td>Composite LAG comparison</td><td><code>LAG()</code> per column</td><td>O(n)</td><td>O(n)</td><td>Compare all grouping columns</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Is the sequence numeric integers (IDs)?
+|   |-- YES --> Are there duplicate values?
+|   |   |-- YES --> Use DENSE_RANK difference technique
+|   |   +-- NO --> Use ROW_NUMBER difference technique
+|   +-- NO (dates/timestamps) |
+|-- Are date ranges overlapping?
+|   |-- YES --> Use running MAX end-date technique (overlapping merge)
+|   +-- NO |
+|-- Do you need gaps (missing) or islands (present)?
+|   |-- GAPS --> Is the database PostgreSQL?
+|   |   |-- YES --> Use generate_series + LEFT JOIN
+|   |   +-- NO --> Use LEAD/LAG gap detection
+|   +-- ISLANDS |
+|-- Is the interval fixed (1 day, 1 hour)?
+|   |-- YES --> Use LAG + running SUM with fixed threshold
+|   +-- NO --> Use LAG + running SUM with variable threshold
++-- DEFAULT --> LAG + running SUM (most general technique)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Identify your sequence type and grouping</h3>
+  <p>Determine whether your data is integer-based (IDs, sequence numbers) or temporal (dates, timestamps), and identify the PARTITION BY columns. [<a href="https://www.red-gate.com/simple-talk/databases/sql-server/t-sql-programming-sql-server/introduction-to-gaps-and-islands-analysis/">src1</a>]</p>
+  <pre><code class="language-sql">-- Inspect your data shape
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'your_table'
+  AND column_name IN ('id', 'event_date', 'user_id', 'status');</code></pre>
+  <p><strong>Verify</strong>: Confirm the sequence column type is integer, date, or timestamp.</p>
+
+  <h3>2. Add the grouping key using window functions</h3>
+  <p>For integer sequences, subtract ROW_NUMBER from the value. For date sequences, compare with LAG and accumulate island IDs with running SUM. [<a href="https://www.itprotoday.com/sql-server/solving-gaps-and-islands-enhanced-window-functions">src2</a>]</p>
+  <pre><code class="language-sql">-- Integer islands: the ROW_NUMBER difference technique
+SELECT
+  val,
+  val - ROW_NUMBER() OVER (ORDER BY val) AS grp
+FROM your_table;
+-- Rows in the same island will have the same grp value</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT DISTINCT grp FROM cte</code> should return one value per island.</p>
+
+  <h3>3. Aggregate to get island boundaries</h3>
+  <p>Group by the computed key to get the start and end of each island. [<a href="https://www.red-gate.com/simple-talk/databases/sql-server/t-sql-programming-sql-server/introduction-to-gaps-and-islands-analysis/">src1</a>]</p>
+  <pre><code class="language-sql">WITH islands AS (
+  SELECT
+    val,
+    val - ROW_NUMBER() OVER (ORDER BY val) AS grp
+  FROM your_table
+)
+SELECT
+  MIN(val) AS island_start,
+  MAX(val) AS island_end,
+  COUNT(*) AS island_length
+FROM islands
+GROUP BY grp
+ORDER BY island_start;</code></pre>
+  <p><strong>Verify</strong>: <code>SUM(island_length)</code> should equal <code>COUNT(*)</code> from the source table.</p>
+
+  <h3>4. Validate edge cases</h3>
+  <p>Check for NULLs, duplicates, and partition boundaries. [<a href="https://mattboegner.com/improve-your-sql-skills-master-the-gaps-islands-problem/">src5</a>]</p>
+  <pre><code class="language-sql">-- Check for NULLs in sequence column
+SELECT COUNT(*) AS null_count
+FROM your_table
+WHERE val IS NULL;
+
+-- Check for duplicates
+SELECT val, COUNT(*) AS cnt
+FROM your_table
+GROUP BY val
+HAVING COUNT(*) &gt; 1;</code></pre>
+  <p><strong>Verify</strong>: If null_count &gt; 0, add <code>WHERE val IS NOT NULL</code> or switch to DENSE_RANK. If duplicates exist, use DENSE_RANK instead of ROW_NUMBER.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Detect gaps in a date sequence</h3>
+  <pre><code class="language-sql">-- Input:  Table 'user_logins' with columns (user_id, login_date)
+-- Output: Missing date ranges per user
+WITH date_range AS (
+  SELECT user_id,
+         login_date,
+         LEAD(login_date) OVER (
+           PARTITION BY user_id ORDER BY login_date
+         ) AS next_login
+  FROM user_logins
+)
+SELECT user_id,
+       login_date + INTERVAL '1 day' AS gap_start,
+       next_login - INTERVAL '1 day' AS gap_end,
+       (next_login - login_date - 1) AS days_missing
+FROM date_range
+WHERE next_login - login_date &gt; 1
+ORDER BY user_id, gap_start;</code></pre>
+
+  <h3>PostgreSQL: Detect islands of consecutive dates</h3>
+  <p>Full script: <a href="scripts/postgresql-detect-islands-of-consecutive-dates.sql">postgresql-detect-islands-of-consecutive-dates.sql</a></p>
+  <pre><code class="language-sql">-- Input:  Table 'daily_activity' with columns (user_id, activity_date)
+-- Output: Consecutive date ranges (islands) per user
+WITH flagged AS (
+  SELECT user_id, activity_date,
+    CASE WHEN activity_date - LAG(activity_date) OVER (
+      PARTITION BY user_id ORDER BY activity_date
+    ) = 1 THEN 0 ELSE 1 END AS new_island
+  FROM daily_activity
+),
+grouped AS (
+  SELECT user_id, activity_date,
+    SUM(new_island) OVER (
+      PARTITION BY user_id ORDER BY activity_date
+      ROWS UNBOUNDED PRECEDING
+    ) AS island_id
+  FROM flagged
+)
+SELECT user_id,
+       MIN(activity_date) AS island_start,
+       MAX(activity_date) AS island_end,
+       COUNT(*) AS consecutive_days
+FROM grouped
+GROUP BY user_id, island_id
+ORDER BY user_id, island_start;</code></pre>
+
+  <h3>PostgreSQL: Merge overlapping date ranges</h3>
+  <p>Full script: <a href="scripts/postgresql-merge-overlapping-date-ranges.sql">postgresql-merge-overlapping-date-ranges.sql</a></p>
+  <pre><code class="language-sql">-- Input:  Table 'subscriptions' with columns (user_id, start_date, end_date)
+-- Output: Merged non-overlapping date ranges per user
+WITH ordered AS (
+  SELECT user_id, start_date, end_date,
+    MAX(end_date) OVER (
+      PARTITION BY user_id ORDER BY start_date
+      ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+    ) AS max_prev_end
+  FROM subscriptions
+),
+flagged AS (
+  SELECT *,
+    CASE WHEN start_date &lt;= max_prev_end THEN 0 ELSE 1 END AS new_group
+  FROM ordered
+),
+grouped AS (
+  SELECT *,
+    SUM(new_group) OVER (
+      PARTITION BY user_id ORDER BY start_date
+      ROWS UNBOUNDED PRECEDING
+    ) AS grp
+  FROM flagged
+)
+SELECT user_id,
+       MIN(start_date) AS merged_start,
+       MAX(end_date) AS merged_end
+FROM grouped
+GROUP BY user_id, grp
+ORDER BY user_id, merged_start;</code></pre>
+
+  <h3>SQL Server: Integer gaps with LEAD</h3>
+  <pre><code class="language-sql">-- Input:  Table 'invoice_numbers' with column (invoice_no INT)
+-- Output: Missing invoice number ranges
+WITH gaps AS (
+  SELECT invoice_no,
+         LEAD(invoice_no) OVER (ORDER BY invoice_no) AS next_no
+  FROM invoice_numbers
+)
+SELECT invoice_no + 1 AS gap_start,
+       next_no - 1    AS gap_end,
+       next_no - invoice_no - 1 AS missing_count
+FROM gaps
+WHERE next_no - invoice_no &gt; 1
+ORDER BY gap_start;</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using ROW_NUMBER with duplicate values</h3>
+  <pre><code class="language-sql">-- BAD -- ROW_NUMBER assigns unique numbers, splitting identical values into separate islands
+WITH islands AS (
+  SELECT status, event_date,
+    event_date - INTERVAL '1 day' * ROW_NUMBER() OVER (
+      PARTITION BY status ORDER BY event_date
+    ) AS grp
+  FROM events
+)
+SELECT status, MIN(event_date), MAX(event_date)
+FROM islands GROUP BY status, grp;</code></pre>
+
+  <h3>Correct: Use DENSE_RANK for data with duplicates</h3>
+  <pre><code class="language-sql">-- GOOD -- DENSE_RANK handles duplicates by assigning the same rank to ties
+WITH islands AS (
+  SELECT status, event_date,
+    event_date - INTERVAL '1 day' * DENSE_RANK() OVER (
+      PARTITION BY status ORDER BY event_date
+    ) AS grp
+  FROM events
+)
+SELECT status, MIN(event_date), MAX(event_date)
+FROM islands GROUP BY status, grp;</code></pre>
+
+  <h3>Wrong: Omitting PARTITION BY when data has multiple entities</h3>
+  <pre><code class="language-sql">-- BAD -- Without PARTITION BY, islands from different users get merged
+WITH flagged AS (
+  SELECT user_id, login_date,
+    CASE WHEN login_date - LAG(login_date) OVER (
+      ORDER BY login_date  -- missing PARTITION BY user_id!
+    ) = 1 THEN 0 ELSE 1 END AS new_island
+  FROM user_logins
+)</code></pre>
+
+  <h3>Correct: Always PARTITION BY the entity column</h3>
+  <pre><code class="language-sql">-- GOOD -- Each user's islands are computed independently
+WITH flagged AS (
+  SELECT user_id, login_date,
+    CASE WHEN login_date - LAG(login_date) OVER (
+      PARTITION BY user_id ORDER BY login_date
+    ) = 1 THEN 0 ELSE 1 END AS new_island
+  FROM user_logins
+)</code></pre>
+
+  <h3>Wrong: Using self-join for gap detection</h3>
+  <pre><code class="language-sql">-- BAD -- O(n^2) self-join; catastrophic on large tables
+SELECT a.val + 1 AS gap_start,
+       MIN(b.val) - 1 AS gap_end
+FROM sequence_table a
+INNER JOIN sequence_table b ON b.val &gt; a.val
+WHERE NOT EXISTS (
+  SELECT 1 FROM sequence_table c
+  WHERE c.val = a.val + 1
+)
+GROUP BY a.val;</code></pre>
+
+  <h3>Correct: Use LEAD window function for O(n) gap detection</h3>
+  <pre><code class="language-sql">-- GOOD -- Single pass with LEAD, O(n) with proper index
+WITH gaps AS (
+  SELECT val,
+    LEAD(val) OVER (ORDER BY val) AS next_val
+  FROM sequence_table
+)
+SELECT val + 1 AS gap_start,
+       next_val - 1 AS gap_end
+FROM gaps
+WHERE next_val - val &gt; 1;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Non-deterministic ORDER BY</strong>: If your ORDER BY column has ties, ROW_NUMBER assigns arbitrary numbers, producing inconsistent island boundaries across runs. Fix: add a tiebreaker column, e.g., <code>ORDER BY event_date, id</code>. [<a href="https://www.red-gate.com/simple-talk/databases/sql-server/t-sql-programming-sql-server/introduction-to-gaps-and-islands-analysis/">src1</a>]</li>
+    <li><strong>NULL propagation in LAG/LEAD</strong>: <code>LAG(val)</code> returns NULL for the first row, and <code>NULL - date</code> is NULL, not a flag. Fix: <code>COALESCE(LAG(val) OVER (...), val)</code> or handle the first-row case explicitly. [<a href="https://spin.atomicobject.com/2021/09/27/gaps-islands-problem-postgres/">src4</a>]</li>
+    <li><strong>Off-by-one in date arithmetic</strong>: <code>date2 - date1 = 1</code> means consecutive days, but <code>timestamp2 - timestamp1 = INTERVAL '1 day'</code> may miss times. Fix: cast to <code>DATE</code> or use <code>DATE_TRUNC('day', ts)</code> before comparison. [<a href="https://mattboegner.com/improve-your-sql-skills-master-the-gaps-islands-problem/">src5</a>]</li>
+    <li><strong>Forgetting ROWS UNBOUNDED PRECEDING</strong>: The default window frame for <code>SUM() OVER (ORDER BY ...)</code> is <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>, which groups equal values. Fix: always specify <code>ROWS UNBOUNDED PRECEDING</code> for running sums. [<a href="https://www.itprotoday.com/sql-server/solving-gaps-and-islands-enhanced-window-functions">src2</a>]</li>
+    <li><strong>Overlapping ranges treated as gaps</strong>: Standard gap detection assumes non-overlapping intervals. If ranges overlap, use the running-MAX technique to merge before detecting. Fix: pre-merge overlapping ranges first. [<a href="https://bertwagner.com/posts/gaps-and-islands/">src7</a>]</li>
+    <li><strong>Performance on unsorted data</strong>: Window functions require sorted input. Without an index on the ORDER BY column, the planner adds an expensive Sort operator. Fix: create an index on <code>(partition_col, order_col)</code>. [<a href="https://sqlperformance.com/2022/04/t-sql-queries/islands-t-sql-challenge">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Finding missing values in a known sequence (invoice numbers, dates)</td><td>Bucketing data into fixed time intervals (hourly, daily)</td><td>DATE_TRUNC / time_bucket aggregation</td></tr>
+      <tr><td>Identifying consecutive activity streaks (login streaks, uptime)</td><td>Detecting simple duplicates in a column</td><td>GROUP BY + HAVING COUNT &gt; 1</td></tr>
+      <tr><td>Merging overlapping date ranges (subscriptions, schedules)</td><td>Joining two tables on date ranges (interval overlap)</td><td>Range join with daterange / OVERLAPS operator</td></tr>
+      <tr><td>Computing session duration from event timestamps</td><td>Computing running totals or moving averages</td><td>Standard window function aggregates</td></tr>
+      <tr><td>Building slowly changing dimensions from event logs</td><td>Data has no natural ordering or sequence</td><td>Graph traversal / recursive CTE</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>The ROW_NUMBER difference technique only works for sequences with a known, constant step size (e.g., +1 for integers, +1 day for dates); variable-step sequences require the LAG/SUM approach</li>
+    <li>MySQL 8.0 supports window functions but lacks <code>generate_series()</code>; use a recursive CTE or a numbers table for gap detection with date series</li>
+    <li>Performance varies significantly by engine: SQL Server's batch mode processing can achieve 5x speedup on islands queries with serial execution plans when window functions share the same PARTITION BY and ORDER BY</li>
+    <li>SQLite window function support (3.25+) is functional but lacks some advanced framing options; test complex ROWS/RANGE frames carefully</li>
+    <li>For very large tables (&gt;10M rows), ensure a covering index exists on <code>(partition_col, order_col, value_col)</code> to avoid table scans</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="related_to">PostgreSQL Slow Query Debugging</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

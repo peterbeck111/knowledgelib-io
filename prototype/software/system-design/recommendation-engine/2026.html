@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Design a Recommendation Engine | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a recommendation engine: multi-stage pipeline (retrieval + ranking), two-tower models, feature stores, ANN...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/recommendation-engine/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Design a Recommendation Engine | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a recommendation engine: multi-stage pipeline (retrieval + ranking), two-tower models, feature stores, ANN indexes, A/B testing, and cold-start strategies. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/recommendation-engine/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Design a Recommendation Engine | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a recommendation engine: multi-stage pipeline (retrieval + ranking), two-tower models, feature stores, ANN indexes, A/B testing, and cold-start strategies. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/recommendation_engine">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a recommendation engine?">
+  <meta name="ai:aliases" content="recommendation system architecture; build a recommender system from scratch; collaborative filtering system design; content-based recommendation engine; hybrid recommendation system architecture; personalization engine design; ML recommendation pipeline architecture; design a recommendation service at scale">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/recommendation-engine/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="catalog_size,interaction_type,latency_requirement">
+  <meta name="ai:constraints" content="Never train on raw PII without anonymization — GDPR/CCPA require consent; Always separate retrieval from ranking for catalogs >100K; Feature store must guarantee training-serving consistency; A/B test every model change against business metrics; Always implement cold-start fallback">
+  <meta name="ai:skip_this_unit_if" content="User needs search/ranking for keyword queries → software/system-design/search-engine/2026; User wants rule-based related items without ML → Use co-occurrence counting; User needs ad ranking/auction-based placement → software/system-design/ad-ranking-system/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Design a Recommendation Engine",
+    "headline": "How to Design a Recommendation Engine",
+    "description": "Complete system design guide for building a production recommendation engine covering multi-stage pipeline architecture (candidate retrieval + ranking), two-tower embedding models, feature stores, ANN indexes, A/B testing frameworks, cold-start strategies, and anti-patterns.",
+    "keywords": ["recommendation engine", "recommender system", "collaborative filtering", "content-based filtering", "two-tower model", "feature store", "system design", "machine learning", "personalization", "ANN index", "FAISS"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Python 3.9+, TensorFlow Recommenders, FAISS, Feast, XGBoost, Kafka",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "System Architectures for Personalization and Recommendation",
+        "url": "https://netflixtechblog.com/system-architectures-for-personalization-and-recommendation-e081aa94b5d8"
+      },
+      {
+        "@type": "WebPage",
+        "name": "System Design for Recommendations and Search",
+        "url": "https://eugeneyan.com/writing/system-design-for-discovery/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Two Decades of Recommender Systems at Amazon.com",
+        "url": "https://assets.amazon.science/76/9e/7eac89c14a838746e91dde0a5e9f/two-decades-of-recommender-systems-at-amazon.pdf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Recommendation Systems Overview",
+        "url": "https://developers.google.com/machine-learning/recommendation/overview/types"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The Two-Tower Model for Recommendation Systems: A Deep Dive",
+        "url": "https://www.shaped.ai/blog/the-two-tower-model-for-recommendation-systems-a-deep-dive"
+      },
+      {
+        "@type": "WebPage",
+        "name": "For Your Ears Only: Personalizing Spotify Home with Machine Learning",
+        "url": "https://engineering.atspotify.com/2020/1/for-your-ears-only-personalizing-spotify-home-with-machine-learning"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Approximate Nearest Neighbor Search in Recommender Systems",
+        "url": "https://zilliz.com/blog/approximate-nearest-neighbor-search-in-recommender-systems"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Design a Recommendation Engine",
+    "description": "Structured knowledge unit covering recommendation engine system design: multi-stage pipeline architecture, two-tower models, feature stores, ANN indexes, collaborative and content-based filtering, A/B testing, cold-start strategies, and production anti-patterns.",
+    "keywords": ["recommendation engine", "recommender system", "collaborative filtering", "two-tower model", "system design", "machine learning", "personalization"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Netflix Technology Blog"},
+      {"@type": "Organization", "name": "Amazon Science"},
+      {"@type": "Organization", "name": "Google Developers"},
+      {"@type": "Organization", "name": "Spotify Engineering"},
+      {"@type": "Organization", "name": "Eugene Yan"},
+      {"@type": "Organization", "name": "Shaped AI"},
+      {"@type": "Organization", "name": "Zilliz"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Design a Recommendation Engine" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a recommendation engine?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production recommendation engine is a multi-stage pipeline — candidate retrieval (fast, coarse) followed by ranking (slow, precise) — backed by a feature store, an event stream, and an A/B testing framework."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "recommendation system architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production recommendation engine is a multi-stage pipeline — candidate retrieval (fast, coarse) followed by ranking (slow, precise) — backed by a feature store, an event stream, and an A/B testing framework."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "build a recommender system from scratch",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production recommendation engine is a multi-stage pipeline — candidate retrieval (fast, coarse) followed by ranking (slow, precise) — backed by a feature store, an event stream, and an A/B testing framework."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "collaborative filtering system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production recommendation engine is a multi-stage pipeline — candidate retrieval (fast, coarse) followed by ranking (slow, precise) — backed by a feature store, an event stream, and an A/B testing framework."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "content-based recommendation engine",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production recommendation engine is a multi-stage pipeline — candidate retrieval (fast, coarse) followed by ranking (slow, precise) — backed by a feature store, an event stream, and an A/B testing framework."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "hybrid recommendation system architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production recommendation engine is a multi-stage pipeline — candidate retrieval (fast, coarse) followed by ranking (slow, precise) — backed by a feature store, an event stream, and an A/B testing framework."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>How to Design a Recommendation Engine</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a recommendation engine?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/recommendation-engine/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A production recommendation engine is a multi-stage pipeline -- candidate retrieval (fast, coarse) followed by ranking (slow, precise) -- backed by a feature store, an event stream, and an A/B testing framework.</li>
+    <li><strong>Key tool/command</strong>: <code>Two-tower embedding model for retrieval + gradient-boosted or deep ranking model + FAISS/ScaNN ANN index</code></li>
+    <li><strong>Watch out for</strong>: Training-serving skew -- features computed differently in training vs. serving silently degrade recommendation quality with no error signal.</li>
+    <li><strong>Works with</strong>: Python (TensorFlow Recommenders, PyTorch, LightFM, Surprise), Spark, Kafka, Redis, FAISS, Feast, any cloud ML platform.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never train on raw PII without anonymization -- GDPR Article 22 and CCPA require consent for automated profiling and right-to-explanation</li>
+    <li>Always separate candidate retrieval from ranking -- single-stage models cannot meet latency SLAs over catalogs &gt;100K items</li>
+    <li>Feature store must guarantee training-serving consistency -- use the same feature computation code for both paths</li>
+    <li>Never deploy a model without an A/B test against the production baseline -- offline metric improvements (NDCG, recall@K) do not reliably predict online metric lifts (CTR, revenue)</li>
+    <li>Always implement a fallback for cold-start users/items -- popularity-based or content-based defaults, never empty results</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Event Ingestion</td><td>Capture user interactions (clicks, views, purchases) in real-time</td><td>Kafka, AWS Kinesis, Google Pub/Sub</td><td>Partition by user_id; horizontal scaling</td></tr>
+      <tr><td>Event Store</td><td>Durable log of all interaction events for replay and retraining</td><td>Kafka (retention), S3/GCS Parquet, Delta Lake</td><td>Tiered storage (hot/warm/cold)</td></tr>
+      <tr><td>Feature Store</td><td>Serve consistent features for training and inference</td><td>Feast, Tecton, Vertex AI Feature Store</td><td>Online store (Redis/DynamoDB) + offline store (BigQuery/S3)</td></tr>
+      <tr><td>Embedding Service</td><td>Generate user and item embeddings via two-tower model</td><td>TensorFlow Recommenders, PyTorch, custom</td><td>GPU cluster for training; CPU/GPU for inference</td></tr>
+      <tr><td>ANN Index</td><td>Fast approximate nearest-neighbor retrieval over item embeddings</td><td>FAISS, ScaNN, Milvus, Pinecone, Weaviate</td><td>Shard by embedding space; replicate for read throughput</td></tr>
+      <tr><td>Candidate Retrieval</td><td>Narrow millions of items to hundreds of candidates in &lt;10ms</td><td>Two-tower model + ANN, co-occurrence, popularity</td><td>Multiple retrieval sources merged; each independently scalable</td></tr>
+      <tr><td>Ranking Model</td><td>Score and re-rank candidates using rich cross-features</td><td>XGBoost, LambdaMART, deep ranking network (DCN, DLRM)</td><td>Model server (TF Serving, Triton); batch + online</td></tr>
+      <tr><td>Business Rules Engine</td><td>Apply hard filters (age-gating, geo-restrictions, already-seen)</td><td>Custom service, Drools, OPA</td><td>Stateless; horizontal scaling</td></tr>
+      <tr><td>Re-ranking / Diversity</td><td>Ensure result diversity, freshness, and business objectives</td><td>MMR, DPP, slot-based allocation</td><td>Lightweight post-processing; CPU-only</td></tr>
+      <tr><td>A/B Testing Framework</td><td>Measure online impact of model changes on business KPIs</td><td>Optimizely, Statsig, custom (hashing-based)</td><td>Consistent hashing for user bucketing</td></tr>
+      <tr><td>Model Training Pipeline</td><td>Retrain models on fresh data (daily or continuous)</td><td>Airflow/Kubeflow + Spark + GPU training</td><td>Scheduled DAGs; spot/preemptible instances</td></tr>
+      <tr><td>Model Registry</td><td>Version, track, and deploy trained models</td><td>MLflow, Vertex AI Model Registry, SageMaker</td><td>Centralized; blue-green deployment</td></tr>
+      <tr><td>Monitoring &amp; Observability</td><td>Track model performance, data drift, and system health</td><td>Prometheus, Grafana, custom dashboards, Evidently AI</td><td>Alert on metric decay, feature drift, latency spikes</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
++-- Catalog size &gt;100K items?
+|   +-- YES -> Multi-stage pipeline required (retrieval + ranking)
+|   |   +-- Have rich item metadata (text, images, categories)?
+|   |   |   +-- YES -> Hybrid: content-based retrieval + collaborative ranking
+|   |   |   +-- NO -> Pure collaborative filtering (two-tower + interaction data)
+|   |   +-- Cold-start items common (&gt;20% of catalog)?
+|   |       +-- YES -> Content-based tower mandatory for item embedding
+|   |       +-- NO -> ID-based embeddings sufficient for item tower
+|   +-- NO -> Single-stage model feasible
+|       +-- Have explicit ratings (1-5 stars)?
+|       |   +-- YES -> Matrix factorization (ALS/SVD) or LightFM
+|       |   +-- NO -> Implicit feedback model (BPR, WARP loss)
+|       +-- Need real-time updates?
+|           +-- YES -> Online learning or session-based model (GRU4Rec)
+|           +-- NO -> Batch retrained daily
++-- Latency budget &lt;50ms?
+|   +-- YES -> Pre-compute recommendations; serve from cache/KV store
+|   +-- NO -> Online inference acceptable with feature store lookup
++-- DEFAULT -> Start with popularity + simple collaborative filtering, iterate toward hybrid</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define interaction schema and ingest events</h3>
+  <p>Design your event schema to capture every user-item interaction with context. This is the foundation -- bad event data means bad recommendations regardless of model sophistication. [<a href="https://netflixtechblog.com/system-architectures-for-personalization-and-recommendation-e081aa94b5d8">src1</a>]</p>
+  <pre><code class="language-python"># Event schema (Avro/Protobuf recommended for production)
+interaction_event = {
+    "user_id": "u_abc123",          # anonymized user identifier
+    "item_id": "item_789",          # catalog item identifier
+    "event_type": "click",          # click | view | purchase | add_to_cart | skip
+    "timestamp": "2026-02-23T10:30:00Z",
+    "context": {
+        "device": "mobile",
+        "session_id": "sess_456",
+        "page": "home_feed",
+        "position": 3               # position in the list (for position bias correction)
+    }
+}</code></pre>
+  <p><strong>Verify</strong>: Check Kafka consumer lag stays &lt;1s and event count matches expected traffic within 5%.</p>
+
+  <h3>2. Build the feature store</h3>
+  <p>Materialize user features (historical interaction aggregates, demographics) and item features (metadata, popularity scores, freshness) into both offline and online stores. This eliminates training-serving skew. [<a href="https://eugeneyan.com/writing/system-design-for-discovery/">src2</a>]</p>
+  <pre><code class="language-python"># Feast feature definition (feast_repo/features.py)
+from feast import Entity, FeatureView, Field, FileSource
+from feast.types import Float32, Int64, String
+from datetime import timedelta
+
+user = Entity(name="user_id", join_keys=["user_id"])
+user_features = FeatureView(
+    name="user_features",
+    entities=[user],
+    ttl=timedelta(hours=24),
+    schema=[
+        Field(name="total_clicks_7d", dtype=Int64),
+        Field(name="avg_session_duration", dtype=Float32),
+        Field(name="top_category", dtype=String),
+        Field(name="interaction_count_30d", dtype=Int64),
+    ],
+    source=FileSource(path="s3://features/user_features.parquet"),
+)</code></pre>
+  <p><strong>Verify</strong>: <code>feast feature-server serve</code> responds in &lt;5ms for user feature lookups; validate feature values match a manual SQL query on 10 random users.</p>
+
+  <h3>3. Train the candidate retrieval model (two-tower)</h3>
+  <p>Train a two-tower model where the user tower and item tower produce embeddings in the same vector space. Similarity between embeddings determines relevance. [<a href="https://developers.google.com/machine-learning/recommendation/overview/types">src4</a>] [<a href="https://www.shaped.ai/blog/the-two-tower-model-for-recommendation-systems-a-deep-dive">src5</a>]</p>
+  <pre><code class="language-python"># Two-tower model with TensorFlow Recommenders
+import tensorflow as tf
+import tensorflow_recommenders as tfrs
+
+class TwoTowerModel(tfrs.Model):
+    def __init__(self, user_model, item_model, task):
+        super().__init__()
+        self.user_model = user_model
+        self.item_model = item_model
+        self.task = task
+
+    def compute_loss(self, features, training=False):
+        user_embeddings = self.user_model(features["user_id"])
+        item_embeddings = self.item_model(features["item_id"])
+        return self.task(user_embeddings, item_embeddings)</code></pre>
+  <p><strong>Verify</strong>: Evaluate recall@100 on held-out test set; target &gt;0.25 for initial model.</p>
+
+  <h3>4. Build the ANN index for fast retrieval</h3>
+  <p>Export item embeddings and build an approximate nearest-neighbor index for sub-millisecond retrieval of top-K candidates from the full catalog. [<a href="https://zilliz.com/blog/approximate-nearest-neighbor-search-in-recommender-systems">src7</a>]</p>
+  <pre><code class="language-python">import faiss
+import numpy as np
+
+embedding_dim = 32
+nlist = 256  # number of clusters
+quantizer = faiss.IndexFlatIP(embedding_dim)
+index = faiss.IndexIVFFlat(quantizer, embedding_dim, nlist, faiss.METRIC_INNER_PRODUCT)
+index.train(item_embeddings_np)
+index.add(item_embeddings_np)
+index.nprobe = 16  # search 16 clusters (speed vs recall trade-off)
+
+# Query: get top 200 candidates for a user
+scores, indices = index.search(user_embedding, k=200)</code></pre>
+  <p><strong>Verify</strong>: Measure recall@200 vs. brute-force search; target &gt;0.95. Query latency target: &lt;5ms for 1M items.</p>
+
+  <h3>5. Build the ranking model</h3>
+  <p>Train a ranking model that takes the retrieved candidates and produces a fine-grained relevance score using rich cross-features between user and item. [<a href="https://eugeneyan.com/writing/system-design-for-discovery/">src2</a>] [<a href="https://assets.amazon.science/76/9e/7eac89c14a838746e91dde0a5e9f/two-decades-of-recommender-systems-at-amazon.pdf">src3</a>]</p>
+  <pre><code class="language-python">import xgboost as xgb
+
+dtrain = xgb.DMatrix(train_features, label=train_labels)
+params = {
+    "objective": "rank:pairwise",
+    "eval_metric": "ndcg@10",
+    "max_depth": 6,
+    "eta": 0.1,
+}
+ranker = xgb.train(params, dtrain, num_boost_round=200)</code></pre>
+  <p><strong>Verify</strong>: Evaluate NDCG@10 on held-out set; target &gt;0.35. Compare against popularity-only baseline.</p>
+
+  <h3>6. Apply business rules and diversity re-ranking</h3>
+  <p>After scoring, apply hard business rules (geo-restrictions, already-consumed filtering) and diversity logic to avoid filter bubbles. [<a href="https://engineering.atspotify.com/2020/1/for-your-ears-only-personalizing-spotify-home-with-machine-learning">src6</a>]</p>
+  <pre><code class="language-python"># Maximal Marginal Relevance (MMR) for diversity
+selected = []
+lambda_param = 0.7  # 0=max diversity, 1=max relevance
+for _ in range(num_results):
+    best = max(remaining, key=lambda c:
+        lambda_param * c["score"] -
+        (1 - lambda_param) * max_similarity(c, selected))
+    selected.append(best)</code></pre>
+  <p><strong>Verify</strong>: Check no duplicate categories in top-3 and no already-consumed items appear.</p>
+
+  <h3>7. Deploy with A/B testing and monitoring</h3>
+  <p>Serve the pipeline behind an A/B testing framework. Monitor model metrics (NDCG, coverage, diversity), system metrics (latency, throughput), and business metrics (CTR, conversion, revenue). [<a href="https://netflixtechblog.com/system-architectures-for-personalization-and-recommendation-e081aa94b5d8">src1</a>]</p>
+  <p><strong>Verify</strong>: Confirm consistent user bucketing (same user always sees same variant). Check metric tracking fires correctly.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Collaborative Filtering with Implicit Feedback</h3>
+  <pre><code class="language-python"># Input:  CSV of (user_id, item_id, rating) tuples
+# Output: Top-N recommendations for a given user
+
+from surprise import SVD, Dataset, Reader
+import pandas as pd
+
+reader = Reader(rating_scale=(1, 5))
+data = Dataset.load_from_df(
+    pd.read_csv("ratings.csv")[["user_id", "item_id", "rating"]], reader
+)
+algo = SVD(n_factors=100, n_epochs=20, lr_all=0.005, reg_all=0.02)
+trainset = data.build_full_trainset()
+algo.fit(trainset)
+
+anti_testset = trainset.build_anti_testset()
+predictions = algo.test([x for x in anti_testset if x[0] == "u_123"])
+top_10 = sorted(predictions, key=lambda x: x.est, reverse=True)[:10]</code></pre>
+
+  <h3>Python: Feature Store Pattern with Feast</h3>
+  <pre><code class="language-python"># Input:  user_id at serving time
+# Output: consistent feature vector for model inference
+
+from feast import FeatureStore
+
+store = FeatureStore(repo_path="feast_repo/")
+features = store.get_online_features(
+    entity_rows=[{"user_id": "u_abc123"}],
+    features=[
+        "user_features:total_clicks_7d",
+        "user_features:avg_session_duration",
+        "user_features:top_category",
+    ],
+).to_dict()
+# Pass features to ranking model -- guarantees no training-serving skew</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Training on all interactions equally</h3>
+  <pre><code class="language-python"># BAD -- treating all events as equal positive signals
+train_data = df[["user_id", "item_id"]]  # clicks, views, purchases all weight=1
+model.fit(train_data)</code></pre>
+
+  <h3>Correct: Weight interactions by signal strength</h3>
+  <pre><code class="language-python"># GOOD -- stronger signals get higher weight
+weights = {"purchase": 5.0, "add_to_cart": 3.0, "click": 1.0, "view": 0.3}
+df["weight"] = df["event_type"].map(weights)
+model.fit(df[["user_id", "item_id"]], sample_weight=df["weight"])</code></pre>
+
+  <h3>Wrong: Using cross-features for retrieval</h3>
+  <pre><code class="language-python"># BAD -- retrieval model uses cross-features (cannot scale to full catalog)
+retrieval_features = ["user_age", "item_category", "user_x_item_category_affinity"]
+# Requires computing features for ALL items per request -- O(N) is too slow</code></pre>
+
+  <h3>Correct: Independent towers for retrieval, cross-features for ranking</h3>
+  <pre><code class="language-python"># GOOD -- retrieval uses independent towers (pre-computed, ANN lookup)
+user_embedding = user_tower(user_features)           # O(1)
+candidates = ann_index.search(user_embedding, k=200) # O(log N)
+ranked = ranking_model.predict(cross_features(user, candidates))  # O(200)</code></pre>
+
+  <h3>Wrong: Deploying based solely on offline metrics</h3>
+  <pre><code class="language-python"># BAD -- no A/B test, no business metric validation
+if new_model_ndcg &gt; old_model_ndcg:
+    deploy(new_model)</code></pre>
+
+  <h3>Correct: A/B test with business metrics as primary KPI</h3>
+  <pre><code class="language-python"># GOOD -- offline metrics gate launch; online metrics gate full rollout
+if new_model_ndcg &gt; old_model_ndcg * 1.02:  # &gt;2% offline lift
+    launch_ab_test(new_model, traffic=10%)
+    # Only promote to 100% if revenue_per_user improves with p&lt;0.05</code></pre>
+
+  <h3>Wrong: No position bias correction</h3>
+  <pre><code class="language-python"># BAD -- position 1 gets 10x CTR regardless of relevance
+# Training on this data reinforces existing ranking (feedback loop)
+train_data = raw_click_log</code></pre>
+
+  <h3>Correct: Apply inverse propensity weighting</h3>
+  <pre><code class="language-python"># GOOD -- correct for position bias in training data
+position_bias = {1: 1.0, 2: 0.7, 3: 0.5, 4: 0.35, 5: 0.25}
+df["corrected_weight"] = df["clicked"] / df["position"].map(position_bias)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Training-serving skew</strong>: Features computed differently in batch training vs. online serving cause silent quality degradation. Fix: Use a feature store (Feast/Tecton) that serves the exact same feature computation for both paths. [<a href="https://eugeneyan.com/writing/system-design-for-discovery/">src2</a>]</li>
+    <li><strong>Popularity bias amplification</strong>: Models trained on click data over-recommend popular items, creating a filter bubble. Fix: Add exploration (epsilon-greedy or Thompson sampling) and diversity re-ranking (MMR with lambda=0.7). [<a href="https://engineering.atspotify.com/2020/1/for-your-ears-only-personalizing-spotify-home-with-machine-learning">src6</a>]</li>
+    <li><strong>Cold-start item neglect</strong>: New items receive zero impressions because they have no interaction data. Fix: Use content-based features in the item tower so new items get meaningful embeddings from day one. [<a href="https://developers.google.com/machine-learning/recommendation/overview/types">src4</a>]</li>
+    <li><strong>Ignoring position bias</strong>: Items at top positions get disproportionate clicks, creating a feedback loop. Fix: Apply inverse propensity scoring or include position as a training feature (set to zero at inference). [<a href="https://eugeneyan.com/writing/system-design-for-discovery/">src2</a>]</li>
+    <li><strong>Stale embeddings</strong>: Item embeddings computed once and never refreshed ignore new interactions and catalog changes. Fix: Rebuild ANN index at least daily; retrain embeddings weekly or continuously. [<a href="https://zilliz.com/blog/approximate-nearest-neighbor-search-in-recommender-systems">src7</a>]</li>
+    <li><strong>Over-engineering for small catalogs</strong>: Building a multi-stage pipeline for &lt;10K items wastes engineering effort. Fix: Use matrix factorization (SVD/ALS) or LightFM with brute-force scoring. [<a href="https://assets.amazon.science/76/9e/7eac89c14a838746e91dde0a5e9f/two-decades-of-recommender-systems-at-amazon.pdf">src3</a>]</li>
+    <li><strong>Neglecting implicit negative signals</strong>: Treating only clicks as positives ignores skips and short view durations. Fix: Use weighted implicit feedback (view &lt;5s = negative, view &gt;30s = weak positive, click = positive, purchase = strong positive). [<a href="https://netflixtechblog.com/system-architectures-for-personalization-and-recommendation-e081aa94b5d8">src1</a>]</li>
+    <li><strong>No fallback for empty results</strong>: When retrieval returns zero candidates, the system returns an empty page. Fix: Always merge retrieval sources (personalized + popularity + trending). [<a href="https://engineering.atspotify.com/2020/1/for-your-ears-only-personalizing-spotify-home-with-machine-learning">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Catalog &gt;1K items and user interaction data available</td><td>Catalog &lt;100 items</td><td>Manual curation or simple rule-based sorting</td></tr>
+      <tr><td>Personalization drives business KPI (engagement, revenue)</td><td>All users should see the same content (editorial, news homepage)</td><td>Content management system with editorial ranking</td></tr>
+      <tr><td>Sufficient interaction volume (&gt;10K interactions/day)</td><td>Very sparse data (&lt;1K total interactions)</td><td>Content-based filtering only, or popularity-based</td></tr>
+      <tr><td>Need to surface long-tail items users would not find via search</td><td>Users know exactly what they want (transactional search)</td><td>Search engine with relevance ranking</td></tr>
+      <tr><td>Real-time personalization matters (feeds, homepages)</td><td>Batch recommendations suffice (weekly email digest)</td><td>Simpler batch job with matrix factorization</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Offline metric improvements (NDCG, recall@K) frequently do not translate to online business metric gains -- always A/B test before full rollout</li>
+    <li>GDPR Article 22 grants users the right to explanation for automated decisions including recommendations -- design for explainability from day one</li>
+    <li>Recommendation quality degrades rapidly when interaction data is stale -- budget for daily retraining pipelines and real-time feature updates</li>
+    <li>Two-tower models trade off cross-feature expressiveness for retrieval speed -- the ranking stage must compensate with richer feature interactions</li>
+    <li>Position bias in training data creates a rich-get-richer feedback loop -- invest in randomized exploration early to collect unbiased signal</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/feature-store/2026" data-relationship="depends_on">Feature Store Architecture</a>
+    <a href="/software/system-design/search-engine/2026" data-relationship="related_to">Search Engine Design</a>
+    <a href="/software/system-design/ad-ranking-system/2026" data-relationship="related_to">Ad Ranking System Design</a>
+    <a href="/software/system-design/real-time-analytics/2026" data-relationship="related_to">Real-Time Analytics Pipeline</a>
+    <a href="/software/system-design/rule-based-recommendations/2026" data-relationship="alternative_to">Rule-Based Recommendation System</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

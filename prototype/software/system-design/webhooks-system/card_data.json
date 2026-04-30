@@ -1,0 +1,87 @@
+{
+  "id": "software/system-design/webhooks-system/2026",
+  "category": "software",
+  "subcategory": "system-design",
+  "topic": "webhooks-system",
+  "version_tag": "2026",
+  "canonical_question": "How do I design a reliable webhooks system?",
+  "aliases": [
+    "How to build a webhook delivery system",
+    "Webhook architecture design patterns",
+    "How to send webhooks reliably at scale",
+    "Webhook retry and idempotency design"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.93,
+  "token_estimate": 3800,
+  "source_count": 7,
+  "md_path": "/software/system-design/webhooks-system/2026.md",
+  "html_path": "/software/system-design/webhooks-system/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": "Standard Webhooks spec v1.0, 2023",
+    "next_review": "2026-08-23",
+    "change_sensitivity": "low"
+  },
+  "constraints": [
+    "Always sign webhook payloads with HMAC-SHA256 or ed25519 -- never send unsigned webhooks",
+    "Receivers must return 2xx within 5-30 seconds -- process asynchronously via queue",
+    "Implement at-least-once delivery with idempotency keys -- exactly-once is not achievable over HTTP",
+    "Persist events to durable storage before attempting delivery -- in-memory queues lose data on crash",
+    "Use constant-time comparison for signature verification -- timing attacks leak secret bytes"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need to consume/receive webhooks from a third-party API (Stripe, GitHub)",
+      "use_instead": "Refer to that provider's webhook integration docs"
+    },
+    {
+      "condition": "Need real-time bidirectional communication",
+      "use_instead": "software/system-design/websockets-architecture (WebSockets or SSE)"
+    },
+    {
+      "condition": "Need guaranteed ordering of all events",
+      "use_instead": "software/system-design/event-streaming (Kafka/Pulsar event streaming)"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      { "id": "software/system-design/event-driven-architecture/2026", "label": "Event-Driven Architecture Patterns" },
+      { "id": "software/system-design/message-queues/2026", "label": "Message Queues Comparison" }
+    ],
+    "solves": [
+      { "id": "software/system-design/async-notifications/2026", "label": "Asynchronous Notification Systems" }
+    ],
+    "alternative_to": [
+      { "id": "software/system-design/polling-vs-webhooks/2026", "label": "Polling vs Webhooks Trade-offs" }
+    ],
+    "often_confused_with": [
+      { "id": "software/system-design/websockets-architecture/2026", "label": "WebSockets for Real-Time Communication" }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "scale",
+      "question": "How many webhook events per second do you expect to send?",
+      "type": "choice",
+      "options": ["<100/s", "100-10K/s", ">10K/s"]
+    },
+    {
+      "key": "ordering",
+      "question": "Do events need to be delivered in strict FIFO order?",
+      "type": "choice",
+      "options": ["no", "per-endpoint", "global"]
+    },
+    {
+      "key": "sender_or_receiver",
+      "question": "Are you building the webhook sender (provider) or receiver (consumer)?",
+      "type": "choice",
+      "options": ["sender", "receiver", "both"]
+    }
+  ]
+}

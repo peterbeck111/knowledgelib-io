@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Retry with Exponential Backoff and Jitter | knowledgelib.io</title>
+  <meta name="description" content="Complete implementation guide for retry with exponential backoff and jitter. Covers full jitter, equal jitter, decorrelated jitter formulas, decision...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/retry-exponential-backoff/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Retry with Exponential Backoff and Jitter | knowledgelib.io">
+  <meta property="og:description" content="Complete implementation guide for retry with exponential backoff and jitter. Covers full jitter, equal jitter, decorrelated jitter formulas, decision tree for strategy selection, code examples in Python (tenacity), Node.js, Go, and Java, 4 anti-patterns, and 7 common pitfalls. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/retry-exponential-backoff/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Retry with Exponential Backoff and Jitter | knowledgelib.io">
+  <meta name="twitter:description" content="Complete implementation guide for retry with exponential backoff and jitter. Covers full jitter, equal jitter, decorrelated jitter formulas, decision tree for strategy selection, code examples in Python (tenacity), Node.js, Go, and Java, 4 anti-patterns, and 7 common pitfalls. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/retry_exponential_backoff">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement retry with exponential backoff and jitter?">
+  <meta name="ai:aliases" content="exponential backoff algorithm; retry with jitter implementation; backoff and retry pattern; how to retry API calls with exponential backoff; thundering herd retry prevention; decorrelated jitter vs full jitter; retry strategy for distributed systems; exponential backoff formula">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/retry-exponential-backoff/2026.md">
+  <meta name="ai:token_estimate" content="3600">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="retry_type,max_retries,idempotent_operation">
+  <meta name="ai:constraints" content="NEVER retry non-idempotent operations without idempotency key; ALWAYS set max retry count (3-5); ALWAYS add jitter; NEVER retry 4xx client errors (except 429); Cap max delay at 30-60 seconds">
+  <meta name="ai:skip_this_unit_if" content="Need to stop calling failing service entirely -> Circuit breaker pattern; Need partial failure handling in multi-step workflow -> Saga pattern; Need request hedging -> Hedged requests pattern">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Retry with Exponential Backoff and Jitter",
+    "headline": "Retry with Exponential Backoff and Jitter",
+    "description": "Complete implementation guide for retry with exponential backoff and jitter. Covers full jitter, equal jitter, decorrelated jitter strategies with formulas, decision tree for strategy selection, production-ready code examples in Python, Node.js, Go, and Java, anti-patterns, common pitfalls, and retry budget patterns.",
+    "keywords": ["exponential backoff", "retry", "jitter", "thundering herd", "full jitter", "equal jitter", "decorrelated jitter", "resilience", "fault tolerance", "distributed systems", "backoff algorithm", "retry budget", "token bucket"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Language-agnostic pattern. Library implementations: tenacity (Python), Polly (.NET), AWS SDK retry, gRPC retry policies",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Exponential Backoff And Jitter",
+        "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Timeouts, retries, and backoff with jitter",
+        "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Retry strategy - Cloud Storage - Google Cloud",
+        "url": "https://docs.google.com/storage/docs/retry-strategy"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Retry resilience strategy - Polly",
+        "url": "https://www.pollydocs.org/strategies/retry.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Tenacity - Retrying library for Python",
+        "url": "https://tenacity.readthedocs.io/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Retry with backoff pattern - AWS Prescriptive Guidance",
+        "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/retry-backoff.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Retry behavior - AWS SDKs and Tools",
+        "url": "https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Retry with Exponential Backoff and Jitter",
+    "description": "Structured knowledge unit covering retry with exponential backoff and jitter strategies. Includes strategy comparison matrix, decision tree, code examples in 4 languages, anti-patterns, and pitfalls for distributed systems.",
+    "keywords": ["exponential backoff", "retry", "jitter", "thundering herd", "distributed systems", "resilience"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "AWS"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Polly (.NET)"},
+      {"@type": "Organization", "name": "Tenacity (Python)"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Retry with Exponential Backoff and Jitter" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement retry with exponential backoff and jitter?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use delay = min(cap, base * 2^attempt) * random() for optimal load distribution on failing services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "exponential backoff algorithm",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use delay = min(cap, base * 2^attempt) * random() for optimal load distribution on failing services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "retry with jitter implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use delay = min(cap, base * 2^attempt) * random() for optimal load distribution on failing services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "backoff and retry pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use delay = min(cap, base * 2^attempt) * random() for optimal load distribution on failing services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to retry API calls with exponential backoff",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use delay = min(cap, base * 2^attempt) * random() for optimal load distribution on failing services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "thundering herd retry prevention",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use delay = min(cap, base * 2^attempt) * random() for optimal load distribution on failing services."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Retry with Exponential Backoff and Jitter</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement retry with exponential backoff and jitter?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/retry-exponential-backoff/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Exponential backoff with full jitter prevents thundering herd problems by spreading retry attempts across time -- use <code>delay = min(cap, base * 2^attempt) * random()</code> for optimal load distribution on failing services.</li>
+    <li><strong>Key tool/command</strong>: <code>delay = min(cap, base * 2^attempt) * random(0, 1)</code></li>
+    <li><strong>Watch out for</strong>: Retrying non-idempotent operations without an idempotency key -- this causes duplicate writes, double charges, and data corruption.</li>
+    <li><strong>Works with</strong>: Any language, any protocol. Used by AWS SDKs, Google Cloud client libraries, gRPC, Polly (.NET), Tenacity (Python).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER retry non-idempotent operations (POST creating resources, financial transactions) without an idempotency key [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src2</a>]</li>
+    <li>ALWAYS set a maximum retry count (3-5 attempts) -- infinite retries cause cascading failures and resource exhaustion [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/retry-backoff.html">src6</a>]</li>
+    <li>ALWAYS add jitter to backoff delays -- pure exponential backoff without jitter causes synchronized retry storms (thundering herd) [<a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">src1</a>]</li>
+    <li>NEVER retry 4xx client errors (400, 401, 403, 404) -- these are permanent failures. Only retry 429 (rate limit) and 5xx (server error) [<a href="https://docs.google.com/storage/docs/retry-strategy">src3</a>]</li>
+    <li>Cap maximum delay at 30-60 seconds -- unbounded exponential growth wastes time without improving success rate [<a href="https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Strategy</th><th scope="col">Formula</th><th scope="col">Thundering Herd Risk</th><th scope="col">Fairness</th><th scope="col">Complexity</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>No backoff (fixed)</td><td><code>delay = constant</code></td><td>Very High</td><td>Equal</td><td>Trivial</td><td>Never use for retries</td></tr>
+      <tr><td>Linear backoff</td><td><code>delay = base * attempt</code></td><td>High</td><td>Equal</td><td>Low</td><td>Simple rate limiting</td></tr>
+      <tr><td>Exponential (no jitter)</td><td><code>delay = min(cap, base * 2^attempt)</code></td><td>High</td><td>Equal</td><td>Low</td><td>Prototype only</td></tr>
+      <tr><td>Full jitter</td><td><code>delay = random(0, min(cap, base * 2^attempt))</code></td><td>Very Low</td><td>High</td><td>Low</td><td>Default recommendation</td></tr>
+      <tr><td>Equal jitter</td><td><code>delay = exp/2 + random(0, exp/2)</code></td><td>Low</td><td>Medium</td><td>Low</td><td>Predictable minimum wait</td></tr>
+      <tr><td>Decorrelated jitter</td><td><code>delay = min(cap, random(base, prev * 3))</code></td><td>Low</td><td>Medium</td><td>Medium</td><td>Stateful clients</td></tr>
+      <tr><td>Fixed delay</td><td><code>delay = constant</code></td><td>Very High</td><td>Equal</td><td>Trivial</td><td>Polling, not retries</td></tr>
+      <tr><td>Exponential + token bucket</td><td>Full jitter + token bucket rate limit</td><td>Very Low</td><td>High</td><td>Medium</td><td>AWS SDK default</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Is the failed operation retryable?
+|
++-- Is the error transient (429, 408, 500, 502, 503, 504, network timeout)?
+|   +-- NO (400, 401, 403, 404, 422) --&gt; Do NOT retry. Return error immediately.
+|   +-- YES &#8595;
+|
++-- Is the operation idempotent (safe to repeat)?
+|   +-- NO --&gt; Add idempotency key or do NOT retry.
+|   +-- YES &#8595;
+|
++-- How many concurrent clients may retry simultaneously?
+|   +-- Few (&lt;10) --&gt; Exponential backoff (jitter optional)
+|   +-- Many (10-1000) --&gt; Full jitter (recommended default)
+|   +-- Very many (&gt;1000) --&gt; Full jitter + token bucket + circuit breaker
+|
++-- Do you need a guaranteed minimum wait time?
+|   +-- YES --&gt; Equal jitter (half fixed, half random)
+|   +-- NO --&gt; Full jitter (lowest total load)
+|
++-- Is this a long-running background job?
+    +-- YES --&gt; Decorrelated jitter (independent of attempt count)
+    +-- NO --&gt; Full jitter with max 3-5 attempts</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Identify retryable errors</h3>
+  <p>Only retry transient failures. Server errors (5xx) and rate limits (429) are retryable. Client errors (4xx except 429, 408) are permanent and must not be retried. [<a href="https://docs.google.com/storage/docs/retry-strategy">src3</a>]</p>
+  <pre><code class="language-python">RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+RETRYABLE_EXCEPTIONS = (ConnectionError, TimeoutError, OSError)
+
+def is_retryable(error):
+    if isinstance(error, RETRYABLE_EXCEPTIONS):
+        return True
+    if hasattr(error, 'status_code'):
+        return error.status_code in RETRYABLE_STATUS_CODES
+    return False</code></pre>
+  <p><strong>Verify</strong>: <code>is_retryable(HTTPError(status_code=503))</code> returns <code>True</code>; <code>is_retryable(HTTPError(status_code=400))</code> returns <code>False</code>.</p>
+
+  <h3>2. Implement the full jitter formula</h3>
+  <p>Full jitter provides the best load distribution across retrying clients. The formula randomizes the delay between 0 and the exponential ceiling. [<a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">src1</a>]</p>
+  <pre><code class="language-python">import random
+
+def full_jitter_delay(attempt, base=1.0, cap=30.0):
+    exp_delay = min(cap, base * (2 ** attempt))
+    return random.uniform(0, exp_delay)</code></pre>
+  <p><strong>Verify</strong>: <code>full_jitter_delay(0)</code> returns value in [0, 1.0]; <code>full_jitter_delay(5)</code> returns value in [0, 30.0].</p>
+
+  <h3>3. Build the retry loop with maximum attempts</h3>
+  <p>Wrap the retryable operation in a loop with configurable max attempts, applying the jitter delay between each attempt. [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src2</a>]</p>
+  <pre><code class="language-python">import time, logging
+
+def retry_with_backoff(fn, max_attempts=4, base=1.0, cap=30.0):
+    last_exception = None
+    for attempt in range(max_attempts):
+        try:
+            return fn()
+        except Exception as e:
+            last_exception = e
+            if not is_retryable(e) or attempt == max_attempts - 1:
+                raise
+            delay = full_jitter_delay(attempt, base, cap)
+            logging.warning(f"Attempt {attempt+1}/{max_attempts} failed. Retrying in {delay:.2f}s")
+            time.sleep(delay)
+    raise last_exception</code></pre>
+  <p><strong>Verify</strong>: Function retries on 503, gives up on 400, raises after max_attempts exhausted.</p>
+
+  <h3>4. Add retry budget / token bucket (for high-scale systems)</h3>
+  <p>Prevent retry amplification by limiting the total retry rate across all requests. AWS SDKs use a token bucket: 500 initial tokens, 5 tokens per successful call refunded, 5 tokens consumed per retry. [<a href="https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html">src7</a>]</p>
+  <pre><code class="language-python">import threading
+
+class RetryBudget:
+    def __init__(self, max_tokens=500, refill_per_success=5, cost_per_retry=5):
+        self.tokens = max_tokens
+        self.max_tokens = max_tokens
+        self.refill = refill_per_success
+        self.cost = cost_per_retry
+        self._lock = threading.Lock()
+
+    def acquire(self):
+        with self._lock:
+            if self.tokens &gt;= self.cost:
+                self.tokens -= self.cost
+                return True
+            return False
+
+    def success(self):
+        with self._lock:
+            self.tokens = min(self.max_tokens, self.tokens + self.refill)</code></pre>
+  <p><strong>Verify</strong>: After 100 consecutive failures (500 tokens consumed), <code>acquire()</code> returns <code>False</code>.</p>
+
+  <h3>5. Respect Retry-After headers</h3>
+  <p>When the server sends a <code>Retry-After</code> header (common with 429 and 503), use the server-specified delay instead of your calculated backoff. [<a href="https://docs.google.com/storage/docs/retry-strategy">src3</a>]</p>
+  <pre><code class="language-python">def get_retry_delay(response, attempt, base=1.0, cap=30.0):
+    retry_after = response.headers.get('Retry-After')
+    if retry_after:
+        try:
+            return min(float(retry_after), cap)
+        except ValueError:
+            pass
+    return full_jitter_delay(attempt, base, cap)</code></pre>
+  <p><strong>Verify</strong>: Response with <code>Retry-After: 5</code> returns <code>5.0</code>; without header falls back to jitter calculation.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python (tenacity): Decorator-Based Retry</h3>
+  <pre><code class="language-python"># Input:  Any function that may raise transient errors
+# Output: Automatic retry with exponential backoff + jitter
+
+from tenacity import (
+    retry, stop_after_attempt, wait_exponential_jitter,
+    retry_if_exception_type, before_sleep_log
+)
+import logging
+import httpx  # pip install httpx&gt;=0.27
+
+logger = logging.getLogger(__name__)
+
+@retry(
+    stop=stop_after_attempt(4),
+    wait=wait_exponential_jitter(initial=1, max=30, jitter=5),
+    retry=retry_if_exception_type((httpx.TransportError, httpx.HTTPStatusError)),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+    reraise=True,
+)
+def fetch_with_retry(url: str) -&gt; dict:
+    response = httpx.get(url, timeout=10)
+    if response.status_code in (429, 500, 502, 503, 504):
+        response.raise_for_status()
+    return response.json()</code></pre>
+
+  <h3>Node.js: Async Retry with Full Jitter</h3>
+  <pre><code class="language-javascript">// Input:  Async function that may throw retryable errors
+// Output: Result of successful call, or throws after max attempts
+
+async function retryWithBackoff(fn, {
+  maxAttempts = 4,
+  baseDelay = 1000,
+  maxDelay = 30000,
+} = {}) {
+  for (let attempt = 0; attempt &lt; maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const isRetryable = error.status &gt;= 500 || error.status === 429
+        || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT';
+      if (!isRetryable || attempt === maxAttempts - 1) throw error;
+      const expDelay = Math.min(maxDelay, baseDelay * 2 ** attempt);
+      const delay = Math.random() * expDelay;
+      await new Promise(r =&gt; setTimeout(r, delay));
+    }
+  }
+}</code></pre>
+
+  <h3>Go: Retry with Context and Full Jitter</h3>
+  <pre><code class="language-go">// Input:  Context, retryable function
+// Output: Result of successful call, or error after max attempts
+
+package retry
+
+import (
+    "context"
+    "math"
+    "math/rand"
+    "time"
+    "fmt"
+)
+
+type Config struct {
+    MaxAttempts int
+    BaseDelay   time.Duration
+    MaxDelay    time.Duration
+}
+
+func Do(ctx context.Context, cfg Config, fn func() error) error {
+    var lastErr error
+    for attempt := 0; attempt &lt; cfg.MaxAttempts; attempt++ {
+        lastErr = fn()
+        if lastErr == nil {
+            return nil
+        }
+        if attempt == cfg.MaxAttempts-1 {
+            break
+        }
+        expDelay := math.Min(
+            float64(cfg.MaxDelay),
+            float64(cfg.BaseDelay)*math.Pow(2, float64(attempt)),
+        )
+        delay := time.Duration(rand.Float64() * expDelay)
+        select {
+        case &lt;-ctx.Done():
+            return fmt.Errorf("retry cancelled: %w", ctx.Err())
+        case &lt;-time.After(delay):
+        }
+    }
+    return fmt.Errorf("all %d attempts failed: %w", cfg.MaxAttempts, lastErr)
+}</code></pre>
+
+  <h3>Java: Retry with Exponential Backoff</h3>
+  <pre><code class="language-java">// Input:  Callable&lt;T&gt; that may throw retryable exceptions
+// Output: Result of successful call, or throws after max attempts
+
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class RetryWithBackoff {
+    private static final Set&lt;Integer&gt; RETRYABLE = Set.of(429, 500, 502, 503, 504);
+
+    public static &lt;T&gt; T execute(
+            RetryableCall&lt;T&gt; fn, int maxAttempts, long baseMs, long capMs
+    ) throws Exception {
+        Exception lastException = null;
+        for (int attempt = 0; attempt &lt; maxAttempts; attempt++) {
+            try {
+                return fn.call();
+            } catch (RetryableException e) {
+                lastException = e;
+                if (!RETRYABLE.contains(e.getStatusCode())
+                        || attempt == maxAttempts - 1) throw e;
+                long expDelay = Math.min(capMs, baseMs * (1L &lt;&lt; attempt));
+                long delay = ThreadLocalRandom.current().nextLong(0, expDelay + 1);
+                Thread.sleep(delay);
+            }
+        }
+        throw lastException;
+    }
+
+    @FunctionalInterface
+    public interface RetryableCall&lt;T&gt; { T call() throws Exception; }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Retry without any backoff</h3>
+  <pre><code class="language-python"># BAD -- hammering a failing service makes the outage worse
+for attempt in range(5):
+    try:
+        return call_api()
+    except Exception:
+        pass  # Retry immediately with zero delay</code></pre>
+
+  <h3>Correct: Retry with exponential backoff and jitter</h3>
+  <pre><code class="language-python"># GOOD -- spreading retries over time lets the service recover
+for attempt in range(5):
+    try:
+        return call_api()
+    except TransientError:
+        delay = min(30, 1.0 * 2 ** attempt) * random.random()
+        time.sleep(delay)</code></pre>
+
+  <h3>Wrong: Retrying non-retryable errors (400, 401, 404)</h3>
+  <pre><code class="language-python"># BAD -- 400 Bad Request will fail every time, wasting retry attempts
+@retry(stop=stop_after_attempt(4), wait=wait_exponential())
+def create_user(data):
+    response = httpx.post('/users', json=data)
+    response.raise_for_status()  # Retries even on 400/401/404!</code></pre>
+
+  <h3>Correct: Only retry transient errors</h3>
+  <pre><code class="language-python"># GOOD -- only retry server errors and rate limits
+@retry(
+    stop=stop_after_attempt(4),
+    wait=wait_exponential_jitter(initial=1, max=30),
+    retry=retry_if_exception(lambda e: getattr(e, 'response', None)
+          and e.response.status_code in (429, 500, 502, 503, 504)),
+)
+def create_user(data):
+    response = httpx.post('/users', json=data)
+    response.raise_for_status()</code></pre>
+
+  <h3>Wrong: Exponential backoff without jitter</h3>
+  <pre><code class="language-python"># BAD -- all 1000 clients retry at exactly 1s, 2s, 4s, 8s -&gt; thundering herd
+delay = base * (2 ** attempt)
+time.sleep(delay)</code></pre>
+
+  <h3>Correct: Always add full jitter</h3>
+  <pre><code class="language-python"># GOOD -- clients spread retries uniformly, preventing synchronized storms
+delay = random.uniform(0, min(cap, base * (2 ** attempt)))
+time.sleep(delay)</code></pre>
+
+  <h3>Wrong: Infinite retries with no maximum</h3>
+  <pre><code class="language-python"># BAD -- retries forever, consuming threads/connections/memory
+while True:
+    try:
+        return call_api()
+    except Exception:
+        time.sleep(2 ** attempt)
+        attempt += 1</code></pre>
+
+  <h3>Correct: Bounded retries with a cap</h3>
+  <pre><code class="language-python"># GOOD -- give up after max_attempts and let the caller handle the failure
+MAX_ATTEMPTS = 4
+for attempt in range(MAX_ATTEMPTS):
+    try:
+        return call_api()
+    except TransientError:
+        if attempt == MAX_ATTEMPTS - 1:
+            raise
+        delay = random.uniform(0, min(30.0, 1.0 * 2 ** attempt))
+        time.sleep(delay)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>No jitter causes thundering herd</strong>: 1000 clients failing at the same time all retry at 1s, 2s, 4s, 8s -- hitting the server in synchronized waves. Fix: <code>delay = random.uniform(0, min(cap, base * 2^attempt))</code>. [<a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">src1</a>]</li>
+    <li><strong>Retrying non-idempotent operations</strong>: Retrying a POST /charge endpoint without an idempotency key creates duplicate charges. Fix: Pass <code>Idempotency-Key</code> header; server deduplicates based on key. [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src2</a>]</li>
+    <li><strong>Ignoring Retry-After headers</strong>: When a server sends <code>Retry-After: 60</code>, ignoring it and retrying in 2s triggers rate limiting or bans. Fix: Parse <code>Retry-After</code> header and use server-specified delay as minimum. [<a href="https://docs.google.com/storage/docs/retry-strategy">src3</a>]</li>
+    <li><strong>Retrying at every layer</strong>: If client retries 3x, load balancer retries 3x, and gateway retries 3x, one user request generates 27 backend calls. Fix: Retry only at the outermost layer, or use a shared retry budget. [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src2</a>]</li>
+    <li><strong>Unbounded exponential delay</strong>: Without a cap, <code>2^20 = 1,048,576</code> seconds (~12 days). Fix: <code>min(cap, base * 2^attempt)</code> with cap of 30-60 seconds. [<a href="https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html">src7</a>]</li>
+    <li><strong>Not logging retry attempts</strong>: Silent retries mask transient issues until they become chronic. Fix: Log every retry with attempt number, delay, and error. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/retry-backoff.html">src6</a>]</li>
+    <li><strong>Retrying on circuit breaker open</strong>: Continuing to retry when the circuit breaker is open wastes resources. Fix: Check circuit state before attempting retry. [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Transient network errors (timeouts, DNS failures)</td><td>Client-side validation errors (4xx)</td><td>Return error immediately</td></tr>
+      <tr><td>Rate-limited APIs returning 429</td><td>Non-idempotent operations without idempotency keys</td><td>Idempotency pattern first, then retry</td></tr>
+      <tr><td>Cloud service temporary unavailability (503)</td><td>Real-time user-facing requests with tight latency SLAs</td><td>Hedged requests / speculative execution</td></tr>
+      <tr><td>Batch processing / background jobs</td><td>Service is consistently down (not transient)</td><td>Circuit breaker to fail fast</td></tr>
+      <tr><td>Database connection pool exhaustion</td><td>Retries at multiple layers (client + LB + gateway)</td><td>Single retry point with retry budget</td></tr>
+      <tr><td>Message queue consumer failures</td><td>Authentication/authorization errors (401, 403)</td><td>Re-authenticate, do not retry</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Full jitter has the lowest total server load according to AWS simulations, but takes slightly longer to complete than equal jitter -- choose based on whether you optimize for server health (full jitter) or client latency (equal jitter).</li>
+    <li>AWS SDKs default to 3 max attempts with 20-second max backoff. Google Cloud client libraries always enable jitter. Polly (.NET) v8+ uses <code>BackoffType.Exponential</code> with <code>UseJitter = true</code>. Prefer library implementations over hand-rolled retries.</li>
+    <li>Retry amplification is the most dangerous failure mode: N clients each retrying M times generates N*M load on an already failing service. Use a global retry budget (token bucket) for services handling &gt;100 requests/second.</li>
+    <li>When using gRPC, leverage built-in retry policies in the service config rather than implementing client-side retry.</li>
+    <li>In serverless environments (AWS Lambda, Cloud Functions), retries consume invocation time and cost. Set aggressive max_attempts (2-3) for cost-sensitive workloads.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/circuit-breaker/2026" data-relationship="related_to">Circuit Breaker Pattern</a>
+    <a href="/software/patterns/idempotency-patterns/2026" data-relationship="related_to">Idempotency Patterns</a>
+    <a href="/software/patterns/connection-pooling/2026" data-relationship="related_to">Connection Pooling</a>
+    <a href="/software/patterns/webhook-implementation/2026" data-relationship="solves">Webhook Implementation</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

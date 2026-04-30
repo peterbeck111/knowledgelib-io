@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Global DNS and Load Balancing Architecture | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for global DNS load balancing covering GeoDNS, Anycast, weighted routing, GSLB with Route 53, Cloudflare, GCP, HAProxy, and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/global-dns-load-balancing/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Global DNS and Load Balancing Architecture | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for global DNS load balancing covering GeoDNS, Anycast, weighted routing, GSLB with Route 53, Cloudflare, GCP, HAProxy, and NGINX. 12-component architecture table, decision tree, Terraform and HAProxy code examples, 4 anti-patterns, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/global-dns-load-balancing/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Global DNS and Load Balancing Architecture | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for global DNS load balancing covering GeoDNS, Anycast, weighted routing, GSLB with Route 53, Cloudflare, GCP, HAProxy, and NGINX. 12-component architecture table, decision tree, Terraform and HAProxy code examples, 4 anti-patterns, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/global_dns_load_balancing">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design global DNS and load balancing?">
+  <meta name="ai:aliases" content="global DNS load balancing architecture; GeoDNS vs Anycast vs GSLB comparison; design global server load balancing system; DNS-based traffic routing multi-region; how to implement global traffic management; multi-region load balancing with DNS failover; anycast IP load balancing architecture; Route 53 latency routing vs Cloudflare load balancing">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/global-dns-load-balancing/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="routing_strategy,scale,infrastructure">
+  <meta name="ai:constraints" content="DNS TTL floor: Never set TTL below 30s — resolver caching varies and ultra-low TTLs increase query volume 10-50x; Anycast requires /24 IPv4 or /48 IPv6 prefix minimum with BGP coordination; Health checks must run from 3+ geographic vantage points; DNS-only LB cannot enforce session affinity; GeoDNS accuracy degrades with VPN/proxy users and ECS non-compliance">
+  <meta name="ai:skip_this_unit_if" content="Need L4/L7 LB within single datacenter -> Local load balancer guides; Need CDN configuration not DNS routing -> CDN architecture docs; Need service mesh routing -> Service mesh architecture guides">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Global DNS and Load Balancing Architecture",
+    "headline": "Global DNS and Load Balancing Architecture",
+    "description": "Complete system design guide for global DNS load balancing covering GeoDNS, Anycast, weighted routing, GSLB architecture with AWS Route 53, Cloudflare, Google Cloud DNS, HAProxy, and NGINX. Includes component architecture table, decision tree, Terraform and HAProxy configuration examples, anti-patterns, and common pitfalls.",
+    "keywords": ["DNS load balancing", "GeoDNS", "Anycast", "GSLB", "global server load balancing", "Route 53", "Cloudflare", "traffic management", "failover", "latency routing", "weighted routing", "system design"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "AWS Route 53, Cloudflare, Google Cloud DNS, HAProxy 2.9+, NGINX Plus R30+, Terraform",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Load Balancing Reference Architecture",
+        "url": "https://developers.cloudflare.com/reference-architecture/architectures/load-balancing/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Choosing a Routing Policy",
+        "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cloud Load Balancing Overview",
+        "url": "https://docs.google.com/load-balancing/docs/load-balancing-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Global Server Load Balancing with HAProxy",
+        "url": "https://www.haproxy.com/documentation/haproxy-enterprise/enterprise-modules/global-server-load-balancing/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Global Server Load Balancing with NGINX Plus",
+        "url": "https://docs.nginx.com/nginx/deployment-guides/global-server-load-balancing/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How GSLB Improves Reliability Across Multi-Cloud Environments",
+        "url": "https://www.splunk.com/en_us/blog/learn/global-server-load-balancing-gslb.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Geo-DNS, Anycast, and GSLB: Best Approach for Global Performance",
+        "url": "https://www.dyncond.com/geo-dns-anycast-and-gslb-whats-the-best-approach-for-global-performance/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Global DNS and Load Balancing Architecture",
+    "description": "Structured knowledge unit covering global DNS load balancing system design: GeoDNS, Anycast, weighted routing, GSLB patterns, with component architecture, decision trees, and multi-provider configuration examples.",
+    "keywords": ["DNS load balancing", "GeoDNS", "Anycast", "GSLB", "global traffic management", "system design", "Route 53", "Cloudflare"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Cloudflare"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "HAProxy Technologies"},
+      {"@type": "Organization", "name": "NGINX"},
+      {"@type": "Organization", "name": "Splunk"},
+      {"@type": "Organization", "name": "DynConD"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Global DNS and Load Balancing Architecture" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design global DNS and load balancing?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "global DNS load balancing architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GeoDNS vs Anycast vs GSLB comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "design global server load balancing system",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "DNS-based traffic routing multi-region",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to implement global traffic management",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Global DNS and Load Balancing Architecture</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design global DNS and load balancing?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/global-dns-load-balancing/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Global DNS load balancing routes users to the nearest healthy backend using a combination of GeoDNS, Anycast, and health-checked weighted records — choose your strategy based on latency requirements, compliance constraints, and infrastructure topology.</li>
+    <li><strong>Key tool/command</strong>: <code>aws route53 create-health-check</code> + latency/geolocation routing policies (or Cloudflare Load Balancing with steering policies)</li>
+    <li><strong>Watch out for</strong>: Setting DNS TTL too low (causes query floods) or too high (causes slow failover) — 60-300s is the sweet spot for most GSLB deployments.</li>
+    <li><strong>Works with</strong>: AWS Route 53, Cloudflare, Google Cloud DNS, Azure Traffic Manager, HAProxy ALOHA, NGINX Plus, PowerDNS, NS1.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>DNS TTL floor: Never set TTL below 30s — resolver caching varies wildly and ultra-low TTLs increase query volume 10-50x without proportional failover benefit</li>
+    <li>Anycast requires owning/leasing a /24 IPv4 or /48 IPv6 block and coordinating BGP with every datacenter provider</li>
+    <li>Health checks must run from multiple geographic vantage points (minimum 3 regions) to avoid false positives from network partitions</li>
+    <li>DNS-only load balancing cannot enforce session affinity — combine with L7 LB or cookie persistence when stateful sessions are required</li>
+    <li>GeoDNS accuracy degrades with VPN/proxy users and resolvers that do not support EDNS Client Subnet (ECS)</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — component architecture table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Authoritative DNS</td><td>Responds to client DNS queries with region-optimal IPs</td><td>Route 53, Cloudflare DNS, Google Cloud DNS, NS1, PowerDNS</td><td>Anycast nameservers, horizontal replication</td></tr>
+      <tr><td>GeoDNS Routing</td><td>Maps client IP geolocation to nearest datacenter</td><td>Route 53 Geolocation, Cloudflare Geo Steering, GCP routing policies</td><td>GeoIP database updates, ECS support</td></tr>
+      <tr><td>Latency-Based Routing</td><td>Returns IPs of lowest-latency region for each client</td><td>Route 53 Latency, Cloudflare Dynamic Steering, NS1 Filter Chains</td><td>Continuous latency probing from edge PoPs</td></tr>
+      <tr><td>Weighted Routing</td><td>Distributes traffic by percentage across endpoints</td><td>Route 53 Weighted, Cloudflare Weighted steering, HAProxy GSLB</td><td>Adjust weights per capacity; canary deployments</td></tr>
+      <tr><td>Anycast Network</td><td>Single IP advertised from multiple PoPs via BGP</td><td>Cloudflare (built-in), GCP Global LB, custom BGP (BIRD/FRR)</td><td>Add PoPs, BGP community-based traffic engineering</td></tr>
+      <tr><td>Health Checks</td><td>Detect unhealthy backends and remove from DNS</td><td>Route 53 Health Checks, Cloudflare Monitors, HAProxy agent checks</td><td>Multi-region probes, configurable thresholds</td></tr>
+      <tr><td>L4/L7 Load Balancer</td><td>Local traffic distribution within each datacenter</td><td>NGINX, HAProxy, Envoy, AWS ALB/NLB, GCP Backend Services</td><td>Horizontal scaling, connection draining</td></tr>
+      <tr><td>Failover Controller</td><td>Automatic rerouting on region-level outage</td><td>Route 53 Failover, Cloudflare Failover steering, GCP auto-failover</td><td>Primary/secondary/tertiary hierarchy</td></tr>
+      <tr><td>SSL/TLS Termination</td><td>Terminates HTTPS at the edge before backend routing</td><td>Cloudflare SSL, AWS ACM + ALB, GCP Managed Certificates</td><td>Edge termination, certificate auto-renewal</td></tr>
+      <tr><td>Monitoring &amp; Observability</td><td>Track DNS resolution, latency, failover events</td><td>Cloudflare Analytics, Route 53 query logs, Prometheus + Grafana</td><td>Alerting on failover events, TTL violations</td></tr>
+      <tr><td>DNS Caching Layer</td><td>Reduce query load on authoritative servers</td><td>Resolver TTL caching, local BIND/Unbound caches</td><td>Tune TTL 60-300s; cache warming</td></tr>
+      <tr><td>Edge Compute</td><td>Run logic at DNS/HTTP edge for routing decisions</td><td>Cloudflare Workers, Lambda@Edge, Fastly Compute</td><td>Latency-based A/B testing, custom routing rules</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Need data sovereignty / compliance routing?
+│   ├── YES → Use GeoDNS with jurisdiction-locked regions
+│   │         (Route 53 Geolocation or Cloudflare Geo Steering)
+│   └── NO ↓
+├── Need sub-100ms failover with zero DNS propagation delay?
+│   ├── YES → Use Anycast IP with L7 health checks
+│   │         (GCP Global LB, Cloudflare proxy, custom BGP)
+│   └── NO ↓
+├── Need lowest-latency routing across 3+ regions?
+│   ├── YES → Use latency-based routing with health checks
+│   │         (Route 53 Latency + failover, Cloudflare Dynamic Steering)
+│   └── NO ↓
+├── Need canary/blue-green deployments?
+│   ├── YES → Use weighted routing (e.g., 90/10 split)
+│   │         (Route 53 Weighted, Cloudflare Weighted Steering)
+│   └── NO ↓
+├── &lt;10K req/s with 2-3 regions?
+│   ├── YES → Simple DNS round-robin with health checks
+│   │         (Any managed DNS provider)
+│   └── NO ↓
+└── DEFAULT → Combine Anycast (edge) + GeoDNS (regional) + L7 LB (local)
+              This is the standard architecture for &gt;100K req/s global services</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define regions and deploy backends</h3>
+  <p>Identify 2-6 geographic regions based on your user distribution. Deploy identical application stacks in each region with independent databases or read replicas. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/load-balancing/">src1</a>]</p>
+  <pre><code class="language-bash"># Example: List your target regions and endpoints
+# Region: us-east-1  → alb-us-east.example.com
+# Region: eu-west-1  → alb-eu-west.example.com
+# Region: ap-south-1 → alb-ap-south.example.com</code></pre>
+  <p><strong>Verify</strong>: <code>curl -s -o /dev/null -w "%{http_code}" https://alb-us-east.example.com/health</code> → expected: <code>200</code></p>
+
+  <h3>2. Configure health checks from multiple vantage points</h3>
+  <p>Set up health checks that probe each backend from at least 3 geographic locations. Configure failure thresholds (typically 3 consecutive failures) and check intervals (10-30s). [<a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html">src2</a>]</p>
+  <pre><code class="language-bash"># AWS Route 53: Create health check
+aws route53 create-health-check --caller-reference "us-east-$(date +%s)" \
+  --health-check-config '{
+    "FullyQualifiedDomainName": "alb-us-east.example.com",
+    "Port": 443,
+    "Type": "HTTPS",
+    "ResourcePath": "/health",
+    "RequestInterval": 10,
+    "FailureThreshold": 3,
+    "Regions": ["us-east-1", "eu-west-1", "ap-southeast-1"]
+  }'</code></pre>
+  <p><strong>Verify</strong>: <code>aws route53 get-health-check-status --health-check-id &lt;ID&gt;</code> → all reporters show <code>Success</code></p>
+
+  <h3>3. Set up DNS routing policy</h3>
+  <p>Choose and configure your primary routing strategy (latency, geolocation, or weighted). Associate health checks with each record set. [<a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html">src2</a>]</p>
+  <pre><code class="language-bash"># AWS Route 53: Latency-based routing with health check
+aws route53 change-resource-record-sets --hosted-zone-id Z1234567890 \
+  --change-batch '{
+    "Changes": [{
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.example.com",
+        "Type": "A",
+        "SetIdentifier": "us-east-1",
+        "Region": "us-east-1",
+        "TTL": 60,
+        "ResourceRecords": [{"Value": "203.0.113.10"}],
+        "HealthCheckId": "hc-us-east-id"
+      }
+    }]
+  }'</code></pre>
+  <p><strong>Verify</strong>: <code>dig api.example.com +short</code> from different regions returns region-appropriate IPs</p>
+
+  <h3>4. Configure local load balancers per region</h3>
+  <p>In each region, deploy L4/L7 load balancers (NGINX, HAProxy, or cloud ALBs) to distribute traffic across local backend instances. [<a href="https://www.haproxy.com/documentation/haproxy-enterprise/enterprise-modules/global-server-load-balancing/">src4</a>]</p>
+  <pre><code class="language-haproxy">frontend http_front
+    bind *:443 ssl crt /etc/ssl/certs/example.pem
+    default_backend app_servers
+
+backend app_servers
+    balance roundrobin
+    option httpchk GET /health
+    http-check expect status 200
+    server app1 10.0.1.10:8080 check inter 5s fall 3 rise 2
+    server app2 10.0.1.11:8080 check inter 5s fall 3 rise 2
+    server app3 10.0.1.12:8080 check inter 5s fall 3 rise 2</code></pre>
+  <p><strong>Verify</strong>: <code>echo "show stat" | socat /var/run/haproxy.sock stdio | grep app_servers</code> → all servers show <code>UP</code></p>
+
+  <h3>5. Implement failover hierarchy</h3>
+  <p>Configure primary, secondary, and tertiary failover targets so that regional failures cascade to the next-best region automatically. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/load-balancing/">src1</a>]</p>
+  <pre><code class="language-bash"># Cloudflare: Configure failover pool priority via API
+curl -X PATCH "https://api.cloudflare.com/client/v4/zones/{zone_id}/load_balancers/{lb_id}" \
+  -H "Authorization: Bearer $CF_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "default_pools": ["pool-us-east", "pool-eu-west", "pool-ap-south"],
+    "fallback_pool": "pool-us-west",
+    "steering_policy": "dynamic_latency",
+    "session_affinity": "cookie"
+  }'</code></pre>
+  <p><strong>Verify</strong>: Disable primary pool health endpoint, then <code>dig example.com</code> → should return secondary pool IPs within TTL window</p>
+
+  <h3>6. Set up monitoring and alerting</h3>
+  <p>Monitor DNS resolution times, failover events, health check flaps, and regional traffic distribution. Alert on anomalies. [<a href="https://www.splunk.com/en_us/blog/learn/global-server-load-balancing-gslb.html">src6</a>]</p>
+  <pre><code class="language-yaml"># Prometheus alert rule: DNS failover detected
+alert: DNSFailoverTriggered
+expr: probe_dns_lookup_time_seconds &gt; 1
+for: 2m
+labels:
+  severity: warning
+annotations:
+  summary: "DNS failover detected for {{ $labels.instance }}"</code></pre>
+  <p><strong>Verify</strong>: Trigger a test failover and confirm alerts fire within expected thresholds</p>
+
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Terraform: Route 53 Latency-Based Routing with Health Checks</h3>
+  <pre><code class="language-hcl"># Input:  Multi-region ALB endpoints
+# Output: Latency-routed DNS with automatic failover
+
+resource "aws_route53_health_check" "us_east" {
+  fqdn              = "alb-us-east.example.com"
+  port               = 443
+  type               = "HTTPS"
+  resource_path      = "/health"
+  failure_threshold  = 3
+  request_interval   = 10
+  regions            = ["us-east-1", "eu-west-1", "ap-southeast-1"]
+
+  tags = { Name = "us-east-health-check" }
+}
+
+resource "aws_route53_record" "api_us_east" {
+  zone_id         = aws_route53_zone.main.zone_id
+  name            = "api.example.com"
+  type            = "A"
+  set_identifier  = "us-east-1"
+  ttl             = 60
+
+  latency_routing_policy {
+    region = "us-east-1"
+  }
+
+  records          = ["203.0.113.10"]
+  health_check_id  = aws_route53_health_check.us_east.id
+}</code></pre>
+
+  <h3>HAProxy: GSLB with DNS-Based Backend Resolution</h3>
+  <pre><code class="language-haproxy"># Input:  DNS-discovered backend servers across regions
+# Output: Load-balanced traffic with health-aware routing
+
+resolvers cloudns
+    nameserver dns1 8.8.8.8:53
+    nameserver dns2 1.1.1.1:53
+    resolve_retries 3
+    timeout resolve 1s
+    timeout retry   1s
+    hold valid      60s
+    accepted_payload_size 8192
+
+frontend gslb_front
+    bind *:443 ssl crt /etc/ssl/certs/example.pem
+    default_backend regional_backends
+
+backend regional_backends
+    balance leastconn
+    option httpchk GET /health
+    http-check expect status 200
+    server-template us-east- 3 us-east.example.com:443 \
+        check inter 10s fall 3 rise 2 ssl verify required \
+        resolvers cloudns resolve-prefer ipv4
+    server-template eu-west- 3 eu-west.example.com:443 \
+        check inter 10s fall 3 rise 2 ssl verify required \
+        resolvers cloudns resolve-prefer ipv4</code></pre>
+
+  <h3>Python: Programmatic DNS Health Check Monitor</h3>
+  <pre><code class="language-python"># Input:  List of endpoints and regions
+# Output: Health status map with latency metrics
+
+import dns.resolver  # dnspython==2.6.1
+import requests      # requests==2.31.0
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+ENDPOINTS = {
+    "us-east": "alb-us-east.example.com",
+    "eu-west": "alb-eu-west.example.com",
+    "ap-south": "alb-ap-south.example.com",
+}
+
+def check_endpoint(region, host):
+    try:
+        start = time.monotonic()
+        answers = dns.resolver.resolve(host, "A")
+        dns_ms = (time.monotonic() - start) * 1000
+        start = time.monotonic()
+        resp = requests.get(f"https://{host}/health", timeout=5)
+        http_ms = (time.monotonic() - start) * 1000
+        return {"region": region, "status": "healthy" if resp.status_code == 200 else "degraded",
+                "dns_ms": round(dns_ms, 2), "http_ms": round(http_ms, 2)}
+    except Exception as e:
+        return {"region": region, "status": "unhealthy", "error": str(e)}
+
+with ThreadPoolExecutor(max_workers=len(ENDPOINTS)) as pool:
+    results = list(pool.map(lambda kv: check_endpoint(*kv), ENDPOINTS.items()))
+for r in results:
+    print(f"[{r['region']}] {r['status']} dns={r.get('dns_ms','N/A')}ms http={r.get('http_ms','N/A')}ms")</code></pre>
+
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Single-region health check for global DNS</h3>
+  <pre><code class="language-yaml"># BAD — health check from one location only
+# A network partition between probe and backend triggers false failover
+health_check:
+  type: HTTPS
+  endpoint: alb-us-east.example.com
+  probe_region: us-east-1  # Single point of failure!
+  failure_threshold: 1     # Too aggressive!</code></pre>
+
+  <h3>Correct: Multi-region health checks with sensible thresholds</h3>
+  <pre><code class="language-yaml"># GOOD — probes from 3+ regions, requires consensus
+health_check:
+  type: HTTPS
+  endpoint: alb-us-east.example.com
+  probe_regions: [us-east-1, eu-west-1, ap-southeast-1]
+  failure_threshold: 3
+  request_interval: 10</code></pre>
+
+  <h3>Wrong: DNS TTL of 0 or 5 seconds for "instant" failover</h3>
+  <pre><code class="language-dns"># BAD — TTL=5 causes massive query amplification
+# Resolvers may ignore TTL &lt; 30s anyway (RFC 8767)
+api.example.com.  5  IN  A  203.0.113.10
+# Result: 100x query volume, no real failover improvement</code></pre>
+
+  <h3>Correct: TTL 60-300s balanced with active health checks</h3>
+  <pre><code class="language-dns"># GOOD — TTL=60 provides fast-enough failover with manageable query volume
+api.example.com.  60  IN  A  203.0.113.10
+# Combined with Route 53 health checks: actual failover time = ~70-90s</code></pre>
+
+  <h3>Wrong: GeoDNS without fallback for unmapped regions</h3>
+  <pre><code class="language-python"># BAD — users from unmapped regions get NXDOMAIN or random routing
+geo_routing = {
+    "US": "203.0.113.10",
+    "EU": "198.51.100.10",
+    # No default! Users from Africa, South America get nothing
+}</code></pre>
+
+  <h3>Correct: GeoDNS with explicit default fallback</h3>
+  <pre><code class="language-python"># GOOD — every region has a path, unmapped locations get best-effort routing
+geo_routing = {
+    "US": "203.0.113.10",
+    "EU": "198.51.100.10",
+    "AP": "192.0.2.10",
+    "DEFAULT": "203.0.113.10",  # Fallback to lowest-latency PoP
+}</code></pre>
+
+  <h3>Wrong: Anycast with long-lived TCP without session persistence</h3>
+  <pre><code class="language-text"># BAD — BGP route changes mid-connection cause TCP resets
+# Anycast works for DNS (UDP) and short HTTP, but long-lived
+# WebSocket/gRPC streams break on route flaps
+anycast_ip: 198.51.100.1 → backend-pool (no session tracking)</code></pre>
+
+  <h3>Correct: Anycast for initial connection + session affinity for stateful protocols</h3>
+  <pre><code class="language-text"># GOOD — Anycast handles initial routing, L7 LB pins the session
+Client → Anycast IP (198.51.100.1)
+       → Nearest edge PoP (BGP)
+       → L7 Load Balancer (session cookie / consistent hashing)
+       → Specific backend instance (pinned for connection lifetime)</code></pre>
+
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>TTL caching ignored by resolvers</strong>: Some ISP resolvers cache DNS records beyond the stated TTL (RFC 8767 allows stale serving). Fix: design for worst-case TTL of 2x your configured value; use Anycast if faster failover needed. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/load-balancing/">src1</a>]</li>
+    <li><strong>EDNS Client Subnet (ECS) not supported</strong>: When the resolver does not pass ECS, GeoDNS routes based on resolver location, not user location. Fix: use Anycast as primary strategy; GeoDNS as secondary. [<a href="https://www.dyncond.com/geo-dns-anycast-and-gslb-whats-the-best-approach-for-global-performance/">src7</a>]</li>
+    <li><strong>Health check flapping causing DNS churn</strong>: An overloaded backend oscillates between healthy/unhealthy, causing rapid DNS changes. Fix: set <code>rise</code> threshold (e.g., 3 consecutive successes) before re-adding; implement circuit breakers. [<a href="https://www.haproxy.com/documentation/haproxy-enterprise/enterprise-modules/global-server-load-balancing/">src4</a>]</li>
+    <li><strong>Forgetting to pre-lower TTL before migration</strong>: Changing DNS records while TTL is 3600s means old records persist for up to 1 hour. Fix: lower TTL to 60s at least 48 hours before any DNS migration. [<a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html">src2</a>]</li>
+    <li><strong>Single DNS provider as sole authority</strong>: If Route 53 has an outage, entire global routing fails. Fix: use multi-provider DNS (Route 53 + Cloudflare, or NS1 + Google Cloud DNS). [<a href="https://www.splunk.com/en_us/blog/learn/global-server-load-balancing-gslb.html">src6</a>]</li>
+    <li><strong>Not testing failover under real conditions</strong>: Failover works in staging but thundering herd effects appear in production. Fix: run regular chaos engineering drills during low-traffic windows. [<a href="https://docs.google.com/load-balancing/docs/load-balancing-overview">src3</a>]</li>
+    <li><strong>DNS propagation ignored in CI/CD</strong>: Deploy pipeline routes traffic to a region before DNS has propagated. Fix: deploy code first, verify health checks pass, then update DNS routing. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/load-balancing/">src1</a>]</li>
+    <li><strong>Asymmetric capacity across regions</strong>: GeoDNS sends equal traffic to all regions but one has half the capacity. Fix: use weighted routing to match traffic to provisioned capacity; implement auto-scaling. [<a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check DNS resolution from multiple resolvers
+dig api.example.com +short @8.8.8.8
+dig api.example.com +short @1.1.1.1
+
+# Trace full DNS resolution path
+dig api.example.com +trace
+
+# Check DNS response with ECS (EDNS Client Subnet)
+dig api.example.com +subnet=198.51.100.0/24 @8.8.8.8
+
+# Verify TTL values
+dig api.example.com +noall +answer
+
+# Test health check endpoint
+curl -s -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" https://api.example.com/health
+
+# Check Route 53 health check status
+aws route53 get-health-check-status --health-check-id &lt;HC_ID&gt;
+
+# List Cloudflare load balancer pool health
+curl -s "https://api.cloudflare.com/client/v4/zones/{zone}/load_balancers/pools/{pool}/health" \
+  -H "Authorization: Bearer $CF_TOKEN" | jq '.result'
+
+# Monitor DNS resolution latency over time
+while true; do echo "$(date +%T) $(dig api.example.com +noall +stats | grep 'Query time')"; sleep 10; done
+
+# Check BGP route for Anycast IP
+whois -h whois.radb.net 198.51.100.0/24</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Technology</th><th scope="col">Current Version</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS Route 53</td><td>2013-04-01 API</td><td>Application Recovery Controller (2023), IP-based routing (2022)</td><td>Most routing policies backwards-compatible since launch</td></tr>
+      <tr><td>Cloudflare LB</td><td>Adaptive (2024)</td><td>Adaptive LB GA, DNS-only mode, custom rules</td><td>Steering: off, geo, random, dynamic_latency, proximity, least_outstanding_requests</td></tr>
+      <tr><td>GCP Cloud DNS</td><td>v1</td><td>Global anycast, routing policies (WRR, geolocation) (2022)</td><td>Integrated with Global External HTTP(S) LB</td></tr>
+      <tr><td>HAProxy GSLB</td><td>2.9+ / ALOHA 15+</td><td>DNS resolution in backends, server-templates</td><td>GSLB module requires ALOHA or Enterprise</td></tr>
+      <tr><td>NGINX Plus</td><td>R30+</td><td>DNS SRV discovery, upstream resolve, geo module</td><td>GSLB requires NGINX Plus (not open-source)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Backends in 2+ geographic regions, need to route users to nearest</td><td>All backends in a single datacenter or region</td><td>Local L4/L7 load balancer (HAProxy, NGINX, ALB)</td></tr>
+      <tr><td>Need automatic failover with &lt;2 min recovery time</td><td>Need sub-second failover for real-time systems</td><td>Anycast with BGP failover or service mesh</td></tr>
+      <tr><td>Data sovereignty compliance (EU data stays in EU)</td><td>No regulatory requirements for data locality</td><td>Latency-based routing (simpler)</td></tr>
+      <tr><td>Multi-cloud deployment needing cloud-agnostic routing</td><td>Fully committed to single cloud provider</td><td>Cloud-native load balancing (ALB, Cloud LB)</td></tr>
+      <tr><td>Canary/blue-green deployments at region level</td><td>Canary within a single cluster</td><td>Kubernetes Ingress with traffic splitting</td></tr>
+      <tr><td>Distribute traffic based on capacity (weighted)</td><td>All regions have identical capacity</td><td>Simple GeoDNS or latency routing</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>DNS is fundamentally a best-effort routing layer — you cannot guarantee all clients will follow your TTL or routing hints (corporate proxies, legacy resolvers, and mobile networks may cache aggressively)</li>
+    <li>Anycast provides near-instant failover for stateless protocols (DNS, HTTP) but can cause TCP connection resets during BGP convergence for long-lived connections</li>
+    <li>Cloud provider GSLB services (Route 53, Cloudflare LB, GCP GLB) are easier to operate than self-managed Anycast/GeoDNS, but create vendor lock-in at the DNS layer</li>
+    <li>Health checks consume backend resources — at scale (many probes x many regions x short intervals), health check traffic itself can be significant</li>
+    <li>Route 53 latency-based routing measures latency to AWS regions, not to your specific backends — actual user experience may differ</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/chat-app-at-scale/2026" data-relationship="related_to">Chat App at Scale</a>
+    <a href="/software/system-design/e-commerce-platform/2026" data-relationship="related_to">E-Commerce Platform Design</a>
+    <a href="/software/debugging/ssl-tls-certificate-errors/2026" data-relationship="related_to">SSL/TLS Certificate Errors</a>
+    <a href="/software/debugging/nodejs-econnrefused/2026" data-relationship="solves">Node.js ECONNREFUSED Errors</a>
+    <a href="/software/system-design/search-engine/2026" data-relationship="often_confused_with">Search Engine Design</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

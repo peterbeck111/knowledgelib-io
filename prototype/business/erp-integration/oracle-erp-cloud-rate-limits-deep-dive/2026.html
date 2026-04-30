@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits | knowledgelib.io</title>
+  <meta name="description" content="Oracle Fusion Cloud ERP rate limits — identity domain tiers (150-4,500 req/min), REST API record caps (499 GET, 500 POST), FBDI upload limits (250 MB), ESS thread pools (5-25 threads), UCM timeout (300s). 7 sources, all cited. Verified 2026-03-09.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/oracle-erp-cloud-rate-limits-deep-dive/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits | knowledgelib.io">
+  <meta property="og:description" content="Oracle Fusion Cloud ERP rate limits — identity domain tiers (150-4,500 req/min), REST API record caps (499 GET, 500 POST), FBDI upload limits (250 MB), ESS thread pools (5-25 threads), UCM timeout (300s). 7 sources, all cited. Verified 2026-03-09.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/oracle-erp-cloud-rate-limits-deep-dive/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-09">
+  <meta property="article:modified_time" content="2026-03-09">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits | knowledgelib.io">
+  <meta name="twitter:description" content="Oracle Fusion Cloud ERP rate limits — identity domain tiers (150-4,500 req/min), REST API record caps (499 GET, 500 POST), FBDI upload limits (250 MB), ESS thread pools (5-25 threads), UCM timeout (300s). 7 sources, all cited. Verified 2026-03-09.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.86">
+  <meta name="ai:last_verified" content="2026-03-09">
+  <meta name="ai:domain" content="business/erp-integration/oracle-erp-cloud-rate-limits-deep-dive">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are Oracle ERP Cloud rate limits - concurrent requests, UCM uploads, ESS job limits?">
+  <meta name="ai:aliases" content="Oracle Fusion Cloud API throttling limits and 429 handling; Oracle ERP Cloud concurrent request limits REST SOAP FBDI; Oracle Cloud ESS scheduled process job queue limits; Oracle Fusion Cloud UCM upload size limits and timeout constraints">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/oracle-erp-cloud-rate-limits-deep-dive/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-03-09">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-09">
+  <meta name="ai:systems" content="Oracle Fusion Cloud ERP (Release 24B / 25A)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction">
+  <meta name="ai:constraints" content="REST API max 499 records GET, 500 POST; FBDI max 250 MB per file with 300s timeout; Identity domain rate limits 150-4500 req/min by tier; ESS threads 5-25 per JMS Processor; REST and SOAP share same rate limit pool; Max 10 parallel FBDI import batches">
+  <meta name="ai:skip_this_unit_if" content="Need OCI infrastructure API limits not Fusion Cloud ERP -> oci-api-rate-limits; Need Oracle Integration Cloud message pack limits -> oracle-integration-cloud-limits; Need Oracle NetSuite API limits -> netsuite-api-capabilities">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits",
+    "headline": "Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits",
+    "description": "Comprehensive reference for Oracle Fusion Cloud ERP rate limits covering identity domain tiers, REST API record caps, FBDI file upload constraints, ESS scheduler thread pools, UCM timeouts, and throttling behavior across all API surfaces.",
+    "keywords": ["Oracle Fusion Cloud ERP", "rate limits", "ERP integration", "API throttling", "FBDI", "ESS", "UCM", "REST API"],
+    "dateModified": "2026-03-09",
+    "datePublished": "2026-03-09",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Oracle Fusion Cloud ERP Release 24B / 25A",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "API Rate Limits - Oracle Cloud Infrastructure Documentation",
+        "url": "https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Scheduler REST API and Guidelines for Monitoring Scheduled Processes in Fusion Cloud Applications",
+        "url": "https://www.ateam-oracle.com/introducing-the-scheduler-rest-api-and-guidelines-for-monitoring-scheduled-processes-in-fusion-cloud-applications"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Oracle Fusion Cloud ERP Integration Challenges, Guidelines, Patterns Using Oracle PaaS",
+        "url": "https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas"
+      },
+      {
+        "@type": "WebPage",
+        "name": "File Size Limits for Import - Oracle Fusion Cloud Sales",
+        "url": "https://docs.oracle.com/en/cloud/saas/sales/fasqa/file-size-limits-for-import.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Troubleshooting HTTP 429 Errors in Oracle Integration",
+        "url": "https://www.ateam-oracle.com/troubleshooting-http-429-errors-in-oracle-integration"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Data Import Options and Guidelines for Fusion Applications Suite",
+        "url": "https://www.ateam-oracle.com/data-import-options-and-guidelines-for-fusion-applications-suite"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Managing Oracle Enterprise Scheduler Service and Jobs",
+        "url": "https://docs.oracle.com/applications/falcm12/OASAD/GUID-E16F47C0-6415-4D24-B68F-2DDA4C462C1B.htm"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits",
+    "description": "Structured reference for Oracle Fusion Cloud ERP rate limits, covering identity domain tiers, REST API record caps, FBDI upload constraints, ESS scheduler thread pools, and throttling behavior.",
+    "keywords": ["Oracle Fusion Cloud ERP", "rate limits", "API throttling", "FBDI", "ESS", "UCM"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-09",
+    "datePublished": "2026-03-09",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Oracle"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Oracle ERP Cloud Rate Limits Deep Dive" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are Oracle ERP Cloud rate limits - concurrent requests, UCM uploads, ESS job limits?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle Fusion Cloud ERP enforces rate limits at three layers — identity domain (request/min), per-API (records/request), and ESS scheduler (concurrent threads) — with FBDI as the only viable path for bulk loads exceeding 500 records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle Fusion Cloud API throttling limits and 429 handling",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle Fusion Cloud ERP enforces rate limits at three layers — identity domain (request/min), per-API (records/request), and ESS scheduler (concurrent threads) — with FBDI as the only viable path for bulk loads exceeding 500 records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle ERP Cloud concurrent request limits REST SOAP FBDI",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle Fusion Cloud ERP enforces rate limits at three layers — identity domain (request/min), per-API (records/request), and ESS scheduler (concurrent threads) — with FBDI as the only viable path for bulk loads exceeding 500 records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle Cloud ESS scheduled process job queue limits",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle Fusion Cloud ERP enforces rate limits at three layers — identity domain (request/min), per-API (records/request), and ESS scheduler (concurrent threads) — with FBDI as the only viable path for bulk loads exceeding 500 records."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle Fusion Cloud UCM upload size limits and timeout constraints",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle Fusion Cloud ERP enforces rate limits at three layers — identity domain (request/min), per-API (records/request), and ESS scheduler (concurrent threads) — with FBDI as the only viable path for bulk loads exceeding 500 records."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Oracle ERP Cloud Rate Limits Deep Dive: Concurrent Requests, UCM Uploads, ESS Job Limits</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are Oracle ERP Cloud rate limits - concurrent requests, UCM uploads, ESS job limits?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/oracle-erp-cloud-rate-limits-deep-dive/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Oracle Fusion Cloud ERP (Release 24B / 25A)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.86 out of 1">0.86</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-09</span></span>
+    <span><strong>Freshness:</strong> 2026-03-09</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Oracle Fusion Cloud ERP enforces rate limits at three layers &mdash; identity domain (request/min), per-API (records/request), and ESS scheduler (concurrent threads) &mdash; with FBDI as the only viable path for bulk loads exceeding 500 records.</li>
+    <li><strong>Key limit</strong>: Identity domain rate limits cap at 150&ndash;4,500 requests/min depending on tier; REST API GET returns max 499 records per page; POST capped at 500 records per request.</li>
+    <li><strong>Watch out for</strong>: REST and SOAP share the same identity domain rate limit pool &mdash; a SOAP-heavy integration will consume capacity for REST calls too.</li>
+    <li><strong>Best for</strong>: Understanding the complete throttling envelope before designing Oracle ERP Cloud integrations involving high-volume data exchange.</li>
+    <li><strong>Authentication</strong>: OAuth 2.0 with JWT assertion (server-to-server) or SAML federation; basic auth supported but not recommended for production.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers Oracle Fusion Cloud ERP (also marketed as Oracle Cloud ERP, part of Oracle Fusion Cloud Applications Suite) across releases 24B and 25A. The rate limits documented here apply to all SaaS-hosted Oracle Fusion Cloud ERP instances including Financials, Procurement, Project Management, and Supply Chain modules. On-premise Oracle E-Business Suite has entirely different limits and is not covered.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Vendor</strong></td><td>Oracle</td></tr>
+      <tr><td><strong>System</strong></td><td>Oracle Fusion Cloud ERP (Release 24B / 25A)</td></tr>
+      <tr><td><strong>API Surface</strong></td><td>REST, SOAP, FBDI, BIP, ESS</td></tr>
+      <tr><td><strong>Current API Version</strong></td><td>Release 25A (quarterly release cycle)</td></tr>
+      <tr><td><strong>Editions Covered</strong></td><td>All SaaS editions</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>Cloud (Oracle-managed SaaS)</td></tr>
+      <tr><td><strong>API Docs</strong></td><td><a href="https://docs.oracle.com/en/cloud/saas/index.html">Oracle Fusion Cloud REST API Documentation</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>GA</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>Oracle Fusion Cloud ERP exposes multiple integration surfaces, each with distinct rate limits and optimal use cases. Choosing the wrong surface is the most common integration design mistake.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Request</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>REST API</td><td>HTTPS/JSON</td><td>Individual record CRUD, queries &lt;500 records</td><td>499 (GET), 500 (POST)</td><td>Identity domain tier</td><td>Yes</td><td>No</td></tr>
+      <tr><td>SOAP Web Services</td><td>HTTPS/XML</td><td>Legacy integrations, metadata operations</td><td>Varies by service</td><td>Shared with REST</td><td>Yes</td><td>No</td></tr>
+      <tr><td>FBDI</td><td>CSV via UCM</td><td>Bulk data loads &gt;500 records, migrations</td><td>250 MB / 500K records per file</td><td>ESS queue-based</td><td>No</td><td>Yes</td></tr>
+      <tr><td>BIP Reports</td><td>SOAP/REST</td><td>Data extraction, report generation</td><td>N/A (report-based)</td><td>ESS queue-based</td><td>No</td><td>Partial</td></tr>
+      <tr><td>ESS (Enterprise Scheduler)</td><td>REST/UI</td><td>Scheduled batch processes, import jobs</td><td>N/A (job-based)</td><td>Thread pool limited</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Business Events</td><td>REST/Webhook</td><td>Event-driven outbound notifications</td><td>N/A (event-based)</td><td>Publisher throughput</td><td>Yes</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max records per GET query</td><td>499</td><td>REST API</td><td>Use offset + limit parameters for pagination; hasMore attribute indicates remaining records</td></tr>
+      <tr><td>Max records per POST</td><td>500</td><td>REST API</td><td>Split larger payloads; use FBDI for bulk operations</td></tr>
+      <tr><td>Max request body size</td><td>1 MB</td><td>REST API payload</td><td>Applies to single request body; attachments handled separately via UCM</td></tr>
+      <tr><td>Max bulk operation items</td><td>50</td><td>REST API bulk/batch</td><td>Per-call limit for composite operations</td></tr>
+      <tr><td>Max FBDI file size</td><td>250 MB</td><td>FBDI upload to UCM</td><td>Split files exceeding this limit before upload</td></tr>
+      <tr><td>UCM upload timeout</td><td>300 seconds</td><td>File transfer to UCM</td><td>Timeout applies to the upload operation; large files over slow connections will fail</td></tr>
+      <tr><td>Max records per FBDI file (low-volume)</td><td>50,000</td><td>Low-volume import mode</td><td>Per-file limit; use high-volume mode for more</td></tr>
+      <tr><td>Max records per FBDI file (high-volume)</td><td>500,000</td><td>High-volume import mode</td><td>Per-file limit; split larger datasets across files</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <p>Oracle Fusion Cloud ERP rate limits are enforced at the identity domain level, not per-application. All REST and SOAP calls from all integrations targeting the same Fusion environment share a single rate limit pool.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Tier Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Authentication requests</td><td>150&ndash;4,500 req/min</td><td>Per minute</td><td>Free: 150, Oracle Apps: 1,000, Premium: 4,500</td></tr>
+      <tr><td>Token management requests</td><td>150&ndash;5,000 req/min</td><td>Per minute</td><td>Free: 150, Oracle Apps: 1,500, Premium: 5,000</td></tr>
+      <tr><td>Other API requests</td><td>150&ndash;5,000 req/min</td><td>Per minute</td><td>Free: 150, Oracle Apps: 1,500, Premium: 5,000</td></tr>
+      <tr><td>Bulk API requests</td><td>200+ req/min</td><td>Per minute</td><td>Free: 200; higher tiers scale accordingly</td></tr>
+      <tr><td>Max CSV files per import job</td><td>20</td><td>Per job</td><td>REST service importActivities limit</td></tr>
+      <tr><td>Max parallel import batches</td><td>10</td><td>Concurrent</td><td>Recommended maximum to avoid performance degradation</td></tr>
+      <tr><td>Max records per import submission</td><td>10,000,000</td><td>Per submission</td><td>10 jobs &times; 20 files &times; 50K records theoretical max</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>ESS (Enterprise Scheduler) Limits</h3>
+  <p>ESS jobs run server-side and are controlled by thread pools and work assignments rather than traditional API rate limits. These limits determine how many scheduled processes can run concurrently.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Default Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Synchronous Java job threads</td><td>5&ndash;25 per JMS Processor</td><td>Configurable; determines max concurrent RUNNING synchronous jobs</td></tr>
+      <tr><td>Default threads per JMS Processor</td><td>5</td><td>Can be increased to 15+ via Scheduler Configuration, but Oracle-managed in SaaS</td></tr>
+      <tr><td>Recommended jobs per job set</td><td>15&ndash;20</td><td>Oracle recommends limiting for troubleshooting simplicity</td></tr>
+      <tr><td>Asynchronous job concurrency</td><td>Work-assignment defined</td><td>Controlled via workshifts and work assignments</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.0 JWT Assertion</td><td>Server-to-server integrations</td><td>Configurable (default ~1h)</td><td>New JWT per request</td><td>Recommended for unattended integrations</td></tr>
+      <tr><td>SAML 2.0 Federation</td><td>SSO-based user-context operations</td><td>Session-based</td><td>Via IdP</td><td>Requires SAML IdP configuration</td></tr>
+      <tr><td>Basic Auth (Username/Password)</td><td>Development, testing, simple scripts</td><td>Session timeout</td><td>No</td><td>Not recommended for production; no MFA support</td></tr>
+      <tr><td>OAuth 2.0 Authorization Code</td><td>User-delegated access</td><td>Access: ~1h, Refresh: long-lived</td><td>Yes</td><td>For applications acting on behalf of a user</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>All API calls from a single integration user share the same identity domain rate limit bucket &mdash; creating multiple integration users does NOT multiply your rate limits. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>]</li>
+    <li>Basic auth tokens consume from the Authentication request rate limit pool on every call, while OAuth tokens only consume during token acquisition/refresh. [<a href="https://www.ateam-oracle.com/troubleshooting-http-429-errors-in-oracle-integration">src5</a>]</li>
+    <li>Session timeout is configurable by the Fusion admin &mdash; never hardcode token lifetimes. Implement token refresh logic that responds to 401 responses. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>REST and SOAP APIs share the same identity domain rate limit pool &mdash; a SOAP-heavy legacy integration directly reduces available capacity for new REST integrations.</li>
+    <li>FBDI is the only supported path for bulk inbound loads exceeding 500 records &mdash; REST API POST is hard-limited and will reject larger payloads.</li>
+    <li>ESS thread counts in SaaS environments are Oracle-managed &mdash; customers cannot arbitrarily increase concurrent scheduled process capacity without engaging Oracle Support.</li>
+    <li>UCM upload timeout of 300 seconds means files approaching the 250 MB limit may fail on slower network connections; practical reliable limit is closer to 150 MB.</li>
+    <li>Identity domain rate limits are per-minute rolling windows, not daily quotas &mdash; sustained high throughput is possible but burst traffic gets throttled immediately.</li>
+    <li>Import jobs (FBDI) should not exceed 10 parallel batches &mdash; more causes performance degradation across the environment, potentially affecting other users.</li>
+    <li>BIP report extractions are ESS jobs &mdash; long-running reports consume the same thread pool as scheduled processes and imports.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START - Need to integrate with Oracle Fusion Cloud ERP
+|-- What's the integration pattern?
+|   |-- Real-time (individual records, &lt;1s)
+|   |   |-- Data volume &lt; 500 records/operation?
+|   |   |   |-- YES -> REST API (JSON, straightforward CRUD)
+|   |   |   +-- NO -> NOT supported real-time; switch to batch/FBDI
+|   |   +-- Need event notifications?
+|   |       |-- YES -> Business Events (outbound) + REST callback
+|   |       +-- NO -> REST API polling with hasMore pagination
+|   |-- Batch/Bulk (scheduled, high volume)
+|   |   |-- Data volume &lt; 500 records?
+|   |   |   |-- YES -> REST API POST (simpler, no file overhead)
+|   |   |   +-- NO (go down)
+|   |   |-- Data volume &lt; 50,000 records?
+|   |   |   |-- YES -> FBDI low-volume mode (single file)
+|   |   |   +-- NO (go down)
+|   |   |-- Data volume &lt; 500,000 records?
+|   |   |   |-- YES -> FBDI high-volume mode (single file)
+|   |   |   +-- NO -> FBDI with file splitting (max 20 files/job, 10 parallel jobs)
+|   |   +-- Need data extraction (outbound)?
+|   |       |-- Small dataset -> REST API with pagination
+|   |       +-- Large dataset -> BIP report extraction (BI Publisher)
+|   |-- Event-driven
+|   |   |-- Oracle publishes events?
+|   |   |   |-- YES -> Business Events subscription
+|   |   |   +-- NO -> BIP report polling or REST polling (scheduled)
+|   |   +-- Guaranteed delivery needed?
+|   |       |-- YES -> Middleware (OIC) with error handling + retry
+|   |       +-- NO -> Direct REST webhook receiver
+|   +-- File-based (CSV/XML)
+|       +-- FBDI (standard Oracle pattern) -> Upload CSV to UCM -> Submit ESS import job
+|-- Which direction?
+|   |-- Inbound (writing to ERP) -> REST (&lt;500 records) or FBDI (&gt;500 records)
+|   |-- Outbound (reading from ERP) -> REST API (small) or BIP extraction (large)
+|   +-- Bidirectional -> Design conflict resolution FIRST; use REST for real-time sync
++-- Error tolerance?
+    |-- Zero-loss required -> Middleware (OIC/MuleSoft) + dead letter queue + FBDI error callbacks
+    +-- Best-effort acceptable -> Direct REST with exponential backoff retry</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Operation</th><th scope="col">API Surface</th><th scope="col">Method / Approach</th><th scope="col">Max Records</th><th scope="col">Timeout</th><th scope="col">Rate Limited By</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Query records</td><td>REST</td><td>GET with offset/limit</td><td>499 per page</td><td>Standard HTTP</td><td>Identity domain tier</td></tr>
+      <tr><td>Create single record</td><td>REST</td><td>POST</td><td>1</td><td>Standard HTTP</td><td>Identity domain tier</td></tr>
+      <tr><td>Create batch (small)</td><td>REST</td><td>POST with payload</td><td>500</td><td>Standard HTTP</td><td>Identity domain tier</td></tr>
+      <tr><td>Bulk import (inbound)</td><td>FBDI</td><td>CSV upload to UCM + ESS job</td><td>500K per file</td><td>300s upload + ESS queue</td><td>ESS thread pool</td></tr>
+      <tr><td>Bulk extract (outbound)</td><td>BIP</td><td>Report execution via ESS</td><td>Report-dependent</td><td>ESS queue</td><td>ESS thread pool</td></tr>
+      <tr><td>Schedule process</td><td>ESS</td><td>REST /scheduledProcesses endpoint</td><td>N/A</td><td>Job-dependent</td><td>Thread pool (5-25 threads)</td></tr>
+      <tr><td>Upload file</td><td>UCM</td><td>ERP Integration web service</td><td>250 MB max</td><td>300 seconds</td><td>File server concurrency</td></tr>
+      <tr><td>Real-time event</td><td>Business Events</td><td>Event subscription</td><td>N/A</td><td>Event-driven</td><td>Publisher throughput</td></tr>
+      <tr><td>SOAP operation</td><td>SOAP WS</td><td>Standard SOAP envelope</td><td>Service-dependent</td><td>Standard HTTP</td><td>Shared identity domain pool</td></tr>
+      <tr><td>Composite operation</td><td>REST</td><td>Batch endpoint</td><td>50 items</td><td>Standard HTTP</td><td>Identity domain tier</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Authenticate and obtain access token</h3>
+  <p>Obtain an OAuth 2.0 access token using JWT assertion for server-to-server integration. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</p>
+  <pre><code class="language-bash"># Exchange JWT for access token
+curl -X POST "https://{your-idcs-domain}/oauth2/v1/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  -d "assertion={your-jwt-assertion}" \
+  -d "scope=urn:opc:idm:__myscopes__"</code></pre>
+  <p><strong>Verify</strong>: Response contains <code>access_token</code> field with <code>token_type: "Bearer"</code>.</p>
+
+  <h3>2. Query records with pagination (respecting 499-record limit)</h3>
+  <p>Oracle REST API returns a maximum of 499 records per GET request. Use the offset and limit parameters to paginate. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</p>
+  <pre><code class="language-bash"># First page
+curl -X GET "https://{host}/fscmRestApi/resources/v1/invoices?limit=499&amp;offset=0" \
+  -H "Authorization: Bearer {access_token}"
+
+# Check response for hasMore: true, then increment offset
+curl -X GET "https://{host}/fscmRestApi/resources/v1/invoices?limit=499&amp;offset=499" \
+  -H "Authorization: Bearer {access_token}"</code></pre>
+  <p><strong>Verify</strong>: Response JSON contains <code>hasMore: false</code> when all records retrieved.</p>
+
+  <h3>3. Upload FBDI file to UCM for bulk import</h3>
+  <p>For bulk loads exceeding 500 records, upload a CSV file to UCM via the ERP Integration web service. [<a href="https://docs.oracle.com/en/cloud/saas/sales/fasqa/file-size-limits-for-import.html">src4</a>]</p>
+  <pre><code class="language-bash">curl -X POST "https://{host}/fscmRestApi/resources/v1/erpintegrations" \
+  -H "Authorization: Bearer {access_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "OperationName": "uploadFileToUCM",
+    "DocumentContent": "{base64-encoded-zip-file}",
+    "DocumentAccount": "fin$/journal$/import$",
+    "ContentType": "zip",
+    "FileName": "JournalImport.zip"
+  }'</code></pre>
+  <p><strong>Verify</strong>: Response returns <code>DocumentId</code> confirming successful upload.</p>
+
+  <h3>4. Submit ESS import job and monitor status</h3>
+  <p>After uploading the FBDI file, submit an ESS scheduled process to execute the import. [<a href="https://docs.oracle.com/applications/falcm12/OASAD/GUID-E16F47C0-6415-4D24-B68F-2DDA4C462C1B.htm">src7</a>]</p>
+  <pre><code class="language-bash"># Submit import job
+curl -X POST "https://{host}/fscmRestApi/resources/v1/erpintegrations" \
+  -H "Authorization: Bearer {access_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "OperationName": "submitESSJobRequest",
+    "JobPackageName": "/oracle/apps/ess/financials/generalLedger/programs/",
+    "JobDefName": "JournalImportLauncher",
+    "ESSParameters": "300000004976094,1,#NULL"
+  }'
+
+# Monitor job status
+curl -X GET "https://{host}/fscmRestApi/resources/v1/erpintegrations?finder=ESSJobStatusRF;requestId={job_id}" \
+  -H "Authorization: Bearer {access_token}"</code></pre>
+  <p><strong>Verify</strong>: Response <code>RequestStatus</code> transitions from <code>RUNNING</code> to <code>SUCCEEDED</code>.</p>
+
+  <h3>5. Implement rate limit handling with exponential backoff</h3>
+  <p>When you hit the identity domain rate limit, Oracle returns HTTP 429. Implement exponential backoff starting at 2 seconds. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>, <a href="https://www.ateam-oracle.com/troubleshooting-http-429-errors-in-oracle-integration">src5</a>]</p>
+  <pre><code class="language-python">import time
+import requests
+
+def call_oracle_api(url, headers, max_retries=5):
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers)
+        if response.status_code == 429:
+            wait = min(2 ** attempt, 60)  # max 60s
+            time.sleep(wait)
+            continue
+        elif response.status_code == 503:
+            wait = min(2 ** (attempt + 1), 120)
+            time.sleep(wait)
+            continue
+        return response
+    raise Exception("Max retries exceeded for Oracle API")</code></pre>
+  <p><strong>Verify</strong>: Function returns valid response without 429 errors after retry sequence.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Paginated data extraction with rate limit handling</h3>
+  <pre><code class="language-python"># Input:  Oracle Fusion REST API endpoint, OAuth token
+# Output: Complete list of all matching records across all pages
+
+import requests
+import time
+
+def extract_all_records(base_url, endpoint, token, query_params=None):
+    headers = {"Authorization": f"Bearer {token}",
+               "Content-Type": "application/json"}
+    all_records = []
+    offset = 0
+    limit = 499  # Oracle max per page
+    has_more = True
+
+    while has_more:
+        url = f"{base_url}/fscmRestApi/resources/v1/{endpoint}"
+        params = {"offset": offset, "limit": limit}
+        if query_params:
+            params.update(query_params)
+
+        for attempt in range(5):
+            resp = requests.get(url, headers=headers, params=params)
+            if resp.status_code == 429:
+                time.sleep(min(2 ** attempt, 60))
+                continue
+            resp.raise_for_status()
+            break
+
+        data = resp.json()
+        items = data.get("items", [])
+        all_records.extend(items)
+        has_more = data.get("hasMore", False)
+        offset += limit
+
+    return all_records</code></pre>
+
+  <h3>JavaScript/Node.js: FBDI file upload with retry</h3>
+  <pre><code class="language-javascript">// Input:  Base64-encoded zip file, Oracle REST endpoint, OAuth token
+// Output: UCM Document ID confirming successful upload
+
+const axios = require('axios'); // v1.6+
+
+async function uploadFBDI(host, token, fileContent, fileName, docAccount) {
+  const url = `${host}/fscmRestApi/resources/v1/erpintegrations`;
+  const payload = {
+    OperationName: 'uploadFileToUCM',
+    DocumentContent: fileContent, // base64 encoded
+    DocumentAccount: docAccount,
+    ContentType: 'zip',
+    FileName: fileName
+  };
+
+  for (let attempt = 0; attempt &lt; 5; attempt++) {
+    try {
+      const resp = await axios.post(url, payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 300000 // 300s to match UCM timeout
+      });
+      return resp.data.DocumentId;
+    } catch (err) {
+      if (err.response?.status === 429 || err.response?.status === 503) {
+        await new Promise(r =&gt; setTimeout(r, Math.min(2 ** attempt * 1000, 60000)));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('FBDI upload failed after 5 retries');
+}</code></pre>
+
+  <h3>cURL: Check ESS job status</h3>
+  <pre><code class="language-bash"># Input:  Oracle host, Bearer token, ESS job request ID
+# Output: Job status (RUNNING, SUCCEEDED, ERROR, WARNING)
+
+curl -s -X GET \
+  "https://{host}/fscmRestApi/resources/v1/erpintegrations?finder=ESSJobStatusRF;requestId={REQUEST_ID}" \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" | jq '.items[0].RequestStatus'</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Rate Limit Tiers by Identity Domain Type</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Identity Domain Type</th><th scope="col">Auth Requests/min</th><th scope="col">Token Mgmt/min</th><th scope="col">Other API/min</th><th scope="col">Bulk/min</th><th scope="col">Typical Use</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Free Tier</td><td>150</td><td>150</td><td>150</td><td>200</td><td>Development, sandbox</td></tr>
+      <tr><td>Oracle Apps</td><td>1,000</td><td>1,500</td><td>1,500</td><td>Scaled</td><td>Standard production</td></tr>
+      <tr><td>Premium</td><td>4,500</td><td>5,000</td><td>5,000</td><td>Scaled</td><td>High-volume enterprise</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Oracle Fusion dates use ISO 8601 format but the timezone reflects the user's profile timezone, not UTC &mdash; always convert to UTC before storing or comparing across systems. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</li>
+    <li>Currency amounts in Oracle Fusion use the currency code from the ledger or business unit &mdash; multi-currency transactions require explicit conversion rate lookup via the Daily Rates REST resource. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</li>
+    <li>FBDI CSV files must use UTF-8 encoding without BOM &mdash; files with BOM characters cause silent import failures with no error in the ESS job log. [<a href="https://www.ateam-oracle.com/data-import-options-and-guidelines-for-fusion-applications-suite">src6</a>]</li>
+    <li>Oracle REST API LOV (List of Values) fields return internal codes, not display labels &mdash; map using the LOV REST endpoint or maintain a local lookup table. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>429</td><td>Too Many Requests</td><td>Identity domain rate limit exceeded</td><td>Exponential backoff: wait 2^n seconds, starting at 2s, max 60s, max 5 retries</td></tr>
+      <tr><td>503</td><td>Service Unavailable</td><td>Oracle Fusion under maintenance or overloaded</td><td>Retry with longer backoff (start at 4s, max 120s); check Oracle Cloud Status page</td></tr>
+      <tr><td>401</td><td>Unauthorized</td><td>Token expired or invalid</td><td>Refresh OAuth token; check if integration user is locked or password expired</td></tr>
+      <tr><td>400</td><td>Bad Request</td><td>Invalid payload format or field values</td><td>Validate payload against REST API describe endpoint; check required fields</td></tr>
+      <tr><td>404</td><td>Not Found</td><td>Resource or endpoint does not exist</td><td>Verify endpoint URL matches your Fusion release version; check object accessibility</td></tr>
+      <tr><td>500</td><td>Internal Server Error</td><td>Server-side Fusion error</td><td>Log full response; retry once; if persistent, file Oracle SR with correlation ID</td></tr>
+      <tr><td>JBO-25013</td><td>Too Many Objects</td><td>Excessive child records in single request</td><td>Reduce batch size; split parent-child creates across multiple requests</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>FBDI upload succeeds but import job fails silently</strong>: The UCM upload returns success (DocumentId) but the subsequent ESS import job errors without clear messaging. Fix: <code>Always poll ESS job status after submission; parse the job output/log file for detailed error rows</code>. [<a href="https://docs.oracle.com/en/cloud/saas/sales/fasqa/file-size-limits-for-import.html">src4</a>, <a href="https://www.ateam-oracle.com/data-import-options-and-guidelines-for-fusion-applications-suite">src6</a>]</li>
+    <li><strong>Rate limit exhaustion from token refresh storms</strong>: Multiple integration processes refreshing OAuth tokens simultaneously consume the Authentication rate limit bucket. Fix: <code>Cache tokens centrally with TTL slightly shorter than expiration; use a single token service for all integrations</code>. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>, <a href="https://www.ateam-oracle.com/troubleshooting-http-429-errors-in-oracle-integration">src5</a>]</li>
+    <li><strong>UCM upload timeout on large files</strong>: Files approaching 250 MB frequently timeout at the 300-second boundary. Fix: <code>Keep FBDI files under 150 MB; compress CSV into zip before upload; split large imports into multiple files</code>. [<a href="https://docs.oracle.com/en/cloud/saas/sales/fasqa/file-size-limits-for-import.html">src4</a>]</li>
+    <li><strong>ESS thread starvation from long-running reports</strong>: BIP report extractions run as ESS jobs and can consume all available threads. Fix: <code>Schedule BIP extractions in off-peak workshifts; monitor thread utilization via Scheduled Processes UI</code>. [<a href="https://docs.oracle.com/applications/falcm12/OASAD/GUID-E16F47C0-6415-4D24-B68F-2DDA4C462C1B.htm">src7</a>]</li>
+    <li><strong>Concurrent FBDI imports cause data corruption</strong>: Running more than 10 parallel import jobs for the same object type can cause interface table contention. Fix: <code>Limit parallel imports to 10 maximum; serialize imports for the same object; purge interface tables between runs</code>. [<a href="https://docs.oracle.com/en/cloud/saas/sales/fasqa/file-size-limits-for-import.html">src4</a>]</li>
+    <li><strong>SOAP and REST competing for rate limit budget</strong>: Legacy SOAP integrations consume from the same identity domain pool. Fix: <code>Audit all integrations sharing the identity domain; migrate SOAP to REST where possible; implement coordinated rate limiting across all clients</code>. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Polling REST API in a tight loop for bulk extraction</h3>
+  <pre><code class="language-python"># BAD - Hammering API without backoff, will hit 429 within seconds
+while True:
+    response = requests.get(f"{base}/invoices?offset={offset}")
+    process(response.json())
+    offset += 499</code></pre>
+
+  <h3>Correct: Paginated extraction with rate-aware throttling</h3>
+  <pre><code class="language-python"># GOOD - Respects rate limits, handles 429, uses appropriate delays
+import time
+offset = 0
+while True:
+    resp = requests.get(f"{base}/invoices?offset={offset}&amp;limit=499",
+                        headers=headers)
+    if resp.status_code == 429:
+        time.sleep(float(resp.headers.get('Retry-After', 5)))
+        continue
+    data = resp.json()
+    process(data['items'])
+    if not data.get('hasMore'):
+        break
+    offset += 499
+    time.sleep(0.5)  # voluntary throttle: ~120 req/min</code></pre>
+
+  <h3>Wrong: Using REST API POST for bulk data loads</h3>
+  <pre><code class="language-javascript">// BAD - REST POST limited to 500 records; 10,000 records = 20 serial calls
+for (const batch of chunk(records, 500)) {
+    await axios.post(`${base}/journals`, { items: batch });
+}</code></pre>
+
+  <h3>Correct: Use FBDI for bulk loads, REST only for small batches</h3>
+  <pre><code class="language-javascript">// GOOD - FBDI handles 500K records per file; single upload + ESS job
+const csv = generateCSV(records); // all 10,000 records
+const zip = await compressToZip(csv);
+const base64 = zip.toString('base64');
+const docId = await uploadFBDI(host, token, base64, 'import.zip', account);
+const jobId = await submitESSJob(host, token, docId);
+await pollJobStatus(host, token, jobId);</code></pre>
+
+  <h3>Wrong: Creating separate integration users to bypass rate limits</h3>
+  <pre><code class="language-text">BAD - Rate limits are per identity domain, NOT per user
+Creating 5 integration users does not give you 5x the rate limit.
+All users in the same identity domain share the same pool.</code></pre>
+
+  <h3>Correct: Optimize request efficiency within the rate limit budget</h3>
+  <pre><code class="language-text">GOOD - Maximize value per request:
+1. Use query filters (q parameter) to reduce result set size
+2. Use fields parameter to request only needed attributes
+3. Cache reference data (LOVs, lookups) locally
+4. Batch related operations into composite requests (max 50)
+5. Schedule bulk operations via FBDI during off-peak hours</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Confusing OCI API limits with Fusion Cloud ERP limits</strong>: OCI infrastructure APIs have separate rate limiting from Fusion Cloud application APIs. Fix: <code>Consult OCI service limits documentation separately from Fusion Cloud REST API documentation</code>. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>]</li>
+    <li><strong>Not monitoring rate limit consumption across integrations</strong>: With multiple integrations sharing one identity domain, no single team sees the full picture. Fix: <code>Implement centralized API call logging with timestamps; aggregate across all integration clients; set alerts at 70% of rate limit threshold</code>. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>, <a href="https://www.ateam-oracle.com/troubleshooting-http-429-errors-in-oracle-integration">src5</a>]</li>
+    <li><strong>Running FBDI imports during peak business hours</strong>: Large FBDI imports consume ESS threads and can slow down the entire Fusion environment. Fix: <code>Schedule FBDI imports outside business hours; coordinate with Oracle maintenance windows</code>. [<a href="https://docs.oracle.com/en/cloud/saas/sales/fasqa/file-size-limits-for-import.html">src4</a>, <a href="https://docs.oracle.com/applications/falcm12/OASAD/GUID-E16F47C0-6415-4D24-B68F-2DDA4C462C1B.htm">src7</a>]</li>
+    <li><strong>Ignoring FBDI interface table cleanup</strong>: Processed records remain in interface tables indefinitely, slowing subsequent imports. Fix: <code>Run purge jobs after every import cycle; automate purge as the final step in every FBDI integration flow</code>. [<a href="https://www.ateam-oracle.com/data-import-options-and-guidelines-for-fusion-applications-suite">src6</a>]</li>
+    <li><strong>Assuming sandbox and production have identical limits</strong>: Sandbox environments may have lower rate limits and different ESS thread allocations. Fix: <code>Load-test in sandbox but validate rate limit assumptions in production with controlled rollout</code>. [<a href="https://docs.oracle.com/en-us/iaas/Content/Identity/sku/api-rate-limiting.htm">src1</a>]</li>
+    <li><strong>Hardcoding API version in integration endpoints</strong>: Oracle Fusion releases quarterly; endpoint paths may change. Fix: <code>Use version-agnostic base URLs where available; pin to a specific release version and update during quarterly testing cycles</code>. [<a href="https://www.ateam-oracle.com/oracle-fusion-cloud-erp-applications-integrations-guidelines-patternsuse-cases-using-oracle-paas">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test authentication (obtain token)
+curl -s -X POST "https://{idcs-domain}/oauth2/v1/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&amp;scope=urn:opc:idm:__myscopes__" \
+  -u "{client_id}:{client_secret}" | jq '.access_token'
+
+# Test REST API connectivity
+curl -s -o /dev/null -w "%{http_code}" -X GET \
+  "https://{host}/fscmRestApi/resources/v1/" \
+  -H "Authorization: Bearer {token}"
+
+# Check ESS scheduled process status
+curl -s -X GET \
+  "https://{host}/fscmRestApi/resources/v1/erpintegrations?finder=ESSJobStatusRF;requestId={JOB_ID}" \
+  -H "Authorization: Bearer {token}" | jq '.items[0] | {Status: .RequestStatus, StartTime: .StartTime, EndTime: .EndTime}'
+
+# List recent ESS jobs (last 20)
+curl -s -X GET \
+  "https://{host}/fscmRestApi/resources/v1/scheduledProcesses?limit=20&amp;orderBy=SubmittedDT:desc" \
+  -H "Authorization: Bearer {token}" | jq '.items[] | {id: .RequestId, name: .Name, status: .Status}'
+
+# Verify object accessibility (describe endpoint)
+curl -s -X GET \
+  "https://{host}/fscmRestApi/resources/v1/{resource}/describe" \
+  -H "Authorization: Bearer {token}" | jq '.Resources[0].attributes | length'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Release</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>25A</td><td>2025-01</td><td>Current</td><td>Enhanced Scheduler REST API endpoints</td><td>Quarterly update</td></tr>
+      <tr><td>24D</td><td>2024-10</td><td>Supported</td><td>Business Events improvements</td><td>&mdash;</td></tr>
+      <tr><td>24C</td><td>2024-07</td><td>Supported</td><td>REST API performance improvements</td><td>&mdash;</td></tr>
+      <tr><td>24B</td><td>2024-04</td><td>Supported</td><td>Revised identity domain rate limit tiers</td><td>Rate limit tier structure updated</td></tr>
+      <tr><td>24A</td><td>2024-01</td><td>Supported</td><td>FBDI high-volume mode expanded</td><td>New high-volume import objects</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Deprecation Policy</h3>
+  <p>Oracle Fusion Cloud ERP follows a quarterly release cadence with no formal API version numbering. REST endpoints are release-specific; breaking changes are documented in Release Readiness guides published before each quarterly update. Oracle generally provides one quarter advance notice before removing or changing REST API behavior.</p>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Designing a new Oracle ERP Cloud integration and need to understand all rate limit boundaries</td><td>Working with Oracle Cloud Infrastructure (OCI) platform APIs</td><td>OCI service limits documentation</td></tr>
+      <tr><td>Troubleshooting 429 errors or ESS job queue bottlenecks</td><td>Integrating with Oracle NetSuite (different API surface entirely)</td><td>NetSuite SuiteTalk/REST API limits documentation</td></tr>
+      <tr><td>Planning FBDI import strategy for high-volume data loads</td><td>Need Oracle Integration Cloud (OIC) message pack limits</td><td>OIC service limits documentation</td></tr>
+      <tr><td>Evaluating whether REST API or FBDI is appropriate for your data volume</td><td>Working with on-premise Oracle E-Business Suite</td><td>E-Business Suite integration guide</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Identity domain rate limits are not published per-customer and may vary based on your specific Oracle contract and service tier &mdash; the values in this card represent documented tiers but your actual limits should be confirmed with Oracle Support.</li>
+    <li>ESS thread counts in Oracle-managed SaaS environments cannot be directly modified by customers &mdash; changes require an Oracle Support Service Request and may be subject to additional charges.</li>
+    <li>Rate limits are subject to change with each quarterly release &mdash; always verify against the current Release Readiness documentation before production deployment.</li>
+    <li>Oracle does not expose rate limit remaining/reset headers in Fusion Cloud REST API responses (unlike OCI APIs) &mdash; you must track consumption client-side.</li>
+    <li>Sandbox and test environments may have lower rate limits and fewer ESS threads than production &mdash; do not assume test performance will translate directly to production.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/oracle-erp-cloud-api-capabilities/2026" data-relationship="related_to">Oracle ERP Cloud API Capabilities</a>
+    <a href="/business/erp-integration/oracle-erp-fbdi-integration-playbook/2026" data-relationship="solves">Oracle ERP FBDI Integration Playbook</a>
+    <a href="/business/erp-integration/oracle-integration-cloud-limits/2026" data-relationship="alternative_to">Oracle Integration Cloud (OIC) Limits</a>
+    <a href="/business/erp-integration/oci-api-rate-limits/2026" data-relationship="often_confused_with">OCI (Infrastructure) API Rate Limits</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

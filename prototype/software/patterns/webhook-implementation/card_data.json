@@ -1,0 +1,91 @@
+{
+  "id": "software/patterns/webhook-implementation/2026",
+  "category": "software",
+  "subcategory": "patterns",
+  "topic": "webhook-implementation",
+  "version_tag": "2026",
+  "canonical_question": "How do I implement a reliable webhook system?",
+  "aliases": [
+    "How to build webhooks with HMAC signature verification",
+    "Webhook sender and receiver implementation guide",
+    "How to implement idempotent webhook processing",
+    "Webhook retry with exponential backoff",
+    "How to secure webhooks with HMAC-SHA256",
+    "Webhook best practices for production"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.90,
+  "token_estimate": 3500,
+  "source_count": 7,
+  "md_path": "/software/patterns/webhook-implementation/2026.md",
+  "html_path": "/software/patterns/webhook-implementation/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": "Standard Webhooks spec v1.0, 2023; pattern is protocol-level and language-agnostic",
+    "next_review": "2026-08-24",
+    "change_sensitivity": "low"
+  },
+  "constraints": [
+    "Always sign payloads with HMAC-SHA256 using a per-endpoint secret -- unsigned webhooks are trivially spoofable",
+    "Always use constant-time comparison (crypto.timingSafeEqual / hmac.compare_digest / hmac.Equal) -- timing attacks leak secret bytes",
+    "Receivers must return 2xx within 5-10 seconds -- process asynchronously via queue, never synchronously",
+    "Exactly-once delivery is impossible over HTTP -- design for at-least-once with idempotency keys",
+    "Verify signatures against the raw request body bytes -- re-serialized JSON changes byte order and breaks HMAC",
+    "Include timestamps in signatures and reject payloads older than 5 minutes to prevent replay attacks"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need to consume webhooks from a specific provider (Stripe, GitHub, Shopify)",
+      "use_instead": "That provider's webhook integration docs -- each has unique header names and signing schemes"
+    },
+    {
+      "condition": "Need real-time bidirectional communication between client and server",
+      "use_instead": "WebSockets or Server-Sent Events (SSE)"
+    },
+    {
+      "condition": "Need guaranteed strict ordering of all events across all consumers",
+      "use_instead": "Event streaming with Kafka, Pulsar, or similar message broker"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      { "id": "software/patterns/idempotency-patterns/2026", "label": "Idempotency Patterns" },
+      { "id": "software/patterns/retry-exponential-backoff/2026", "label": "Retry with Exponential Backoff" },
+      { "id": "software/patterns/api-rate-limiting/2026", "label": "API Rate Limiting" }
+    ],
+    "solves": [
+      { "id": "software/patterns/polling-sse-websocket/2026", "label": "Polling vs SSE vs WebSocket -- When to Use Each" }
+    ],
+    "alternative_to": [
+      { "id": "software/system-design/message-queue-event-driven/2026", "label": "Message Queue & Event-Driven Architecture" }
+    ],
+    "often_confused_with": [
+      { "id": "software/system-design/webhooks-system/2026", "label": "Webhooks System Design (architecture-level)" }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "role",
+      "question": "Are you building the webhook sender (provider), receiver (consumer), or both?",
+      "type": "choice",
+      "options": ["sender", "receiver", "both"]
+    },
+    {
+      "key": "delivery_guarantee",
+      "question": "What delivery guarantee do you need?",
+      "type": "choice",
+      "options": ["at-least-once", "at-most-once"]
+    },
+    {
+      "key": "scale",
+      "question": "What is your expected webhook volume?",
+      "type": "choice",
+      "options": ["low (<100/min)", "medium (100-10K/min)", "high (>10K/min)"]
+    }
+  ]
+}

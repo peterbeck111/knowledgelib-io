@@ -1,0 +1,40 @@
+# Input:  A microservice "order-service" that needs to read ConfigMaps and Secrets in its namespace
+# Output: Least-privilege RBAC with separate service account
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: order-service
+  namespace: orders
+  annotations:
+    description: "Service account for order-service -- read-only config access"
+automountServiceAccountToken: false  # Explicit opt-in per pod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: orders
+  name: order-service-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["order-config"]  # Restrict to specific ConfigMap
+  verbs: ["get", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["order-db-creds"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: orders
+  name: order-service-binding
+subjects:
+- kind: ServiceAccount
+  name: order-service
+  namespace: orders
+roleRef:
+  kind: Role
+  name: order-service-role
+  apiGroup: rbac.authorization.k8s.io

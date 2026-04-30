@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>RAG System Architecture: System Design Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for Retrieval-Augmented Generation (RAG) with component architecture table, decision tree, 6 step-by-step instructions, 3...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/rag-system/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="RAG System Architecture: System Design Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for Retrieval-Augmented Generation (RAG) with component architecture table, decision tree, 6 step-by-step instructions, 3 multi-language code examples, 5 anti-pattern pairs, and 8 common pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/rag-system/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RAG System Architecture: System Design Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for Retrieval-Augmented Generation (RAG) with component architecture table, decision tree, 6 step-by-step instructions, 3 multi-language code examples, 5 anti-pattern pairs, and 8 common pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/rag_system">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a Retrieval-Augmented Generation (RAG) system?">
+  <meta name="ai:aliases" content="RAG system architecture; retrieval augmented generation design; RAG pipeline design; how to build a RAG system; RAG architecture patterns; vector search RAG pipeline; LLM retrieval system design; enterprise RAG architecture; production RAG system; contextual retrieval system design">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/rag-system/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="monthly">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="vector_db,embedding_model,scale,rag_complexity">
+  <meta name="ai:constraints" content="Embedding model dimensions fixed at index time — changing requires full re-indexing; Chunk size bounds retrieval quality — too small loses context, too large dilutes relevance; Context window limits are hard — chunks + prompt + generation must fit; Embedding models silently truncate inputs exceeding token limits; Hybrid search doubles storage and indexing cost; Never evaluate RAG quality subjectively">
+  <meta name="ai:skip_this_unit_if" content="Building a chatbot with only conversation memory, no external retrieval → Use LLM conversation memory patterns; Need to fine-tune an LLM on proprietary data → LLM fine-tuning guide; Building a traditional keyword search engine → software/system-design/search-engine/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "RAG System Architecture: System Design Guide",
+    "headline": "RAG System Architecture: System Design Guide",
+    "description": "Complete system design guide for Retrieval-Augmented Generation (RAG) covering the three-stage pipeline (ingestion, retrieval, generation), component architecture, vector database selection, chunking strategies, hybrid search, reranking, evaluation with RAGAS, and production deployment patterns. Includes decision tree, multi-language code examples (Python/LangChain, Python/LlamaIndex, TypeScript), anti-patterns, and diagnostic commands.",
+    "keywords": ["RAG", "retrieval augmented generation", "system design", "vector database", "embeddings", "LangChain", "LlamaIndex", "Pinecone", "chunking strategies", "hybrid search", "reranking", "RAGAS evaluation"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "LangChain 0.3+, LlamaIndex 0.10+, OpenAI API or any LLM provider, Vector database (Pinecone/Weaviate/Qdrant/Chroma/pgvector), Python 3.10+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Contextual Retrieval",
+        "url": "https://www.anthropic.com/news/contextual-retrieval"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Retrieval Augmented Generation (RAG)",
+        "url": "https://www.pinecone.io/learn/retrieval-augmented-generation/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Advanced RAG Cheat Sheet and Recipes Guide",
+        "url": "https://www.llamaindex.ai/blog/a-cheat-sheet-and-some-recipes-for-building-advanced-rag-803a9d94c41b"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Chunking Strategies for LLM Applications",
+        "url": "https://www.pinecone.io/learn/chunking-strategies/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Build a Custom RAG Agent with LangGraph",
+        "url": "https://docs.langchain.com/oss/python/langgraph/agentic-rag"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Advanced RAG Techniques",
+        "url": "https://weaviate.io/blog/advanced-rag"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Building Performant RAG Applications for Production",
+        "url": "https://developers.llamaindex.ai/python/framework/optimizing/production_rag/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "RAG System Architecture: System Design Guide",
+    "description": "Structured system design guide for Retrieval-Augmented Generation (RAG) with 12-component architecture table, decision tree, step-by-step implementation guide, code examples in Python and TypeScript, anti-patterns, common pitfalls, and evaluation strategies. Optimized for AI agent consumption.",
+    "keywords": ["RAG", "retrieval augmented generation", "system design", "vector database", "embeddings", "LangChain", "LlamaIndex", "hybrid search"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Anthropic"},
+      {"@type": "Organization", "name": "Pinecone"},
+      {"@type": "Organization", "name": "LlamaIndex"},
+      {"@type": "Organization", "name": "LangChain"},
+      {"@type": "Organization", "name": "Weaviate"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "RAG System Architecture: System Design Guide" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a Retrieval-Augmented Generation (RAG) system?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A RAG system is a three-stage pipeline — ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) — with each stage independently optimizable and scalable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "RAG system architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A RAG system is a three-stage pipeline — ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) — with each stage independently optimizable and scalable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "retrieval augmented generation design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A RAG system is a three-stage pipeline — ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) — with each stage independently optimizable and scalable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "RAG pipeline design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A RAG system is a three-stage pipeline — ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) — with each stage independently optimizable and scalable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to build a RAG system",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A RAG system is a three-stage pipeline — ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) — with each stage independently optimizable and scalable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "RAG architecture patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A RAG system is a three-stage pipeline — ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) — with each stage independently optimizable and scalable."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>RAG System Architecture: System Design Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a Retrieval-Augmented Generation (RAG) system?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/rag-system/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> monthly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A RAG system is a three-stage pipeline &mdash; ingestion (chunk documents, generate embeddings, store in vector DB), retrieval (embed query, similarity search, optional reranking), and generation (inject retrieved context into LLM prompt) &mdash; with each stage independently optimizable and scalable.</li>
+    <li><strong>Key tool/command</strong>: <code>vectorstore.similarity_search(query, k=5)</code> followed by <code>llm.invoke(prompt_with_context)</code> (LangChain pattern)</li>
+    <li><strong>Watch out for</strong>: Naive fixed-size chunking destroys context boundaries &mdash; 80% of RAG failures trace back to chunking, not retrieval or generation. [<a href="https://www.pinecone.io/learn/chunking-strategies/">src4</a>]</li>
+    <li><strong>Works with</strong>: LangChain 0.3+, LlamaIndex 0.10+, any vector DB (Pinecone, Weaviate, Qdrant, Chroma, pgvector), any LLM (OpenAI, Anthropic, open-source).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Embedding model dimensions are fixed at index time &mdash; changing models requires full re-indexing of all documents [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</li>
+    <li>Chunk size directly bounds retrieval quality &mdash; chunks too small lose context (faithfulness 0.47-0.51), semantic chunking reaches 0.79-0.82 [<a href="https://www.pinecone.io/learn/chunking-strategies/">src4</a>]</li>
+    <li>Context window limits are hard &mdash; total retrieved chunks + system prompt + user query + generation budget must fit within the LLM&rsquo;s context window [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>]</li>
+    <li>Embedding models have maximum input token limits (512-8192 tokens) &mdash; text exceeding the limit is silently truncated, corrupting vector representations [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</li>
+    <li>Hybrid search (vector + BM25) requires two index structures, roughly doubling storage and indexing cost [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>] [<a href="https://weaviate.io/blog/advanced-rag">src6</a>]</li>
+    <li>Never evaluate RAG quality subjectively &mdash; use automated metrics (faithfulness, answer relevancy, context precision) or regressions will go undetected [<a href="https://developers.llamaindex.ai/python/framework/optimizing/production_rag/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Document Loader</strong></td><td>Ingests raw documents (PDF, HTML, Markdown, DB rows) into the pipeline</td><td>LangChain document loaders, LlamaIndex readers, Unstructured.io, Apache Tika</td><td>Horizontal &mdash; stateless workers behind a queue</td></tr>
+      <tr><td><strong>Text Splitter / Chunker</strong></td><td>Splits documents into semantically coherent chunks with metadata</td><td>RecursiveCharacterTextSplitter (400-512 tokens), semantic chunking, sentence-window</td><td>CPU-bound &mdash; parallelize across documents</td></tr>
+      <tr><td><strong>Embedding Model</strong></td><td>Converts text chunks and queries into dense vector representations</td><td>OpenAI text-embedding-3-small/large, Voyage AI voyage-3, Cohere embed-v3, BGE-large, E5</td><td>Batch API calls; GPU for self-hosted models</td></tr>
+      <tr><td><strong>Vector Store</strong></td><td>Stores and indexes embeddings for fast approximate nearest neighbor (ANN) search</td><td>Pinecone, Weaviate, Qdrant, Chroma, pgvector, Milvus, FAISS</td><td>Shard by namespace/collection; replicate for reads</td></tr>
+      <tr><td><strong>Sparse Index (BM25)</strong></td><td>Keyword-based retrieval for hybrid search &mdash; catches exact terms that vectors miss</td><td>Elasticsearch, OpenSearch, Pinecone sparse vectors, Weaviate BM25</td><td>Shard by document ID; standard search scaling</td></tr>
+      <tr><td><strong>Query Transformer</strong></td><td>Rewrites, expands, or decomposes user queries before retrieval</td><td>HyDE (hypothetical document), multi-query, sub-question decomposition</td><td>Stateless &mdash; LLM call per query</td></tr>
+      <tr><td><strong>Retriever</strong></td><td>Executes similarity search against vector store, returns top-k relevant chunks</td><td>Vector search (cosine/dot-product), hybrid (vector + BM25), metadata filters</td><td>Tune k, use metadata filters to reduce search space</td></tr>
+      <tr><td><strong>Reranker</strong></td><td>Re-scores retrieved chunks by relevance using a cross-encoder model</td><td>Cohere Rerank, Jina Reranker, bge-reranker, FlashRank</td><td>GPU for cross-encoder; retrieve 3-5x final k, rerank to k</td></tr>
+      <tr><td><strong>Context Assembler</strong></td><td>Formats retrieved chunks into a prompt template with citations and instructions</td><td>LangChain prompt templates, LlamaIndex response synthesizer</td><td>Stateless &mdash; string formatting</td></tr>
+      <tr><td><strong>LLM Generator</strong></td><td>Produces the final answer grounded in retrieved context</td><td>GPT-4o, Claude 3.5/Opus, Llama 3, Mistral, Gemini</td><td>Scale via API rate limits or self-hosted replicas</td></tr>
+      <tr><td><strong>Evaluation Framework</strong></td><td>Measures retrieval and generation quality with automated metrics</td><td>RAGAS (faithfulness, relevancy, precision), DeepEval, TruLens</td><td>Run offline on test sets; CI integration</td></tr>
+      <tr><td><strong>Observability</strong></td><td>Traces retrieval, reranking, and generation steps for debugging and cost tracking</td><td>LangSmith, Arize Phoenix, Weights &amp; Biases, OpenTelemetry</td><td>Event streaming &mdash; scale consumers independently</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Corpus size and complexity?
+│   ├── &lt;10K documents, single domain
+│   │   ├── Simple Q&amp;A → Naive RAG: chunk + embed + retrieve + generate
+│   │   └── Need citations → Naive RAG + source tracking in metadata
+│   ├── 10K-1M documents, multiple domains
+│   │   ├── Keyword matches important → Hybrid search (vector + BM25) [src1]
+│   │   ├── Mixed doc types (PDF, code, tables) → Semantic chunking + metadata filters
+│   │   └── Need high precision → Add reranker (retrieve 20, rerank to 5)
+│   └── &gt;1M documents, enterprise-scale
+│       ├── Multi-tenant → Namespace/collection per tenant in vector DB
+│       ├── Latency-sensitive → Cache frequent queries + pre-compute popular embeddings
+│       └── Complex multi-hop questions → Agentic RAG with LangGraph [src5]
+├── Query complexity?
+│   ├── Single-hop factual → Standard retrieval with k=3-5
+│   ├── Multi-hop reasoning → Sub-question decomposition or iterative retrieval
+│   └── Conversational (follow-ups) → Conversation-aware retrieval with history condensation
+├── Vector DB choice?
+│   ├── Managed, zero-ops → Pinecone (serverless)
+│   ├── Open-source, self-hosted → Qdrant, Weaviate, or Milvus
+│   ├── Already using PostgreSQL → pgvector extension
+│   └── Prototyping/local dev → Chroma (in-memory) or FAISS
+└── DEFAULT → Start with Naive RAG (LangChain + Chroma), add reranking when precision matters</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Prepare and chunk your documents</h3>
+  <p>Split documents into semantically coherent chunks. Use recursive character splitting as a baseline (400-512 tokens, 10-20% overlap), then upgrade to semantic chunking if quality metrics demand it. [<a href="https://www.pinecone.io/learn/chunking-strategies/">src4</a>]</p>
+  <pre><code class="language-python">from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
+
+# Load documents from a directory
+loader = DirectoryLoader("./docs", glob="**/*.pdf", loader_cls=PyPDFLoader)
+raw_docs = loader.load()
+
+# Chunk with overlap to preserve context at boundaries
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512,       # ~400-512 tokens — sweet spot for most use cases
+    chunk_overlap=64,     # ~12% overlap preserves cross-boundary context
+    separators=["\n\n", "\n", ". ", " ", ""],  # Respect natural boundaries
+    length_function=len,
+)
+chunks = splitter.split_documents(raw_docs)
+print(f"Split {len(raw_docs)} documents into {len(chunks)} chunks")</code></pre>
+  <p><strong>Verify</strong>: <code>len(chunks)</code> is 5-20x the number of source documents. Spot-check 10 random chunks for coherence.</p>
+
+  <h3>2. Generate embeddings and store in a vector database</h3>
+  <p>Embed all chunks and upsert into your vector store. Pin the embedding model &mdash; changing it later requires full re-indexing. [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</p>
+  <pre><code class="language-python">from langchain_openai import OpenAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
+import os
+
+# Pin embedding model version — changing requires full re-index
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-small",  # 1536 dims, $0.02/1M tokens
+    openai_api_key=os.environ["OPENAI_API_KEY"],
+)
+
+# Create vector store and upsert chunks
+vectorstore = PineconeVectorStore.from_documents(
+    documents=chunks,
+    embedding=embeddings,
+    index_name="rag-index",
+    namespace="production",
+)
+print(f"Indexed {len(chunks)} chunks into Pinecone")</code></pre>
+  <p><strong>Verify</strong>: <code>vectorstore.similarity_search("test query", k=3)</code> returns relevant chunks, not random results.</p>
+
+  <h3>3. Implement retrieval with hybrid search</h3>
+  <p>Combine dense vector search with sparse keyword search (BM25) for higher recall. Anthropic&rsquo;s research shows hybrid retrieval with contextual embeddings reduces failures by 49%. [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>] [<a href="https://weaviate.io/blog/advanced-rag">src6</a>]</p>
+  <pre><code class="language-python">from langchain.retrievers import EnsembleRetriever
+from langchain_community.retrievers import BM25Retriever
+
+# Dense retriever — semantic similarity
+dense_retriever = vectorstore.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 10},  # Over-retrieve for reranking
+)
+
+# Sparse retriever — keyword matching (catches exact terms vectors miss)
+bm25_retriever = BM25Retriever.from_documents(chunks, k=10)
+
+# Hybrid: combine dense + sparse with weighted fusion
+hybrid_retriever = EnsembleRetriever(
+    retrievers=[dense_retriever, bm25_retriever],
+    weights=[0.6, 0.4],  # Tune based on your query types
+)
+results = hybrid_retriever.invoke("How does contextual retrieval work?")</code></pre>
+  <p><strong>Verify</strong>: Compare results from dense-only vs. hybrid on 20 test queries &mdash; hybrid should improve recall on keyword-heavy queries.</p>
+
+  <h3>4. Add reranking for precision</h3>
+  <p>Over-retrieve (3-5x final k), then rerank with a cross-encoder to maximize precision. This reduces noise in the LLM context. [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>] [<a href="https://www.llamaindex.ai/blog/a-cheat-sheet-and-some-recipes-for-building-advanced-rag-803a9d94c41b">src3</a>]</p>
+  <pre><code class="language-python">from langchain.retrievers import ContextualCompressionRetriever
+from langchain_cohere import CohereRerank
+
+# Reranker: retrieves 20 chunks, reranks to top 5
+reranker = CohereRerank(
+    model="rerank-english-v3.0",
+    top_n=5,  # Final number of chunks passed to LLM
+)
+
+compression_retriever = ContextualCompressionRetriever(
+    base_compressor=reranker,
+    base_retriever=hybrid_retriever,  # From step 3
+)
+
+reranked_results = compression_retriever.invoke("What embedding model should I use?")
+# Now only the 5 most relevant chunks proceed to generation</code></pre>
+  <p><strong>Verify</strong>: Spot-check reranked results &mdash; the top chunk should directly answer the query, not just be tangentially related.</p>
+
+  <h3>5. Build the generation chain with citations</h3>
+  <p>Assemble retrieved context into a prompt template and pass to the LLM. Include source metadata for citation traceability. [<a href="https://docs.langchain.com/oss/python/langgraph/agentic-rag">src5</a>]</p>
+  <pre><code class="language-python">from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+prompt = ChatPromptTemplate.from_template("""
+Answer the question based ONLY on the following context. If the context
+does not contain enough information, say "I don't have enough information."
+Cite sources using [Source: filename] format.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:""")
+
+def format_docs(docs):
+    return "\n\n".join(
+        f"[Source: {d.metadata.get('source', 'unknown')}]\n{d.page_content}"
+        for d in docs
+    )
+
+# LCEL chain: retrieve → format → prompt → generate
+rag_chain = (
+    {"context": compression_retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+answer = rag_chain.invoke("How do I design a RAG system?")
+print(answer)</code></pre>
+  <p><strong>Verify</strong>: Answer references specific source documents. Asking about topics not in the corpus returns &ldquo;I don&rsquo;t have enough information.&rdquo;</p>
+
+  <h3>6. Evaluate with RAGAS metrics</h3>
+  <p>Measure retrieval and generation quality using automated evaluation. Run on a test set of 50-100 question-answer pairs. [<a href="https://developers.llamaindex.ai/python/framework/optimizing/production_rag/">src7</a>]</p>
+  <pre><code class="language-python">from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision
+from datasets import Dataset
+
+# Prepare evaluation dataset
+eval_data = {
+    "question": ["What is contextual retrieval?", "How does hybrid search work?"],
+    "answer": [answer_1, answer_2],  # RAG-generated answers
+    "contexts": [retrieved_contexts_1, retrieved_contexts_2],
+    "ground_truth": ["Contextual retrieval prepends...", "Hybrid search combines..."],
+}
+
+result = evaluate(
+    Dataset.from_dict(eval_data),
+    metrics=[faithfulness, answer_relevancy, context_precision],
+)
+print(result)
+# Target: faithfulness &gt; 0.85, answer_relevancy &gt; 0.80, context_precision &gt; 0.75</code></pre>
+  <p><strong>Verify</strong>: All metrics above threshold. If faithfulness &lt; 0.85, improve chunking or retrieval. If relevancy &lt; 0.80, improve prompt template.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python/LangChain: Complete Naive RAG Pipeline</h3>
+  <pre><code class="language-python"># Input:  Directory of documents + user query
+# Output: LLM answer grounded in retrieved context with sources
+
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import DirectoryLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+
+# 1. Load and chunk
+docs = DirectoryLoader("./docs", glob="**/*.md").load()
+chunks = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=64).split_documents(docs)
+
+# 2. Embed and store
+db = Chroma.from_documents(chunks, OpenAIEmbeddings(model="text-embedding-3-small"))
+retriever = db.as_retriever(search_kwargs={"k": 5})
+
+# 3. Generate
+prompt = ChatPromptTemplate.from_template(
+    "Answer based on context:\n{context}\n\nQuestion: {question}"
+)
+chain = (
+    {"context": retriever | (lambda docs: "\n".join(d.page_content for d in docs)),
+     "question": RunnablePassthrough()}
+    | prompt | ChatOpenAI(model="gpt-4o", temperature=0) | StrOutputParser()
+)
+print(chain.invoke("How does RAG work?"))</code></pre>
+
+  <h3>Python/LlamaIndex: RAG with Sentence Window Retrieval</h3>
+  <pre><code class="language-python"># Input:  PDF documents + user query
+# Output: Answer using sentence-window retrieval for fine-grained context
+
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from llama_index.core.node_parser import SentenceWindowNodeParser
+from llama_index.core.postprocessor import MetadataReplacementPostProcessor
+
+# Parse with sentence windows — embeds single sentences, retrieves surrounding window
+node_parser = SentenceWindowNodeParser.from_defaults(
+    window_size=3,  # 3 sentences before + after the matched sentence
+)
+
+documents = SimpleDirectoryReader("./docs").load_data()
+index = VectorStoreIndex.from_documents(documents, node_parser=node_parser)
+
+# At query time, replace sentence with full window for generation
+query_engine = index.as_query_engine(
+    similarity_top_k=5,
+    node_postprocessors=[MetadataReplacementPostProcessor(target_metadata_key="window")],
+)
+response = query_engine.query("What are RAG best practices?")
+print(response)</code></pre>
+
+  <h3>TypeScript/LangChain: RAG with Pinecone</h3>
+  <pre><code class="language-typescript">// Input:  Array of text documents + user query string
+// Output: LLM-generated answer grounded in retrieved context
+
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { PineconeStore } from "@langchain/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
+
+const pinecone = new Pinecone();
+const index = pinecone.Index("rag-index");
+
+const vectorStore = await PineconeStore.fromExistingIndex(
+  new OpenAIEmbeddings({ modelName: "text-embedding-3-small" }),
+  { pineconeIndex: index }
+);
+
+const retriever = vectorStore.asRetriever({ k: 5 });
+const llm = new ChatOpenAI({ modelName: "gpt-4o", temperature: 0 });
+const prompt = ChatPromptTemplate.fromTemplate(
+  "Answer based on context:\n{context}\n\nQuestion: {question}"
+);
+
+const chain = RunnableSequence.from([
+  { context: retriever.pipe((docs) =&gt; docs.map((d) =&gt; d.pageContent).join("\n")),
+    question: new RunnablePassthrough() },
+  prompt, llm, new StringOutputParser(),
+]);
+const answer = await chain.invoke("How does RAG work?");</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Stuffing entire documents into the context window</h3>
+  <pre><code class="language-python"># BAD &mdash; sending full documents instead of relevant chunks
+# Wastes tokens, dilutes relevance, hits context window limits
+def naive_answer(question, documents):
+    full_text = "\n".join(doc.page_content for doc in documents)  # Could be 500K+ tokens
+    return llm.invoke(f"Context: {full_text}\n\nQuestion: {question}")
+# Result: exceeds context window, LLM ignores middle content ("lost in the middle" problem)</code></pre>
+
+  <h3>Correct: Retrieve only relevant chunks with bounded k</h3>
+  <pre><code class="language-python"># GOOD &mdash; retrieve top-k relevant chunks, respecting token budget [src2]
+def rag_answer(question, retriever, llm, max_context_tokens=3000):
+    chunks = retriever.invoke(question)  # Returns k most relevant chunks
+    context = "\n\n".join(c.page_content for c in chunks)
+    if num_tokens(context) &gt; max_context_tokens:
+        chunks = chunks[:len(chunks) // 2]  # Trim to fit
+        context = "\n\n".join(c.page_content for c in chunks)
+    return llm.invoke(f"Context: {context}\n\nQuestion: {question}")</code></pre>
+
+  <h3>Wrong: Using fixed-size chunking without overlap</h3>
+  <pre><code class="language-python"># BAD &mdash; hard splits at character boundaries, no overlap
+chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
+# "The Eiffel Tower was built in" | "1889 by Gustave Eiffel"
+# Neither chunk contains the complete fact — retrieval fails for both</code></pre>
+
+  <h3>Correct: Recursive chunking with overlap and boundary awareness</h3>
+  <pre><code class="language-python"># GOOD &mdash; respects natural boundaries, preserves cross-boundary context [src4]
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512,
+    chunk_overlap=64,  # 12% overlap captures cross-boundary content
+    separators=["\n\n", "\n", ". ", " ", ""],  # Split at natural boundaries first
+)
+chunks = splitter.split_documents(documents)</code></pre>
+
+  <h3>Wrong: Embedding queries and documents with different models</h3>
+  <pre><code class="language-python"># BAD &mdash; asymmetric embedding models produce incomparable vector spaces
+doc_embeddings = model_a.encode(documents)     # Model A for docs
+query_embedding = model_b.encode(user_query)   # Model B for queries
+# Cosine similarity between different vector spaces is meaningless</code></pre>
+
+  <h3>Correct: Use the same embedding model for both documents and queries</h3>
+  <pre><code class="language-python"># GOOD &mdash; same model ensures vectors live in the same space [src2]
+embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
+# Used at index time
+vectorstore = Chroma.from_documents(chunks, embedding_model)
+# Used at query time (automatically by the retriever)
+retriever = vectorstore.as_retriever()</code></pre>
+
+  <h3>Wrong: No evaluation &mdash; &ldquo;it seems to work&rdquo;</h3>
+  <pre><code class="language-python"># BAD &mdash; no metrics, no test set, deploying based on vibes
+chain = build_rag_chain()
+answer = chain.invoke("test question")
+print(answer)  # "Looks good to me!" — ships to production
+# Silent regressions when you change chunking, models, or prompts</code></pre>
+
+  <h3>Correct: Automated evaluation with RAGAS metrics</h3>
+  <pre><code class="language-python"># GOOD &mdash; measurable quality gates before deployment [src7]
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision
+result = evaluate(test_dataset, metrics=[faithfulness, answer_relevancy, context_precision])
+assert result["faithfulness"] &gt; 0.85, f"Faithfulness too low: {result['faithfulness']}"
+assert result["answer_relevancy"] &gt; 0.80, f"Relevancy too low: {result['answer_relevancy']}"
+# Gate deployments on metric thresholds in CI/CD</code></pre>
+
+  <h3>Wrong: Retrieving without reranking for precision-critical applications</h3>
+  <pre><code class="language-python"># BAD &mdash; top-5 from vector similarity often includes tangentially related noise
+results = vectorstore.similarity_search(query, k=5)
+# Result 1: Highly relevant
+# Result 2: Same topic, wrong subtopic
+# Result 3: Tangentially related
+# Results 4-5: Noise that confuses the LLM</code></pre>
+
+  <h3>Correct: Over-retrieve and rerank</h3>
+  <pre><code class="language-python"># GOOD &mdash; retrieve 20, rerank to 5 for high precision [src1] [src3]
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain_cohere import CohereRerank
+
+base_retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
+reranker = CohereRerank(model="rerank-english-v3.0", top_n=5)
+retriever = ContextualCompressionRetriever(
+    base_compressor=reranker, base_retriever=base_retriever
+)
+# Cross-encoder reranking is 5-10x more accurate than vector similarity alone</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Choosing chunk size without testing</strong>: Optimal chunk size depends on document type and query patterns. Factoid queries work best with 256-512 tokens; analytical queries need 1024+. Fix: benchmark 3-4 chunk sizes on your test set using RAGAS context_precision. [<a href="https://www.pinecone.io/learn/chunking-strategies/">src4</a>]</li>
+    <li><strong>Ignoring metadata filters</strong>: Retrieving across all documents when the query clearly targets a specific domain/date/category wastes context tokens on irrelevant chunks. Fix: attach metadata (source, date, category) at indexing time and filter at retrieval time. [<a href="https://weaviate.io/blog/advanced-rag">src6</a>]</li>
+    <li><strong>Not handling the &ldquo;no relevant results&rdquo; case</strong>: When the vector store returns low-similarity results, the LLM hallucinates rather than admitting ignorance. Fix: set a similarity threshold (e.g., cosine &gt; 0.7) and return &ldquo;I don&rsquo;t have information on this&rdquo; when no chunk passes. [<a href="https://developers.llamaindex.ai/python/framework/optimizing/production_rag/">src7</a>]</li>
+    <li><strong>Updating documents without re-indexing</strong>: Editing source documents without re-embedding and upserting leads to stale retrieval results. Fix: build an incremental indexing pipeline that detects changed files and re-indexes only those. [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</li>
+    <li><strong>&ldquo;Lost in the middle&rdquo; effect</strong>: LLMs attend more to the beginning and end of long contexts, underweighting middle chunks. Fix: limit retrieved chunks to 3-5, or place the most relevant chunk first and last. [<a href="https://www.llamaindex.ai/blog/a-cheat-sheet-and-some-recipes-for-building-advanced-rag-803a9d94c41b">src3</a>]</li>
+    <li><strong>Missing contextual information in chunks</strong>: A chunk saying &ldquo;the company reported $4.2B revenue&rdquo; without identifying which company is useless. Fix: use Anthropic&rsquo;s contextual retrieval &mdash; prepend chunk-specific context. [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>]</li>
+    <li><strong>Skipping hybrid search for technical content</strong>: Pure vector search misses exact API names, error codes, and version numbers that BM25 catches trivially. Fix: always use hybrid search (vector + BM25) for technical documentation. [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>] [<a href="https://weaviate.io/blog/advanced-rag">src6</a>]</li>
+    <li><strong>Treating all queries the same</strong>: Simple factual queries and complex multi-step questions need different retrieval strategies. Fix: implement query routing &mdash; classify queries and route to appropriate retriever (simple vs. multi-hop vs. agentic). [<a href="https://docs.langchain.com/oss/python/langgraph/agentic-rag">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check embedding dimensions match between index and query
+python -c "from langchain_openai import OpenAIEmbeddings; e=OpenAIEmbeddings(model='text-embedding-3-small'); print(len(e.embed_query('test')))"
+
+# Count chunks in vector store (Pinecone)
+python -c "from pinecone import Pinecone; pc=Pinecone(); print(pc.Index('rag-index').describe_index_stats())"
+
+# Test retrieval quality — does top result answer the query?
+python -c "results = retriever.invoke('your test query'); print(results[0].page_content[:200])"
+
+# Measure chunk size distribution
+python -c "import statistics; sizes=[len(c.page_content) for c in chunks]; print(f'mean={statistics.mean(sizes):.0f}, median={statistics.median(sizes):.0f}, std={statistics.stdev(sizes):.0f}')"
+
+# Check for duplicate chunks (common after re-indexing)
+python -c "contents=[c.page_content for c in chunks]; dupes=len(contents)-len(set(contents)); print(f'{dupes} duplicate chunks')"
+
+# Run RAGAS evaluation on test set
+python -c "from ragas import evaluate; from ragas.metrics import faithfulness; print(evaluate(dataset, metrics=[faithfulness]))"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>LangChain 0.3 (2024-09)</td><td>Current</td><td>LCEL-first API; deprecated legacy chains (LLMChain, RetrievalQA)</td><td>Replace <code>RetrievalQA.from_chain_type()</code> with LCEL chain composition</td></tr>
+      <tr><td>LangChain 0.2 (2024-05)</td><td>Maintenance</td><td>Community package split; <code>langchain-community</code> separate</td><td>Move imports from <code>langchain</code> to <code>langchain-community</code> or partner packages</td></tr>
+      <tr><td>LlamaIndex 0.10+ (2024-03)</td><td>Current</td><td>New module structure; <code>llama-index-core</code> + integration packages</td><td>Update imports; install integration packages separately</td></tr>
+      <tr><td>OpenAI Embeddings v3 (2024-01)</td><td>Current</td><td>New models: text-embedding-3-small (1536d), text-embedding-3-large (3072d)</td><td>Re-index with new model for better quality; supports Matryoshka dimensionality reduction</td></tr>
+      <tr><td>Pinecone Serverless (2024-01)</td><td>Current</td><td>New serverless architecture; pod-based deprecated for new indexes</td><td>Migrate pod indexes to serverless; use namespaces for multi-tenancy</td></tr>
+      <tr><td>Weaviate 1.25+ (2024-06)</td><td>Current</td><td>Named vectors; multi-modal modules</td><td>Use named vectors for hybrid (dense + sparse) in single collection</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Knowledge base changes frequently (weekly/monthly)</td><td>Data is static and small enough to fit in prompt</td><td>Direct prompt injection (system message with all context)</td></tr>
+      <tr><td>Need grounded, cited answers from specific documents</td><td>Questions require real-time web data</td><td>Web search + LLM (Perplexity-style)</td></tr>
+      <tr><td>Corpus exceeds LLM context window (&gt;100K tokens)</td><td>Corpus fits in a single context window (&lt;50K tokens)</td><td>Long-context LLM without retrieval</td></tr>
+      <tr><td>Need to reduce hallucinations on domain-specific topics</td><td>Creative writing or open-ended generation</td><td>Standard LLM prompting</td></tr>
+      <tr><td>Multi-tenant &mdash; different users access different document sets</td><td>All users access the same small knowledge base</td><td>Fine-tuned LLM or prompt engineering</td></tr>
+      <tr><td>Must attribute answers to specific source documents</td><td>Attribution not required</td><td>Fine-tuning bakes knowledge into weights</td></tr>
+      <tr><td>Budget-conscious &mdash; retrieve only relevant context per query</td><td>Unlimited token budget and low latency tolerance</td><td>Send entire knowledge base in prompt</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>Embedding model choice locks your index</strong> &mdash; switching from <code>text-embedding-3-small</code> (1536 dims) to <code>text-embedding-3-large</code> (3072 dims) requires full re-indexing. Choose embedding model before building the index. [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</li>
+    <li><strong>RAG does not eliminate hallucinations</strong> &mdash; it reduces them. The LLM can still generate content not present in retrieved chunks, especially when instructions say &ldquo;answer the question&rdquo; without &ldquo;based ONLY on the context.&rdquo; Always include strict grounding instructions in the prompt. [<a href="https://developers.llamaindex.ai/python/framework/optimizing/production_rag/">src7</a>]</li>
+    <li><strong>Vector similarity != relevance</strong> &mdash; cosine similarity of 0.85 does not mean 85% relevant. Thresholds vary by embedding model and domain. Calibrate with labeled data. [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</li>
+    <li><strong>Latency adds up</strong> &mdash; embedding (50-200ms) + vector search (20-100ms) + reranking (100-500ms) + LLM generation (500-3000ms) = 700-3800ms total. Budget each component and parallelize where possible. [<a href="https://developers.llamaindex.ai/python/framework/optimizing/production_rag/">src7</a>]</li>
+    <li><strong>Cost scales with queries, not corpus size</strong> &mdash; embedding the corpus is a one-time cost; the recurring cost is per-query embedding + LLM generation. At 10K queries/day with GPT-4o, expect $50-200/day in LLM costs alone. [<a href="https://www.pinecone.io/learn/retrieval-augmented-generation/">src2</a>]</li>
+    <li><strong>The &ldquo;evolving&rdquo; temporal status means frameworks change rapidly</strong> &mdash; LangChain, LlamaIndex, and vector DB APIs ship breaking changes quarterly. Pin dependency versions and test upgrades in staging. [<a href="https://docs.langchain.com/oss/python/langgraph/agentic-rag">src5</a>]</li>
+    <li><strong>Hybrid search is not always better</strong> &mdash; for purely semantic queries (e.g., &ldquo;explain how transformers work&rdquo;), BM25 adds no value and may introduce noise. Profile your query distribution before adding hybrid search complexity. [<a href="https://www.anthropic.com/news/contextual-retrieval">src1</a>] [<a href="https://weaviate.io/blog/advanced-rag">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/search-engine/2026" data-relationship="related_to">Search Engine Architecture</a>
+    <a href="/software/system-design/message-queue/2026" data-relationship="related_to">Message Queue Architecture</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

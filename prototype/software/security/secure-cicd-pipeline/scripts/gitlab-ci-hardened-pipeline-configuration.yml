@@ -1,0 +1,50 @@
+# .gitlab-ci.yml
+stages:
+  - test
+  - scan
+  - build
+  - deploy
+
+variables:
+  # Never define secrets here -- use CI/CD Variables (Settings > CI/CD)
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# Secret detection runs automatically on all branches
+secret_detection:
+  stage: test
+
+sast:
+  stage: scan
+  # GitLab Auto SAST runs automatically when detected
+
+dependency_scanning:
+  stage: scan
+  # Scans lock files for known CVEs
+
+container_scanning:
+  stage: build
+  variables:
+    CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  needs: ["build"]
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy_production:
+  stage: deploy
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual  # Require manual approval for production
+  script:
+    - cosign verify --certificate-oidc-issuer https://gitlab.com $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - ./deploy.sh

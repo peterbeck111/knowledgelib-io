@@ -1,0 +1,29 @@
+START: What type of autoscaling do you need?
+|
++-- Need to scale replica count based on CPU/memory?
+|   +-- YES --> Use HPA with Resource metrics (see Step 1-2 below)
+|   +-- NO |
+|
++-- Need to scale on application-specific metrics (RPS, queue length)?
+|   +-- YES --> Is the metric available inside the cluster (Prometheus)?
+|   |   +-- YES --> Use HPA + prometheus-adapter (see Step 3)
+|   |   +-- NO --> Use HPA + external metrics adapter (see Step 4)
+|   +-- NO |
+|
++-- Need to scale to zero replicas when idle?
+|   +-- YES --> Use KEDA (extends HPA with scale-to-zero)
+|   +-- NO |
+|
++-- Need to right-size pod resource requests, not add replicas?
+|   +-- YES --> Use VPA (Vertical Pod Autoscaler), not HPA
+|   +-- NO |
+|
++-- Workload is stateful (database, cache)?
+|   +-- YES --> Prefer VPA or manual scaling; HPA risks split-brain with stateful sets
+|   +-- NO |
+|
++-- Need cluster node scaling when pods are unschedulable?
+|   +-- YES --> Use Cluster Autoscaler alongside HPA
+|   +-- NO |
+|
++-- DEFAULT --> Start with HPA on CPU at 50-70% target; add memory or custom metrics as needed

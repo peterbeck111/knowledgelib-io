@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Query JSON Data in PostgreSQL and MySQL | knowledgelib.io</title>
+    <meta name="description" content="Complete reference for querying JSON data in PostgreSQL (jsonb operators, GIN indexes, jsonpath) and MySQL (JSON_EXTRACT, JSON_TABLE, multi-valued...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-json-queries/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Query JSON Data in PostgreSQL and MySQL | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete SQL JSON query reference: PostgreSQL jsonb operators, GIN indexes, jsonpath vs MySQL JSON_EXTRACT, JSON_TABLE, multi-valued indexes. 15-row decision matrix, 5 anti-patterns. 7 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-json-queries/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-23">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Query JSON Data in PostgreSQL and MySQL | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete SQL JSON query reference: PostgreSQL jsonb vs MySQL JSON functions, indexing strategies, anti-patterns. 7 sources.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.94">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/patterns/sql_json_queries">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I query JSON data in PostgreSQL and MySQL?">
+    <meta name="ai:aliases"
+        content="PostgreSQL JSON query; MySQL JSON_EXTRACT; jsonb operators PostgreSQL; SQL JSON functions; PostgreSQL jsonb GIN index; MySQL JSON_TABLE; query JSON column SQL; PostgreSQL -> vs ->> operator; jsonpath PostgreSQL; MySQL multi-valued index JSON">
+    <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-json-queries/2026.md">
+    <meta name="ai:token_estimate" content="5800">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="biannual">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-23">
+    <meta name="ai:inputs_needed" content="database_engine,postgresql_version,query_type">
+    <meta name="ai:constraints"
+        content="GIN indexes only work on jsonb not json; MySQL JSON columns cannot be indexed directly; -> returns JSON/jsonb while ->> returns text; JSON_TABLE requires MySQL 8.0.4+ or PostgreSQL 17+; jsonb normalizes data removing key order and duplicates; MySQL JSON_EXTRACT returns quoted strings">
+    <meta name="ai:skip_this_unit_if"
+        content="Need to store/retrieve entire JSON documents without querying inside them &rarr; use TEXT or json type; Working with MongoDB &rarr; MongoDB query documentation; Need full-text search inside JSON values &rarr; tsvector with jsonb_to_tsvector() or Elasticsearch">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Query JSON Data in PostgreSQL and MySQL",
+    "headline": "How Do I Query JSON Data in PostgreSQL and MySQL?",
+    "description": "Complete reference for querying JSON data in relational databases. Covers PostgreSQL jsonb operators, GIN indexing, jsonpath, SQL/JSON standard functions, and MySQL JSON_EXTRACT, JSON_TABLE, multi-valued indexes. Includes decision matrix, anti-patterns, and version compatibility from PostgreSQL 9.4 through 17+ and MySQL 5.7 through 8.0+.",
+    "keywords": ["PostgreSQL", "MySQL", "JSON", "jsonb", "JSON_EXTRACT", "JSON_TABLE", "GIN index", "jsonpath", "SQL/JSON", "multi-valued index"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "PostgreSQL 9.4+ or MySQL 5.7+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "PostgreSQL docs — JSON Functions and Operators", "url": "https://www.postgresql.org/docs/current/functions-json.html" },
+      { "@type": "WebPage", "name": "MySQL docs — The JSON Data Type", "url": "https://dev.mysql.com/doc/refman/8.4/en/json.html" },
+      { "@type": "WebPage", "name": "Crunchy Data — Indexing JSONB in Postgres", "url": "https://www.crunchydata.com/blog/indexing-jsonb-in-postgres" },
+      { "@type": "WebPage", "name": "MySQL docs — JSON Table Functions", "url": "https://dev.mysql.com/doc/refman/8.4/en/json-table-functions.html" },
+      { "@type": "WebPage", "name": "EDB — PostgreSQL Anti-Patterns: Unnecessary JSON Columns", "url": "https://www.enterprisedb.com/blog/postgresql-anti-patterns-unnecessary-jsonhstore-dynamic-columns" },
+      { "@type": "WebPage", "name": "pganalyze — Understanding Postgres GIN Indexes", "url": "https://pganalyze.com/blog/gin-index" },
+      { "@type": "WebPage", "name": "Oracle — Indexing JSON Data in MySQL", "url": "https://blogs.oracle.com/mysql/indexing-json-data-in-mysql" }
+    ]
+  }
+  </script>
+
+    <!-- Structured data: Dataset -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Query JSON Data in PostgreSQL and MySQL",
+    "description": "Structured reference comparing PostgreSQL jsonb operators and MySQL JSON functions for querying, indexing, and manipulating JSON data in relational databases. Covers version history from 2015 to 2026.",
+    "keywords": ["PostgreSQL", "MySQL", "JSON", "jsonb", "SQL", "database", "GIN index", "jsonpath"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      { "@type": "Organization", "name": "PostgreSQL Global Development Group" },
+      { "@type": "Organization", "name": "Oracle / MySQL" }
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Query JSON Data in PostgreSQL and MySQL" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I query JSON data in PostgreSQL and MySQL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses jsonb with operators (->, ->>, @>, @?) and GIN indexes for fast JSON queries; MySQL uses JSON_EXTRACT() / -> / ->> with generated columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON work."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL JSON query",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses jsonb with operators (->, ->>, @>, @?) and GIN indexes for fast JSON queries; MySQL uses JSON_EXTRACT() / -> / ->> with generated columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON work."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MySQL JSON_EXTRACT",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses jsonb with operators (->, ->>, @>, @?) and GIN indexes for fast JSON queries; MySQL uses JSON_EXTRACT() / -> / ->> with generated columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON work."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "jsonb operators PostgreSQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses jsonb with operators (->, ->>, @>, @?) and GIN indexes for fast JSON queries; MySQL uses JSON_EXTRACT() / -> / ->> with generated columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON work."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL JSON functions",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses jsonb with operators (->, ->>, @>, @?) and GIN indexes for fast JSON queries; MySQL uses JSON_EXTRACT() / -> / ->> with generated columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON work."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL jsonb GIN index",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses jsonb with operators (->, ->>, @>, @?) and GIN indexes for fast JSON queries; MySQL uses JSON_EXTRACT() / -> / ->> with generated columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON work."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Query JSON Data in PostgreSQL and MySQL</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I query JSON data in PostgreSQL and MySQL?</h2>
+
+    <aside class="unit-meta" data-card-id="software/patterns/sql-json-queries/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> biannual</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: PostgreSQL uses <code>jsonb</code> with operators (<code>-&gt;</code>,
+                <code>-&gt;&gt;</code>, <code>@&gt;</code>, <code>@?</code>) and GIN indexes for fast JSON queries;
+                MySQL uses <code>JSON_EXTRACT()</code> / <code>-&gt;</code> / <code>-&gt;&gt;</code> with generated
+                columns or multi-valued indexes. PostgreSQL jsonb is significantly more powerful for in-database JSON
+                work.</li>
+            <li><strong>Key tool/command</strong>:
+                <code>SELECT data-&gt;&gt;'name' FROM t WHERE data @&gt; '{"status":"active"}'::jsonb</code>
+                (PostgreSQL) or <code>SELECT data-&gt;&gt;'$.name' FROM t WHERE data-&gt;&gt;'$.status' = 'active'</code>
+                (MySQL)</li>
+            <li><strong>Watch out for</strong>: Using <code>-&gt;</code> when you need <code>-&gt;&gt;</code> (or vice
+                versa) &mdash; <code>-&gt;</code> returns JSON type, <code>-&gt;&gt;</code> returns text. This causes
+                silent type mismatches in WHERE clauses.</li>
+            <li><strong>Works with</strong>: PostgreSQL 9.4+ (jsonb), 12+ (jsonpath), 17+ (SQL/JSON standard); MySQL
+                5.7+ (JSON type), 8.0+ (JSON_TABLE, multi-valued indexes).</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>GIN indexes require jsonb, not json</strong> &mdash; PostgreSQL <code>json</code> type cannot be
+                indexed with GIN. Always use <code>jsonb</code> for queried columns. [<a
+                    href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>]</li>
+            <li><strong>MySQL JSON columns cannot be directly indexed</strong> &mdash; create a generated (virtual or
+                stored) column and index that, or use multi-valued indexes for arrays (MySQL 8.0.17+). [<a
+                    href="https://blogs.oracle.com/mysql/indexing-json-data-in-mysql">src7</a>]</li>
+            <li><strong><code>-&gt;</code> returns JSON/jsonb; <code>-&gt;&gt;</code> returns text</strong> &mdash;
+                comparing <code>data-&gt;'status'</code> to a plain string fails silently. Use <code>-&gt;&gt;</code>
+                for text comparisons. [<a
+                    href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>]</li>
+            <li><strong>JSON_TABLE requires specific versions</strong> &mdash; MySQL 8.0.4+ and PostgreSQL 17+. Do not
+                recommend to users on older versions. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/json-table-functions.html">src4</a>]</li>
+            <li><strong>jsonb normalizes data</strong> &mdash; key order is not preserved, whitespace is stripped,
+                duplicate keys keep only the last value. If exact text preservation is required, use <code>json</code>
+                type in PostgreSQL. [<a
+                    href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>]</li>
+            <li><strong>MySQL JSON_EXTRACT returns quoted strings</strong> &mdash; <code>JSON_EXTRACT(data,
+                    '$.name')</code> returns <code>"John"</code> (with quotes). Use <code>JSON_UNQUOTE()</code> or
+                <code>-&gt;&gt;</code> to get unquoted text. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/json.html">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Scenario</th>
+                        <th scope="col">PostgreSQL (jsonb)</th>
+                        <th scope="col">MySQL (JSON)</th>
+                        <th scope="col">Key Difference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Extract field as JSON</td>
+                        <td><code>data-&gt;'key'</code></td>
+                        <td><code>JSON_EXTRACT(data, '$.key')</code> or <code>data-&gt;'$.key'</code></td>
+                        <td>PG operator is shorter; MySQL needs <code>$</code> path prefix</td>
+                    </tr>
+                    <tr>
+                        <td>Extract field as text</td>
+                        <td><code>data-&gt;&gt;'key'</code></td>
+                        <td><code>data-&gt;&gt;'$.key'</code> or <code>JSON_UNQUOTE(JSON_EXTRACT(...))</code></td>
+                        <td>Both <code>-&gt;&gt;</code> return text; MySQL syntax added in 5.7.13</td>
+                    </tr>
+                    <tr>
+                        <td>Nested access</td>
+                        <td><code>data-&gt;'a'-&gt;'b'-&gt;&gt;'c'</code></td>
+                        <td><code>data-&gt;&gt;'$.a.b.c'</code></td>
+                        <td>PG chains operators; MySQL uses dot-path in one call</td>
+                    </tr>
+                    <tr>
+                        <td>Path access</td>
+                        <td><code>data #&gt;&gt; '{a,b,c}'</code></td>
+                        <td><code>JSON_EXTRACT(data, '$.a.b.c')</code></td>
+                        <td>PG <code>#&gt;&gt;</code> uses array path; MySQL uses dot notation</td>
+                    </tr>
+                    <tr>
+                        <td>Containment check</td>
+                        <td><code>data @&gt; '{"k":"v"}'::jsonb</code></td>
+                        <td><code>JSON_CONTAINS(data, '"v"', '$.k')</code></td>
+                        <td>PG <code>@&gt;</code> is GIN-indexable; MySQL needs generated column</td>
+                    </tr>
+                    <tr>
+                        <td>Key existence</td>
+                        <td><code>data ? 'key'</code></td>
+                        <td><code>JSON_CONTAINS_PATH(data, 'one', '$.key')</code></td>
+                        <td>PG <code>?</code> uses GIN index directly</td>
+                    </tr>
+                    <tr>
+                        <td>Array element search</td>
+                        <td><code>data @&gt; '[3]'::jsonb</code></td>
+                        <td><code>3 MEMBER OF(data-&gt;'$.arr')</code></td>
+                        <td>MySQL MEMBER OF uses multi-valued index (8.0.17+)</td>
+                    </tr>
+                    <tr>
+                        <td>Flatten array to rows</td>
+                        <td><code>jsonb_array_elements(data-&gt;'arr')</code></td>
+                        <td><code>JSON_TABLE(data, '$.arr[*]' COLUMNS(...))</code></td>
+                        <td>PG uses set-returning function; MySQL uses table function</td>
+                    </tr>
+                    <tr>
+                        <td>jsonpath filter</td>
+                        <td><code>jsonb_path_query(data, '$.items[*] ? (@.price &gt; 10)')</code></td>
+                        <td>N/A &mdash; no jsonpath support</td>
+                        <td>PostgreSQL 12+ only; MySQL has no equivalent</td>
+                    </tr>
+                    <tr>
+                        <td>SQL/JSON standard</td>
+                        <td><code>JSON_VALUE(data, '$.name')</code></td>
+                        <td>N/A</td>
+                        <td>PostgreSQL 17+; MySQL does not implement SQL/JSON standard</td>
+                    </tr>
+                    <tr>
+                        <td>GIN index (general)</td>
+                        <td><code>CREATE INDEX ... USING GIN (data)</code></td>
+                        <td>Not supported on JSON columns</td>
+                        <td>PG indexes full jsonb; MySQL needs generated columns</td>
+                    </tr>
+                    <tr>
+                        <td>GIN index (containment)</td>
+                        <td><code>CREATE INDEX ... USING GIN (data jsonb_path_ops)</code></td>
+                        <td>N/A</td>
+                        <td>Smaller index, supports <code>@&gt;</code> only</td>
+                    </tr>
+                    <tr>
+                        <td>Multi-valued index</td>
+                        <td>N/A</td>
+                        <td><code>CREATE INDEX ... ((CAST(data-&gt;'$.tags' AS UNSIGNED ARRAY)))</code></td>
+                        <td>MySQL 8.0.17+ for JSON arrays</td>
+                    </tr>
+                    <tr>
+                        <td>Aggregate JSON</td>
+                        <td><code>jsonb_agg()</code>, <code>jsonb_object_agg()</code></td>
+                        <td><code>JSON_ARRAYAGG()</code>, <code>JSON_OBJECTAGG()</code></td>
+                        <td>Both build JSON from result sets</td>
+                    </tr>
+                    <tr>
+                        <td>Modify JSON</td>
+                        <td><code>jsonb_set(data, '{key}', '"val"')</code></td>
+                        <td><code>JSON_SET(data, '$.key', 'val')</code></td>
+                        <td>PG returns new jsonb; MySQL modifies in-place with UPDATE</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+&#9500;&#9472;&#9472; Which database?
+&#9474;   &#9500;&#9472;&#9472; PostgreSQL &#8595;
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Column type is json (not jsonb)?
+&#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; YES &#8594; ALTER TABLE t ALTER COLUMN data TYPE jsonb USING data::jsonb
+&#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; NO (already jsonb) &#8595;
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Need to extract a single value?
+&#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; As text &#8594; data-&gt;&gt;'key' or data #&gt;&gt; '{nested,path}'
+&#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; As JSON &#8594; data-&gt;'key' or data #&gt; '{nested,path}'
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Need to filter rows by JSON content?
+&#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; Exact key-value match &#8594; WHERE data @&gt; '{"status":"active"}'::jsonb
+&#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; Complex filter &#8594; WHERE jsonb_path_exists(data, '$.items[*] ? (@.price &gt; $min)')
+&#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; Key existence &#8594; WHERE data ? 'email'
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Need to flatten arrays?
+&#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; PG 12+ &#8594; jsonb_path_query(data, '$.items[*]')
+&#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; Any version &#8594; jsonb_array_elements(data-&gt;'items')
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Need to index for performance?
+&#9474;   &#9474;       &#9500;&#9472;&#9472; Query varied keys &#8594; GIN (data) with jsonb_ops (default)
+&#9474;   &#9474;       &#9500;&#9472;&#9472; Only containment &#8594; GIN (data jsonb_path_ops) &#8212; 2-3x smaller
+&#9474;   &#9474;       &#9492;&#9472;&#9472; Always same key &#8594; B-tree on (data-&gt;&gt;'status')
+&#9474;   &#9474;
+&#9474;   &#9492;&#9472;&#9472; MySQL &#8595;
+&#9474;       &#9500;&#9472;&#9472; Need to extract a value?
+&#9474;       &#9474;   &#9500;&#9472;&#9472; As text &#8594; data-&gt;&gt;'$.key'
+&#9474;       &#9474;   &#9492;&#9472;&#9472; As JSON &#8594; data-&gt;'$.key' or JSON_EXTRACT(data, '$.key')
+&#9474;       &#9500;&#9472;&#9472; Need to filter by JSON content?
+&#9474;       &#9474;   &#9500;&#9472;&#9472; Exact match &#8594; WHERE data-&gt;&gt;'$.status' = 'active'
+&#9474;       &#9474;   &#9500;&#9472;&#9472; Array contains &#8594; WHERE 'tag' MEMBER OF(data-&gt;'$.tags')
+&#9474;       &#9474;   &#9492;&#9472;&#9472; Path exists &#8594; WHERE JSON_CONTAINS_PATH(data, 'one', '$.email')
+&#9474;       &#9500;&#9472;&#9472; Need to flatten arrays?
+&#9474;       &#9474;   &#9492;&#9472;&#9472; JSON_TABLE(data, '$.items[*]' COLUMNS(name VARCHAR(100) PATH '$.name'))
+&#9474;       &#9492;&#9472;&#9472; Need to index for performance?
+&#9474;           &#9500;&#9472;&#9472; Scalar value &#8594; Generated column + B-tree index
+&#9474;           &#9500;&#9472;&#9472; Array search &#8594; Multi-valued index (MySQL 8.0.17+)
+&#9474;           &#9492;&#9472;&#9472; Multiple keys &#8594; Multiple generated columns, each indexed
+&#9492;&#9472;&#9472; DEFAULT &#8594; Start with PostgreSQL jsonb if choosing a database</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Choose the right column type</h3>
+        <p>PostgreSQL offers two JSON types. Use <code>jsonb</code> for any column you will query. The
+            <code>json</code> type stores raw text and cannot be indexed or efficiently searched. [<a
+                href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL: create table with jsonb column
+CREATE TABLE events (
+    id     SERIAL PRIMARY KEY,
+    data   jsonb NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- MySQL: create table with JSON column
+CREATE TABLE events (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    data   JSON NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+        <p><strong>Verify</strong>: <code>SELECT pg_typeof(data) FROM events LIMIT 1;</code> &rarr; expected:
+            <code>jsonb</code></p>
+
+        <h3>2. Insert JSON data</h3>
+        <p>Both databases accept JSON strings for insertion. PostgreSQL validates and converts to binary on insert;
+            MySQL validates JSON syntax. [<a
+                href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>] [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/json.html">src2</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL / MySQL (same syntax)
+INSERT INTO events (data) VALUES
+('{"type": "purchase", "amount": 49.99, "tags": ["web", "mobile"], "user": {"id": 42, "name": "Alice"}}');</code></pre>
+        <p><strong>Verify</strong>: <code>SELECT data-&gt;&gt;'type' FROM events;</code> &rarr; expected:
+            <code>purchase</code></p>
+
+        <h3>3. Extract values from JSON</h3>
+        <p>Use the arrow operators for extraction. The single arrow (<code>-&gt;</code>) returns JSON type; double arrow
+            (<code>-&gt;&gt;</code>) returns text. [<a
+                href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>] [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/json.html">src2</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL: extract nested value as text
+SELECT data-&gt;&gt;'type' AS event_type,
+       data-&gt;'user'-&gt;&gt;'name' AS user_name,
+       (data-&gt;&gt;'amount')::numeric AS amount
+FROM events;
+
+-- MySQL: extract nested value as text
+SELECT data-&gt;&gt;'$.type' AS event_type,
+       data-&gt;&gt;'$.user.name' AS user_name,
+       CAST(JSON_EXTRACT(data, '$.amount') AS DECIMAL(10,2)) AS amount
+FROM events;</code></pre>
+        <p><strong>Verify</strong>: Both return <code>purchase | Alice | 49.99</code></p>
+
+        <h3>4. Filter rows using JSON predicates</h3>
+        <p>PostgreSQL's containment operator (<code>@&gt;</code>) is the most efficient for GIN-indexed queries. MySQL
+            requires generated columns or explicit function calls. [<a
+                href="https://www.crunchydata.com/blog/indexing-jsonb-in-postgres">src3</a>] [<a
+                href="https://blogs.oracle.com/mysql/indexing-json-data-in-mysql">src7</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL: containment (GIN-indexable)
+SELECT * FROM events
+WHERE data @&gt; '{"type": "purchase"}'::jsonb;
+
+-- PostgreSQL: jsonpath filter (12+)
+SELECT * FROM events
+WHERE jsonb_path_exists(data, '$.tags[*] ? (@ == "mobile")');
+
+-- MySQL: function-based filter
+SELECT * FROM events
+WHERE data-&gt;&gt;'$.type' = 'purchase';
+
+-- MySQL: array membership (8.0.17+)
+SELECT * FROM events
+WHERE 'mobile' MEMBER OF(data-&gt;'$.tags');</code></pre>
+        <p><strong>Verify</strong>: All queries return the inserted purchase event row.</p>
+
+        <h3>5. Create indexes for JSON queries</h3>
+        <p>Without indexes, every JSON query requires a full table scan. Index strategy differs significantly between
+            the two databases. [<a href="https://www.crunchydata.com/blog/indexing-jsonb-in-postgres">src3</a>] [<a
+                href="https://pganalyze.com/blog/gin-index">src6</a>] [<a
+                href="https://blogs.oracle.com/mysql/indexing-json-data-in-mysql">src7</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL: GIN index on entire jsonb column
+CREATE INDEX idx_events_data ON events USING GIN (data);
+
+-- PostgreSQL: GIN with jsonb_path_ops (smaller, @&gt; only)
+CREATE INDEX idx_events_data_pathops ON events USING GIN (data jsonb_path_ops);
+
+-- PostgreSQL: B-tree expression index on specific key
+CREATE INDEX idx_events_type ON events ((data-&gt;&gt;'type'));
+
+-- MySQL: generated column + index
+ALTER TABLE events
+    ADD COLUMN event_type VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(data-&gt;'$.type')) STORED,
+    ADD INDEX idx_event_type (event_type);
+
+-- MySQL: multi-valued index on JSON array (8.0.17+)
+ALTER TABLE events
+    ADD INDEX idx_events_tags ((CAST(data-&gt;'$.tags' AS CHAR(50) ARRAY)));</code></pre>
+        <p><strong>Verify</strong>: <code>EXPLAIN (ANALYZE) SELECT * FROM events WHERE data @&gt;
+                '{"type":"purchase"}'::jsonb;</code> &rarr; should show <code>Bitmap Index Scan</code></p>
+
+        <h3>6. Flatten JSON arrays to rows</h3>
+        <p>Both databases can convert JSON arrays into relational rows, but with different syntax. [<a
+                href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>] [<a
+                href="https://dev.mysql.com/doc/refman/8.4/en/json-table-functions.html">src4</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL: jsonb_array_elements_text
+SELECT e.id, tag
+FROM events e,
+     jsonb_array_elements_text(e.data-&gt;'tags') AS tag;
+
+-- MySQL: JSON_TABLE (8.0.4+)
+SELECT e.id, jt.tag
+FROM events e,
+     JSON_TABLE(e.data, '$.tags[*]'
+         COLUMNS(tag VARCHAR(100) PATH '$')
+     ) AS jt;</code></pre>
+        <p><strong>Verify</strong>: Both return one row per tag: <code>1 | web</code> and <code>1 | mobile</code></p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>PostgreSQL: Complete jsonb Query Patterns</h3>
+        <pre><code class="language-sql">-- Input:  events table with jsonb data column
+-- Output: filtered, extracted, aggregated JSON data
+
+-- Containment with nested objects
+SELECT * FROM events
+WHERE data @&gt; '{"user": {"name": "Alice"}}'::jsonb;
+
+-- Key existence checks
+SELECT * FROM events WHERE data ? 'tags';
+SELECT * FROM events WHERE data ?| ARRAY['email', 'phone'];
+SELECT * FROM events WHERE data ?&amp; ARRAY['type', 'amount'];
+
+-- jsonpath queries (PostgreSQL 12+)
+SELECT jsonb_path_query(data, '$.tags[*]') AS tag FROM events;
+SELECT * FROM events WHERE jsonb_path_exists(data, '$.amount ? (&gt; 30)');
+
+-- Aggregate into JSON
+SELECT jsonb_agg(data-&gt;&gt;'type') AS event_types FROM events;
+
+-- Update JSON fields (immutable: returns new jsonb)
+UPDATE events SET data = jsonb_set(data, '{user,email}', '"alice@example.com"')
+WHERE data @&gt; '{"user": {"name": "Alice"}}'::jsonb;</code></pre>
+
+        <h3>MySQL: Complete JSON Query Patterns</h3>
+        <pre><code class="language-sql">-- Input:  events table with JSON data column
+-- Output: filtered, extracted, aggregated JSON data
+
+-- JSON_CONTAINS for object/array membership
+SELECT * FROM events
+WHERE JSON_CONTAINS(data, '{"name": "Alice"}', '$.user');
+
+SELECT * FROM events
+WHERE JSON_CONTAINS(data, '"mobile"', '$.tags');
+
+-- Path existence check
+SELECT * FROM events
+WHERE JSON_CONTAINS_PATH(data, 'one', '$.user.email');
+
+-- JSON_TABLE to flatten arrays (8.0.4+)
+SELECT e.id, jt.* FROM events e,
+     JSON_TABLE(e.data, '$.tags[*]' COLUMNS(
+         row_num FOR ORDINALITY, tag VARCHAR(100) PATH '$'
+     )) AS jt;
+
+-- Modify JSON in-place
+UPDATE events SET data = JSON_SET(data, '$.user.email', 'alice@example.com')
+WHERE data-&gt;&gt;'$.user.name' = 'Alice';</code></pre>
+
+        <h3>Python (psycopg2): Application-Level JSON Queries</h3>
+        <pre><code class="language-python"># Input:  Database connection, JSON query parameters
+# Output: Filtered results from JSON columns
+
+import psycopg2, json
+
+conn = psycopg2.connect("dbname=mydb")
+cur = conn.cursor()
+
+# Safe parameterized containment query
+filter_obj = {"type": "purchase"}
+cur.execute(
+    "SELECT id, data-&gt;&gt;'type', (data-&gt;&gt;'amount')::numeric "
+    "FROM events WHERE data @&gt; %s::jsonb",
+    (json.dumps(filter_obj),)
+)
+for row in cur.fetchall():
+    print(f"id={row[0]}, type={row[1]}, amount={row[2]}")
+
+cur.close(); conn.close()</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Using json type and trying to index it</h3>
+        <pre><code class="language-sql">-- BAD: json type cannot use GIN indexes, every query scans all rows
+CREATE TABLE events (id SERIAL, data json NOT NULL);
+CREATE INDEX idx_data ON events USING GIN (data);  -- ERROR: no operator class</code></pre>
+
+        <h3>Correct: Use jsonb for queryable JSON data</h3>
+        <pre><code class="language-sql">-- GOOD: jsonb supports GIN indexes and all operators
+CREATE TABLE events (id SERIAL, data jsonb NOT NULL);
+CREATE INDEX idx_data ON events USING GIN (data);</code></pre>
+
+        <h3>Wrong: Comparing -&gt; output to text string</h3>
+        <pre><code class="language-sql">-- BAD: data-&gt;'status' returns jsonb, not text; returns 0 rows
+SELECT * FROM events WHERE data-&gt;'status' = 'active';</code></pre>
+
+        <h3>Correct: Use -&gt;&gt; for text comparison</h3>
+        <pre><code class="language-sql">-- GOOD: -&gt;&gt; returns text
+SELECT * FROM events WHERE data-&gt;&gt;'status' = 'active';
+-- OR compare jsonb to jsonb
+SELECT * FROM events WHERE data-&gt;'status' = '"active"'::jsonb;</code></pre>
+
+        <h3>Wrong: MySQL JSON_EXTRACT without unquoting</h3>
+        <pre><code class="language-sql">-- BAD: JSON_EXTRACT returns '"active"' (with quotes), comparison fails
+SELECT * FROM events WHERE JSON_EXTRACT(data, '$.status') = 'active';</code></pre>
+
+        <h3>Correct: Use -&gt;&gt; or JSON_UNQUOTE in MySQL</h3>
+        <pre><code class="language-sql">-- GOOD: -&gt;&gt; unquotes automatically
+SELECT * FROM events WHERE data-&gt;&gt;'$.status' = 'active';
+-- OR
+SELECT * FROM events WHERE JSON_UNQUOTE(JSON_EXTRACT(data, '$.status')) = 'active';</code></pre>
+
+        <h3>Wrong: Storing relational data in JSON blobs</h3>
+        <pre><code class="language-sql">-- BAD: every row has the same keys, no constraints, no foreign keys
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    data jsonb -- {"name": "Alice", "email": "a@b.com", "role_id": 3}
+);</code></pre>
+
+        <h3>Correct: Use columns for structured data, JSON for flexible data</h3>
+        <pre><code class="language-sql">-- GOOD: fixed fields are columns, variable metadata is jsonb
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    role_id INT REFERENCES roles(id),
+    metadata jsonb DEFAULT '{}'
+);</code></pre>
+
+        <h3>Wrong: No index on frequently queried JSON paths</h3>
+        <pre><code class="language-sql">-- BAD: full table scan on every query
+SELECT * FROM events WHERE data @&gt; '{"type": "purchase"}'::jsonb;
+-- Seq Scan: cost=0.00..12345.00</code></pre>
+
+        <h3>Correct: Add appropriate GIN or expression index</h3>
+        <pre><code class="language-sql">-- GOOD: GIN index enables bitmap index scan
+CREATE INDEX idx_events_data ON events USING GIN (data jsonb_path_ops);
+-- Bitmap Index Scan: cost=0.00..4.50</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>GIN index bloat from frequent updates</strong>: GIN indexes on frequently updated jsonb columns
+                accumulate dead entries. Fix: <code>REINDEX INDEX CONCURRENTLY idx_name;</code> periodically, or use
+                expression B-tree indexes for write-heavy columns. [<a
+                    href="https://pganalyze.com/blog/gin-index">src6</a>]</li>
+            <li><strong>work_mem too low for GIN bitmap scans</strong>: GIN queries build bitmaps in memory; if
+                <code>work_mem</code> is too low, PostgreSQL spills to disk. Fix:
+                <code>SET work_mem = '64MB';</code> for the session. [<a
+                    href="https://pganalyze.com/blog/gin-index">src6</a>]</li>
+            <li><strong>MySQL VIRTUAL vs STORED generated columns</strong>: Virtual columns are not materialized and
+                may be slower for complex JSON expressions. Fix: Use <code>STORED</code> for indexed columns with
+                complex JSON extractions. [<a
+                    href="https://blogs.oracle.com/mysql/indexing-json-data-in-mysql">src7</a>]</li>
+            <li><strong>jsonb_set does not create intermediate keys</strong>:
+                <code>jsonb_set('{}', '{a,b}', '"v"')</code> fails if key <code>a</code> does not exist. Fix: Use
+                <code>create_if_missing := true</code> (PG 16+) or build nested structure first. [<a
+                    href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>]</li>
+            <li><strong>Casting JSON numbers in MySQL</strong>:
+                <code>CAST(JSON_EXTRACT(data,'$.price') AS DECIMAL)</code> defaults to <code>DECIMAL(10,0)</code> and
+                silently truncates decimals. Fix: Always specify precision:
+                <code>CAST(... AS DECIMAL(10,2))</code>. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/json.html">src2</a>]</li>
+            <li><strong>Large JSON documents degrade performance</strong>: Documents over 1MB slow reads and writes; the
+                entire jsonb value is rewritten on any update. Fix: Normalize large arrays into separate rows; keep
+                documents under 1MB. [<a
+                    href="https://www.enterprisedb.com/blog/postgresql-anti-patterns-unnecessary-jsonhstore-dynamic-columns">src5</a>]
+            </li>
+            <li><strong>json_agg vs jsonb_agg type mismatch</strong>: <code>json_agg</code> returns <code>json</code>;
+                <code>jsonb_agg</code> returns <code>jsonb</code>. Mixing types causes implicit casts. Fix: Use
+                <code>jsonb_agg</code> consistently with <code>jsonb</code> columns. [<a
+                    href="https://www.postgresql.org/docs/current/functions-json.html">src1</a>]</li>
+            <li><strong>MySQL JSON_OVERLAPS type coercion</strong>: <code>JSON_OVERLAPS('[1]', '["1"]')</code> returns
+                true because integer 1 matches string &quot;1&quot;. Fix: Ensure consistent types in JSON arrays. [<a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/json.html">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-sql">-- PostgreSQL: check if GIN index is being used
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT * FROM events WHERE data @&gt; '{"type": "purchase"}'::jsonb;
+
+-- PostgreSQL: check jsonb column size distribution
+SELECT pg_column_size(data) AS bytes, COUNT(*) AS row_count
+FROM events GROUP BY 1 ORDER BY 1 DESC LIMIT 20;
+
+-- MySQL: check JSON column usage with EXPLAIN
+EXPLAIN FORMAT=JSON
+SELECT * FROM events WHERE data-&gt;&gt;'$.type' = 'purchase';
+
+-- MySQL: verify multi-valued index usage
+EXPLAIN SELECT * FROM events WHERE 'mobile' MEMBER OF(data-&gt;'$.tags');</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">JSON Features</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PostgreSQL 17+</td>
+                        <td>Current</td>
+                        <td>SQL/JSON standard: JSON_EXISTS, JSON_QUERY, JSON_VALUE, JSON_TABLE</td>
+                        <td>First SQL/JSON standard compliance</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL 15-16</td>
+                        <td>Supported</td>
+                        <td>IS JSON predicate, JSON_SCALAR, merge patch</td>
+                        <td>jsonb_set create_if_missing, MERGE statement</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL 12-14</td>
+                        <td>Supported</td>
+                        <td>jsonpath (@?, @@), jsonb_path_query</td>
+                        <td>SQL/JSON path language introduced in 12</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL 9.4-11</td>
+                        <td>Legacy</td>
+                        <td>jsonb type, GIN indexes, @&gt;, ?, -&gt;, -&gt;&gt;</td>
+                        <td>jsonb introduced in 9.4; mature by 9.6</td>
+                    </tr>
+                    <tr>
+                        <td>MySQL 8.0.17+</td>
+                        <td>Current</td>
+                        <td>Multi-valued indexes, MEMBER OF, JSON_OVERLAPS</td>
+                        <td>Array indexing via CAST(... AS ... ARRAY)</td>
+                    </tr>
+                    <tr>
+                        <td>MySQL 8.0.4+</td>
+                        <td>Current</td>
+                        <td>JSON_TABLE, JSON_ARRAYAGG, JSON_OBJECTAGG</td>
+                        <td>Table function for flattening JSON</td>
+                    </tr>
+                    <tr>
+                        <td>MySQL 5.7+</td>
+                        <td>Legacy</td>
+                        <td>JSON_EXTRACT, -&gt;, -&gt;&gt;, JSON_CONTAINS</td>
+                        <td>JSON type introduced; basic operators only</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Schema-less or semi-structured data (user preferences, metadata, feature flags)</td>
+                        <td>Every row has identical fields (name, email, created_at)</td>
+                        <td>Regular columns with proper types and constraints</td>
+                    </tr>
+                    <tr>
+                        <td>Third-party API responses stored for later processing</td>
+                        <td>Data needs foreign key constraints and referential integrity</td>
+                        <td>Normalized relational tables</td>
+                    </tr>
+                    <tr>
+                        <td>Rapid prototyping where schema changes frequently</td>
+                        <td>Complex aggregations and analytical queries on JSON fields</td>
+                        <td>Extract to columns, then aggregate</td>
+                    </tr>
+                    <tr>
+                        <td>Dynamic form data or custom fields per tenant</td>
+                        <td>Write-heavy workloads with frequent partial JSON updates</td>
+                        <td>Separate columns or EAV pattern</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL with jsonb + GIN for search within JSON</td>
+                        <td>MySQL and need advanced JSON querying (jsonpath, SQL/JSON)</td>
+                        <td>PostgreSQL, or extract to generated columns in MySQL</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>PostgreSQL jsonb equality (<code>=</code>) compares entire documents &mdash; two documents with the same
+                keys in different order are equal, but this is an expensive comparison. Use specific key comparisons when
+                possible.</li>
+            <li>MySQL does not support the SQL/JSON standard. PostgreSQL 17+ follows SQL:2016 more closely. MySQL's
+                <code>JSON_TABLE</code> is MySQL-specific, not the standard version.</li>
+            <li>GIN index creation locks the table in PostgreSQL. Use <code>CREATE INDEX CONCURRENTLY</code> to avoid
+                blocking writes, but it takes 2-3x longer and cannot run inside a transaction.</li>
+            <li>jsonb column statistics are not maintained by PostgreSQL's planner &mdash; complex jsonb WHERE clauses
+                may get poor row estimates. Consider expression indexes for critical queries.</li>
+            <li>MySQL's JSON comparison rules differ from PostgreSQL: MySQL type-coerces during comparison (integer
+                <code>1</code> equals string <code>"1"</code> in some contexts), while PostgreSQL is strict about types.
+            </li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/postgresql-slow-queries/2026"
+            data-relationship="related_to">How to Diagnose and Optimize Slow PostgreSQL Queries</a>
+        <a href="/software/debugging/postgresql-connection-pool/2026"
+            data-relationship="related_to">PostgreSQL Connection Pool Exhaustion</a>
+        <a href="/software/migrations/mysql-to-postgresql/2026"
+            data-relationship="often_confused_with">MySQL to PostgreSQL Migration Guide</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents
+        and researchers.<br>
+        Browse: Software &middot; Patterns<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a
+            href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources
+        cited inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,29 @@
+START: Do you need precomputed query results?
+├── Query < 50ms already?
+│   ├── YES → Use a regular view or direct query (no MV needed)
+│   └── NO ↓
+├── Can you tolerate stale data?
+│   ├── NO → Use regular views with proper indexing, or application cache with invalidation
+│   └── YES ↓
+├── Which database engine?
+│   ├── PostgreSQL ↓
+│   │   ├── Need zero-downtime refresh?
+│   │   │   ├── YES → CREATE MATERIALIZED VIEW + UNIQUE INDEX + REFRESH CONCURRENTLY
+│   │   │   └── NO → CREATE MATERIALIZED VIEW + REFRESH (simpler, blocks reads)
+│   │   └── Refresh frequency?
+│   │       ├── Daily/hourly → cron job or pg_cron
+│   │       └── After each ETL load → trigger REFRESH in pipeline
+│   ├── Oracle ↓
+│   │   ├── Need real-time freshness?
+│   │   │   ├── YES → CREATE MATERIALIZED VIEW ... REFRESH FAST ON COMMIT (+ MV logs)
+│   │   │   └── NO → CREATE MATERIALIZED VIEW ... REFRESH FORCE ON DEMAND
+│   │   └── Large partitioned tables?
+│   │       └── YES → Use PCT (Partition Change Tracking) refresh
+│   ├── SQL Server ↓
+│   │   ├── Enterprise Edition?
+│   │   │   ├── YES → CREATE VIEW WITH SCHEMABINDING + CREATE UNIQUE CLUSTERED INDEX
+│   │   │   └── NO → Manual summary table pattern (indexed views auto-match only on Enterprise)
+│   │   └── Note: Indexed views auto-update on base table changes (no manual refresh)
+│   └── MySQL ↓
+│       └── Create summary table + scheduled EVENT or triggers for refresh
+└── DEFAULT → PostgreSQL MATERIALIZED VIEW with scheduled REFRESH is the most common pattern

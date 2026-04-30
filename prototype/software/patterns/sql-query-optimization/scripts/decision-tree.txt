@@ -1,0 +1,25 @@
+START: Query is slow
+├── Have you run EXPLAIN ANALYZE?
+│   ├── NO → Run EXPLAIN ANALYZE first (see Step 1 below)
+│   └── YES ↓
+├── Is there a Sequential Scan / Full Table Scan on a large table?
+│   ├── YES → Is there a WHERE clause filtering rows?
+│   │   ├── YES → Add index on WHERE columns (see Step 2)
+│   │   └── NO → Query legitimately needs all rows -- optimize with LIMIT, pagination, or materialized view
+│   └── NO ↓
+├── Is the plan doing Index Scan but still slow?
+│   ├── YES → Check if it's fetching too many columns (heap fetches) → Create covering index (see Code Examples)
+│   └── NO ↓
+├── Is there a Sort or Hash operation consuming >50% cost?
+│   ├── YES → Add index matching ORDER BY / GROUP BY columns → Or increase work_mem for in-memory sorts
+│   └── NO ↓
+├── Is there a Nested Loop with high row estimates?
+│   ├── YES → Replace with Hash Join (rewrite query) or add join column indexes
+│   └── NO ↓
+├── Are estimated rows very different from actual rows?
+│   ├── YES → Run ANALYZE to update statistics → Check for data skew → Consider extended statistics
+│   └── NO ↓
+├── Is the query using correlated subqueries?
+│   ├── YES → Rewrite as JOIN or lateral join (see Anti-Patterns)
+│   └── NO ↓
+└── DEFAULT → Profile at application level -- problem may be N+1 queries, connection overhead, or network latency

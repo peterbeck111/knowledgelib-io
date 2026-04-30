@@ -1,0 +1,38 @@
+START
+|-- Expected concurrent viewers?
+|   |-- <1K users
+|   |   --> Simple stack: S3 + CloudFront + FFmpeg on EC2/Lambda
+|   |   --> Single-server transcoding, managed CDN, no custom edge
+|   |-- 1K-100K users
+|   |   --> Standard architecture: message queue + worker pool transcoding
+|   |   --> Managed CDN (CloudFront/Cloudflare), multi-AZ deployment
+|   |   --> Add Redis caching for metadata, Elasticsearch for search
+|   |-- 100K-1M users
+|   |   --> Full microservices: dedicated services per component
+|   |   --> Multi-region deployment, custom encoding ladder per title
+|   |   --> Consider building/peering your own CDN edge nodes
+|   |-- >1M users (Netflix/YouTube scale)
+|       --> Custom CDN (Open Connect model): ISP-embedded cache appliances [src1]
+|       --> Per-title encoding optimization (content-aware encoding)
+|       --> Global service mesh, multi-region active-active
+|
+|-- Content type?
+|   |-- User-generated (YouTube-style)
+|   |   --> Heavy moderation pipeline (ML content scanning)
+|   |   --> Aggressive transcode queue (millions of uploads/day)
+|   |   --> No DRM required for most content
+|   |-- Licensed/premium (Netflix-style)
+|   |   --> DRM mandatory (Widevine + FairPlay + PlayReady) [src5]
+|   |   --> Higher encoding quality, per-title optimization
+|   |   --> Strict geo-restrictions and license windowing
+|   |-- Both
+|       --> Separate pipelines: fast transcode for UGC, quality-optimized for premium
+|
+|-- Build vs buy?
+    |-- Managed services (faster launch)
+    |   --> AWS: MediaConvert + CloudFront + DynamoDB
+    |   --> GCP: Transcoder API + Cloud CDN + Firestore
+    |-- Build from scratch (max control)
+    |   --> FFmpeg workers + Kafka + S3 + custom CDN
+    |-- Hybrid (recommended for most)
+        --> Custom upload/metadata + managed transcode/CDN

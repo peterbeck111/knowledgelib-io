@@ -1,0 +1,121 @@
+{
+  "id": "business/erp-integration/pagination-patterns-comparison/2026",
+  "category": "business",
+  "subcategory": "erp-integration",
+  "topic": "pagination-patterns-comparison",
+  "version_tag": "2026",
+  "canonical_question": "How do pagination patterns differ across ERPs - cursor vs offset vs keyset vs nextRecordsUrl?",
+  "aliases": [
+    "ERP API pagination comparison cursor offset keyset",
+    "Salesforce nextRecordsUrl vs SAP $skip vs Oracle offset pagination",
+    "Which ERP pagination method scales best for large datasets?",
+    "Deep pagination performance across ERP REST APIs"
+  ],
+  "entity_type": "erp_integration",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.86,
+  "token_estimate": 4650,
+  "source_count": 8,
+  "md_path": "/business/erp-integration/pagination-patterns-comparison/2026.md",
+  "html_path": "/business/erp-integration/pagination-patterns-comparison/2026.html",
+  "priority": "medium",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "evolving",
+    "last_breaking_change": "Salesforce v62.0 added GraphQL cursor pagination; D365 adopted $skiptoken for server-driven paging",
+    "next_review": "2026-06-03",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Salesforce: Default page size 2,000 records for REST SOQL queries - server-controlled, not adjustable",
+    "SAP S/4HANA: $skip/$top client-side paging can cause duplicate/missing records under concurrent writes",
+    "Oracle ERP Cloud: Default offset/limit capped at 500 records per page - results not ordered by default",
+    "NetSuite: Maximum 1,000 pages of results regardless of page size - hard cap on total retrievable records",
+    "Dynamics 365: maxpagesize capped at 10,000 per page; $skip deprecated for server-driven paging",
+    "Workday RaaS: No native pagination - reports over 50K rows must use WQL API",
+    "All platforms: Offset-based pagination degrades at >100K records - O(n) database scan"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "User needs general REST API capability comparison across ERPs",
+      "use_instead": "business/erp-integration/erp-rest-api-comparison/2026"
+    },
+    {
+      "condition": "User needs rate limits comparison (not pagination)",
+      "use_instead": "business/erp-integration/erp-rate-limits-comparison/2026"
+    },
+    {
+      "condition": "User needs bulk data import/export patterns",
+      "use_instead": "business/erp-integration/erp-bulk-import-comparison/2026"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      {
+        "id": "business/erp-integration/erp-rest-api-comparison/2026",
+        "label": "REST API capabilities comparison across ERPs"
+      },
+      {
+        "id": "business/erp-integration/erp-rate-limits-comparison/2026",
+        "label": "Rate limits comparison across ERPs"
+      },
+      {
+        "id": "business/erp-integration/erp-bulk-import-comparison/2026",
+        "label": "Bulk import comparison across ERPs"
+      }
+    ],
+    "solves": [
+      {
+        "id": "business/erp-integration/change-data-capture-erp/2026",
+        "label": "CDC patterns for incremental data sync"
+      }
+    ],
+    "alternative_to": [
+      {
+        "id": "business/erp-integration/erp-bulk-import-comparison/2026",
+        "label": "Bulk import comparison - use when data volume exceeds pagination feasibility"
+      }
+    ],
+    "often_confused_with": [
+      {
+        "id": "business/erp-integration/batch-vs-realtime-integration/2026",
+        "label": "Batch vs real-time - pagination is a mechanism, not a pattern"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "data_volume",
+      "question": "How many records do you need to paginate through?",
+      "type": "choice",
+      "options": [
+        "< 10,000 records (offset is fine)",
+        "10,000-100,000 records (cursor preferred)",
+        "> 100,000 records (cursor or keyset required)",
+        "> 1,000,000 records (bulk API recommended)"
+      ]
+    },
+    {
+      "key": "consistency_requirement",
+      "question": "Can the underlying data change while you paginate?",
+      "type": "choice",
+      "options": [
+        "Static dataset (no concurrent writes)",
+        "Slowly changing (occasional updates)",
+        "Highly volatile (frequent inserts/deletes during pagination)"
+      ]
+    },
+    {
+      "key": "navigation_pattern",
+      "question": "Do you need random page access or sequential-only?",
+      "type": "choice",
+      "options": [
+        "Sequential (next page only) - cursor/keyset is ideal",
+        "Random access (jump to page N) - offset required",
+        "Resume from checkpoint - cursor with bookmark"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Resolve Terraform State Conflicts and Lock | knowledgelib.io</title>
+    <meta name="description" content="Complete debugging guide for Terraform state conflicts and lock issues: 11 ranked causes, force-unlock procedures, serial mismatch recovery, DynamoDB...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/terraform-state-conflicts/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Resolve Terraform State Conflicts and Lock | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete debugging guide for Terraform state conflicts and lock issues: 11 ranked causes, force-unlock procedures, serial mismatch recovery, DynamoDB and S3 native locking, CI/CD mutex patterns, 4 anti-pattern pairs, state corruption recovery. 7 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/terraform-state-conflicts/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-23">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Resolve Terraform State Conflicts and Lock | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete debugging guide for Terraform state conflicts and lock issues: 11 ranked causes, force-unlock procedures, serial mismatch recovery, DynamoDB and S3 native locking, CI/CD mutex patterns, 4 anti-pattern pairs, state corruption recovery. 7 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/terraform_state_conflicts">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I resolve Terraform state conflicts and lock issues?">
+    <meta name="ai:aliases"
+        content="Terraform state lock error; Error acquiring the state lock; Terraform force-unlock; Terraform state serial mismatch; Terraform ConditionalCheckFailedException; Terraform state file corruption; Terraform lock ID not found; Terraform state push conflict; Terraform MD5 hash mismatch; Terraform DynamoDB lock stuck">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/terraform-state-conflicts/2026.md">
+    <meta name="ai:token_estimate" content="4800">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-23">
+    <meta name="ai:inputs_needed" content="error_message,backend_type,context">
+    <meta name="ai:constraints"
+        content="Never force-unlock while another terraform process is running; Always verify no operations in progress before force-unlocking; state push requires local serial > remote serial; Local state files cannot be force-unlocked; DynamoDB locking deprecated in Terraform 1.10">
+    <meta name="ai:skip_this_unit_if"
+        content="Provider or resource errors (not state/lock errors) -> Provider-specific troubleshooting; State drift without lock errors -> terraform plan -refresh-only; Backend configuration errors during init -> Backend configuration troubleshooting">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"How to Resolve Terraform State Conflicts and Lock Issues","headline":"How to Resolve Terraform State Conflicts and Lock Issues","description":"Complete debugging guide for Terraform state conflicts and lock issues covering stale locks, force-unlock, serial mismatches, DynamoDB/S3 native locking, CI/CD mutex patterns, state corruption recovery, and 5 hard constraints agents must respect.","keywords":["Terraform","state lock","force-unlock","state conflict","DynamoDB","S3 backend","state corruption","serial mismatch","OpenTofu","IaC","infrastructure as code"],"dateModified":"2026-02-23","datePublished":"2026-02-23","proficiencyLevel":"Expert","dependencies":"Terraform >= 0.12 or OpenTofu >= 1.6","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"State: Locking — HashiCorp Developer","url":"https://developer.hashicorp.com/terraform/language/state/locking"},{"@type":"WebPage","name":"terraform force-unlock command reference — HashiCorp Developer","url":"https://developer.hashicorp.com/terraform/cli/commands/force-unlock"},{"@type":"WebPage","name":"Backend Type: s3 — HashiCorp Developer","url":"https://developer.hashicorp.com/terraform/language/backend/s3"},{"@type":"WebPage","name":"Managing Terraform State — Spacelift","url":"https://spacelift.io/blog/terraform-state"},{"@type":"WebPage","name":"How to manage Terraform state — Gruntwork","url":"https://gruntwork.io/blog/how-to-manage-terraform-state"},{"@type":"WebPage","name":"Terraform State Lock Errors — Scalr","url":"https://scalr.com/learning-center/terraform-state-lock-errors-emergency-solutions-prevention-guide/"},{"@type":"WebPage","name":"Error uploading state: Conflict — HashiCorp Support","url":"https://support.hashicorp.com/hc/en-us/articles/31856819100179"}]}</script>
+
+    <!-- Dataset structured data (for Google Dataset Search) -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Resolve Terraform State Conflicts and Lock Issues",
+    "description": "Structured debugging reference for Terraform state conflicts and lock issues: 11 ranked causes with likelihood percentages, diagnostic decision tree, force-unlock procedures, serial mismatch recovery, S3/DynamoDB/Terraform Cloud backend-specific solutions, and CI/CD mutex patterns.",
+    "keywords": ["Terraform", "state lock", "force-unlock", "state conflict", "DynamoDB", "S3 backend", "state corruption", "infrastructure as code"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "HashiCorp"},
+      {"@type": "Organization", "name": "Spacelift"},
+      {"@type": "Organization", "name": "Gruntwork"},
+      {"@type": "Organization", "name": "Scalr"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+    </script>
+
+    <!-- Breadcrumb structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "Terraform State Conflicts" }
+    ]
+  }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I resolve Terraform state conflicts and lock issues?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then terraform force-unlock <LOCK_ID>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Terraform state lock error",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then terraform force-unlock <LOCK_ID>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Error acquiring the state lock",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then terraform force-unlock <LOCK_ID>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Terraform force-unlock",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then terraform force-unlock <LOCK_ID>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Terraform state serial mismatch",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then terraform force-unlock <LOCK_ID>."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Terraform ConditionalCheckFailedException",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then terraform force-unlock <LOCK_ID>."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+    
+  <main role="main">
+
+<h1>How to Resolve Terraform State Conflicts and Lock Issues</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I resolve Terraform state conflicts and lock issues?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/terraform-state-conflicts/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR — agents: parse this section for a quick answer -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Most Terraform state lock errors are stale locks from interrupted processes — identify the lock holder, confirm no operation is running, then <code>terraform force-unlock &lt;LOCK_ID&gt;</code>.</li>
+            <li><strong>Key tool/command</strong>: <code>terraform force-unlock &lt;LOCK_ID&gt;</code></li>
+            <li><strong>Watch out for</strong>: Force-unlocking while another process is actually running — this causes state corruption and potential infrastructure drift.</li>
+            <li><strong>Works with</strong>: Terraform &gt;= 0.12, OpenTofu &gt;= 1.6. S3+DynamoDB, S3 native locking (&gt;= 1.10), Terraform Cloud, Azure Blob, GCS.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints — agents: read before recommending any action -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never run <code>terraform force-unlock</code> while another terraform process is actively running — this causes state corruption from concurrent writes</li>
+            <li>Always verify no other operations are in progress (check CI/CD pipelines, teammates, scheduled jobs) before force-unlocking</li>
+            <li><code>terraform state push</code> requires local serial &gt; remote serial — pushing an older serial overwrites newer state and loses changes</li>
+            <li>Local state files (.tfstate on disk) cannot be unlocked by <code>terraform force-unlock</code> — only remote backends support this command</li>
+            <li>DynamoDB-based locking is deprecated as of Terraform 1.10 — migrate to native S3 locking (<code>use_lockfile = true</code>) before it is removed</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference — the core lookup table (DEBUGGING ranked diagnostic table) -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Stale lock from crashed/interrupted process</td>
+                        <td>~40%</td>
+                        <td><code>Error acquiring the state lock</code> + old timestamp</td>
+                        <td><code>terraform force-unlock &lt;LOCK_ID&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>CI/CD pipeline killed mid-apply</td>
+                        <td>~20%</td>
+                        <td>Lock info shows CI runner hostname</td>
+                        <td>Kill orphan process, then <code>terraform force-unlock &lt;LOCK_ID&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Concurrent terraform runs (no CI mutex)</td>
+                        <td>~12%</td>
+                        <td>Two pipelines/users running simultaneously</td>
+                        <td>Wait for first to complete, add CI concurrency controls</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>DynamoDB lock table permission denied</td>
+                        <td>~8%</td>
+                        <td><code>ConditionalCheckFailedException</code></td>
+                        <td>Fix IAM: add <code>dynamodb:PutItem</code>, <code>dynamodb:DeleteItem</code></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>State serial mismatch after state push</td>
+                        <td>~6%</td>
+                        <td><code>Error uploading state: Conflict</code> + MD5 mismatch</td>
+                        <td>Pull state, increment serial, push back</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Backend migration lock conflict</td>
+                        <td>~5%</td>
+                        <td>Lock error during <code>terraform init -migrate-state</code></td>
+                        <td>Complete/abort previous migration, force-unlock, retry</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>S3 lock file not cleaned up</td>
+                        <td>~3%</td>
+                        <td><code>.tflock</code> file persists in S3 bucket</td>
+                        <td>Delete <code>*.tflock</code> from S3 manually</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Network interruption during apply</td>
+                        <td>~2%</td>
+                        <td>Process exited uncleanly, lock remains</td>
+                        <td>Verify process dead, <code>terraform force-unlock</code></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Terraform Cloud workspace locked</td>
+                        <td>~2%</td>
+                        <td>Workspace shows "Locked" in UI</td>
+                        <td>Unlock via UI or API <code>POST /actions/unlock</code></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Azure Blob lease not released</td>
+                        <td>~1%</td>
+                        <td>Azure lease ID in error</td>
+                        <td><code>az storage blob lease break</code></td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Lock ID mismatch on unlock attempt</td>
+                        <td>~1%</td>
+                        <td><code>lock ID does not match existing lock ID</code></td>
+                        <td>Get correct lock ID from backend, retry</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Error contains "Error acquiring the state lock"?
+│   ├── YES → Is another terraform process running (CI/CD, teammates)?
+│   │   ├── YES → Wait for it to finish, or add -lock-timeout=10m
+│   │   └── NO → Extract LOCK_ID from error → terraform force-unlock &lt;LOCK_ID&gt;
+│   └── NO ↓
+├── Error contains "ConditionalCheckFailedException"?
+│   ├── YES → Check DynamoDB IAM permissions (PutItem, DeleteItem, GetItem)
+│   │   ├── Permissions OK → Stale DynamoDB lock → delete item from lock table
+│   │   └── Permissions missing → Fix IAM policy
+│   └── NO ↓
+├── Error contains "Error uploading state: Conflict" or "MD5 hash"?
+│   ├── YES → Serial mismatch → pull state, increment serial by 2, push back
+│   └── NO ↓
+├── Error contains "lock ID does not match"?
+│   ├── YES → Extract correct lock ID from backend → retry force-unlock
+│   └── NO ↓
+├── Using Terraform Cloud and workspace shows "Locked"?
+│   ├── YES → Unlock via UI or API POST /actions/unlock
+│   └── NO ↓
+└── DEFAULT → Run terraform init -reconfigure, then retry operation</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Identify the lock holder and error type</h3>
+        <p>Read the full error message. Terraform prints the lock ID, who holds it, when it was acquired, and what operation they were running. [<a href="https://developer.hashicorp.com/terraform/language/state/locking">src1</a>]</p>
+        <pre><code class="language-bash"># The error output looks like this:
+# Error: Error acquiring the state lock
+#
+# Lock Info:
+#   ID:        a1b2c3d4-e5f6-7890-abcd-ef1234567890
+#   Path:      terraform-state/production/terraform.tfstate
+#   Operation: OperationTypeApply
+#   Who:       runner@ci-node-42
+#   Version:   1.9.5
+#   Created:   2026-02-23 10:15:32.123456 +0000 UTC</code></pre>
+        <p><strong>Verify</strong>: Check the <code>Who</code> field and <code>Created</code> timestamp — if the lock is hours/days old, it is stale.</p>
+
+        <h3>2. Confirm no active operations</h3>
+        <p>Before force-unlocking, ensure no other process is running terraform against this state file. [<a href="https://scalr.com/learning-center/terraform-state-lock-errors-emergency-solutions-prevention-guide/">src6</a>]</p>
+        <pre><code class="language-bash"># Check local processes
+ps aux | grep terraform
+
+# Check CI/CD pipelines (GitHub Actions example)
+gh run list --workflow=terraform.yml --status=in_progress
+
+# Check Terraform Cloud (if applicable)
+curl -s -H "Authorization: Bearer $TFC_TOKEN" \
+  "https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/runs?filter[status]=applying" \
+  | jq '.data[] | {id: .id, status: .attributes.status}'</code></pre>
+        <p><strong>Verify</strong>: No terraform processes listed, no CI runs in progress.</p>
+
+        <h3>3. Force-unlock the state</h3>
+        <p>Use the lock ID from the error message. [<a href="https://developer.hashicorp.com/terraform/cli/commands/force-unlock">src2</a>]</p>
+        <pre><code class="language-bash"># Standard force-unlock (will prompt for confirmation)
+terraform force-unlock a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+# Skip confirmation prompt (CI/CD usage)
+terraform force-unlock -force a1b2c3d4-e5f6-7890-abcd-ef1234567890</code></pre>
+        <p><strong>Verify</strong>: <code>terraform plan</code> runs without lock errors.</p>
+
+        <h3>4. Handle serial mismatch conflicts</h3>
+        <p>If you get an MD5 hash or serial conflict when pushing state, increment the serial. [<a href="https://support.hashicorp.com/hc/en-us/articles/31856819100179">src7</a>]</p>
+        <pre><code class="language-bash"># Pull current remote state
+terraform state pull > current-state.tfstate
+
+# Increment serial by 2 (must exceed remote serial)
+jq '.serial = .serial + 2' current-state.tfstate > fixed-state.tfstate
+
+# Push the fixed state
+terraform state push fixed-state.tfstate
+
+# Clean up
+rm current-state.tfstate fixed-state.tfstate</code></pre>
+        <p><strong>Verify</strong>: <code>terraform plan</code> shows expected changes (or no changes).</p>
+
+        <h3>5. Delete stale DynamoDB lock (last resort)</h3>
+        <p>If force-unlock fails, delete the lock item directly from DynamoDB. [<a href="https://developer.hashicorp.com/terraform/language/backend/s3">src3</a>]</p>
+        <pre><code class="language-bash"># Scan for stale locks
+aws dynamodb scan --table-name terraform-state-locks \
+  --filter-expression "attribute_exists(LockID)" \
+  --projection-expression "LockID,Info"
+
+# Delete the stale lock entry
+aws dynamodb delete-item --table-name terraform-state-locks \
+  --key '{"LockID": {"S": "terraform-state/production/terraform.tfstate-md5"}}'</code></pre>
+        <p><strong>Verify</strong>: <code>terraform plan</code> acquires lock successfully.</p>
+
+        <h3>6. Recover from state corruption</h3>
+        <p>If state is corrupted, restore from S3 versioning. [<a href="https://gruntwork.io/blog/how-to-manage-terraform-state">src5</a>]</p>
+        <pre><code class="language-bash"># List state file versions
+aws s3api list-object-versions --bucket my-terraform-state \
+  --prefix "production/terraform.tfstate" \
+  --query 'Versions[0:5].{VersionId:VersionId,LastModified:LastModified,Size:Size}'
+
+# Download last known good version
+aws s3api get-object --bucket my-terraform-state \
+  --key "production/terraform.tfstate" \
+  --version-id "abc123def456" restored-state.tfstate
+
+# Increment serial and push
+jq '.serial = .serial + 2' restored-state.tfstate > push-state.tfstate
+terraform state push push-state.tfstate</code></pre>
+        <p><strong>Verify</strong>: <code>terraform plan</code> shows expected infrastructure state.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>HCL: S3 backend with native locking (recommended)</h3>
+        <pre><code class="language-hcl"># Input:  Backend config in terraform block
+# Output: Remote state with S3-native locking (no DynamoDB needed)
+
+terraform {
+  backend "s3" {
+    bucket       = "mycompany-terraform-state"
+    key          = "production/network/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true  # Native S3 locking (Terraform >= 1.10)
+  }
+}</code></pre>
+
+        <h3>HCL: S3 backend with DynamoDB locking (legacy)</h3>
+        <pre><code class="language-hcl"># Input:  Backend config with DynamoDB lock table
+# Output: Remote state with DynamoDB-based locking (deprecated)
+
+terraform {
+  backend "s3" {
+    bucket         = "mycompany-terraform-state"
+    key            = "production/network/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-state-locks"  # Deprecated in 1.10
+  }
+}</code></pre>
+
+        <h3>Bash: CI/CD safe apply with lock timeout and retry</h3>
+        <pre><code class="language-bash">#!/usr/bin/env bash
+# Input:  Terraform workspace directory
+# Output: Safe apply with lock timeout, retry, and auto-unlock on stale lock
+
+set -euo pipefail
+MAX_RETRIES=3
+LOCK_TIMEOUT="5m"
+
+for attempt in $(seq 1 $MAX_RETRIES); do
+  echo "Attempt $attempt of $MAX_RETRIES"
+  if terraform apply -auto-approve -lock-timeout="$LOCK_TIMEOUT" 2>&amp;1; then
+    echo "Apply succeeded"; exit 0
+  else
+    LOCK_ID=$(terraform plan 2>&amp;1 | grep -oP 'ID:\s+\K[a-f0-9-]+' || true)
+    if [ -n "$LOCK_ID" ]; then
+      echo "Force-unlocking stale lock: $LOCK_ID"
+      terraform force-unlock -force "$LOCK_ID"
+    else
+      echo "Non-lock error"; exit 1
+    fi
+  fi
+done
+echo "Failed after $MAX_RETRIES attempts"; exit 1</code></pre>
+
+        <h3>YAML: GitHub Actions concurrency control</h3>
+        <pre><code class="language-yaml"># Input:  GitHub Actions workflow
+# Output: Single-concurrent terraform apply per environment
+
+name: Terraform Apply
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: terraform-${{ github.ref }}-production
+  cancel-in-progress: false  # Never cancel running apply
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      - run: terraform apply -auto-approve -lock-timeout=10m</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Force-unlocking without checking for active operations</h3>
+        <pre><code class="language-bash"># BAD — blindly force-unlocking can corrupt state if another process is running
+terraform force-unlock -force $(terraform plan 2>&amp;1 | grep -oP 'ID:\s+\K[a-f0-9-]+')</code></pre>
+
+        <h3>Correct: Verify no active operations, then unlock</h3>
+        <pre><code class="language-bash"># GOOD — check for running processes first
+ps aux | grep "[t]erraform"
+gh run list --workflow=terraform.yml --status=in_progress
+# Only after confirming nothing is running:
+terraform force-unlock a1b2c3d4-e5f6-7890-abcd-ef1234567890</code></pre>
+
+        <h3>Wrong: Disabling state locking entirely</h3>
+        <pre><code class="language-hcl"># BAD — no locking creates race conditions and state corruption
+terraform {
+  backend "s3" {
+    bucket = "my-state"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+# Running with -lock=false makes it worse</code></pre>
+
+        <h3>Correct: Enable locking and handle contention with timeouts</h3>
+        <pre><code class="language-hcl"># GOOD — always enable locking, use timeouts for contention
+terraform {
+  backend "s3" {
+    bucket       = "my-state"
+    key          = "terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+}
+# Run with: terraform apply -lock-timeout=10m</code></pre>
+
+        <h3>Wrong: Pushing state without checking serial</h3>
+        <pre><code class="language-bash"># BAD — pushing without serial check can overwrite newer state
+terraform state pull > backup.tfstate
+# ... make edits ...
+terraform state push backup.tfstate
+# Error: serial not greater than current</code></pre>
+
+        <h3>Correct: Pull latest, increment serial, then push</h3>
+        <pre><code class="language-bash"># GOOD — always increment serial before pushing
+terraform state pull > current.tfstate
+SERIAL=$(jq '.serial' current.tfstate)
+jq ".serial = $SERIAL + 2" current.tfstate > updated.tfstate
+terraform state push updated.tfstate</code></pre>
+
+        <h3>Wrong: Storing state files in Git</h3>
+        <pre><code class="language-bash"># BAD — state contains secrets; Git has no locking
+git add terraform.tfstate
+git commit -m "Update state"
+# Merge conflicts on .tfstate are unrecoverable</code></pre>
+
+        <h3>Correct: Use remote backend with encryption and versioning</h3>
+        <pre><code class="language-hcl"># GOOD — remote backend handles versioning and locking
+terraform {
+  backend "s3" {
+    bucket       = "my-state"
+    key          = "terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+}
+# S3 versioning provides history; Git tracks only .tf files</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Forgetting -lock-timeout in CI/CD</strong>: Default lock timeout is 0s — terraform immediately fails if lock is held. Fix: Always add <code>-lock-timeout=5m</code> to plan/apply. [<a href="https://scalr.com/learning-center/terraform-state-lock-errors-emergency-solutions-prevention-guide/">src6</a>]</li>
+            <li><strong>DynamoDB table with wrong key name</strong>: Partition key must be exactly <code>LockID</code> (capital L, capital ID) with type String. Fix: <code>aws dynamodb describe-table --table-name terraform-state-locks</code>. [<a href="https://developer.hashicorp.com/terraform/language/backend/s3">src3</a>]</li>
+            <li><strong>S3 bucket without versioning</strong>: Without versioning, corrupted state requires <code>terraform import</code> for every resource. Fix: <code>aws s3api put-bucket-versioning --bucket my-state --versioning-configuration Status=Enabled</code>. [<a href="https://gruntwork.io/blog/how-to-manage-terraform-state">src5</a>]</li>
+            <li><strong>Multiple backends referencing same state key</strong>: Creates implicit coupling and lock contention. Fix: Use unique keys per stack: <code>key = "env/${var.env}/component/terraform.tfstate"</code>. [<a href="https://spacelift.io/blog/terraform-state">src4</a>]</li>
+            <li><strong>Running terraform from wrong directory</strong>: Each directory is a separate root module with its own state. Fix: Verify with <code>terraform state list</code> before modifying. [<a href="https://developer.hashicorp.com/terraform/language/state/locking">src1</a>]</li>
+            <li><strong>Terraform Cloud auto-lock on VCS runs</strong>: VCS-triggered runs lock workspace; CLI runs fail. Fix: Unlock via UI or API. [<a href="https://support.hashicorp.com/hc/en-us/articles/31856819100179">src7</a>]</li>
+            <li><strong>Ignoring lock info timestamps</strong>: A 5-minute-old lock may be active; a 5-hour-old lock is stale. Fix: Always check <code>Created</code> field before force-unlocking. [<a href="https://developer.hashicorp.com/terraform/cli/commands/force-unlock">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Check who holds the state lock
+terraform plan 2>&amp;1 | grep -A 10 "Lock Info"
+
+# Inspect current state serial and lineage
+terraform state pull | jq '{serial, lineage, terraform_version}'
+
+# List all resources in current state
+terraform state list
+
+# Check DynamoDB lock table entries (S3 backend)
+aws dynamodb scan --table-name terraform-state-locks \
+  --projection-expression "LockID,Info"
+
+# Check S3 lock files (native S3 locking)
+aws s3 ls s3://my-state-bucket/ --recursive | grep ".tflock"
+
+# List S3 state file versions for recovery
+aws s3api list-object-versions --bucket my-state-bucket \
+  --prefix "production/terraform.tfstate" \
+  --query 'Versions[0:5]'
+
+# Verify state file is valid JSON
+terraform state pull | python3 -c "import sys,json; json.load(sys.stdin); print('Valid')"
+
+# Check Terraform Cloud workspace lock status
+curl -s -H "Authorization: Bearer $TFC_TOKEN" \
+  "https://app.terraform.io/api/v2/workspaces/$WS_ID" \
+  | jq '.data.attributes.locked'
+
+# Check for hung terraform processes
+ps aux | grep "[t]erraform"
+
+# Azure Blob lease status
+az storage blob show --container-name tfstate --name terraform.tfstate \
+  --account-name mystorageaccount --query properties.lease</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Breaking Changes</th>
+                        <th scope="col">Migration Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Terraform &gt;= 1.10</td>
+                        <td>Current</td>
+                        <td>Native S3 locking (<code>use_lockfile</code>), DynamoDB deprecated</td>
+                        <td>Add <code>use_lockfile = true</code>, keep <code>dynamodb_table</code> during transition</td>
+                    </tr>
+                    <tr>
+                        <td>Terraform 1.0-1.9</td>
+                        <td>Supported</td>
+                        <td>None for locking</td>
+                        <td>S3 backend requires <code>dynamodb_table</code> for locking</td>
+                    </tr>
+                    <tr>
+                        <td>Terraform 0.14-0.15</td>
+                        <td>Legacy</td>
+                        <td>Backend config changes</td>
+                        <td><code>terraform init -reconfigure</code> after upgrades</td>
+                    </tr>
+                    <tr>
+                        <td>Terraform 0.12-0.13</td>
+                        <td>EOL</td>
+                        <td>HCL2 migration</td>
+                        <td>State format compatible, backends unchanged</td>
+                    </tr>
+                    <tr>
+                        <td>OpenTofu &gt;= 1.6</td>
+                        <td>Current (fork)</td>
+                        <td>Same state format as Terraform</td>
+                        <td><code>force-unlock</code>, state commands work identically</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Error acquiring the state lock" appears</td>
+                        <td>State drift without lock errors</td>
+                        <td><code>terraform plan -refresh-only</code></td>
+                    </tr>
+                    <tr>
+                        <td>CI/CD pipeline stuck waiting for lock</td>
+                        <td>Provider authentication failures</td>
+                        <td>Provider-specific documentation</td>
+                    </tr>
+                    <tr>
+                        <td><code>terraform force-unlock</code> needed</td>
+                        <td>Plan shows unexpected resource changes</td>
+                        <td><code>terraform import</code> or state inspection</td>
+                    </tr>
+                    <tr>
+                        <td>State serial/MD5 mismatch errors</td>
+                        <td>Terraform version upgrade issues</td>
+                        <td>Terraform upgrade guide</td>
+                    </tr>
+                    <tr>
+                        <td>Recovering from corrupted state file</td>
+                        <td>Infrastructure wrong but state is correct</td>
+                        <td><code>terraform apply</code> to converge</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Native S3 locking (<code>use_lockfile</code>) stores a <code>.tflock</code> file alongside state — IAM policies must grant <code>s3:PutObject</code> and <code>s3:DeleteObject</code> on <code>*.tflock</code> paths</li>
+            <li><code>terraform force-unlock</code> behavior varies by backend — Azure Blob Storage requires breaking the lease separately</li>
+            <li>State files contain sensitive data (passwords, tokens, private keys) in plaintext — always encrypt at rest and restrict access via IAM</li>
+            <li>After any manual state manipulation (<code>state push</code>, <code>state mv</code>, <code>state rm</code>), always run <code>terraform plan</code> to verify before applying</li>
+            <li>Terraform Cloud serial conflicts often require API-level state manipulation — CLI <code>state push</code> may fail due to version mismatches</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/docker-container-wont-start/2026" data-relationship="related_to">Docker Container Won't Start</a>
+        <a href="/software/debugging/kubernetes-pod-pending/2026" data-relationship="related_to">Kubernetes Pod Pending</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

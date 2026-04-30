@@ -1,0 +1,36 @@
+START
+|-- Dashboard update frequency?
+|   |-- Sub-second (<1s latency)?
+|   |   |-- Use WebSocket push + in-memory pre-aggregation (Flink stateful operators)
+|   |   |-- Storage: ClickHouse or Druid with real-time ingestion
+|   |   +-- Avoid: materialized views with sync lag; use Flink direct-to-sink
+|   |-- Near-real-time (1-30s)?
+|   |   |-- Use SSE or WebSocket + ClickHouse materialized views
+|   |   |-- Batch micro-aggregations in 5-10s tumbling windows
+|   |   +-- This covers 80% of dashboard use cases
+|   +-- Periodic (1-5 min)?
+|       |-- Use polling API + query cache (Redis, 60s TTL)
+|       |-- Pre-aggregate with scheduled ClickHouse materialized views
+|       +-- Simplest architecture; start here unless requirements demand faster
+|
+|-- Concurrent viewers?
+|   |-- <100 viewers?
+|   |   +-- Direct DB queries OK; single OLAP node sufficient
+|   |-- 100-10K viewers?
+|   |   |-- Pre-aggregate + cache; fan out via WebSocket with Redis PubSub
+|   |   +-- 2-4 WebSocket server nodes behind load balancer
+|   +-- >10K viewers?
+|       |-- CDN-cached SSE streams or broadcast via pub/sub (Redis/NATS)
+|       |-- Never let viewers trigger individual DB queries
+|       +-- Compute once, broadcast N times
+|
++-- Data volume?
+    |-- <10K events/sec?
+    |   +-- Single ClickHouse node or TimescaleDB; Kafka optional
+    |-- 10K-1M events/sec?
+    |   +-- Kafka (3+ brokers) -> Flink -> ClickHouse cluster (3+ nodes)
+    +-- >1M events/sec?
+        |-- Kafka cluster (6+ brokers, partitioned by key)
+        |-- Flink cluster with RocksDB state backend
+        |-- ClickHouse cluster with distributed tables
+        +-- Druid with deep storage on S3 for historical queries

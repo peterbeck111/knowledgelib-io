@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Migrate from Heroku to AWS/Railway/Fly.io | knowledgelib.io</title>
+    <meta name="description" content="Complete Heroku migration guide covering AWS ECS Fargate, Railway, and Fly.io with service mapping table, Terraform IaC, database migration, CI/CD...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/migrations/heroku-to-aws/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Migrate from Heroku to AWS/Railway/Fly.io | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete Heroku migration guide covering AWS ECS Fargate, Railway, and Fly.io with service mapping table, Terraform IaC, database migration, CI/CD setup, and 8 common pitfalls. 8 sources, all cited. Verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/migrations/heroku-to-aws/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Migrate from Heroku to AWS/Railway/Fly.io | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete Heroku migration guide covering AWS ECS Fargate, Railway, and Fly.io with service mapping table, Terraform IaC, database migration, CI/CD setup, and 8 common pitfalls. 8 sources, all cited. Verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.92">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/migrations/heroku_to_aws">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I migrate from Heroku to AWS/Railway/Fly.io?">
+    <meta name="ai:aliases"
+        content="Heroku to AWS migration guide; migrate Heroku app to AWS ECS; Heroku alternative migration; Heroku to Railway migration; Heroku to Fly.io migration; move from Heroku to cloud; Heroku to ECS Fargate migration; Heroku alternatives 2026">
+    <meta name="ai:raw" content="/api/v1/units/software/migrations/heroku-to-aws/2026.md">
+    <meta name="ai:token_estimate" content="4200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="monthly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="target_platform,database_size,downtime_tolerance">
+    <meta name="ai:constraints"
+        content="AWS Fargate requires platform version 1.4.0+; Heroku DATABASE_URL sslmode must be remapped; Docker images must listen on $PORT; pg_restore requires --no-owner --no-acl; Railway Hobby plan is single-user; Fly.io volumes are region-pinned">
+    <meta name="ai:skip_this_unit_if"
+        content="Migrating to GCP or Azure -> search platform-specific guide; Containerizing without changing platforms -> software/devops/docker-containerization-guide/2026; Comparing PaaS without migrating -> software/devops/paas-comparison-guide/2026">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"How to Migrate from Heroku to AWS/Railway/Fly.io","headline":"How to Migrate from Heroku to AWS/Railway/Fly.io","description":"Complete migration guide from Heroku to AWS ECS Fargate, Railway, and Fly.io covering containerization, database migration, CI/CD setup, infrastructure as code, and 2025-2026 platform pricing updates.","keywords":["Heroku","AWS","ECS Fargate","Railway","Fly.io","cloud migration","Docker","PaaS","containerization"],"dateModified":"2026-02-23","datePublished":"2026-02-17","proficiencyLevel":"Expert","dependencies":"Docker, PostgreSQL, AWS CLI / Railway CLI / flyctl","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"How to Migrate from Heroku to AWS","url":"https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view"},{"@type":"WebPage","name":"Heroku to AWS Migration: 2025 Guide","url":"https://cloudvisor.co/heroku-to-aws-migration/"},{"@type":"WebPage","name":"Railway Migration Guide from Heroku","url":"https://docs.railway.com/guides/migrate-from-heroku"},{"@type":"WebPage","name":"Migrate from Heroku - Fly.io Docs","url":"https://fly.io/docs/getting-started/migrate-from-heroku/"},{"@type":"WebPage","name":"Moving from Heroku to AWS: A Practical Guide","url":"https://njclabs.com/blog/heroku-to-aws-migration-guide/"},{"@type":"WebPage","name":"Outgrowing Heroku: TeePublic on Amazon ECS","url":"https://judoscale.com/blog/heroku-to-aws-migration"},{"@type":"WebPage","name":"AWS Fargate Platform Versions","url":"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform-fargate.html"},{"@type":"WebPage","name":"Railway Pricing & Plans","url":"https://docs.railway.com/pricing"}]}</script>
+
+    <!-- Structured data: Dataset -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "How to Migrate from Heroku to AWS/Railway/Fly.io",
+        "description": "Structured migration guide comparing AWS ECS Fargate, Railway, and Fly.io as Heroku alternatives with service mapping, code examples, and 2026 pricing data.",
+        "keywords": ["Heroku", "AWS", "Railway", "Fly.io", "migration", "containerization", "PaaS"],
+        "temporalCoverage": "2022/2026",
+        "dateModified": "2026-02-23",
+        "datePublished": "2026-02-17",
+        "sourceOrganization": [
+            { "@type": "Organization", "name": "OneUptime" },
+            { "@type": "Organization", "name": "Cloudvisor" },
+            { "@type": "Organization", "name": "Railway" },
+            { "@type": "Organization", "name": "Fly.io" },
+            { "@type": "Organization", "name": "AWS" }
+        ],
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+        "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+    }
+    </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+            { "@type": "ListItem", "position": 3, "name": "Migrations", "item": "https://knowledgelib.io/software/migrations/" },
+            { "@type": "ListItem", "position": 4, "name": "How to Migrate from Heroku to AWS/Railway/Fly.io" }
+        ]
+    }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I migrate from Heroku to AWS/Railway/Fly.io?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Containerize your Heroku app with Docker, choose a target platform (AWS ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database with pg_dump/pg_restore, and set up CI/CD to replace Heroku's git push workflow."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Heroku to AWS migration guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Containerize your Heroku app with Docker, choose a target platform (AWS ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database with pg_dump/pg_restore, and set up CI/CD to replace Heroku's git push workflow."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "migrate Heroku app to AWS ECS",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Containerize your Heroku app with Docker, choose a target platform (AWS ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database with pg_dump/pg_restore, and set up CI/CD to replace Heroku's git push workflow."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Heroku alternative migration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Containerize your Heroku app with Docker, choose a target platform (AWS ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database with pg_dump/pg_restore, and set up CI/CD to replace Heroku's git push workflow."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Heroku to Railway migration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Containerize your Heroku app with Docker, choose a target platform (AWS ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database with pg_dump/pg_restore, and set up CI/CD to replace Heroku's git push workflow."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Heroku to Fly.io migration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Containerize your Heroku app with Docker, choose a target platform (AWS ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database with pg_dump/pg_restore, and set up CI/CD to replace Heroku's git push workflow."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Migrate from Heroku to AWS/Railway/Fly.io</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I migrate from Heroku to AWS/Railway/Fly.io?</h2>
+
+    <aside class="unit-meta" data-card-id="software/migrations/heroku-to-aws/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> monthly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Containerize your Heroku app with Docker, choose a target platform (AWS
+                ECS Fargate for full control, Railway for simplicity, Fly.io for edge deployment), migrate your database
+                with <code>pg_dump</code>/<code>pg_restore</code>, and set up CI/CD.</li>
+            <li><strong>Key tool/command</strong>:
+                <code>docker build -t myapp . &amp;&amp; docker push &lt;registry&gt;/myapp</code></li>
+            <li><strong>Watch out for</strong>: Heroku's ephemeral filesystem &mdash; file writes fail on all platforms
+                without S3/R2.</li>
+            <li><strong>Works with</strong>: Any Heroku app; targets: AWS ECS Fargate (platform v1.4.0+), Railway
+                (Hobby/Pro), Fly.io (Machines).</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>AWS Fargate requires platform version 1.4.0+ (Linux) &mdash; all earlier versions were retired in 2024.
+                Always specify <code>platformVersion: "LATEST"</code> in task definitions. [<a
+                    href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform-fargate.html">src7</a>]
+            </li>
+            <li>Heroku <code>DATABASE_URL</code> includes <code>sslmode=require</code> &mdash; strip or remap SSL
+                parameters when connecting to RDS, Railway, or Fly Postgres. [<a
+                    href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                    href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>]</li>
+            <li>Docker images must listen on <code>$PORT</code> &mdash; all three platforms inject PORT at runtime;
+                hardcoding a port causes health check failures. [<a
+                    href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                    href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</li>
+            <li>Never run <code>pg_restore</code> without <code>--no-owner --no-acl</code> &mdash; Heroku role names
+                don't exist on the target and will cause the restore to fail. [<a
+                    href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>, <a
+                    href="https://njclabs.com/blog/heroku-to-aws-migration-guide/">src5</a>]</li>
+            <li>Railway Hobby plan ($5/mo) is single-user only &mdash; teams must upgrade to Pro ($20/seat/mo). Egress
+                and volume pricing were reduced in March 2025. [<a
+                    href="https://docs.railway.com/guides/migrate-from-heroku">src3</a>, <a
+                    href="https://docs.railway.com/pricing">src8</a>]</li>
+            <li>Fly.io persistent volumes are region-pinned &mdash; once created, a volume cannot be moved. Match
+                database region to compute region. [<a
+                    href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Heroku Feature</th>
+                        <th scope="col">AWS Equivalent</th>
+                        <th scope="col">Railway</th>
+                        <th scope="col">Fly.io</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Web Dynos</td>
+                        <td>ECS Fargate tasks</td>
+                        <td>Railway services</td>
+                        <td>Fly Machines</td>
+                    </tr>
+                    <tr>
+                        <td>Worker Dynos</td>
+                        <td>ECS tasks (separate)</td>
+                        <td>Separate services</td>
+                        <td>Process groups</td>
+                    </tr>
+                    <tr>
+                        <td>Heroku Postgres</td>
+                        <td>Amazon RDS</td>
+                        <td>Railway Postgres</td>
+                        <td>Fly Managed Postgres</td>
+                    </tr>
+                    <tr>
+                        <td>Heroku Redis</td>
+                        <td>ElastiCache</td>
+                        <td>Railway Redis</td>
+                        <td>Upstash Redis</td>
+                    </tr>
+                    <tr>
+                        <td>Config Vars</td>
+                        <td>SSM / Secrets Manager</td>
+                        <td>Railway variables</td>
+                        <td><code>fly secrets</code></td>
+                    </tr>
+                    <tr>
+                        <td>Heroku Pipelines</td>
+                        <td>CodePipeline + CodeBuild</td>
+                        <td>Environments</td>
+                        <td><code>fly deploy</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>git push heroku</code></td>
+                        <td>Push to ECR &rarr; ECS</td>
+                        <td><code>git push</code> (auto)</td>
+                        <td><code>fly deploy</code></td>
+                    </tr>
+                    <tr>
+                        <td>Procfile</td>
+                        <td>ECS task definition</td>
+                        <td>Procfile (native)</td>
+                        <td>Procfile / fly.toml</td>
+                    </tr>
+                    <tr>
+                        <td>Auto-scaling</td>
+                        <td>ECS Service Auto Scaling</td>
+                        <td>Automatic (vertical)</td>
+                        <td>Machines auto-start/stop</td>
+                    </tr>
+                    <tr>
+                        <td>Logging</td>
+                        <td>CloudWatch Logs</td>
+                        <td>Built-in dashboard</td>
+                        <td><code>fly logs</code></td>
+                    </tr>
+                    <tr>
+                        <td>SSL/TLS</td>
+                        <td>ACM + ALB listener</td>
+                        <td>Automatic (Let's Encrypt)</td>
+                        <td>Automatic (Let's Encrypt)</td>
+                    </tr>
+                    <tr>
+                        <td>Free tier</td>
+                        <td>12 months free + always-free</td>
+                        <td>Hobby $5/mo ($5 credit)</td>
+                        <td>3 shared VMs, 160GB BW</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
++-- What matters most?
+|   +-- Full control + AWS -> AWS ECS Fargate [src1, src2]
+|   +-- Developer simplicity -> Railway [src3]
+|   +-- Global edge deploy -> Fly.io [src4]
++-- Team size?
+|   +-- Solo/small -> Railway or Fly.io (less ops)
+|   +-- DevOps team -> AWS (more powerful)
++-- Database size?
+|   +-- &lt; 10 GB -> pg_dump/restore [src1]
+|   +-- &gt; 10 GB -> AWS DMS live replication [src2]
++-- Downtime tolerance?
+|   +-- Zero downtime -> AWS DMS + blue-green deploy [src2, src6]
+|   +-- Maintenance window OK -> pg_dump/restore (any platform)
++-- DEFAULT -> Containerize first, then pick platform</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+        <h3>1. Containerize your app</h3>
+        <p>Convert Procfile-based app to Docker. [<a
+                href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                href="https://njclabs.com/blog/heroku-to-aws-migration-guide/">src5</a>]</p>
+        <pre><code class="language-bash">docker build -t myapp .
+docker run -p 3000:3000 -e PORT=3000 myapp</code></pre>
+
+        <h3>2. Export Heroku configuration</h3>
+        <p>Capture config vars, add-ons, and database info. [<a
+                href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</p>
+        <pre><code class="language-bash">heroku config -a myapp --shell > heroku_env.txt
+heroku addons -a myapp
+heroku pg:info -a myapp</code></pre>
+
+        <h3>3a. Migrate to AWS ECS Fargate</h3>
+        <p>Full AWS ecosystem integration. Requires platform v1.4.0+. [<a
+                href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>, <a
+                href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform-fargate.html">src7</a>]</p>
+        <pre><code class="language-bash"># Push to ECR, create cluster, create service
+aws ecr create-repository --repository-name myapp
+docker push &lt;account-id&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/myapp:latest
+aws ecs create-service --cluster myapp --service-name myapp \
+  --launch-type FARGATE --platform-version LATEST</code></pre>
+
+        <h3>3b. Migrate to Railway</h3>
+        <p>Closest to Heroku's DX. Supports Procfile natively. [<a
+                href="https://docs.railway.com/guides/migrate-from-heroku">src3</a>, <a
+                href="https://docs.railway.com/pricing">src8</a>]</p>
+        <pre><code class="language-bash">railway init && railway link && railway up</code></pre>
+
+        <h3>3c. Migrate to Fly.io</h3>
+        <p>Best for global edge. Free allowance: 3 shared VMs. [<a
+                href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</p>
+        <pre><code class="language-bash">fly launch && fly deploy</code></pre>
+
+        <h3>4. Migrate the database</h3>
+        <p>Always use <code>--no-owner --no-acl</code> to avoid role mismatches. [<a
+                href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>, <a
+                href="https://njclabs.com/blog/heroku-to-aws-migration-guide/">src5</a>]</p>
+        <pre><code class="language-bash">pg_dump $(heroku config:get DATABASE_URL -a myapp) -Fc -f backup.dump
+pg_restore -h target-host -d myapp --no-owner --no-acl backup.dump</code></pre>
+
+        <h3>5. Update DNS and cut over</h3>
+        <p>Point domain to the new platform. Fly.io dedicated IPv4 costs $2/mo. [<a
+                href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</p>
+        <pre><code class="language-bash"># AWS: CNAME -> ALB
+# Railway: railway domain add myapp.com
+# Fly.io: fly certs add myapp.com
+dig myapp.com  # Verify propagation</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+        <h3>Terraform: AWS ECS Fargate for Heroku migration</h3>
+        <p>Full script: <a
+                href="scripts/terraform-aws-ecs-fargate-infrastructure-for-herok.txt">terraform-aws-ecs-fargate-infrastructure-for-herok.txt</a>
+            (59 lines)</p>
+        <pre><code class="language-hcl">resource "aws_ecs_task_definition" "app" {
+  family                   = "myapp"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  container_definitions    = jsonencode([{
+    name  = "myapp"
+    image = "${aws_ecr_repository.app.repository_url}:latest"
+    portMappings = [{ containerPort = 3000 }]
+  }])
+}</code></pre>
+
+        <h3>Bash: Complete Heroku-to-Railway migration</h3>
+        <p>Full script: <a
+                href="scripts/bash-complete-heroku-to-railway-migration-script.sh">bash-complete-heroku-to-railway-migration-script.sh</a>
+            (32 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+set -euo pipefail
+HEROKU_APP="$1"
+railway init && railway link
+# ... (see full script)</code></pre>
+
+        <h3>GitHub Actions: CI/CD for ECS Fargate deployment</h3>
+        <pre><code class="language-yaml"># Input:  GitHub repo with Dockerfile
+# Output: Auto-deploy to ECS on push to main
+name: Deploy to ECS
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/amazon-ecr-login@v2
+      - run: docker build -t $ECR_REGISTRY/myapp:$GITHUB_SHA . && docker push ...
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+        <h3>Wrong: Storing files on local filesystem</h3>
+        <pre><code class="language-javascript">// ❌ BAD — file disappears on restart
+fs.writeFileSync('uploads/file.txt', data);</code></pre>
+        <h3>Correct: Use S3/R2 object storage</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — persistent across deploys [src1]
+await s3.send(new PutObjectCommand({ Bucket: 'myapp', Key: 'file.txt', Body: data }));</code></pre>
+
+        <h3>Wrong: Hardcoding Heroku-specific env vars</h3>
+        <pre><code class="language-bash"># ❌ BAD — Heroku-managed variable won't exist
+REDIS_URL="$HEROKU_REDIS_URL"</code></pre>
+        <h3>Correct: Platform-agnostic configuration</h3>
+        <pre><code class="language-bash"># ✅ GOOD — standard env vars, set per platform [src1, src3]
+DATABASE_URL=$(aws ssm get-parameter --name /myapp/database-url --with-decryption --query Parameter.Value --output text)</code></pre>
+
+        <h3>Wrong: pg_restore without --no-owner</h3>
+        <pre><code class="language-bash"># ❌ BAD — Heroku roles don't exist on target
+pg_restore -h rds-host -U postgres -d myapp backup.dump
+# ERROR: role "uf3kxyz" does not exist</code></pre>
+        <h3>Correct: Strip ownership during restore</h3>
+        <pre><code class="language-bash"># ✅ GOOD — ignore Heroku-specific roles [src2, src5]
+pg_restore -h rds-host -U postgres -d myapp --no-owner --no-acl backup.dump</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Forgetting worker processes</strong>: Each Procfile process needs a separate service on the
+                target platform. [<a
+                    href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>]</li>
+            <li><strong>Database connection limits</strong>: Add RDS Proxy or PgBouncer &mdash; Heroku includes pooling
+                by default. [<a href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>, <a
+                    href="https://njclabs.com/blog/heroku-to-aws-migration-guide/">src5</a>]</li>
+            <li><strong>SSL certificates</strong>: AWS requires ACM + ALB config; Railway and Fly.io auto-provision via
+                Let's Encrypt. [<a
+                    href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>]</li>
+            <li><strong>Scheduled jobs</strong>: Don't use cron inside containers &mdash; use platform-native schedulers
+                (EventBridge, Railway cron, Fly Machines). [<a
+                    href="https://oneuptime.com/blog/post/2026-02-12-migrate-from-heroku-to-aws/view">src1</a>, <a
+                    href="https://docs.railway.com/guides/migrate-from-heroku">src3</a>]</li>
+            <li><strong>Log aggregation</strong>: AWS needs explicit CloudWatch setup. Set up log forwarding early. [<a
+                    href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>]</li>
+            <li><strong>Build dependencies in runtime image</strong>: Use multi-stage Docker builds to keep images lean.
+                [<a href="https://njclabs.com/blog/heroku-to-aws-migration-guide/">src5</a>]</li>
+            <li><strong>Fly.io IPv4 billing</strong>: Dedicated public IPv4 costs $2/mo per app. Use shared IPv4 or IPv6
+                when possible. [<a href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</li>
+            <li><strong>Railway egress costs</strong>: Reduced in March 2025, but high-bandwidth apps should monitor
+                usage against included credits. [<a href="https://docs.railway.com/pricing">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Heroku: capture state before migration
+heroku ps -a myapp &amp;&amp; heroku config -a myapp --shell &amp;&amp; heroku addons -a myapp
+
+# AWS: verify
+aws ecs describe-services --cluster myapp-cluster --services myapp-service
+aws ecs list-tasks --cluster myapp-cluster
+aws logs tail /ecs/myapp --follow
+
+# Railway: verify
+railway status &amp;&amp; railway logs &amp;&amp; railway domain list
+
+# Fly.io: verify
+fly status &amp;&amp; fly logs &amp;&amp; fly checks list</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Platform</th>
+                        <th scope="col">Key Feature</th>
+                        <th scope="col">Heroku Equivalent</th>
+                        <th scope="col">Cost Model (2026)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>AWS ECS Fargate</td>
+                        <td>Serverless containers, full AWS ecosystem</td>
+                        <td>Dynos + add-ons</td>
+                        <td>Pay-per-vCPU-second (~50&ndash;70% cheaper at scale)</td>
+                    </tr>
+                    <tr>
+                        <td>Railway</td>
+                        <td>Git-push deploys, auto-scaling, project canvas</td>
+                        <td>Almost identical to Heroku</td>
+                        <td>Hobby $5/mo, Pro $20/seat/mo</td>
+                    </tr>
+                    <tr>
+                        <td>Fly.io</td>
+                        <td>Edge deployment, global distribution</td>
+                        <td>Dynos + multi-region</td>
+                        <td>Free (3 VMs, 160GB BW) + usage</td>
+                    </tr>
+                    <tr>
+                        <td>Render</td>
+                        <td>Static sites + services</td>
+                        <td>Heroku alternative</td>
+                        <td>Free tier + pay-per-use</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Migrate When</th>
+                        <th scope="col">Don't Migrate When</th>
+                        <th scope="col">Consider Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Costs exceed $500/mo</td>
+                        <td>Simple app under $50/mo</td>
+                        <td>Stay on Heroku Eco</td>
+                    </tr>
+                    <tr>
+                        <td>Need auto-scaling beyond Heroku</td>
+                        <td>No DevOps experience</td>
+                        <td>Railway (Heroku-like)</td>
+                    </tr>
+                    <tr>
+                        <td>Compliance requires specific cloud</td>
+                        <td>Timeline &lt; 2 weeks</td>
+                        <td>Plan longer</td>
+                    </tr>
+                    <tr>
+                        <td>Need VPC networking / private subnets</td>
+                        <td>App is in prototype/MVP phase</td>
+                        <td>Stay on Heroku or Railway</td>
+                    </tr>
+                    <tr>
+                        <td>Need multi-region deployment</td>
+                        <td>Single-region, low traffic</td>
+                        <td>Any platform works</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Heroku free tier removed Nov 2022 &mdash; Eco plan ($5/mo) replaced it. All alternatives have comparable
+                low-cost tiers.</li>
+            <li>AWS ECS Fargate: higher complexity but 50&ndash;70% cheaper at scale. Now supports custom container stop
+                signals for graceful shutdown. [<a
+                    href="https://cloudvisor.co/heroku-to-aws-migration/">src2</a>, <a
+                    href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform-fargate.html">src7</a>]
+            </li>
+            <li>Railway scaling is vertical &mdash; add replicas manually for horizontal. Committed spend tiers
+                available from $10,000/mo for dedicated hosts. [<a
+                    href="https://docs.railway.com/guides/migrate-from-heroku">src3</a>, <a
+                    href="https://docs.railway.com/pricing">src8</a>]</li>
+            <li>Fly.io: match database region to compute region. Volume snapshots became billable Jan 2026
+                ($0.08/GB/mo, first 10GB free). [<a
+                    href="https://fly.io/docs/getting-started/migrate-from-heroku/">src4</a>]</li>
+            <li>All platforms require explicit file storage migration &mdash; move from Heroku's ephemeral filesystem to
+                S3, R2, or equivalent.</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/devops/docker-containerization-guide/2026"
+            data-relationship="depends_on">Docker Containerization Guide</a>
+        <a href="/software/migrations/docker-compose-to-kubernetes/2026"
+            data-relationship="related_to">Docker Compose to Kubernetes Migration</a>
+        <a href="/software/migrations/monolith-to-microservices/2026"
+            data-relationship="related_to">Monolith to Microservices Migration</a>
+        <a href="/software/migrations/jenkins-to-github-actions/2026"
+            data-relationship="solves">Jenkins to GitHub Actions Migration</a>
+        <a href="/software/devops/paas-comparison-guide/2026"
+            data-relationship="alternative_to">PaaS Comparison Guide</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents
+        and researchers.<br>
+        Browse: Software &middot; Migrations<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a
+            href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

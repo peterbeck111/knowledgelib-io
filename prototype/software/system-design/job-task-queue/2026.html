@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Distributed Job &amp; Task Queue System Design | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for distributed job and task queues — Celery vs BullMQ vs Temporal vs Sidekiq comparison, decision tree, code examples in...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/job-task-queue/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Distributed Job &amp; Task Queue System Design | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for distributed job and task queues — Celery vs BullMQ vs Temporal vs Sidekiq comparison, decision tree, code examples in Python and Node.js, 5 anti-patterns, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/job-task-queue/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Distributed Job &amp; Task Queue System Design | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for distributed job and task queues — Celery vs BullMQ vs Temporal vs Sidekiq comparison, decision tree, code examples in Python and Node.js, 5 anti-patterns, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/job_task_queue">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a distributed job and task queue system?">
+  <meta name="ai:aliases" content="distributed task queue architecture design; how to build a job queue system at scale; Celery vs BullMQ vs Temporal vs Sidekiq comparison; system design interview: design a task queue; at-least-once delivery task processing architecture; background job processing system design; async task queue with retries and dead letter queue; designing reliable job scheduling infrastructure">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/job-task-queue/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="language, scale, task_duration, delivery_guarantee">
+  <meta name="ai:constraints" content="All task handlers MUST be idempotent; Never store large payloads (>64 KB) in queue messages; Always configure a dead letter queue; Set explicit task TTLs and max retry counts; Broker persistence must match durability requirements">
+  <meta name="ai:skip_this_unit_if" content="Need event streaming (Kafka/Pulsar/NATS) not a job queue; Need cron scheduler only, not distributed task processing; Need workflow orchestrator for data pipelines (Airflow/Prefect)">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Distributed Job & Task Queue System Design",
+    "headline": "Distributed Job & Task Queue System Design",
+    "description": "Complete system design guide for distributed job and task queues covering Celery, BullMQ, Temporal, and Sidekiq with architecture patterns, decision trees, code examples, anti-patterns, and production pitfalls.",
+    "keywords": ["distributed task queue", "job queue system design", "Celery", "BullMQ", "Temporal", "Sidekiq", "at-least-once delivery", "dead letter queue", "background jobs", "async task processing"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Redis 6.2+, RabbitMQ 3.x, Python 3.9+, Node.js 18+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Celery - Distributed Task Queue Documentation",
+        "url": "https://docs.celeryq.dev/en/stable/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "BullMQ Documentation — What is BullMQ",
+        "url": "https://docs.bullmq.io/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Temporal.io Documentation",
+        "url": "https://docs.temporal.io/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Sidekiq Best Practices",
+        "url": "https://github.com/sidekiq/sidekiq/wiki/Best-Practices"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design a Distributed Job Scheduler: System Design Guide",
+        "url": "https://www.systemdesignhandbook.com/guides/design-a-distributed-job-scheduler/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "FOQS: Scaling a Distributed Priority Queue",
+        "url": "https://engineering.fb.com/2021/02/22/production-engineering/foqs-scaling-a-distributed-priority-queue/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dead Letter Queues (DLQ): The Complete Developer-Friendly Guide",
+        "url": "https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Distributed Job & Task Queue System Design",
+    "description": "Structured knowledge unit covering distributed job and task queue architecture: Celery, BullMQ, Temporal, Sidekiq comparison with decision trees, code examples, anti-patterns, and production pitfalls.",
+    "keywords": ["distributed task queue", "job queue", "Celery", "BullMQ", "Temporal", "Sidekiq", "system design"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Celery Project"},
+      {"@type": "Organization", "name": "Taskforce.sh (BullMQ)"},
+      {"@type": "Organization", "name": "Temporal Technologies"},
+      {"@type": "Organization", "name": "Mike Perham (Sidekiq)"},
+      {"@type": "Organization", "name": "Meta Engineering"},
+      {"@type": "Organization", "name": "System Design Handbook"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Distributed Job & Task Queue System Design" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a distributed job and task queue system?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "distributed task queue architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to build a job queue system at scale",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Celery vs BullMQ vs Temporal vs Sidekiq comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "system design interview: design a task queue",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "at-least-once delivery task processing architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Distributed Job &amp; Task Queue System Design</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a distributed job and task queue system?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/job-task-queue/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A distributed job queue decouples producers from workers via a broker, enabling asynchronous task processing with retries, dead letter queues, and horizontal scaling — choose Celery for Python, BullMQ for Node.js, Sidekiq for Ruby, or Temporal for long-running workflows.</li>
+    <li><strong>Key tool/command</strong>: <code>celery -A tasks worker --loglevel=info</code> (Python) / <code>new Worker(queueName, processor)</code> (BullMQ/Node.js)</li>
+    <li><strong>Watch out for</strong>: Non-idempotent task handlers — at-least-once delivery means your task will run more than once after retries, causing duplicate side effects.</li>
+    <li><strong>Works with</strong>: Any language. Core patterns are language-agnostic. Code examples in Python (Celery) and Node.js/TypeScript (BullMQ).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>All task handlers MUST be idempotent — at-least-once delivery means duplicate execution is expected, not exceptional [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</li>
+    <li>Never store large payloads (&gt;64 KB) in queue messages — pass a reference (S3 key, DB row ID) and fetch in the worker [<a href="https://github.com/sidekiq/sidekiq/wiki/Best-Practices">src4</a>]</li>
+    <li>Always configure a dead letter queue (DLQ) — without one, poison messages block processing or are silently lost [<a href="https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/">src7</a>]</li>
+    <li>Set explicit task TTLs and max retry counts — unbounded retries cause infinite loops and resource exhaustion [<a href="https://www.systemdesignhandbook.com/guides/design-a-distributed-job-scheduler/">src5</a>]</li>
+    <li>Broker persistence must match durability needs — an in-memory Redis with no AOF loses all pending jobs on crash [<a href="https://docs.bullmq.io/">src2</a>]</li>
+    <li>Never let workers auto-acknowledge before processing completes — premature ACK means lost tasks on worker crash [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Producer</td><td>Enqueues tasks with payload and metadata</td><td>Any application code (web server, CLI, cron)</td><td>Stateless; scale with application tier</td></tr>
+      <tr><td>Message Broker</td><td>Stores and routes tasks to workers</td><td>Redis (BullMQ, Sidekiq), RabbitMQ (Celery), PostgreSQL (Temporal), SQS (cloud)</td><td>Cluster mode with replication; partition by queue</td></tr>
+      <tr><td>Worker Pool</td><td>Pulls and executes tasks</td><td>Celery workers, BullMQ Workers, Sidekiq threads, Temporal workers</td><td>Horizontal scaling; auto-scale on queue depth</td></tr>
+      <tr><td>Result Backend</td><td>Stores task outcomes and return values</td><td>Redis, PostgreSQL, MongoDB, S3</td><td>Optional; omit if tasks are fire-and-forget</td></tr>
+      <tr><td>Dead Letter Queue</td><td>Isolates poison messages after max retries</td><td>Dedicated queue in same broker</td><td>Monitor DLQ depth; alert on growth</td></tr>
+      <tr><td>Scheduler</td><td>Triggers periodic/delayed tasks</td><td>Celery Beat, BullMQ repeatable jobs, cron, CloudWatch Events</td><td>Single-leader pattern to prevent duplicate scheduling</td></tr>
+      <tr><td>Rate Limiter</td><td>Throttles task processing rate</td><td>Token bucket per queue or per worker group</td><td>Protects downstream APIs from overload</td></tr>
+      <tr><td>Priority Router</td><td>Routes high-priority tasks before low-priority</td><td>Weighted queues (Sidekiq), priority levels (BullMQ)</td><td>Separate worker pools per priority tier</td></tr>
+      <tr><td>Observability</td><td>Monitors queue depth, latency, failure rate</td><td>Prometheus + Grafana, Datadog, Flower (Celery)</td><td>Alert on queue depth &gt; threshold, DLQ growth</td></tr>
+      <tr><td>Retry Engine</td><td>Retries failed tasks with backoff</td><td>Built-in (all frameworks), custom exponential backoff</td><td>Cap retries (3-5); exponential backoff with jitter</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Choose a Task Queue Framework
+├── Language: Python?
+│   ├── YES → Tasks run &lt; 1 hour?
+│   │   ├── YES → Use Celery + Redis/RabbitMQ broker
+│   │   └── NO → Use Temporal Python SDK (durable execution)
+│   └── NO ↓
+├── Language: Node.js / TypeScript?
+│   ├── YES → Tasks run &lt; 1 hour?
+│   │   ├── YES → Use BullMQ + Redis
+│   │   └── NO → Use Temporal TypeScript SDK
+│   └── NO ↓
+├── Language: Ruby?
+│   ├── YES → Use Sidekiq + Redis (default choice for Rails)
+│   └── NO ↓
+├── Language: Go / Java?
+│   ├── YES → Need workflow orchestration?
+│   │   ├── YES → Use Temporal (native Go/Java SDKs)
+│   │   └── NO → Use cloud-native (SQS + Lambda, Cloud Tasks)
+│   └── NO ↓
+├── Need long-running workflows (hours/days)?
+│   ├── YES → Use Temporal (durable execution, automatic state persistence)
+│   └── NO ↓
+├── Throughput &gt; 1M tasks/day?
+│   ├── YES → Use dedicated broker cluster (RabbitMQ/Redis Cluster) + auto-scaling workers
+│   └── NO ↓
+└── DEFAULT → Celery (Python) or BullMQ (Node.js) — largest ecosystems, easiest to start</code></pre>
+
+  <pre><code>START: Choose Delivery Guarantee
+├── Can your system tolerate duplicate processing?
+│   ├── YES → At-least-once (default for all frameworks — simplest)
+│   └── NO ↓
+├── Can you make handlers idempotent (dedup key, upsert, conditional write)?
+│   ├── YES → At-least-once + idempotency layer (recommended)
+│   └── NO ↓
+├── Is losing occasional tasks acceptable?
+│   ├── YES → At-most-once (ACK before processing — fast but lossy)
+│   └── NO ↓
+└── DEFAULT → At-least-once + idempotent handlers (industry standard)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define the task interface and serialization</h3>
+  <p>Every task needs a name, a serializable payload, and metadata (retry count, priority, timeout). Keep payloads small and pass references to large data. [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</p>
+  <pre><code class="language-python"># Python — Celery task definition
+from celery import Celery
+
+app = Celery('tasks', broker='redis://localhost:6379/0', backend='redis://localhost:6379/1')
+
+@app.task(bind=True, max_retries=3, default_retry_delay=60, acks_late=True)
+def process_order(self, order_id: int):
+    """Process a single order. Idempotent: checks order status before acting."""
+    order = db.get_order(order_id)
+    if order.status == 'processed':
+        return  # idempotent guard
+    try:
+        charge_payment(order)
+        update_inventory(order)
+        order.status = 'processed'
+        db.save(order)
+    except PaymentError as exc:
+        raise self.retry(exc=exc)</code></pre>
+  <p><strong>Verify</strong>: <code>celery -A tasks inspect active</code> &rarr; expected: task appears in active list when running</p>
+
+  <h3>2. Configure the broker with persistence and DLQ</h3>
+  <p>Set up the message broker with appropriate durability. For Redis, enable AOF persistence. Configure dead letter routing for failed messages. [<a href="https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/">src7</a>]</p>
+  <pre><code class="language-python"># Python — Celery configuration with DLQ and retry policy
+app.conf.update(
+    task_acks_late=True,                    # ACK after processing, not before
+    worker_prefetch_multiplier=1,           # fetch one task at a time (fairness)
+    task_reject_on_worker_lost=True,        # re-queue if worker crashes mid-task
+    task_default_queue='default',
+    task_queues={
+        'default': {'exchange': 'default', 'routing_key': 'default'},
+        'priority': {'exchange': 'priority', 'routing_key': 'priority'},
+        'dead_letter': {'exchange': 'dead_letter', 'routing_key': 'dead_letter'},
+    },
+    task_annotations={
+        'tasks.process_order': {'rate_limit': '100/m'},
+    },
+    broker_transport_options={
+        'visibility_timeout': 3600,
+    },
+)</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli CONFIG GET appendonly</code> &rarr; expected: <code>yes</code></p>
+
+  <h3>3. Implement worker pool with concurrency control</h3>
+  <p>Start workers with appropriate concurrency. Use prefork for CPU-bound tasks (Celery), event loop for I/O-bound tasks (BullMQ). [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</p>
+  <pre><code class="language-bash"># Start Celery workers with concurrency and queue binding
+celery -A tasks worker --loglevel=info --concurrency=4 -Q default,priority
+
+# Start a dedicated DLQ processor (manual inspection)
+celery -A tasks worker --loglevel=warning --concurrency=1 -Q dead_letter</code></pre>
+  <p><strong>Verify</strong>: <code>celery -A tasks inspect ping</code> &rarr; expected: <code>pong</code> from all workers</p>
+
+  <h3>4. Add retry logic with exponential backoff</h3>
+  <p>Configure exponential backoff with jitter to prevent thundering herd on transient failures. Cap maximum retries. [<a href="https://www.systemdesignhandbook.com/guides/design-a-distributed-job-scheduler/">src5</a>]</p>
+  <pre><code class="language-python"># Python — exponential backoff with jitter
+import random
+
+@app.task(bind=True, max_retries=5, acks_late=True)
+def call_external_api(self, endpoint: str, payload: dict):
+    try:
+        response = requests.post(endpoint, json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as exc:
+        backoff = (2 ** self.request.retries) * 30 + random.randint(0, 30)
+        raise self.retry(exc=exc, countdown=backoff)</code></pre>
+  <p><strong>Verify</strong>: Check retry count in Flower dashboard or <code>celery -A tasks inspect reserved</code></p>
+
+  <h3>5. Set up monitoring and alerting</h3>
+  <p>Monitor queue depth, processing latency, failure rate, and DLQ growth. Alert before queues back up. [<a href="https://engineering.fb.com/2021/02/22/production-engineering/foqs-scaling-a-distributed-priority-queue/">src6</a>]</p>
+  <pre><code class="language-bash"># Check queue depth (Redis / BullMQ)
+redis-cli LLEN bull:myqueue:wait
+
+# Check Celery queue depth
+celery -A tasks inspect active_queues
+
+# Flower web dashboard for Celery
+celery -A tasks flower --port=5555</code></pre>
+  <p><strong>Verify</strong>: Navigate to <code>http://localhost:5555</code> &rarr; expected: Flower dashboard with worker and task stats</p>
+
+  <h3>6. Implement graceful shutdown and scaling</h3>
+  <p>Workers must finish in-progress tasks before shutting down. Use SIGTERM handling and drain mode. [<a href="https://github.com/sidekiq/sidekiq/wiki/Best-Practices">src4</a>]</p>
+  <pre><code class="language-bash"># Graceful shutdown: send SIGTERM, workers finish current tasks
+celery -A tasks control shutdown
+
+# Scale workers dynamically based on queue depth (Kubernetes HPA)
+# kubectl autoscale deployment celery-worker --min=2 --max=20 --cpu-percent=70</code></pre>
+  <p><strong>Verify</strong>: Send SIGTERM to worker process &rarr; expected: worker finishes current task, then exits cleanly</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python (Celery): Basic Task Producer and Consumer</h3>
+  <pre><code class="language-python"># Input:  order_id (int) — reference to order in database
+# Output: task result stored in Redis backend
+
+from celery import Celery
+
+app = Celery('shop', broker='redis://localhost:6379/0',
+             backend='redis://localhost:6379/1')
+
+@app.task(bind=True, max_retries=3, acks_late=True)
+def process_order(self, order_id: int):
+    """Idempotent order processor with retry."""
+    order = db.get(order_id)
+    if order.status == 'done': return        # idempotent guard
+    try:
+        charge(order)
+        order.status = 'done'
+        db.save(order)
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+
+# Producer side: enqueue the task
+result = process_order.delay(order_id=42)
+print(result.get(timeout=120))  # blocks until result ready</code></pre>
+
+  <h3>Node.js (BullMQ): Queue with Worker and Events</h3>
+  <pre><code class="language-typescript">// Input:  job data object { orderId: number }
+// Output: completed job with return value in Redis
+
+import { Queue, Worker, QueueEvents } from 'bullmq';  // bullmq@5.x
+import IORedis from 'ioredis';                         // ioredis@5.x
+
+const connection = new IORedis({ host: '127.0.0.1', port: 6379, maxRetriesPerRequest: null });
+
+// Producer: add jobs
+const orderQueue = new Queue('orders', { connection });
+await orderQueue.add('process', { orderId: 42 }, {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 5000 },
+  removeOnComplete: 1000,
+  removeOnFail: 5000,
+});
+
+// Worker: process jobs
+const worker = new Worker('orders', async (job) =&gt; {
+  const order = await db.get(job.data.orderId);
+  if (order.status === 'done') return;         // idempotent guard
+  await charge(order);
+  order.status = 'done';
+  await db.save(order);
+  return { success: true };
+}, { connection, concurrency: 5 });
+
+// Events: monitor completion and failure
+const events = new QueueEvents('orders', { connection });
+events.on('completed', ({ jobId, returnvalue }) =&gt;
+  console.log(`Job ${jobId} completed:`, returnvalue));
+events.on('failed', ({ jobId, failedReason }) =&gt;
+  console.error(`Job ${jobId} failed:`, failedReason));</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Storing entire payload in the queue message</h3>
+  <pre><code class="language-python"># BAD — large payload serialized into Redis, causes memory pressure and slow serialization
+@app.task
+def process_image(self, image_bytes: bytes, metadata: dict):
+    result = resize(image_bytes)
+    save(result)</code></pre>
+
+  <h3>Correct: Pass a reference, fetch data in the worker</h3>
+  <pre><code class="language-python"># GOOD — only a lightweight reference travels through the broker
+@app.task
+def process_image(self, image_s3_key: str):
+    image_bytes = s3.download(image_s3_key)
+    result = resize(image_bytes)
+    save(result)</code></pre>
+
+  <h3>Wrong: Acknowledging tasks before processing completes</h3>
+  <pre><code class="language-python"># BAD — default Celery acks early; if worker crashes mid-task, the task is lost
+app.conf.task_acks_late = False  # default — ACK on receive, not on completion</code></pre>
+
+  <h3>Correct: ACK after successful processing</h3>
+  <pre><code class="language-python"># GOOD — task is re-queued if worker dies before completing
+app.conf.task_acks_late = True
+app.conf.task_reject_on_worker_lost = True</code></pre>
+
+  <h3>Wrong: No retry limit — infinite retry loops</h3>
+  <pre><code class="language-python"># BAD — poison message retries forever, consuming resources indefinitely
+@app.task(bind=True)
+def fragile_task(self, data):
+    try:
+        do_work(data)
+    except Exception as exc:
+        raise self.retry(exc=exc)  # no max_retries — retries forever</code></pre>
+
+  <h3>Correct: Bounded retries with exponential backoff and DLQ routing</h3>
+  <pre><code class="language-python"># GOOD — max 5 retries with exponential backoff, then moves to DLQ
+@app.task(bind=True, max_retries=5, acks_late=True)
+def safe_task(self, data):
+    try:
+        do_work(data)
+    except Exception as exc:
+        if self.request.retries &gt;= self.max_retries:
+            dead_letter_queue.send(data, error=str(exc))
+            return
+        raise self.retry(exc=exc, countdown=30 * (2 ** self.request.retries))</code></pre>
+
+  <h3>Wrong: Non-idempotent task handlers</h3>
+  <pre><code class="language-python"># BAD — if task retries, user gets charged twice
+@app.task
+def charge_user(user_id, amount):
+    payment_service.charge(user_id, amount)  # no dedup — runs again on retry</code></pre>
+
+  <h3>Correct: Idempotent handler with deduplication key</h3>
+  <pre><code class="language-python"># GOOD — idempotency key prevents duplicate charges
+@app.task
+def charge_user(user_id, amount, idempotency_key):
+    if payment_service.has_processed(idempotency_key):
+        return
+    payment_service.charge(user_id, amount, idempotency_key=idempotency_key)</code></pre>
+
+  <h3>Wrong: Single queue for all task types</h3>
+  <pre><code class="language-python"># BAD — slow 10-minute report generation blocks fast 100ms notification sends
+app.conf.task_default_queue = 'default'
+# Everything goes to 'default': notifications, reports, emails, imports</code></pre>
+
+  <h3>Correct: Separate queues by priority and task duration</h3>
+  <pre><code class="language-python"># GOOD — fast tasks are never blocked by slow ones
+app.conf.task_routes = {
+    'tasks.send_notification': {'queue': 'fast'},
+    'tasks.generate_report':   {'queue': 'slow'},
+    'tasks.process_payment':   {'queue': 'critical'},
+}
+# Run separate worker pools per queue
+# celery -A tasks worker -Q fast --concurrency=10
+# celery -A tasks worker -Q slow --concurrency=2
+# celery -A tasks worker -Q critical --concurrency=4</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Poison messages blocking the queue</strong>: A single malformed task that always fails can block consumers in an infinite retry loop, preventing all other tasks from processing. Fix: set <code>max_retries</code> and route to a dead letter queue after exhaustion. [<a href="https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/">src7</a>]</li>
+    <li><strong>Thundering herd on retry</strong>: When many tasks fail simultaneously (e.g., downstream outage), they all retry at the same time, overwhelming the recovering service. Fix: add random jitter to exponential backoff: <code>delay = base * 2^retry + random(0, base)</code>. [<a href="https://www.systemdesignhandbook.com/guides/design-a-distributed-job-scheduler/">src5</a>]</li>
+    <li><strong>Worker memory leaks from long-running processes</strong>: Celery workers that process millions of tasks accumulate memory. Fix: set <code>worker_max_tasks_per_child=1000</code> to recycle worker processes after N tasks. [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</li>
+    <li><strong>Visibility timeout too short</strong>: If a task takes longer than the broker's visibility timeout, the broker re-delivers it to another worker, causing duplicate execution. Fix: set <code>visibility_timeout</code> higher than your longest expected task duration. [<a href="https://docs.bullmq.io/">src2</a>]</li>
+    <li><strong>Premature result backend queries</strong>: Calling <code>result.get()</code> immediately after <code>task.delay()</code> blocks the caller, defeating the purpose of async processing. Fix: use callbacks, webhooks, or polling with <code>result.ready()</code>. [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</li>
+    <li><strong>No monitoring on queue depth</strong>: Queues silently back up until workers are overwhelmed and tasks time out. Fix: monitor queue depth (e.g., <code>LLEN bull:queue:wait</code> for BullMQ) and alert at thresholds. [<a href="https://engineering.fb.com/2021/02/22/production-engineering/foqs-scaling-a-distributed-priority-queue/">src6</a>]</li>
+    <li><strong>Single scheduler instance without leader election</strong>: Running multiple Celery Beat instances causes duplicate periodic task scheduling. Fix: use <code>django-celery-beat</code> with database lock or a single Beat instance with health checks. [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</li>
+    <li><strong>Ignoring task serialization format</strong>: Using Python pickle for Celery task serialization is a remote code execution vulnerability. Fix: use JSON serialization (<code>task_serializer='json'</code>) and never accept pickle from untrusted sources. [<a href="https://docs.celeryq.dev/en/stable/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Celery worker status
+celery -A tasks inspect ping
+
+# List active tasks across all workers
+celery -A tasks inspect active
+
+# Check queue depth (Redis-backed broker)
+redis-cli LLEN celery
+
+# Check BullMQ queue depth
+redis-cli LLEN bull:myqueue:wait
+
+# Monitor Celery in real-time (Flower)
+celery -A tasks flower --port=5555
+
+# Check RabbitMQ queue depth
+rabbitmqctl list_queues name messages_ready messages_unacknowledged
+
+# Check Sidekiq queue stats via Redis
+redis-cli SCARD queues
+
+# View failed jobs in BullMQ
+redis-cli LRANGE bull:myqueue:failed 0 10
+
+# Check broker connection from worker
+celery -A tasks inspect report</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Framework</th><th scope="col">Current Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Celery 5.6 (Recovery)</td><td>5.6.x</td><td>Current stable</td><td>Memory leak fixes (Python 3.11+), credential logging fix</td><td>Python 3.9-3.13; Redis or RabbitMQ broker</td></tr>
+      <tr><td>BullMQ 5.x</td><td>5.x</td><td>Current stable</td><td>Job flows with parent-child dependencies, rate limiting, deduplication</td><td>Node.js 18+; requires Redis 6.2+</td></tr>
+      <tr><td>Temporal 1.x</td><td>1.24+</td><td>GA</td><td>Durable execution, versioned workflows, schedules API</td><td>Go, Java, TypeScript, Python SDKs</td></tr>
+      <tr><td>Sidekiq 7.x</td><td>7.x</td><td>Current stable</td><td>Capsules (multiple thread configs), embedding, metrics</td><td>Ruby 2.7+; Redis 6.2+; Pro/Enterprise for rate limiting</td></tr>
+      <tr><td>Amazon SQS</td><td>&mdash;</td><td>Managed service</td><td>Standard (at-least-once) and FIFO (exactly-once) queues</td><td>Max message size 256 KB; 14-day retention</td></tr>
+      <tr><td>Google Cloud Tasks</td><td>&mdash;</td><td>Managed service</td><td>HTTP target tasks, rate limiting, scheduling</td><td>Max 1 MB payload; auto-retry with backoff</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Background jobs that don't need immediate response (emails, reports, image processing)</td><td>Tasks that must complete within the HTTP request-response cycle (&lt;100 ms)</td><td>In-process function call or thread pool</td></tr>
+      <tr><td>Workload spikes that exceed server capacity — queue absorbs bursts</td><td>Low, steady throughput that a single server handles easily</td><td>Direct function invocation</td></tr>
+      <tr><td>Tasks that call unreliable external APIs and need retry with backoff</td><td>Purely in-memory computation with no I/O</td><td>Multiprocessing / thread pool</td></tr>
+      <tr><td>Long-running workflows spanning minutes to days (Temporal)</td><td>Simple cron-like scheduling with no retries needed</td><td>OS cron, systemd timers</td></tr>
+      <tr><td>Fan-out: one event triggers many independent tasks in parallel</td><td>Strict sequential processing with strong ordering guarantees</td><td>Event streaming (Kafka, Pulsar)</td></tr>
+      <tr><td>Decoupled microservices communicating asynchronously</td><td>Real-time bidirectional communication (chat, gaming)</td><td>WebSockets, gRPC streaming</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>At-least-once is the default guarantee for all major frameworks — exactly-once requires idempotent handlers plus a deduplication store (Redis SET NX, database upsert)</li>
+    <li>Redis-based brokers (BullMQ, Sidekiq, Celery+Redis) lose pending tasks on crash unless Redis persistence (AOF/RDB) is enabled — RabbitMQ offers stronger durability out of the box</li>
+    <li>Celery's pickle serializer is a remote code execution vector — always use JSON serialization in production (<code>task_serializer = 'json'</code>)</li>
+    <li>Temporal is fundamentally different from Celery/BullMQ/Sidekiq: it manages workflow state server-side with durable execution, making it the right choice for long-running, multi-step processes but overkill for simple fire-and-forget tasks</li>
+    <li>BullMQ requires <code>maxRetriesPerRequest: null</code> in the IORedis connection config for workers — omitting this causes timeout errors under load</li>
+    <li>Task queue is not the same as event streaming — if you need publish-subscribe, event replay, or log compaction, use Kafka/Pulsar/NATS instead</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/redis-memory-issues/2026" data-relationship="related_to">Redis Memory Issues</a>
+    <a href="/software/system-design/chat-app-at-scale/2026" data-relationship="related_to">Chat App at Scale</a>
+    <a href="/software/debugging/nodejs-memory-leaks/2026" data-relationship="solves">Node.js Memory Leaks</a>
+    <a href="/software/debugging/kubernetes-pod-pending/2026" data-relationship="solves">Kubernetes Pod Pending</a>
+    <a href="/software/system-design/social-media-feed/2026" data-relationship="often_confused_with">Social Media Feed (fan-out pattern)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

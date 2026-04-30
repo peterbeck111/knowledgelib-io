@@ -1,0 +1,79 @@
+# Input:  Pod that needs specific scheduling constraints
+# Output: Deployment with nodeSelector, tolerations, affinity, and topology spread
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      # Resource requests drive scheduling — set based on actual usage
+      containers:
+        - name: api
+          image: myapp:1.2.3
+          resources:
+            requests:
+              cpu: 250m       # What the scheduler uses for placement
+              memory: 256Mi
+            limits:
+              cpu: 500m       # Runtime enforcement
+              memory: 512Mi
+
+      # nodeSelector: simplest way to target specific nodes
+      nodeSelector:
+        kubernetes.io/os: linux
+        node-type: compute    # Ensure this label exists on target nodes
+
+      # Tolerations: allow scheduling on tainted nodes
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "api"
+          effect: "NoSchedule"
+        # Always tolerate Kubernetes built-in taints
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 300
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 300
+
+      # Affinity: prefer (not require) nodes with SSD
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              preference:
+                matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values: ["ssd"]
+        # Anti-affinity: spread replicas across nodes
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: api-server
+                topologyKey: kubernetes.io/hostname
+
+      # Topology spread: even distribution across zones
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: api-server

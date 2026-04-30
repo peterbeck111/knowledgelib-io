@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Fix PostgreSQL Connection Pool Exhaustion | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to PostgreSQL connection pool exhaustion: diagnose with pg_stat_activity, fix with PgBouncer transaction pooling, kill idle connections,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/postgresql-connection-pool/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Fix PostgreSQL Connection Pool Exhaustion | knowledgelib.io">
+    <meta property="og:description"
+        content="Fix PostgreSQL 'too many clients': pg_stat_activity diagnosis, PgBouncer transaction pooling setup, PG17 transaction_timeout, idle connection timeouts, Python/Node.js pool config, PgCat alternatives. 8 authoritative sources.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/postgresql-connection-pool/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-19">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Fix PostgreSQL Connection Pool Exhaustion | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Fix PostgreSQL 'too many clients': pg_stat_activity diagnosis, PgBouncer transaction pooling, PG17 transaction_timeout, Python/Node.js config, PgCat alternatives.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.94">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/postgresql_connection_pool">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I fix PostgreSQL connection pool exhaustion?">
+    <meta name="ai:aliases"
+        content="PostgreSQL too many clients; PostgreSQL connection pool exhaustion; PgBouncer setup; PostgreSQL max_connections; PostgreSQL FATAL too many connections; PostgreSQL connection leak; PgBouncer transaction pooling; PostgreSQL idle connections; pg_stat_activity connections; PostgreSQL connection limit">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/postgresql-connection-pool/2026.md">
+    <meta name="ai:token_estimate" content="7200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-19">
+    <meta name="ai:inputs_needed" content="postgresql_version,has_pooler,deployment_type">
+    <meta name="ai:constraints"
+        content="Never raise max_connections above 300-500 without a connection pooler; PgBouncer transaction pooling incompatible with prepared statements, advisory locks, LISTEN/NOTIFY, SET, temp tables; idle_session_timeout requires PG14+; transaction_timeout requires PG17+; PgBouncer SCRAM auth requires 1.14+; Changing max_connections requires full restart">
+    <meta name="ai:skip_this_unit_if"
+        content="Slow queries not connection count -> software/debugging/postgresql-slow-queries/2026; MySQL connection issues -> software/debugging/mysql-connection-issues/2026; Redis issues -> software/debugging/redis-memory-issues/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Fix PostgreSQL Connection Pool Exhaustion",
+    "headline": "How Do I Fix PostgreSQL Connection Pool Exhaustion?",
+    "description": "Complete reference for diagnosing and fixing PostgreSQL 'too many clients' errors with PgBouncer, pg_stat_activity, timeouts (including PostgreSQL 17 transaction_timeout), and correct application pool configuration. Covers PgBouncer 1.24-1.25 features, PgCat/Odyssey alternatives.",
+    "keywords": ["PostgreSQL", "connection pool", "PgBouncer", "too many clients", "max_connections", "pg_stat_activity", "transaction_timeout", "PgCat"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-19",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "PostgreSQL 9.6+, PgBouncer 1.14+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "PostgreSQL Documentation -- Server Configuration: max_connections", "url": "https://www.postgresql.org/docs/current/runtime-config-connection.html" },
+      { "@type": "WebPage", "name": "PgBouncer Documentation & Changelog", "url": "https://www.pgbouncer.org/config.html" },
+      { "@type": "WebPage", "name": "PostgreSQL Documentation -- pg_stat_activity", "url": "https://www.postgresql.org/docs/current/monitoring-stats.html" },
+      { "@type": "WebPage", "name": "PgBouncer vs Pgcat vs Odyssey on VPS in 2025", "url": "https://onidel.com/blog/postgresql-proxy-comparison-2025" },
+      { "@type": "WebPage", "name": "PostgreSQL 17: transaction_timeout", "url": "https://www.dbi-services.com/blog/postgresql-17-transaction_timeout/" },
+      { "@type": "WebPage", "name": "PgBouncer vs. Pgpool-II: Choosing the Right Tool", "url": "https://horkan.com/2025/01/01/pgbouncer-vs-pgpool-ii-choosing-the-right-tool-for-your-postgresql-environment" },
+      { "@type": "WebPage", "name": "Benchmarking PostgreSQL Connection Poolers", "url": "https://legacy.tembo.io/blog/postgres-connection-poolers/" },
+      { "@type": "WebPage", "name": "Postgres Connection Pooling: Comparing PgCat and PgBouncer", "url": "https://pganalyze.com/blog/5mins-postgres-pgcat-vs-pgbouncer" }
+    ]
+  }
+  </script>
+
+    <!-- Dataset structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Fix PostgreSQL Connection Pool Exhaustion",
+    "description": "Structured reference for PostgreSQL connection pool exhaustion with command table, decision tree, PgBouncer config, PgCat/Odyssey alternatives, and anti-patterns.",
+    "keywords": ["PostgreSQL", "connection pooling", "PgBouncer", "database", "PgCat", "Odyssey"],
+    "temporalCoverage": "2010/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-19",
+    "sourceOrganization": [
+      { "@type": "Organization", "name": "PostgreSQL Global Development Group" },
+      { "@type": "Organization", "name": "PgBouncer Project" },
+      { "@type": "Organization", "name": "Onidel Cloud" },
+      { "@type": "Organization", "name": "Tembo" }
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <!-- Breadcrumb structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Fix PostgreSQL Connection Pool Exhaustion" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I fix PostgreSQL connection pool exhaustion?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses a process-per-connection model -- each connection consumes ~5-10MB RAM and a dedicated OS process. When connections exceed max_connections (default: 100), new connection attempts fail with FATAL: sorry, too many clients already. The fix: deploy PgBouncer in transaction pooling mode, which multiplexes thousands of app connections through a small, fixed pool of actual server connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL too many clients",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses a process-per-connection model -- each connection consumes ~5-10MB RAM and a dedicated OS process. When connections exceed max_connections (default: 100), new connection attempts fail with FATAL: sorry, too many clients already. The fix: deploy PgBouncer in transaction pooling mode, which multiplexes thousands of app connections through a small, fixed pool of actual server connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL connection pool exhaustion",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses a process-per-connection model -- each connection consumes ~5-10MB RAM and a dedicated OS process. When connections exceed max_connections (default: 100), new connection attempts fail with FATAL: sorry, too many clients already. The fix: deploy PgBouncer in transaction pooling mode, which multiplexes thousands of app connections through a small, fixed pool of actual server connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PgBouncer setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses a process-per-connection model -- each connection consumes ~5-10MB RAM and a dedicated OS process. When connections exceed max_connections (default: 100), new connection attempts fail with FATAL: sorry, too many clients already. The fix: deploy PgBouncer in transaction pooling mode, which multiplexes thousands of app connections through a small, fixed pool of actual server connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL max_connections",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses a process-per-connection model -- each connection consumes ~5-10MB RAM and a dedicated OS process. When connections exceed max_connections (default: 100), new connection attempts fail with FATAL: sorry, too many clients already. The fix: deploy PgBouncer in transaction pooling mode, which multiplexes thousands of app connections through a small, fixed pool of actual server connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL FATAL too many connections",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL uses a process-per-connection model -- each connection consumes ~5-10MB RAM and a dedicated OS process. When connections exceed max_connections (default: 100), new connection attempts fail with FATAL: sorry, too many clients already. The fix: deploy PgBouncer in transaction pooling mode, which multiplexes thousands of app connections through a small, fixed pool of actual server connections."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Fix PostgreSQL Connection Pool Exhaustion?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I fix PostgreSQL connection pool exhaustion?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/postgresql-connection-pool/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: PostgreSQL uses a <strong>process-per-connection</strong> model -- each
+                connection consumes ~5-10MB RAM. When connections exceed <code>max_connections</code> (default: 100),
+                new attempts fail with <code>FATAL: sorry, too many clients already</code>. The fix: deploy
+                <strong>PgBouncer</strong> in transaction pooling mode, which multiplexes thousands of app connections
+                through a small, fixed pool of actual server connections.</li>
+            <li><strong>Key tool/command</strong>:
+                <code>SELECT state, count(*) FROM pg_stat_activity GROUP BY state;</code> -- shows active, idle, and
+                <code>idle in transaction</code> connections. High idle counts = connection leak; high
+                <code>idle in transaction</code> = transaction/lock leak.</li>
+            <li><strong>Watch out for</strong>: Simply raising <code>max_connections</code> costs memory (~5-10MB per
+                connection) and degrades performance beyond ~300-500 connections due to OS scheduler and lock
+                contention. Use PgBouncer instead.</li>
+            <li><strong>Works with</strong>: PostgreSQL 9.6+. PgBouncer 1.25+ recommended (latest). PgBouncer 1.14+ minimum
+                for SCRAM auth. PostgreSQL 17+ adds <code>transaction_timeout</code>.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>Never raise <code>max_connections</code> above 300-500 without a connection pooler</strong> --
+                performance degrades super-linearly due to OS context switching (1 process per connection) and
+                PostgreSQL internal lock contention. [<a
+                    href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]</li>
+            <li><strong>PgBouncer transaction pooling breaks certain PostgreSQL features</strong>: server-side prepared
+                statements (<code>PREPARE</code>/<code>EXECUTE</code>), advisory locks (<code>pg_advisory_lock</code>),
+                <code>LISTEN</code>/<code>NOTIFY</code>, persistent <code>SET</code> statements, and temporary tables
+                are all incompatible with <code>pool_mode = transaction</code>. [<a
+                    href="https://www.pgbouncer.org/config.html">src2</a>]</li>
+            <li><strong><code>idle_session_timeout</code> requires PostgreSQL 14+</strong> -- on older versions, use
+                PgBouncer's <code>client_idle_timeout</code> (added in PgBouncer 1.24) or implement application-level
+                connection release. [<a
+                    href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]</li>
+            <li><strong><code>transaction_timeout</code> requires PostgreSQL 17+</strong> -- this parameter was added in
+                PG17 (2024-09). Do not set it on older versions or the server will reject the configuration. [<a
+                    href="https://www.dbi-services.com/blog/postgresql-17-transaction_timeout/">src5</a>]</li>
+            <li><strong>PgBouncer SCRAM-SHA-256 auth requires PgBouncer 1.14+</strong> -- PostgreSQL 14+ defaults to
+                SCRAM. Use <code>auth_type = md5</code> on older PgBouncer versions. [<a
+                    href="https://www.pgbouncer.org/config.html">src2</a>]</li>
+            <li><strong>Changing <code>max_connections</code> requires a full server restart</strong> -- unlike most GUC
+                parameters, it cannot be changed with <code>pg_reload_conf()</code>. Plan maintenance windows. [<a
+                    href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Symptom / Goal</th>
+                        <th scope="col">Command / Solution</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Check current connection count</td>
+                        <td><code>SELECT count(*) FROM pg_stat_activity;</code></td>
+                        <td>Compare to <code>max_connections</code> [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Check connection limit</td>
+                        <td><code>SHOW max_connections;</code></td>
+                        <td>Default: 100 [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>See connections by state</td>
+                        <td><code>SELECT state, count(*) FROM pg_stat_activity GROUP BY state;</code></td>
+                        <td>active, idle, idle in transaction [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Find which apps consume connections</td>
+                        <td><code>SELECT usename, application_name, client_addr, count(*) FROM pg_stat_activity GROUP BY 1,2,3 ORDER BY 4 DESC;</code>
+                        </td>
+                        <td>Pinpoints the culprit [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Kill idle connections immediately</td>
+                        <td><code>SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND query_start &lt; NOW() - INTERVAL '10 minutes';</code>
+                        </td>
+                        <td>Emergency only [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Kill idle-in-transaction connections</td>
+                        <td><code>SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle in transaction' AND query_start &lt; NOW() - INTERVAL '5 minutes';</code>
+                        </td>
+                        <td>Frees locked resources [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Check superuser reserved slots</td>
+                        <td><code>SHOW superuser_reserved_connections;</code></td>
+                        <td>Default: 3 (reserved from max_connections) [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Check PgBouncer pool status</td>
+                        <td><code>SHOW POOLS;</code> in PgBouncer admin</td>
+                        <td><code>cl_waiting &gt; 0</code> = exhaustion [<a
+                                href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Check PgBouncer overall stats</td>
+                        <td><code>SHOW STATS;</code> in PgBouncer admin</td>
+                        <td>req/s, latency, errors [<a href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Set idle-in-transaction timeout</td>
+                        <td><code>idle_in_transaction_session_timeout = 30000</code></td>
+                        <td>Kills stuck transactions after 30s [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Set statement timeout</td>
+                        <td><code>statement_timeout = 30000</code></td>
+                        <td>Kills queries running &gt; 30s [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Set transaction timeout (PG17+)</td>
+                        <td><code>transaction_timeout = 60000</code></td>
+                        <td>Limits total transaction duration to 60s [<a
+                                href="https://www.dbi-services.com/blog/postgresql-17-transaction_timeout/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>Reload config without restart</td>
+                        <td><code>SELECT pg_reload_conf();</code></td>
+                        <td>For GUC params that don't need restart [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>Increase max_connections (temporary)</td>
+                        <td>Edit <code>postgresql.conf</code>, restart server</td>
+                        <td>Requires server restart; see caveats [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START -- "FATAL: sorry, too many clients already" or connection timeout
+|
++-- Step 1: Diagnose
+|   +-- SHOW max_connections;
+|   +-- SELECT count(*) FROM pg_stat_activity;
+|   +-- SELECT state, count(*) FROM pg_stat_activity GROUP BY state;
+|       +-- HIGH "active"              -> real load -> need PgBouncer [src2]
+|       +-- HIGH "idle"                -> connection leak -> fix app pool [src4]
+|       +-- HIGH "idle in transaction" -> transaction leak -> set idle_in_transaction_session_timeout [src1]
+|
++-- Step 2: Emergency mitigation
+|   +-- Kill idle connections -> pg_terminate_backend() [src3]
+|   +-- Set idle_in_transaction_session_timeout -> prevents future stalls [src1]
+|   +-- Temporarily increase max_connections -> restart required, temporary [src1]
+|
++-- Step 3: Permanent fix
+|   +-- No connection pooler?
+|   |   +-- INSTALL PgBouncer in transaction pooling mode [src2, src6]
+|   |       -> 10,000 app connections -> 20-100 PostgreSQL connections
+|   +-- PgBouncer installed but pool_size too small?
+|   |   +-- Increase default_pool_size in pgbouncer.ini [src2]
+|   +-- Application connection leak?
+|   |   +-- Add missing connection.close() / context managers
+|   |   +-- Set server_idle_timeout in PgBouncer [src2]
+|   +-- Long-running transactions?
+|   |   +-- idle_in_transaction_session_timeout + statement_timeout [src1]
+|   |   +-- transaction_timeout (PostgreSQL 17+) [src5]
+|   +-- High-scale (&gt;50 concurrent per core)?
+|       +-- Consider PgCat (multi-threaded, 59K tps) [src4, src7, src8]
+|       +-- Consider Odyssey (enterprise, multi-threaded) [src4]
+|
++-- Step 4: Monitor
+    +-- Alert when pg_stat_activity count &gt; 80% of max_connections
+    +-- SHOW POOLS; -- cl_waiting &gt; 0 = problem
+    +-- Grafana + postgres_exporter for dashboards</code></pre>
+    </section>
+
+    <!-- Step-by-Step -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Diagnose the current state</h3>
+        <p>Always start with <code>pg_stat_activity</code> before making changes. [<a
+                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</p>
+        <pre><code class="language-sql">-- How many connections vs the limit?
+SHOW max_connections;
+SELECT count(*) AS current FROM pg_stat_activity;
+
+-- What are they doing?
+SELECT state, count(*) FROM pg_stat_activity GROUP BY state ORDER BY count(*) DESC;
+
+-- Who is consuming the most?
+SELECT usename, application_name, client_addr, state, count(*)
+FROM pg_stat_activity
+WHERE pid &lt;&gt; pg_backend_pid()
+GROUP BY 1, 2, 3, 4
+ORDER BY count(*) DESC LIMIT 20;
+
+-- Long-running / stuck connections
+SELECT pid, usename, state,
+       now() - backend_start AS conn_age,
+       now() - query_start   AS query_age,
+       left(query, 100)
+FROM pg_stat_activity
+WHERE state != 'idle'
+ORDER BY query_age DESC NULLS LAST;</code></pre>
+
+        <h3>2. Emergency: terminate problem connections</h3>
+        <p>For immediate relief when hitting the connection limit. [<a
+                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</p>
+        <pre><code class="language-sql">-- Kill idle connections older than 10 minutes
+SELECT pg_terminate_backend(pid), usename, application_name, state
+FROM pg_stat_activity
+WHERE state = 'idle'
+  AND query_start &lt; NOW() - INTERVAL '10 minutes'
+  AND pid &lt;&gt; pg_backend_pid();
+
+-- Kill idle-in-transaction connections older than 5 minutes
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE state = 'idle in transaction'
+  AND query_start &lt; NOW() - INTERVAL '5 minutes'
+  AND pid &lt;&gt; pg_backend_pid();
+
+-- Check headroom
+SELECT current_setting('max_connections')::int AS max_conn,
+       (SELECT count(*) FROM pg_stat_activity) AS used,
+       current_setting('max_connections')::int
+         - current_setting('superuser_reserved_connections')::int
+         - (SELECT count(*) FROM pg_stat_activity) AS slots_remaining;</code></pre>
+
+        <h3>3. Set timeouts to prevent future exhaustion</h3>
+        <p>Add to <code>postgresql.conf</code> and reload. [<a
+                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>, <a
+                href="https://www.dbi-services.com/blog/postgresql-17-transaction_timeout/">src5</a>]</p>
+        <pre><code class="language-ini"># postgresql.conf
+idle_in_transaction_session_timeout = 30000   # ms -- kills stuck transactions
+statement_timeout = 30000                      # ms -- kills slow statements
+idle_session_timeout = 600000                  # ms -- kills truly idle connections (PG14+)
+transaction_timeout = 60000                    # ms -- caps total transaction time (PG17+)</code></pre>
+        <pre><code class="language-sql">-- Reload without restart:
+SELECT pg_reload_conf();</code></pre>
+
+        <h3>4. Install PgBouncer (the permanent fix)</h3>
+        <p>PgBouncer multiplexes many app connections through a small pool. [<a
+                href="https://www.pgbouncer.org/config.html">src2</a>, <a
+                href="https://horkan.com/2025/01/01/pgbouncer-vs-pgpool-ii-choosing-the-right-tool-for-your-postgresql-environment">src6</a>]
+        </p>
+        <pre><code class="language-ini"># /etc/pgbouncer/pgbouncer.ini
+[databases]
+myapp = host=127.0.0.1 port=5432 dbname=myapp
+
+[pgbouncer]
+listen_port = 6432
+listen_addr = *
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+
+pool_mode = transaction      # CRITICAL: return connection after each transaction
+
+default_pool_size = 25       # server connections per db/user
+max_client_conn = 10000      # accept up to 10,000 app connections
+reserve_pool_size = 5
+reserve_pool_timeout = 3
+max_prepared_statements = 200  # enabled by default in 1.24+
+
+server_idle_timeout = 600
+log_pooler_errors = 1</code></pre>
+        <pre><code class="language-bash">sudo systemctl enable pgbouncer && sudo systemctl start pgbouncer
+
+# Monitor:
+psql -h 127.0.0.1 -p 6432 -U pgbouncer_admin pgbouncer -c "SHOW POOLS;"
+# cl_waiting &gt; 0 = pool exhaustion; increase default_pool_size</code></pre>
+
+        <h3>5. Configure application pool correctly</h3>
+        <p>Even with PgBouncer, tune your application's own connection pool. [<a
+                href="https://onidel.com/blog/postgresql-proxy-comparison-2025">src4</a>, <a
+                href="https://legacy.tembo.io/blog/postgres-connection-poolers/">src7</a>]</p>
+        <pre><code class="language-python"># SQLAlchemy (Python)
+engine = create_engine(
+    "postgresql+psycopg2://user:pass@pgbouncer_host:6432/mydb",
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
+    pool_pre_ping=True,
+)</code></pre>
+        <pre><code class="language-javascript">// Node.js pg
+const pool = new Pool({
+  host: 'pgbouncer_host', port: 6432,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>SQL: real-time connection health dashboard</h3>
+        <pre><code class="language-sql">WITH limits AS (
+  SELECT current_setting('max_connections')::int AS max_conn,
+         current_setting('superuser_reserved_connections')::int AS reserved
+),
+totals AS (SELECT count(*) AS total FROM pg_stat_activity)
+SELECT
+  l.max_conn,
+  l.max_conn - l.reserved AS usable,
+  t.total AS used,
+  round((t.total::numeric / (l.max_conn - l.reserved)) * 100, 1) AS pct_used,
+  CASE
+    WHEN (t.total::numeric / (l.max_conn - l.reserved)) &gt; 0.90 THEN 'CRITICAL'
+    WHEN (t.total::numeric / (l.max_conn - l.reserved)) &gt; 0.75 THEN 'WARNING'
+    ELSE 'OK'
+  END AS health,
+  (SELECT count(*) FROM pg_stat_activity WHERE state = 'active') AS active_conns,
+  (SELECT count(*) FROM pg_stat_activity WHERE state = 'idle') AS idle_conns,
+  (SELECT count(*) FROM pg_stat_activity WHERE state = 'idle in transaction') AS idle_txn_conns
+FROM limits l, totals t;</code></pre>
+
+        <h3>Python: connection pool monitor with alerting</h3>
+        <p>Full script: <a
+                href="scripts/python-connection-pool-monitor-with-alerting.py">python-connection-pool-monitor-with-alerting.py</a>
+            (95 lines)</p>
+        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+Input:  PostgreSQL DSN + alert thresholds
+Output: Connection health report + alerts
+Requirements: pip install psycopg2-binary
+"""
+import psycopg2, sys
+
+def check_health(dsn, warn_pct=75.0, crit_pct=90.0):
+    conn = psycopg2.connect(dsn)
+    cur = conn.cursor()
+    alerts = []
+
+    cur.execute("SHOW max_connections"); max_conn = int(cur.fetchone()[0])
+    cur.execute("SHOW superuser_reserved_connections"); reserved = int(cur.fetchone()[0])
+    usable = max_conn - reserved
+
+    cur.execute("""
+        SELECT state, count(*),
+               max(EXTRACT(EPOCH FROM (now()-query_start)))::int
+        FROM pg_stat_activity WHERE pid &lt;&gt; pg_backend_pid()
+        GROUP BY state
+    """)
+    by_state = {r[0] or 'unknown': {'count': r[1], 'max_age': r[2]} for r in cur.fetchall()}
+    total = sum(v['count'] for v in by_state.values())
+    pct = (total / usable) * 100
+
+    if pct &gt;= crit_pct:
+        alerts.append(f'CRITICAL: {pct:.1f}% full ({total}/{usable}) -- imminent FATAL')
+    elif pct &gt;= warn_pct:
+        alerts.append(f'WARNING: {pct:.1f}% full ({total}/{usable})')
+
+    idle_txn = by_state.get('idle in transaction', {})
+    if idle_txn.get('count', 0) &gt; 5:
+        alerts.append(f"WARNING: {idle_txn['count']} idle-in-transaction (max_age={idle_txn.get('max_age',0)}s)")
+
+    idle = by_state.get('idle', {})
+    if idle.get('count', 0) &gt; usable * 0.5:
+        alerts.append(f"WARNING: {idle['count']} idle connections -- possible leak")
+
+    cur.close(); conn.close()
+    return {'used': total, 'usable': usable, 'pct': pct, 'by_state': by_state, 'alerts': alerts}
+
+if __name__ == '__main__':
+    dsn = sys.argv[1] if len(sys.argv) &gt; 1 else 'postgresql://localhost/mydb'
+    r = check_health(dsn)
+    print(f"Connections: {r['used']}/{r['usable']} ({r['pct']:.1f}%)")
+    for state, info in r['by_state'].items():
+        print(f"  {state}: {info['count']} (max_age={info.get('max_age',0)}s)")
+    for alert in r['alerts']: print(f"[ALERT] {alert}")</code></pre>
+
+        <h3>Bash: PgBouncer health check and pool report</h3>
+        <p>Full script: <a
+                href="scripts/bash-pgbouncer-health-check-and-pool-report.sh">bash-pgbouncer-health-check-and-pool-report.sh</a>
+            (42 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+PGB_HOST="${PGB_HOST:-127.0.0.1}"
+PGB_PORT="${PGB_PORT:-6432}"
+PGB_USER="${PGB_USER:-pgbouncer_admin}"
+PSQL="psql -h $PGB_HOST -p $PGB_PORT -U $PGB_USER pgbouncer -t -A -F'|'"
+
+echo "=== PgBouncer Health Report === $(date)"
+echo ""
+echo "--- Pools ---"
+eval "$PSQL" -c "SHOW POOLS;" | while IFS='|' read -r db user cl_active cl_waiting sv_active sv_idle rest; do
+    [ "$db" = "database" ] || [ -z "$db" ] && continue
+    if [ "${cl_waiting:-0}" -gt "0" ] 2>/dev/null; then
+        echo "  WARNING: $db/$user -- cl_waiting=$cl_waiting cl_active=$cl_active sv_active=$sv_active"
+    else
+        echo "  OK: $db/$user -- cl_active=$cl_active sv_active=$sv_active sv_idle=$sv_idle"
+    fi
+done
+
+echo ""
+echo "Actions if cl_waiting &gt; 0:"
+echo "  1. Increase pool_size in pgbouncer.ini -> RELOAD"
+echo "  2. Check for long-running transactions in PostgreSQL"
+echo "  3. Check for connection leaks in application"</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Increasing max_connections as the primary fix</h3>
+        <pre><code class="language-ini"># BAD -- max_connections = 1000 -> ~5-10 GB RAM; performance degrades above ~300 [src1, src4]
+max_connections = 1000
+# Context switching for 1000 OS processes slows everything down
+# Still fails when microservices push past 1000</code></pre>
+
+        <h3>Correct: PgBouncer + modest max_connections</h3>
+        <pre><code class="language-ini"># GOOD -- PgBouncer handles app connections; PostgreSQL handles few [src2, src6]
+# postgresql.conf
+max_connections = 100    # PostgreSQL only sees pooled connections
+
+# pgbouncer.ini
+max_client_conn = 10000  # accept 10,000 app connections
+default_pool_size = 25   # but only 25 actual PostgreSQL connections
+pool_mode = transaction</code></pre>
+
+        <h3>Wrong: Connection leak -- no context manager</h3>
+        <pre><code class="language-python"># BAD -- connection never released on exception [src4]
+def get_users():
+    conn = pool.getconn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users")   # exception here...
+    rows = cur.fetchall()
+    pool.putconn(conn)                   # ...this is never reached
+    return rows</code></pre>
+
+        <h3>Correct: Always use context managers / finally</h3>
+        <pre><code class="language-python"># GOOD -- connection always returned to pool [src4]
+def get_users():
+    conn = pool.getconn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM users")
+            return cur.fetchall()
+    finally:
+        pool.putconn(conn)  # always runs, even on exception</code></pre>
+
+        <h3>Wrong: Using session pooling mode in PgBouncer for web apps</h3>
+        <pre><code class="language-ini"># BAD -- session pooling barely improves over no pooling [src2, src6]
+pool_mode = session
+# Each app "connection" holds a server connection for its entire lifetime
+# 500 simultaneous users -> 500 server connections -> same problem</code></pre>
+
+        <h3>Correct: Transaction pooling for web applications</h3>
+        <pre><code class="language-ini"># GOOD -- maximum multiplexing [src2, src6]
+pool_mode = transaction
+# Server connection held only during a transaction
+# 500 users doing 50ms transactions -> ~25 server connections
+
+# Not compatible with transaction pooling:
+# - Persistent SET statements
+# - Server-side prepared statements (PREPARE/EXECUTE)
+# - Advisory locks (pg_advisory_lock)
+# - LISTEN/NOTIFY
+# - Temporary tables (use unlogged tables instead)</code></pre>
+
+        <h3>Wrong: No timeout safety net</h3>
+        <pre><code class="language-ini"># BAD -- no timeouts means one stuck transaction can exhaust all connections [src1, src5]
+# postgresql.conf with NO timeout settings:
+# idle_in_transaction_session_timeout = 0
+# statement_timeout = 0
+# idle_session_timeout = 0
+# One stuck transaction holds locks and connections indefinitely</code></pre>
+
+        <h3>Correct: Defense-in-depth timeout strategy</h3>
+        <pre><code class="language-ini"># GOOD -- layered timeouts catch different failure modes [src1, src5]
+# postgresql.conf
+idle_in_transaction_session_timeout = 30000   # kills stuck BEGIN with no COMMIT
+statement_timeout = 30000                      # kills runaway queries
+idle_session_timeout = 600000                  # kills abandoned connections (PG14+)
+transaction_timeout = 60000                    # caps total transaction time (PG17+)</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>max_connections</code> includes superuser reserved slots</strong>: The effective limit for
+                regular users is <code>max_connections - superuser_reserved_connections</code> (default: 100 - 3 = 97).
+                Increase <code>superuser_reserved_connections = 5</code> for emergency admin access. [<a
+                    href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]</li>
+            <li><strong>Increasing <code>max_connections</code> requires a restart</strong>: Unlike most PostgreSQL
+                config changes, <code>max_connections</code> requires a full server restart (not just
+                <code>pg_reload_conf()</code>). Plan maintenance windows accordingly. [<a
+                    href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]</li>
+            <li><strong>Prepared statements break PgBouncer transaction pooling</strong>: Server-side prepared
+                statements (<code>PREPARE</code>/<code>EXECUTE</code>) are connection-scoped. In transaction mode,
+                PgBouncer may route <code>EXECUTE</code> to a different server connection than <code>PREPARE</code>.
+                PgBouncer 1.24+ has <code>max_prepared_statements = 200</code> enabled by default, which helps but
+                doesn't fully solve cross-transaction usage. [<a
+                    href="https://www.pgbouncer.org/config.html">src2</a>]</li>
+            <li><strong>Formula for PgBouncer pool size</strong>: A common rule:
+                <code>pool_size = num_cpu_cores x 2</code>. For a 4-core DB server: <code>default_pool_size = 8</code>.
+                Going higher often hurts due to PostgreSQL's internal lock contention. [<a
+                    href="https://www.pgbouncer.org/config.html">src2</a>, <a
+                    href="https://horkan.com/2025/01/01/pgbouncer-vs-pgpool-ii-choosing-the-right-tool-for-your-postgresql-environment">src6</a>]
+            </li>
+            <li><strong><code>idle in transaction</code> holds locks</strong>: An <code>idle in transaction</code>
+                connection holds all row locks from its open transaction. Even one stuck transaction can block other
+                queries. Set <code>idle_in_transaction_session_timeout</code> to automatically kill these. [<a
+                    href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>, <a
+                    href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</li>
+            <li><strong>Multi-process apps multiply pool sizes</strong>: With Gunicorn/uWSGI using 8 workers x 4 threads
+                x <code>pool_size=10</code>, you get 320 potential connections to PgBouncer. Size
+                <code>max_client_conn</code> in PgBouncer accordingly and use <code>max_user_client_connections</code>
+                (1.24+) to cap per-user usage. [<a
+                    href="https://onidel.com/blog/postgresql-proxy-comparison-2025">src4</a>, <a
+                    href="https://legacy.tembo.io/blog/postgres-connection-poolers/">src7</a>]</li>
+            <li><strong>PgBouncer is single-threaded</strong>: For high-throughput scenarios (&gt;50 active queries per
+                CPU core), consider multi-threaded alternatives like PgCat (Rust, 59K tps peak) or Odyssey (C,
+                enterprise). PgBouncer peaks at ~44K tps. [<a
+                    href="https://onidel.com/blog/postgresql-proxy-comparison-2025">src4</a>, <a
+                    href="https://legacy.tembo.io/blog/postgres-connection-poolers/">src7</a>, <a
+                    href="https://pganalyze.com/blog/5mins-postgres-pgcat-vs-pgbouncer">src8</a>]</li>
+            <li><strong>PgBouncer CVE-2025-2291</strong>: Versions before 1.24.1 did not check <code>VALID UNTIL</code>
+                of user passwords when using <code>auth_query</code>. Upgrade to 1.24.1+ or 1.25.0+. [<a
+                    href="https://www.pgbouncer.org/config.html">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-sql">-- Connection overview
+SHOW max_connections;
+SHOW superuser_reserved_connections;
+SELECT count(*) FROM pg_stat_activity;
+SELECT state, count(*) FROM pg_stat_activity GROUP BY state ORDER BY count(*) DESC;
+
+-- Top consumers
+SELECT usename, application_name, client_addr, state, count(*)
+FROM pg_stat_activity GROUP BY 1,2,3,4 ORDER BY count(*) DESC LIMIT 20;
+
+-- Long-running / stuck
+SELECT pid, usename, state,
+       now()-backend_start AS conn_age,
+       now()-query_start AS query_age,
+       left(query, 80)
+FROM pg_stat_activity WHERE state != 'idle' ORDER BY query_age DESC NULLS LAST LIMIT 20;
+
+-- Emergency: kill idle connections
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+WHERE state = 'idle' AND query_start &lt; NOW() - INTERVAL '10 minutes'
+  AND pid &lt;&gt; pg_backend_pid();
+
+-- Emergency: kill stuck transactions
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+WHERE state = 'idle in transaction' AND query_start &lt; NOW() - INTERVAL '5 minutes'
+  AND pid &lt;&gt; pg_backend_pid();
+
+-- Headroom calculation
+SELECT current_setting('max_connections')::int AS max_conn,
+       (SELECT count(*) FROM pg_stat_activity) AS used,
+       current_setting('max_connections')::int
+         - current_setting('superuser_reserved_connections')::int
+         - (SELECT count(*) FROM pg_stat_activity) AS slots_remaining;</code></pre>
+
+        <pre><code class="language-bash"># PgBouncer admin interface
+psql -h 127.0.0.1 -p 6432 -U pgbouncer pgbouncer
+
+# Inside PgBouncer admin:
+SHOW POOLS;    # cl_waiting &gt; 0 = exhaustion -- increase pool_size
+SHOW STATS;    # request rates, avg query time
+SHOW SERVERS;  # server-side connections
+SHOW CLIENTS;  # client-side connections (idle state new in 1.25)
+SHOW CONFIG;   # current config values
+RELOAD;        # reload pgbouncer.ini (no restart needed)
+PAUSE mydb;    # pause all queries to a db (for maintenance)
+RESUME mydb;   # resume after pause</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>pg_stat_activity</code></td>
+                        <td>PostgreSQL 7.4</td>
+                        <td>Essential monitoring view [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>pg_terminate_backend()</code></td>
+                        <td>PostgreSQL 8.4</td>
+                        <td>Terminate connections [<a
+                                href="https://www.postgresql.org/docs/current/monitoring-stats.html">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>idle_in_transaction_session_timeout</code></td>
+                        <td>PostgreSQL 9.6</td>
+                        <td>Auto-kills stuck transactions [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>statement_timeout</code></td>
+                        <td>PostgreSQL 7.3</td>
+                        <td>Kills slow statements [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>idle_session_timeout</code></td>
+                        <td>PostgreSQL 14</td>
+                        <td>Kills completely idle connections [<a
+                                href="https://www.postgresql.org/docs/current/runtime-config-connection.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>transaction_timeout</code></td>
+                        <td>PostgreSQL 17 (2024-09)</td>
+                        <td>Limits total transaction duration [<a
+                                href="https://www.dbi-services.com/blog/postgresql-17-transaction_timeout/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer transaction pooling</td>
+                        <td>PgBouncer 1.0 (2007)</td>
+                        <td>Core feature; stable [<a href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer SCRAM-SHA-256</td>
+                        <td>PgBouncer 1.14 (2020)</td>
+                        <td>Required for PostgreSQL 14+ default auth [<a
+                                href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer <code>client_idle_timeout</code></td>
+                        <td>PgBouncer 1.24 (2025-01)</td>
+                        <td>Per-user idle client timeout [<a href="https://www.pgbouncer.org/config.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer <code>max_prepared_statements</code></td>
+                        <td>PgBouncer 1.24 (2025-01)</td>
+                        <td>Default 200; was opt-in before [<a href="https://www.pgbouncer.org/config.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer <code>max_user_client_connections</code></td>
+                        <td>PgBouncer 1.24 (2025-01)</td>
+                        <td>Per-user connection limits [<a href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer LDAP auth</td>
+                        <td>PgBouncer 1.25 (2025-11)</td>
+                        <td>LDAP via HBA or auth_ldap_options [<a
+                                href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer client-side direct TLS</td>
+                        <td>PgBouncer 1.25 (2025-11)</td>
+                        <td>PG17 faster TLS support [<a href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer <code>transaction_timeout</code></td>
+                        <td>PgBouncer 1.25 (2025-11)</td>
+                        <td>Pooler-level transaction timeout [<a
+                                href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>PgBouncer <code>query_wait_notify</code></td>
+                        <td>PgBouncer 1.25 (2025-11)</td>
+                        <td>NOTICE to queued clients [<a href="https://www.pgbouncer.org/config.html">src2</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>FATAL: sorry, too many clients already</td>
+                        <td>Slow query performance (not connection count)</td>
+                        <td>PostgreSQL query optimization (EXPLAIN ANALYZE)</td>
+                    </tr>
+                    <tr>
+                        <td>Web app with &gt;50 concurrent DB connections</td>
+                        <td>Single-user CLI or batch jobs</td>
+                        <td>Direct PostgreSQL connection (no pooler needed)</td>
+                    </tr>
+                    <tr>
+                        <td>Microservices each opening own connection pool</td>
+                        <td>Need read replicas + load balancing + failover</td>
+                        <td>Pgpool-II or PgCat (multi-feature proxy)</td>
+                    </tr>
+                    <tr>
+                        <td>Connection count approaching max_connections</td>
+                        <td>Already using managed pooling (Supabase, RDS Proxy)</td>
+                        <td>Managed pooler settings (tune, don't replace)</td>
+                    </tr>
+                    <tr>
+                        <td>High idle connection count from leaks</td>
+                        <td>PgBouncer bottleneck at &gt;50K tps</td>
+                        <td>PgCat or Odyssey (multi-threaded)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>PostgreSQL 17 <code>transaction_timeout</code></strong> closes a gap: before PG17, a transaction
+                with many short statements and short idle pauses could run indefinitely even with
+                <code>statement_timeout</code> and <code>idle_in_transaction_session_timeout</code> set.
+                <code>transaction_timeout</code> caps total wall-clock time. [<a
+                    href="https://www.dbi-services.com/blog/postgresql-17-transaction_timeout/">src5</a>]</li>
+            <li><strong>PgBouncer 1.24+ enables prepared statements by default</strong>
+                (<code>max_prepared_statements = 200</code>). Older versions required explicit opt-in. Test
+                compatibility when upgrading. [<a href="https://www.pgbouncer.org/config.html">src2</a>]</li>
+            <li><strong>Managed databases</strong> (RDS, Cloud SQL, Supabase, Neon) often have their own pooling layer.
+                Check before deploying your own. Stacking poolers adds latency without benefit. [<a
+                    href="https://legacy.tembo.io/blog/postgres-connection-poolers/">src7</a>]</li>
+            <li><strong>CVE-2025-2291 and CVE-2025-12819</strong>: PgBouncer had two security vulnerabilities in 2025.
+                Ensure you run PgBouncer 1.25.0+ which fixes both. [<a
+                    href="https://www.pgbouncer.org/config.html">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/postgresql-slow-queries/2026"
+            data-relationship="related_to">PostgreSQL Slow Query Optimization</a>
+        <a href="/software/debugging/mysql-deadlocks/2026"
+            data-relationship="related_to">MySQL Deadlocks</a>
+        <a href="/software/debugging/redis-memory-issues/2026"
+            data-relationship="solves">Redis Memory Issues</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

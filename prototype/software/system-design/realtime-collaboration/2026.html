@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Real-Time Collaboration System Design (Google Docs | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building real-time collaborative editing (Google Docs clone).">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/realtime-collaboration/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Real-Time Collaboration System Design (Google Docs | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building real-time collaborative editing (Google Docs clone). Covers CRDT vs OT decision framework, Yjs architecture, WebSocket sync, presence awareness, and rich-text conflict resolution. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/realtime-collaboration/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Real-Time Collaboration System Design (Google Docs | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building real-time collaborative editing (Google Docs clone). Covers CRDT vs OT decision framework, Yjs architecture, WebSocket sync, presence awareness, and rich-text conflict resolution. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/realtime_collaboration">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a real-time collaboration system (Google Docs clone)?">
+  <meta name="ai:aliases" content="How to build real-time collaborative editing like Google Docs; CRDT vs OT for collaborative text editing; System design for multiplayer document editing; How does Google Docs handle concurrent edits">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/realtime-collaboration/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="concurrency_level,content_type,offline_support,architecture">
+  <meta name="ai:constraints" content="Server must enforce total ordering OR use proven CRDT; Rich-text CRDTs are harder than plain-text; WebSocket reconnection logic is mandatory; Undo/redo requires intention-preserving algorithms; Document size grows unbounded without GC">
+  <meta name="ai:skip_this_unit_if" content="Building a chat app not collaborative editing -> WebSocket pub/sub pattern; Only need shared cursors without document sync -> Presence-only solution">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Real-Time Collaboration System Design (Google Docs Clone)",
+    "headline": "Real-Time Collaboration System Design (Google Docs Clone)",
+    "description": "Complete system design guide for building real-time collaborative editing. Covers CRDT vs OT decision framework, Yjs architecture, WebSocket sync, presence awareness, rich-text conflict resolution, anti-patterns, and production deployment.",
+    "keywords": ["real-time collaboration", "CRDT", "operational transformation", "Google Docs", "Yjs", "collaborative editing", "WebSocket", "system design", "multiplayer", "conflict resolution"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Yjs 13.6.x, y-websocket 2.x, WebSocket-capable backend",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "How Figma's multiplayer technology works",
+        "url": "https://www.figma.com/blog/how-figmas-multiplayer-technology-works/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CRDTs: The Hard Parts",
+        "url": "https://martin.kleppmann.com/2020/07/06/crdt-hard-parts-hydra.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "I was wrong. CRDTs are the future",
+        "url": "https://josephg.com/blog/crdts-are-the-future/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Yjs Documentation",
+        "url": "https://docs.yjs.dev/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Understanding sync engines: How Figma, Linear, and Google Docs work",
+        "url": "https://liveblocks.io/blog/understanding-sync-engines-how-figma-linear-and-google-docs-work"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Google Wave Operational Transformation",
+        "url": "https://svn.apache.org/repos/asf/incubator/wave/whitepapers/operational-transform/operational-transform.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Peritext: A CRDT for Collaborative Rich Text Editing",
+        "url": "https://www.inkandswitch.com/peritext/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Real-Time Collaboration System Design (Google Docs Clone)",
+    "description": "Structured knowledge unit covering real-time collaborative editing system design including CRDT vs OT comparison, component architecture, Yjs implementation, WebSocket sync patterns, presence awareness, and production deployment strategies.",
+    "keywords": ["real-time collaboration", "CRDT", "operational transformation", "Google Docs", "Yjs", "system design", "collaborative editing"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Figma"},
+      {"@type": "Organization", "name": "Martin Kleppmann (University of Cambridge)"},
+      {"@type": "Organization", "name": "Yjs Project"},
+      {"@type": "Organization", "name": "Liveblocks"},
+      {"@type": "Organization", "name": "Apache Wave (Google)"},
+      {"@type": "Organization", "name": "Ink & Switch"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Real-Time Collaboration System Design" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a real-time collaboration system (Google Docs clone)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a CRDT library (Yjs or Automerge) for new projects; OT only if you need a proven centralized model with simpler server logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to build real-time collaborative editing like Google Docs",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a CRDT library (Yjs or Automerge) for new projects; OT only if you need a proven centralized model with simpler server logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CRDT vs OT for collaborative text editing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a CRDT library (Yjs or Automerge) for new projects; OT only if you need a proven centralized model with simpler server logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "System design for multiplayer document editing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a CRDT library (Yjs or Automerge) for new projects; OT only if you need a proven centralized model with simpler server logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Google Docs handle concurrent edits",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use a CRDT library (Yjs or Automerge) for new projects; OT only if you need a proven centralized model with simpler server logic."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Real-Time Collaboration System Design (Google Docs Clone)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a real-time collaboration system (Google Docs clone)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/realtime-collaboration/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use a CRDT library (Yjs or Automerge) for new projects; OT only if you need a proven centralized model with simpler server logic.</li>
+    <li><strong>Key tool/command</strong>: <code>new Y.Doc()</code> with <code>y-websocket</code> provider -- production-ready collaborative editing in under 50 lines.</li>
+    <li><strong>Watch out for</strong>: Rich-text formatting merge conflicts -- plain-text CRDTs do not handle overlapping bold/italic ranges correctly (use Peritext-style approach).</li>
+    <li><strong>Works with</strong>: Any WebSocket-capable backend (Node.js, Go, Rust, Elixir); Yjs supports 20+ editor bindings (ProseMirror, TipTap, Monaco, CodeMirror, Quill).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Server must enforce total ordering OR use a mathematically proven CRDT -- partial implementations cause data loss under concurrent edits</li>
+    <li>Rich-text CRDTs (Peritext) are significantly harder than plain-text -- never assume plain-text CRDT solutions transfer directly to rich text</li>
+    <li>WebSocket reconnection with exponential backoff is mandatory -- network partitions WILL happen in production</li>
+    <li>Undo/redo requires intention-preserving algorithms, not simple stack-based undo -- concurrent edits invalidate naive undo stacks</li>
+    <li>Document state grows unbounded without garbage collection -- implement tombstone compaction or periodic snapshots</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Conflict Resolution Engine</td><td>Merges concurrent edits without data loss</td><td>Yjs (CRDT), Automerge (CRDT), ShareDB (OT), Google OT</td><td>Stateless -- runs on each client + server</td></tr>
+      <tr><td>WebSocket Gateway</td><td>Persistent bidirectional connection for real-time sync</td><td>y-websocket, Socket.IO, ws (Node), Gorilla (Go)</td><td>Horizontal scale with sticky sessions per document</td></tr>
+      <tr><td>Document Router</td><td>Routes clients to correct server for their document</td><td>Consistent hashing on document ID</td><td>Hash ring with virtual nodes</td></tr>
+      <tr><td>Presence Service</td><td>Tracks who is online, cursor positions, selections</td><td>Liveblocks Presence, Phoenix Presence, custom broadcast</td><td>Ephemeral state -- no persistence needed</td></tr>
+      <tr><td>Awareness Protocol</td><td>Broadcasts cursor/selection state to peers</td><td>Yjs Awareness, custom WebSocket messages</td><td>Piggyback on sync connection; throttle to 10-15 fps</td></tr>
+      <tr><td>Operation Log / WAL</td><td>Ordered history of all edits for replay and recovery</td><td>Append-only log (Kafka, Redis Streams, PostgreSQL)</td><td>Partition by document ID</td></tr>
+      <tr><td>Snapshot Store</td><td>Periodic full-document snapshots for fast load</td><td>S3, PostgreSQL JSONB, Redis</td><td>Snapshot every N ops or T seconds</td></tr>
+      <tr><td>Auth + Access Control</td><td>Per-document permissions (view/edit/comment)</td><td>JWT tokens validated at WebSocket handshake</td><td>Stateless token validation at gateway</td></tr>
+      <tr><td>Offline Queue</td><td>Buffers edits when disconnected, replays on reconnect</td><td>IndexedDB (browser), SQLite (mobile)</td><td>Local-first -- syncs on reconnection</td></tr>
+      <tr><td>Rich-Text Formatting Layer</td><td>Handles bold, italic, links without merge conflicts</td><td>Peritext (CRDT), ProseMirror + Yjs, TipTap + Yjs</td><td>Integrated with conflict resolution engine</td></tr>
+      <tr><td>Garbage Collector</td><td>Compacts tombstones and reclaims memory</td><td>Yjs GC, Automerge compaction, custom sweep</td><td>Run during low-activity periods</td></tr>
+      <tr><td>CDN / Edge Cache</td><td>Serves static assets; caches read-only snapshots</td><td>Cloudflare, CloudFront, Fastly</td><td>Cache invalidation on document update</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Need offline editing + peer-to-peer sync?
+|   |-- YES --> Use CRDT (Yjs or Automerge)
+|   +-- NO
+|       |-- Need rich-text collaborative editing?
+|       |   |-- YES
+|       |   |   |-- Want managed solution?
+|       |   |   |   |-- YES --> Liveblocks or TipTap Cloud
+|       |   |   |   +-- NO --> Yjs + TipTap/ProseMirror + y-websocket
+|       |   +-- NO (plain text or structured data)
+|       |       |-- Central server acceptable?
+|       |       |   |-- YES
+|       |       |   |   |-- &lt; 1K concurrent users per doc?
+|       |       |   |   |   |-- YES --> OT (ShareDB) or Yjs -- both work
+|       |       |   |   |   +-- NO --> Yjs (better memory profile at scale)
+|       |       |   +-- NO --> Yjs with y-webrtc provider
+|       +-- Canvas/graphics editing?
+|           |-- YES --> Property-level LWW (Figma model) [<a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/">src1</a>]
+|           +-- NO --> Yjs with appropriate shared type (Y.Map, Y.Array)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Choose conflict resolution strategy</h3>
+  <p>Decide between OT (Operational Transformation) and CRDT (Conflict-free Replicated Data Type). CRDTs converge without a central server; OT requires server coordination but has a simpler mental model for centralized architectures. [<a href="https://josephg.com/blog/crdts-are-the-future/">src3</a>]</p>
+  <p><strong>Verify</strong>: Match your requirements against the decision tree above. If offline or P2P is needed, CRDT is the only viable option.</p>
+
+  <h3>2. Set up the CRDT document model</h3>
+  <p>Initialize Yjs shared types that mirror your document structure. Yjs provides Y.Text, Y.Map, Y.Array, and Y.XmlFragment. [<a href="https://docs.yjs.dev/">src4</a>]</p>
+  <pre><code class="language-javascript">import * as Y from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
+import { IndexeddbPersistence } from 'y-indexeddb';
+
+const ydoc = new Y.Doc();
+const ytext = ydoc.getText('document-body');
+const ymeta = ydoc.getMap('document-meta');
+ymeta.set('title', 'Untitled Document');
+ymeta.set('lastModified', Date.now());</code></pre>
+  <p><strong>Verify</strong>: <code>console.log(ydoc.getText('document-body').toString())</code> --> expected: <code>""</code></p>
+
+  <h3>3. Connect the WebSocket sync provider</h3>
+  <p>Wire up the network transport layer. The y-websocket provider handles connection management, reconnection, and binary sync protocol automatically. [<a href="https://docs.yjs.dev/">src4</a>]</p>
+  <pre><code class="language-javascript">const wsProvider = new WebsocketProvider(
+  'wss://your-server.example.com',
+  'document-room-id',
+  ydoc
+);
+wsProvider.on('status', ({ status }) =&gt; {
+  console.log(`Sync status: ${status}`);
+});
+const indexeddbProvider = new IndexeddbPersistence('document-room-id', ydoc);
+indexeddbProvider.on('synced', () =&gt; console.log('Loaded from local cache'));</code></pre>
+  <p><strong>Verify</strong>: Open two browser tabs with the same room ID. Type in one, confirm text appears in the other within 50-100ms.</p>
+
+  <h3>4. Implement awareness (cursors and presence)</h3>
+  <p>Awareness broadcasts ephemeral state (cursor position, user name, color) to all connected peers. Unlike document state, awareness data is not persisted. [<a href="https://docs.yjs.dev/">src4</a>]</p>
+  <pre><code class="language-javascript">wsProvider.awareness.setLocalStateField('user', {
+  name: 'Alice', color: '#30bced', cursor: null
+});
+wsProvider.awareness.on('change', ({ added, updated, removed }) =&gt; {
+  const states = wsProvider.awareness.getStates();
+  states.forEach((state, clientId) =&gt; {
+    if (clientId !== ydoc.clientID) {
+      console.log(`User ${state.user?.name} at ${state.user?.cursor}`);
+    }
+  });
+});</code></pre>
+  <p><strong>Verify</strong>: Open two tabs, confirm each shows the other user's cursor position and name.</p>
+
+  <h3>5. Bind to a rich-text editor</h3>
+  <p>Connect Yjs to TipTap (built on ProseMirror) with collaboration extensions. Disable the built-in history plugin -- Yjs handles undo/redo. [<a href="https://docs.yjs.dev/">src4</a>]</p>
+  <pre><code class="language-javascript">import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+
+const editor = new Editor({
+  extensions: [
+    StarterKit.configure({ history: false }),
+    Collaboration.configure({ document: ydoc }),
+    CollaborationCursor.configure({
+      provider: wsProvider,
+      user: { name: 'Alice', color: '#30bced' },
+    }),
+  ],
+});</code></pre>
+  <p><strong>Verify</strong>: Type formatted text (bold, italic) in one tab. Confirm formatting appears correctly in the other tab.</p>
+
+  <h3>6. Deploy the WebSocket server</h3>
+  <p>Run the y-websocket server in production with persistence enabled. [<a href="https://docs.yjs.dev/">src4</a>]</p>
+  <pre><code class="language-bash">npm install y-websocket
+HOST=0.0.0.0 PORT=1234 YPERSISTENCE=./yjs-docs npx y-websocket</code></pre>
+  <p><strong>Verify</strong>: <code>curl -s -o /dev/null -w "%{http_code}" http://localhost:1234/</code></p>
+
+  <h3>7. Add server-side persistence and snapshots</h3>
+  <p>Store periodic full-document snapshots for fast loading and disaster recovery. [<a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/">src1</a>]</p>
+  <pre><code class="language-javascript">const { LeveldbPersistence } = require('y-leveldb');
+const persistence = new LeveldbPersistence('./yjs-storage');
+
+setInterval(async () =&gt; {
+  const docNames = await persistence.getAllDocNames();
+  for (const docName of docNames) {
+    const ydoc = await persistence.getYDoc(docName);
+    const snapshot = Y.encodeStateAsUpdate(ydoc);
+    await saveSnapshotToS3(docName, Buffer.from(snapshot));
+    ydoc.destroy();
+  }
+}, 5 * 60 * 1000);</code></pre>
+  <p><strong>Verify</strong>: Stop and restart the server. Reopen the document and confirm all content is preserved.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>JavaScript: Minimal CRDT Collaboration with Yjs</h3>
+  <pre><code class="language-javascript">// Input:  Two users editing the same Y.Text concurrently
+// Output: Both edits merged without conflict, converged state
+
+import * as Y from 'yjs'; // yjs@13.6.x
+
+const doc1 = new Y.Doc();
+const doc2 = new Y.Doc();
+
+doc1.getText('shared').insert(0, 'Hello ');
+doc2.getText('shared').insert(0, 'World');
+
+const sv1 = Y.encodeStateVector(doc1);
+const sv2 = Y.encodeStateVector(doc2);
+const update1to2 = Y.encodeStateAsUpdate(doc1, sv2);
+const update2to1 = Y.encodeStateAsUpdate(doc2, sv1);
+Y.applyUpdate(doc1, update2to1);
+Y.applyUpdate(doc2, update1to2);
+
+console.log(doc1.getText('shared').toString() === doc2.getText('shared').toString()); // true</code></pre>
+
+  <h3>JavaScript: WebSocket Sync Server (Node.js)</h3>
+  <pre><code class="language-javascript">// Input:  Multiple WebSocket clients connecting per document room
+// Output: Real-time sync of Y.Doc state across all connected clients
+
+const http = require('http');
+const WebSocket = require('ws');
+const { setupWSConnection } = require('y-websocket/bin/utils');
+
+const server = http.createServer((req, res) =&gt; {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('y-websocket server');
+});
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (ws, req) =&gt; {
+  const roomName = req.url.slice(1).split('?')[0];
+  setupWSConnection(ws, req, { docName: roomName });
+});
+server.listen(1234);</code></pre>
+
+  <h3>Python: OT-style Server with Operation Logging</h3>
+  <pre><code class="language-python"># Input:  Concurrent text operations from multiple clients
+# Output: Transformed operations that maintain document consistency
+
+from dataclasses import dataclass
+from typing import Literal
+
+@dataclass
+class TextOp:
+    op_type: Literal["insert", "delete"]
+    position: int
+    text: str = ""
+    length: int = 0
+    client_id: str = ""
+    revision: int = 0
+
+def transform(op1: TextOp, op2: TextOp) -&gt; TextOp:
+    """Transform op1 against op2 (server-side OT)."""
+    if op1.op_type == "insert" and op2.op_type == "insert":
+        if op1.position &gt; op2.position or (
+            op1.position == op2.position and op1.client_id &gt; op2.client_id
+        ):
+            return TextOp("insert", op1.position + len(op2.text),
+                          op1.text, client_id=op1.client_id)
+        return op1
+    # ... additional cases for delete/insert, delete/delete combinations
+    return op1
+
+op_alice = TextOp("insert", 5, "Hello", client_id="alice", revision=1)
+op_bob = TextOp("insert", 3, "World", client_id="bob", revision=1)
+op_alice_prime = transform(op_alice, op_bob)
+print(f"Alice's op transformed: position {op_alice_prime.position}")  # 10</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using simple last-write-wins for text content</h3>
+  <pre><code class="language-javascript">// BAD -- overwrites entire document on each keystroke, losing concurrent edits
+socket.on('document-update', (newContent) =&gt; {
+  document.content = newContent; // last write wins = data loss
+});</code></pre>
+
+  <h3>Correct: Using granular CRDT operations</h3>
+  <pre><code class="language-javascript">// GOOD -- merges character-level operations, preserves all concurrent edits
+const ydoc = new Y.Doc();
+const ytext = ydoc.getText('content');
+ydoc.on('update', (update) =&gt; {
+  socket.emit('yjs-update', update); // send binary diff, not full document
+});
+socket.on('yjs-update', (update) =&gt; {
+  Y.applyUpdate(ydoc, new Uint8Array(update)); // merge, not overwrite
+});</code></pre>
+
+  <h3>Wrong: Sending full document state on every edit</h3>
+  <pre><code class="language-javascript">// BAD -- O(document_size) per keystroke, 100KB+ per keystroke
+editor.on('change', () =&gt; {
+  const fullDoc = editor.getContent();
+  ws.send(JSON.stringify({ type: 'full-sync', data: fullDoc }));
+});</code></pre>
+
+  <h3>Correct: Sending incremental updates only</h3>
+  <pre><code class="language-javascript">// GOOD -- O(edit_size) per keystroke, typically 10-100 bytes
+ydoc.on('update', (update, origin) =&gt; {
+  if (origin !== 'remote') {
+    ws.send(update); // binary diff: only the characters that changed
+  }
+});</code></pre>
+
+  <h3>Wrong: Using built-in editor undo with collaborative editing</h3>
+  <pre><code class="language-javascript">// BAD -- built-in undo reverts OTHER users' changes, not just yours
+const editor = new Editor({
+  extensions: [StarterKit, Collaboration.configure({ document: ydoc })]
+});
+// User A types, User B types, User A hits Ctrl+Z -&gt; undoes User B's edit!</code></pre>
+
+  <h3>Correct: Using Yjs undo manager scoped to local client</h3>
+  <pre><code class="language-javascript">// GOOD -- undo only affects the local user's operations
+import { UndoManager } from 'yjs';
+const undoManager = new UndoManager(ytext, {
+  trackedOrigins: new Set([null]) // only track local changes
+});
+const editor = new Editor({
+  extensions: [
+    StarterKit.configure({ history: false }), // DISABLE built-in undo
+    Collaboration.configure({ document: ydoc }),
+  ],
+});</code></pre>
+
+  <h3>Wrong: No reconnection handling</h3>
+  <pre><code class="language-javascript">// BAD -- connection drops silently, user loses subsequent edits
+const ws = new WebSocket('wss://server.example.com/doc/123');
+ws.onclose = () =&gt; console.log('disconnected'); // logs and does nothing</code></pre>
+
+  <h3>Correct: Exponential backoff with offline queue</h3>
+  <pre><code class="language-javascript">// GOOD -- queues edits locally and syncs on reconnection
+function connectWithRetry(url, ydoc, attempt = 0) {
+  const ws = new WebSocket(url);
+  ws.onopen = () =&gt; {
+    attempt = 0;
+    const localState = Y.encodeStateAsUpdate(ydoc);
+    ws.send(localState);
+  };
+  ws.onclose = () =&gt; {
+    const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+    setTimeout(() =&gt; connectWithRetry(url, ydoc, attempt + 1), delay);
+  };
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>CRDT memory bloat</strong>: Yjs stores tombstones for deleted characters. A document with 100K edits can consume 10-50x its visible text size in memory. Fix: enable <code>ydoc.gc = true</code> and periodically re-encode with <code>Y.encodeStateAsUpdate(ydoc)</code>. [<a href="https://martin.kleppmann.com/2020/07/06/crdt-hard-parts-hydra.html">src2</a>]</li>
+    <li><strong>Cursor jumps on high latency</strong>: When sync latency exceeds 200ms, cursor positions desync and jump. Fix: throttle awareness updates to 50-100ms intervals and use <code>Y.createRelativePositionFromTypeIndex</code>. [<a href="https://docs.yjs.dev/">src4</a>]</li>
+    <li><strong>Split-brain from missing server authority</strong>: In pure P2P mode, network partitions can diverge and produce surprising merges. Fix: designate one peer as authority or accept non-deterministic merge ordering. [<a href="https://martin.kleppmann.com/2020/07/06/crdt-hard-parts-hydra.html">src2</a>]</li>
+    <li><strong>Rich-text formatting conflicts</strong>: Overlapping bold/italic ranges from two users can produce incorrect formatting. Fix: use Peritext-style formatting marks attached to character positions. [<a href="https://www.inkandswitch.com/peritext/">src7</a>]</li>
+    <li><strong>WebSocket message ordering</strong>: Load-balancing across multiple servers can deliver messages out of order. Fix: use sticky sessions (route by document ID) or include vector clocks. [<a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/">src1</a>]</li>
+    <li><strong>Snapshot load time</strong>: Replaying all operations from genesis is O(total_ops). Fix: store periodic snapshots and replay only operations after the last snapshot. [<a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/">src1</a>]</li>
+    <li><strong>Browser tab duplication</strong>: Each tab creates a separate Y.Doc and WebSocket connection, causing double presence. Fix: use BroadcastChannel API or SharedWorker. [<a href="https://docs.yjs.dev/">src4</a>]</li>
+    <li><strong>Undo across formatting boundaries</strong>: Undoing a bold operation modified by another user can corrupt formatting. Fix: use Yjs UndoManager with <code>captureTransaction</code>. [<a href="https://www.inkandswitch.com/peritext/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check WebSocket server health
+curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: test" \
+  http://localhost:1234/
+
+# Monitor active WebSocket connections (Linux)
+ss -s | grep -i estab
+
+# Check Yjs document size in bytes (Node.js)
+node -e "const Y=require('yjs'); const doc=new Y.Doc(); console.log(Y.encodeStateAsUpdate(doc).byteLength)"
+
+# Monitor WebSocket traffic in Chrome DevTools
+# Network tab -&gt; WS filter -&gt; click connection -&gt; Messages tab</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Library</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Yjs</td><td>13.6.x</td><td>Current (2024)</td><td>Improved GC, Sub-documents</td><td>Recommended for new projects</td></tr>
+      <tr><td>Yjs</td><td>13.5.x</td><td>Stable</td><td>Y.XmlFragment improvements</td><td></td></tr>
+      <tr><td>Automerge</td><td>2.x</td><td>Current (2023)</td><td>Rust core, 10x faster than 1.x</td><td>Breaking API changes from 1.x</td></tr>
+      <tr><td>Automerge</td><td>1.x</td><td>Legacy</td><td>Pure JS, slow on large docs</td><td>Migrate to 2.x</td></tr>
+      <tr><td>ShareDB</td><td>4.x</td><td>Current</td><td>OT with JSON documents</td><td>Mature but less active</td></tr>
+      <tr><td>y-websocket</td><td>2.x</td><td>Current</td><td>Binary protocol, awareness</td><td>Drop-in server for Yjs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multiple users edit the same document simultaneously</td><td>Single-user editing with simple save/load</td><td>Standard REST API with optimistic locking</td></tr>
+      <tr><td>Offline editing with later sync is required</td><td>Always-online with reliable network</td><td>Server-authoritative OT (ShareDB)</td></tr>
+      <tr><td>Rich-text collaborative editing (Google Docs clone)</td><td>Chat or messaging (append-only)</td><td>WebSocket pub/sub (Socket.IO rooms)</td></tr>
+      <tr><td>Peer-to-peer collaboration without central server</td><td>You already have and require a central server</td><td>OT with server transformation</td></tr>
+      <tr><td>Canvas/whiteboard with object-level edits (Figma clone)</td><td>Simple form data with field-level edits</td><td>Property-level last-write-wins</td></tr>
+      <tr><td>Need to support 100+ concurrent editors per document</td><td>2-3 users with low-frequency edits</td><td>Mutex lock or turn-based editing</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>CRDT performance has improved dramatically (Yjs processes 6M ops/sec in benchmarks) but memory overhead remains: expect 2-5x document size for metadata in Yjs, more for Automerge 1.x</li>
+    <li>Google Docs uses OT, not CRDTs -- but Google has a massive engineering team maintaining their custom OT implementation. For most teams, CRDTs (Yjs) are more practical to implement correctly</li>
+    <li>Figma does NOT use "true CRDTs" -- they use CRDT-inspired property-level last-write-wins with a central server, which is simpler but does not support offline editing or P2P</li>
+    <li>The "OT vs CRDT" debate is largely settled for new projects: use CRDTs unless you have specific reasons not to. Joseph Gentle (ex-Google Wave): "Everything OT can do, CRDTs can do. The reverse is not true."</li>
+    <li>Rich-text CRDT is an unsolved problem at the academic level -- Peritext (2022) is the most promising approach but not yet a drop-in solution in mainstream libraries</li>
+    <li>End-to-end encryption is possible with CRDTs (server never sees plaintext) but not with OT (server must understand operations to transform them)</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/websocket-architecture/2026" data-relationship="related_to">WebSocket Architecture Patterns</a>
+    <a href="/software/system-design/event-driven-systems/2026" data-relationship="related_to">Event-Driven System Design</a>
+    <a href="/software/system-design/event-sourcing/2026" data-relationship="often_confused_with">Event Sourcing (often confused with collaborative editing)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

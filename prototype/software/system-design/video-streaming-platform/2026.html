@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Video Streaming Platform System Design | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a video streaming platform (Netflix/YouTube clone): upload pipeline, transcoding, CDN edge delivery, adaptive...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/video-streaming-platform/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Video Streaming Platform System Design | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a video streaming platform (Netflix/YouTube clone): upload pipeline, transcoding, CDN edge delivery, adaptive bitrate (HLS/DASH), DRM. 12-component architecture table, 3 code examples, 5 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/video-streaming-platform/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Video Streaming Platform System Design | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a video streaming platform (Netflix/YouTube clone): upload pipeline, transcoding, CDN edge delivery, adaptive bitrate (HLS/DASH), DRM. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.91">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/video_streaming_platform">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a video streaming platform (Netflix/YouTube clone)?">
+  <meta name="ai:aliases" content="design Netflix system architecture; build a video streaming service like YouTube; video on demand platform system design; Netflix clone architecture guide; YouTube clone system design; video streaming platform architecture; design a scalable video delivery system; OTT platform system design">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/video-streaming-platform/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,content_type,budget">
+  <meta name="ai:constraints" content="Never serve video from origin directly — always use CDN; Always transcode into multiple renditions (encoding ladder); DRM mandatory for licensed content; Segment duration must be 2-10 seconds; Separate metadata storage from blob storage">
+  <meta name="ai:skip_this_unit_if" content="Building live streaming (Twitch-style) -> Use live streaming architecture with RTMP/LL-HLS; Simple embedded video player -> Use managed service (Mux, Cloudflare Stream); Video conferencing (Zoom-style) -> Use WebRTC SFU/MCU architecture">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Video Streaming Platform System Design",
+    "headline": "Video Streaming Platform System Design",
+    "description": "Comprehensive system design guide for building a video streaming platform like Netflix or YouTube. Covers upload pipeline, distributed transcoding, CDN edge delivery, adaptive bitrate streaming (HLS/DASH), DRM content protection, and recommendation engine architecture with 12-component reference table.",
+    "keywords": ["video streaming", "system design", "Netflix architecture", "YouTube architecture", "HLS", "DASH", "CDN", "transcoding", "adaptive bitrate", "DRM", "video platform", "microservices"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "FFmpeg, H.264/H.265/AV1, HLS/DASH, CDN, Object Storage, Message Queue, DRM (Widevine/FairPlay/PlayReady)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Netflix Open Connect Overview",
+        "url": "https://openconnect.netflix.com/Open-Connect-Overview.pdf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "System Design of YouTube - A Complete Architecture",
+        "url": "https://www.geeksforgeeks.org/system-design/system-design-of-youtube-a-complete-architecture/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Designing a Scalable Video Streaming Platform Like YouTube and Netflix",
+        "url": "https://www.designgurus.io/blog/design-video-streaming-platform"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Netflix Live Origin",
+        "url": "https://netflixtechblog.com/netflix-live-origin-41f1b0ad5371"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Video DRM Protection Guide 2026: Widevine, FairPlay and More",
+        "url": "https://www.kinescope.com/blog/video-drm-protection-guide-2026"
+      },
+      {
+        "@type": "WebPage",
+        "name": "YouTube Tech Stack: How 2.5B Users Stream Video at Scale",
+        "url": "https://www.vdocipher.com/blog/youtube-tech-stack-architecture/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Adaptive Bitrate Streaming: How It Works for Developers",
+        "url": "https://www.mux.com/articles/adaptive-bitrate-streaming-how-it-works-and-how-to-get-it-right"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Video Streaming Platform System Design",
+    "description": "Structured system design reference for video streaming platforms covering upload pipelines, transcoding, CDN delivery, adaptive bitrate streaming, DRM, and scaling strategies based on Netflix and YouTube architectures.",
+    "keywords": ["video streaming", "system design", "Netflix", "YouTube", "HLS", "DASH", "CDN", "transcoding", "adaptive bitrate"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Netflix"},
+      {"@type": "Organization", "name": "GeeksforGeeks"},
+      {"@type": "Organization", "name": "Design Gurus"},
+      {"@type": "Organization", "name": "Netflix Technology Blog"},
+      {"@type": "Organization", "name": "Kinescope"},
+      {"@type": "Organization", "name": "VdoCipher"},
+      {"@type": "Organization", "name": "Mux"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Video Streaming Platform System Design" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a video streaming platform (Netflix/YouTube clone)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) — the CDN and transcoding pipeline are where most complexity and cost reside."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "design Netflix system architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) — the CDN and transcoding pipeline are where most complexity and cost reside."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "build a video streaming service like YouTube",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) — the CDN and transcoding pipeline are where most complexity and cost reside."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "video on demand platform system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) — the CDN and transcoding pipeline are where most complexity and cost reside."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Netflix clone architecture guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) — the CDN and transcoding pipeline are where most complexity and cost reside."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "YouTube clone system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) — the CDN and transcoding pipeline are where most complexity and cost reside."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Video Streaming Platform System Design</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a video streaming platform (Netflix/YouTube clone)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/video-streaming-platform/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A video streaming platform requires five core subsystems: upload/ingest, transcoding pipeline, object storage, CDN edge delivery, and adaptive bitrate playback (HLS/DASH) &mdash; the CDN and transcoding pipeline are where most complexity and cost reside.</li>
+    <li><strong>Key tool/command</strong>: <code>ffmpeg -i input.mp4 -codec:v libx264 -preset medium -b:v 3000k -hls_time 6 -hls_playlist_type vod output.m3u8</code></li>
+    <li><strong>Watch out for</strong>: Skipping the encoding ladder and serving a single bitrate &mdash; this causes buffering on slow connections and wastes bandwidth on mobile.</li>
+    <li><strong>Works with</strong>: Any cloud provider (AWS MediaConvert + CloudFront, GCP Transcoder + Cloud CDN, Azure Media Services), or self-hosted with FFmpeg + nginx + your own CDN.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never serve video from origin servers directly &mdash; always use CDN/edge caching; a single 4K stream at 25 Mbps serving 10K concurrent users = 250 Gbps of origin bandwidth [<a href="https://openconnect.netflix.com/Open-Connect-Overview.pdf">src1</a>]</li>
+    <li>Always transcode into multiple renditions (encoding ladder) &mdash; Netflix uses 5-12 renditions per title, YouTube generates 6+ formats from 144p to 4K [<a href="https://www.vdocipher.com/blog/youtube-tech-stack-architecture/">src6</a>]</li>
+    <li>DRM encryption (Widevine + FairPlay + PlayReady) is mandatory for licensed content &mdash; unencrypted streams violate licensing agreements and enable piracy [<a href="https://www.kinescope.com/blog/video-drm-protection-guide-2026">src5</a>]</li>
+    <li>Segment duration for HLS/DASH must be 2-10 seconds &mdash; Apple recommends 6s for HLS; shorter creates manifest bloat, longer causes slow adaptation [<a href="https://www.mux.com/articles/adaptive-bitrate-streaming-how-it-works-and-how-to-get-it-right">src7</a>]</li>
+    <li>Video metadata (titles, thumbnails, user data) and video blobs must live in separate storage systems &mdash; SQL/NoSQL for metadata, object storage (S3/GCS) for blobs</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core component architecture table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Upload Service</strong></td><td>Chunked upload, resumable uploads, deduplication</td><td>tus protocol, S3 multipart upload, GCS resumable</td><td>Horizontal &mdash; stateless workers behind load balancer</td></tr>
+      <tr><td><strong>Message Queue</strong></td><td>Decouples upload from transcoding, ensures at-least-once processing</td><td>Apache Kafka, AWS SQS, Google Pub/Sub, RabbitMQ</td><td>Partition by video ID; consumer groups per pipeline stage</td></tr>
+      <tr><td><strong>Transcoding Pipeline</strong></td><td>Encodes raw video into multiple bitrate/resolution renditions</td><td>FFmpeg, AWS MediaConvert, GCP Transcoder API, Handbrake</td><td>Horizontal &mdash; spin up workers per job; GPU instances for H.265/AV1</td></tr>
+      <tr><td><strong>Object Storage</strong></td><td>Stores raw uploads and transcoded segments/manifests</td><td>AWS S3, Google Cloud Storage, Azure Blob, MinIO</td><td>Virtually unlimited; lifecycle policies for raw cleanup</td></tr>
+      <tr><td><strong>CDN / Edge Cache</strong></td><td>Serves video segments from edge PoPs closest to viewers</td><td>Netflix Open Connect, CloudFront, Cloudflare, Akamai, Fastly</td><td>95%+ cache hit ratio; fill from origin on miss</td></tr>
+      <tr><td><strong>Metadata Service</strong></td><td>Video catalog, search, recommendations, user profiles</td><td>PostgreSQL + Elasticsearch, DynamoDB, Cassandra</td><td>Read replicas + caching (Redis); shard by user/region</td></tr>
+      <tr><td><strong>Thumbnail Service</strong></td><td>Generates preview thumbnails and trick-play images</td><td>FFmpeg scene detection, sprite sheets</td><td>Batch processing during transcode; cached on CDN</td></tr>
+      <tr><td><strong>DRM License Server</strong></td><td>Issues decryption keys for encrypted content</td><td>Widevine, FairPlay, PlayReady, BuyDRM, PallyCon</td><td>Multi-DRM per device; license server scales horizontally</td></tr>
+      <tr><td><strong>Adaptive Streaming</strong></td><td>Client-side bitrate adaptation based on bandwidth</td><td>HLS (Apple), DASH (MPEG), CMAF (unified)</td><td>Client-driven &mdash; player switches renditions automatically</td></tr>
+      <tr><td><strong>API Gateway</strong></td><td>Routes requests, rate limiting, auth, request aggregation</td><td>Kong, AWS API Gateway, nginx, Envoy</td><td>Horizontal behind L7 load balancer; edge-deployed</td></tr>
+      <tr><td><strong>Recommendation Engine</strong></td><td>Personalized content suggestions</td><td>Collaborative filtering, deep learning, two-phase ranking</td><td>Offline batch training + real-time feature store (Redis)</td></tr>
+      <tr><td><strong>Analytics Pipeline</strong></td><td>Playback quality metrics, engagement, A/B testing</td><td>Kafka + Spark/Flink, ClickHouse, BigQuery</td><td>Stream processing for real-time; batch for daily aggregates</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Expected concurrent viewers?
+|   |-- &lt;1K users
+|   |   --&gt; Simple stack: S3 + CloudFront + FFmpeg on EC2/Lambda
+|   |-- 1K-100K users
+|   |   --&gt; Standard architecture: message queue + worker pool transcoding
+|   |   --&gt; Managed CDN (CloudFront/Cloudflare), multi-AZ deployment
+|   |-- 100K-1M users
+|   |   --&gt; Full microservices: dedicated services per component
+|   |   --&gt; Multi-region deployment, custom encoding ladder per title
+|   |-- &gt;1M users (Netflix/YouTube scale)
+|       --&gt; Custom CDN (Open Connect model): ISP-embedded cache appliances
+|       --&gt; Per-title encoding optimization, global service mesh
+|
+|-- Content type?
+|   |-- User-generated (YouTube-style)
+|   |   --&gt; Heavy moderation pipeline (ML content scanning)
+|   |   --&gt; Aggressive transcode queue, no DRM for most content
+|   |-- Licensed/premium (Netflix-style)
+|   |   --&gt; DRM mandatory (Widevine + FairPlay + PlayReady)
+|   |   --&gt; Higher encoding quality, geo-restrictions
+|   |-- Both
+|       --&gt; Separate pipelines: fast for UGC, quality-optimized for premium
+|
+|-- Build vs buy?
+    |-- Managed services --&gt; AWS MediaConvert + CloudFront + DynamoDB
+    |-- Build from scratch --&gt; FFmpeg workers + Kafka + S3 + custom CDN
+    |-- Hybrid (recommended) --&gt; Custom upload/metadata + managed transcode/CDN</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Design the upload and ingest pipeline</h3>
+  <p>Handle large file uploads (often multi-GB) with chunked, resumable uploads. Upload directly to object storage to avoid proxying through your application servers. [<a href="https://www.geeksforgeeks.org/system-design/system-design-of-youtube-a-complete-architecture/">src2</a>]</p>
+  <pre><code class="language-python"># Upload service — accepts chunked uploads, stores in S3, publishes job to Kafka
+import boto3
+from kafka import KafkaProducer
+import json, uuid
+
+s3 = boto3.client("s3", region_name="us-east-1")
+producer = KafkaProducer(
+    bootstrap_servers=["kafka:9092"],
+    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+)
+
+def handle_upload_complete(file_path, user_id, title):
+    video_id = str(uuid.uuid4())
+    s3_key = f"raw/{video_id}/{file_path.split('/')[-1]}"
+    s3.upload_file(file_path, "raw-video-uploads", s3_key)
+    producer.send("transcode-jobs", value={
+        "video_id": video_id, "s3_key": s3_key,
+        "renditions": ["360p", "480p", "720p", "1080p"],
+    })
+    return video_id</code></pre>
+  <p><strong>Verify</strong>: <code>aws s3 ls s3://raw-video-uploads/raw/{video_id}/</code> &rarr; raw file listed</p>
+
+  <h3>2. Build the transcoding pipeline</h3>
+  <p>Consume jobs from the message queue and transcode each video into multiple renditions using FFmpeg. Each rendition produces HLS segments (.ts files) and a playlist (.m3u8). [<a href="https://www.designgurus.io/blog/design-video-streaming-platform">src3</a>] [<a href="https://www.mux.com/articles/adaptive-bitrate-streaming-how-it-works-and-how-to-get-it-right">src7</a>]</p>
+  <pre><code class="language-bash"># FFmpeg command to transcode to 720p HLS with 6-second segments
+ffmpeg -i input.mp4 \
+  -vf scale=1280:720 \
+  -c:v libx264 -preset medium -b:v 2800k \
+  -c:a aac -b:a 128k \
+  -hls_time 6 -hls_playlist_type vod \
+  -hls_segment_filename "720p/seg_%04d.ts" \
+  720p/playlist.m3u8</code></pre>
+  <p><strong>Verify</strong>: <code>ffprobe 720p/playlist.m3u8</code> &rarr; shows stream info with correct resolution</p>
+
+  <h3>3. Generate the master HLS manifest</h3>
+  <p>Create a master playlist that references all rendition playlists, enabling adaptive bitrate switching in the player. [<a href="https://www.mux.com/articles/adaptive-bitrate-streaming-how-it-works-and-how-to-get-it-right">src7</a>]</p>
+  <pre><code class="language-text">#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
+360p/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1400000,RESOLUTION=854x480
+480p/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1280x720
+720p/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+1080p/playlist.m3u8</code></pre>
+  <p><strong>Verify</strong>: <code>ffplay master.m3u8</code> &rarr; plays video with adaptive quality switching</p>
+
+  <h3>4. Configure CDN and edge caching</h3>
+  <p>Place your CDN in front of object storage. Video segments are immutable and should be cached aggressively (1 year). Manifests need shorter TTLs (30-60s) to allow content updates. [<a href="https://openconnect.netflix.com/Open-Connect-Overview.pdf">src1</a>]</p>
+  <pre><code class="language-nginx"># nginx edge config: aggressive segment caching, short manifest TTL
+location ~* \.ts$ {
+    proxy_cache video_cache;
+    proxy_cache_valid 200 365d;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+}
+location ~* \.m3u8$ {
+    proxy_cache video_cache;
+    proxy_cache_valid 200 60s;
+    add_header Cache-Control "public, max-age=60";
+}</code></pre>
+  <p><strong>Verify</strong>: <code>curl -sI https://cdn.example.com/{video_id}/720p/seg_0001.ts | grep X-Cache</code> &rarr; <code>HIT</code> on second request</p>
+
+  <h3>5. Implement the playback API and metadata service</h3>
+  <p>Build the API that serves video metadata and playback URLs. Use signed URLs so only authenticated users can access content. [<a href="https://www.geeksforgeeks.org/system-design/system-design-of-youtube-a-complete-architecture/">src2</a>] [<a href="https://www.vdocipher.com/blog/youtube-tech-stack-architecture/">src6</a>]</p>
+  <pre><code class="language-javascript">// Playback API — returns signed CDN URL for the master manifest
+app.get("/api/v1/videos/:videoId/playback", async (req, res) =&gt; {
+  const video = await db.query("SELECT * FROM videos WHERE id = $1 AND status = 'ready'", [req.params.videoId]);
+  if (!video.rows.length) return res.status(404).json({ error: "Not found" });
+  const manifestUrl = getSignedUrl({
+    url: `https://cdn.example.com/${req.params.videoId}/master.m3u8`,
+    dateLessThan: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+  });
+  res.json({ id: video.rows[0].id, manifest_url: manifestUrl });
+});</code></pre>
+  <p><strong>Verify</strong>: <code>curl http://localhost:3000/api/v1/videos/{id}/playback</code> &rarr; JSON with signed <code>manifest_url</code></p>
+
+  <h3>6. Add DRM encryption for premium content</h3>
+  <p>For licensed content, encrypt segments during transcoding and set up a multi-DRM license server (Widevine for Chrome/Android, FairPlay for Safari/iOS, PlayReady for Edge/Windows). [<a href="https://www.kinescope.com/blog/video-drm-protection-guide-2026">src5</a>]</p>
+  <pre><code class="language-bash"># Encrypt HLS segments with AES-128 (basic; use Widevine/FairPlay for production)
+openssl rand 16 &gt; enc.key
+echo "https://keys.example.com/${VIDEO_ID}/enc.key" &gt; enc_keyinfo.txt
+echo "enc.key" &gt;&gt; enc_keyinfo.txt
+ffmpeg -i input.mp4 -c:v libx264 -b:v 3000k -c:a aac -b:a 128k \
+  -hls_time 6 -hls_playlist_type vod \
+  -hls_key_info_file enc_keyinfo.txt output_encrypted.m3u8</code></pre>
+  <p><strong>Verify</strong>: <code>grep EXT-X-KEY output_encrypted.m3u8</code> &rarr; shows <code>METHOD=AES-128,URI=...</code></p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Video Upload Pipeline with S3 and Kafka</h3>
+  <pre><code class="language-python"># Input:  Raw video file path, user metadata
+# Output: video_id, transcode job published to Kafka
+
+import boto3, json, uuid, hashlib
+from kafka import KafkaProducer
+
+class VideoUploadPipeline:
+    def __init__(self, s3_bucket, kafka_brokers):
+        self.s3 = boto3.client("s3")
+        self.bucket = s3_bucket
+        self.producer = KafkaProducer(
+            bootstrap_servers=kafka_brokers,
+            value_serializer=lambda v: json.dumps(v).encode(),
+        )
+
+    def upload(self, filepath, user_id, title):
+        video_id = str(uuid.uuid4())
+        s3_key = f"raw/{video_id}/{filepath.rsplit('/', 1)[-1]}"
+        self.s3.upload_file(filepath, self.bucket, s3_key)
+        job = {"video_id": video_id, "s3_key": s3_key,
+               "renditions": ["360p", "480p", "720p", "1080p"]}
+        self.producer.send("transcode-jobs", value=job)
+        self.producer.flush()
+        return job</code></pre>
+
+  <h3>JavaScript: HLS Master Manifest Generator</h3>
+  <pre><code class="language-javascript">// Input:  video ID, list of completed renditions with metadata
+// Output: M3U8 master manifest string
+
+function generateMasterManifest(videoId, renditions) {
+  const lines = ["#EXTM3U", "#EXT-X-VERSION:3", ""];
+  const sorted = [...renditions].sort((a, b) =&gt; a.bandwidth - b.bandwidth);
+  for (const r of sorted) {
+    lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=${r.bandwidth},RESOLUTION=${r.resolution},CODECS="${r.codecs}"`);
+    lines.push(`${r.name}/playlist.m3u8`);
+    lines.push("");
+  }
+  return lines.join("\n");
+}</code></pre>
+
+  <h3>Go: Transcoding Worker with Job Queue</h3>
+  <pre><code class="language-go">// Input:  Transcode job from Kafka (video_id, s3_key, renditions)
+// Output: Transcoded HLS segments uploaded to S3
+
+var ladder = map[string]Rendition{
+    "360p":  {640, 360, "800k", "96k"},
+    "720p":  {1280, 720, "2800k", "128k"},
+    "1080p": {1920, 1080, "5000k", "192k"},
+}
+
+func transcodeRendition(inputPath, videoID, name string, r Rendition) error {
+    outDir := filepath.Join("/tmp/transcode", videoID, name)
+    os.MkdirAll(outDir, 0755)
+    cmd := exec.Command("ffmpeg", "-i", inputPath,
+        "-vf", fmt.Sprintf("scale=%d:%d", r.Width, r.Height),
+        "-c:v", "libx264", "-preset", "medium", "-b:v", r.VideoBitrate,
+        "-c:a", "aac", "-b:a", r.AudioBitrate,
+        "-hls_time", "6", "-hls_playlist_type", "vod",
+        "-hls_segment_filename", filepath.Join(outDir, "seg_%04d.ts"),
+        filepath.Join(outDir, "playlist.m3u8"), "-y")
+    return cmd.Run()
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Synchronous transcoding during upload</h3>
+  <pre><code class="language-python"># BAD — blocks the upload response until transcoding completes (minutes to hours)
+@app.post("/upload")
+def upload_video(file):
+    save_to_disk(file)
+    transcode_all_renditions(file.filename)    # Blocks for 5-30 minutes!
+    return {"status": "ready"}                 # User waits forever, request times out</code></pre>
+
+  <h3>Correct: Async transcoding via message queue</h3>
+  <pre><code class="language-python"># GOOD — upload returns immediately, transcoding happens asynchronously
+@app.post("/upload")
+def upload_video(file):
+    video_id = save_to_s3(file)
+    publish_to_queue("transcode-jobs", {"video_id": video_id})
+    return {"status": "processing", "video_id": video_id}   # Returns in &lt;1s</code></pre>
+
+  <h3>Wrong: Single bitrate streaming</h3>
+  <pre><code class="language-python"># BAD — serves one resolution regardless of user bandwidth
+def get_video_url(video_id):
+    return f"https://cdn.example.com/{video_id}/video_1080p.mp4"
+    # Mobile users on 3G get constant buffering</code></pre>
+
+  <h3>Correct: Adaptive bitrate with HLS/DASH encoding ladder</h3>
+  <pre><code class="language-python"># GOOD — serves master manifest; player picks the right rendition
+def get_video_url(video_id):
+    return f"https://cdn.example.com/{video_id}/master.m3u8"
+    # Player adapts quality based on available bandwidth</code></pre>
+
+  <h3>Wrong: Storing video blobs in a database</h3>
+  <pre><code class="language-python"># BAD — stores video binary in PostgreSQL BYTEA column
+def store_video(video_id, video_bytes):
+    db.execute("INSERT INTO videos (id, data) VALUES (%s, %s)", (video_id, video_bytes))
+    # Database bloats to TB, backups take hours, queries slow to a crawl</code></pre>
+
+  <h3>Correct: Object storage for blobs, database for metadata only</h3>
+  <pre><code class="language-python"># GOOD — S3 for video files, PostgreSQL for metadata only
+def store_video(video_id, filepath, title, user_id):
+    s3.upload_file(filepath, "video-bucket", f"raw/{video_id}/{os.path.basename(filepath)}")
+    db.execute("INSERT INTO videos (id, title, user_id, status) VALUES (%s,%s,%s,'uploaded')",
+               (video_id, title, user_id))</code></pre>
+
+  <h3>Wrong: No CDN &mdash; serving directly from origin</h3>
+  <pre><code class="language-python"># BAD — all viewers worldwide hit the single origin region
+def get_stream_url(video_id):
+    return f"https://us-east-1.s3.amazonaws.com/videos/{video_id}/master.m3u8"
+    # 10K viewers x 5 Mbps = 50 Gbps origin bandwidth, $22,500/hour in S3 egress</code></pre>
+
+  <h3>Correct: CDN edge delivery with origin shielding</h3>
+  <pre><code class="language-python"># GOOD — CDN serves from 200+ edge PoPs, origin handles &lt;5% of requests
+def get_stream_url(video_id):
+    return f"https://cdn.example.com/{video_id}/master.m3u8"
+    # 95%+ cache hit ratio, $0.01-0.02/GB vs $0.09/GB from S3 direct</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Not implementing resumable uploads</strong>: Users uploading multi-GB files lose all progress on network interruption. Fix: Use the <code>tus</code> protocol or S3 multipart upload with client-side retry per chunk. [<a href="https://www.geeksforgeeks.org/system-design/system-design-of-youtube-a-complete-architecture/">src2</a>]</li>
+    <li><strong>Fixed encoding ladder ignoring content complexity</strong>: An animated show looks sharp at 1.5 Mbps, but action movies need 4+ Mbps at the same resolution. Fix: Implement per-title encoding optimization (Netflix reported 20-30% savings). [<a href="https://www.designgurus.io/blog/design-video-streaming-platform">src3</a>]</li>
+    <li><strong>Ignoring cold start latency in playback</strong>: First segment takes too long to load because the player starts at high quality. Fix: Configure the player to start at a low rendition and ramp up. [<a href="https://www.mux.com/articles/adaptive-bitrate-streaming-how-it-works-and-how-to-get-it-right">src7</a>]</li>
+    <li><strong>Missing video processing status tracking</strong>: Users see &quot;processing&quot; forever with no progress indication. Fix: Emit progress events from transcoding workers and expose via WebSocket or polling. [<a href="https://www.vdocipher.com/blog/youtube-tech-stack-architecture/">src6</a>]</li>
+    <li><strong>No origin shielding on the CDN</strong>: Every edge PoP cache miss hits origin directly, creating thundering herd. Fix: Add a shield/mid-tier cache layer between edge and origin. [<a href="https://openconnect.netflix.com/Open-Connect-Overview.pdf">src1</a>]</li>
+    <li><strong>Skipping thumbnail generation</strong>: Users cannot preview content, reducing engagement. Fix: Generate thumbnails at key intervals during transcoding using FFmpeg scene detection. [<a href="https://www.vdocipher.com/blog/youtube-tech-stack-architecture/">src6</a>]</li>
+    <li><strong>Long cache TTLs on manifests</strong>: Cannot update or remove content (DMCA, corrections) when manifests are cached for days. Fix: Short TTLs (30-60s) on <code>.m3u8</code> manifests, aggressive caching on immutable <code>.ts</code> segments. [<a href="https://www.mux.com/articles/adaptive-bitrate-streaming-how-it-works-and-how-to-get-it-right">src7</a>]</li>
+    <li><strong>No geographic routing</strong>: All traffic routes to a single region, adding 100-300ms latency for distant users. Fix: Multi-region deployment with DNS-based latency routing. [<a href="https://netflixtechblog.com/netflix-live-origin-41f1b0ad5371">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Validate HLS manifest structure
+ffprobe -v quiet -print_format json -show_streams master.m3u8
+
+# Check video codec, bitrate, and resolution
+ffprobe -v error -show_entries stream=codec_name,width,height,bit_rate -of csv input.mp4
+
+# Measure CDN cache hit ratio
+curl -sI https://cdn.example.com/video_id/720p/seg_0001.ts | grep -i x-cache
+
+# Monitor Kafka transcoding queue depth
+kafka-consumer-groups --bootstrap-server kafka:9092 --group transcode-workers --describe
+
+# Check S3 bucket size for cost estimation
+aws s3 ls s3://transcoded-video-segments --recursive --summarize | tail -2
+
+# Test HLS playback
+ffplay https://cdn.example.com/video_id/master.m3u8
+
+# Validate DRM encryption on segments
+ffprobe -v error -show_entries format_tags -of json encrypted_segment.ts</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Technology</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>H.264/AVC + AAC</td><td>Universal standard</td><td>Maximum device compatibility; baseline for all platforms</td></tr>
+      <tr><td>H.265/HEVC</td><td>Widely supported (2020+)</td><td>30-40% smaller files; Apple ecosystem strong; licensing fees</td></tr>
+      <tr><td>AV1</td><td>Growing adoption (2023+)</td><td>50-60% smaller than H.264; royalty-free; encoding 50-100x slower</td></tr>
+      <tr><td>HLS</td><td>Industry standard</td><td>Apple-developed; works everywhere with wide player support</td></tr>
+      <tr><td>DASH</td><td>Industry standard</td><td>MPEG-developed; primary for non-Apple; not native on iOS</td></tr>
+      <tr><td>CMAF</td><td>Emerging standard</td><td>Unifies HLS + DASH segments; reduces storage by 50%</td></tr>
+      <tr><td>Widevine L1/L3</td><td>Current DRM</td><td>Google-backed; Chrome, Android, smart TVs, Chromecast</td></tr>
+      <tr><td>FairPlay Streaming</td><td>Current DRM</td><td>Apple-only; required for Safari and iOS DRM playback</td></tr>
+      <tr><td>PlayReady</td><td>Current DRM</td><td>Microsoft-backed; Edge, Xbox, Windows, some smart TVs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Building a video-on-demand (VOD) platform at any scale</td><td>Building real-time video conferencing (Zoom/Teams)</td><td>WebRTC-based SFU/MCU architecture</td></tr>
+      <tr><td>Content is pre-recorded and can be transcoded ahead of time</td><td>Ultra-low latency live streaming required (&lt;3s)</td><td>LL-HLS, WebRTC, or RTMP-based live streaming</td></tr>
+      <tr><td>Adaptive bitrate playback across diverse devices and networks</td><td>Streaming short clips (&lt;30s) where quality switching has no time to help</td><td>Progressive download (single MP4 file)</td></tr>
+      <tr><td>Licensed content requires DRM protection</td><td>Internal/private video sharing within a small team</td><td>Simple S3 presigned URLs or Cloudflare Stream</td></tr>
+      <tr><td>&gt;10K concurrent viewers expected</td><td>Hosting a few dozen training videos for a small org</td><td>Managed platforms (Vimeo, Wistia, YouTube unlisted)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>AV1 encoding is extremely CPU-intensive (50-100x slower than H.264) &mdash; use hardware encoders (NVIDIA NVENC, Intel QSV) or cloud encoding services for production; CPU-only AV1 is only viable for batch processing with long deadlines</li>
+    <li>CDN egress costs dominate the bill at scale &mdash; Netflix spends ~$0.01/GB via Open Connect peering vs $0.05-0.09/GB on commercial CDNs; at 1PB/day this difference is millions per month</li>
+    <li>DRM adds significant implementation complexity and ongoing licensing costs &mdash; evaluate whether your content actually needs DRM before committing; user-generated content platforms typically do not need DRM</li>
+    <li>Per-title encoding optimization delivers 20-30% bandwidth savings but requires a sophisticated analysis pipeline &mdash; start with a fixed ladder and optimize later</li>
+    <li>Video transcoding is one of the most compute-intensive workloads in software &mdash; a 1-hour 4K video can take 4-8 hours to encode on a single CPU instance across all renditions</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+    <a href="/software/system-design/cdn-architecture/2026" data-relationship="related_to">CDN Architecture and Edge Caching</a>
+    <a href="/software/system-design/media-encoding-pipeline/2026" data-relationship="solves">Media Encoding Pipeline Design</a>
+    <a href="/software/system-design/live-streaming-platform/2026" data-relationship="alternative_to">Live Streaming Platform Design</a>
+    <a href="/software/system-design/video-conferencing/2026" data-relationship="often_confused_with">Video Conferencing System Design (WebRTC)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

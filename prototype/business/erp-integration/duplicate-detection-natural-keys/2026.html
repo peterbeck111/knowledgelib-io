@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Duplicate Detection and Natural Key Management | knowledgelib.io</title>
+  <meta name="description" content="How duplicate detection and natural key management differ across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, and Oracle ERP Cloud.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/duplicate-detection-natural-keys/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Duplicate Detection and Natural Key Management | knowledgelib.io">
+  <meta property="og:description" content="How duplicate detection and natural key management differ across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, and Oracle ERP Cloud. ExternalId upsert, alternate keys, cross-reference mapping tables, ID strategy decision tree. 8 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/duplicate-detection-natural-keys/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Duplicate Detection and Natural Key Management | knowledgelib.io">
+  <meta name="twitter:description" content="How duplicate detection and natural key management differ across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, and Oracle ERP Cloud. ExternalId upsert, alternate keys, cross-reference mapping tables, ID strategy decision tree. 8 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/duplicate-detection-natural-keys">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do duplicate detection and natural key management differ across ERPs?">
+  <meta name="ai:aliases" content="Cross-ERP duplicate prevention strategies and ExternalId patterns; Natural key vs surrogate key for ERP integration deduplication; How to prevent duplicate records when syncing between ERPs; ID mapping table design for multi-system ERP integration">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/duplicate-detection-natural-keys/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Salesforce (API v62.0); Oracle NetSuite (2024.2); SAP S/4HANA (2408); Microsoft Dynamics 365 (Dataverse API v9.2); Oracle ERP Cloud (24B)">
+  <meta name="ai:inputs_needed" content="erp_systems,record_types,id_strategy">
+  <meta name="ai:constraints" content="Salesforce max 7 External ID fields per std object; NetSuite external IDs are case-insensitive; NetSuite single externalId owner per record type; SAP has no native External ID field; D365 max 10 alternate keys per entity with max 5 fields per key; D365 special characters break upsert; Oracle ERP Cloud requires source system registration">
+  <meta name="ai:skip_this_unit_if" content="User needs idempotency patterns → business/erp-integration/idempotency-erp-integrations/2026; User needs single-system API reference → business/erp-integration/{system}-rest-api-capabilities/2026; User needs MDM strategy → business/erp-integration/master-data-management-erp/2026">
+  <meta name="ai:sections" content="tldr,system_profile,per_erp_duplicate_prevention,natural_key_design,xref_table_design,cross_system_comparison,code_examples,error_handling,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Duplicate Detection and Natural Key Management Across ERPs",
+    "headline": "Duplicate Detection and Natural Key Management Across ERPs",
+    "description": "Cross-system comparison of duplicate detection and natural key management across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, and Oracle ERP Cloud. Covers ExternalId upsert, alternate keys, fuzzy matching, OrigSystemReference, cross-reference mapping table design, and ID strategy decision tree.",
+    "keywords": ["duplicate detection", "natural keys", "ExternalId", "alternate keys", "ERP integration", "upsert", "cross-reference table", "Salesforce", "NetSuite", "SAP", "Dynamics 365", "Oracle ERP Cloud"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, NetSuite 2024.2, SAP S/4HANA 2408, Dynamics 365 Dataverse API v9.2, Oracle ERP Cloud 24B",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Insert or Update (Upsert) a Record Using an External ID",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "External IDs Overview — NetSuite Applications Suite",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP S/4HANA Business Partner Duplicate Check",
+        "url": "https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-sap/sap-s-4hana-business-partner-duplicate-check/ba-p/13494543"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dataverse: Duplicate Detection Rules vs Alternate Keys",
+        "url": "https://dynamics-chronicles.com/article/dataverse-duplicate-detection-rules-vs-alternate-keys"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Import Your Hub Source System Reference Data — Oracle Fusion Cloud",
+        "url": "https://docs.oracle.com/en/cloud/saas/customer-data-management/faudm/import-your-hub-source-system-reference-data.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Improving Dynamics 365 Data Integrations with Alternate Keys",
+        "url": "https://www.crmsoftwareblog.com/2021/01/improving-dynamics-365-data-integrations-with-alternate-keys/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Introduction to Cross Reference Tables — Oracle SOA Suite",
+        "url": "https://docs.oracle.com/en/middleware/soa-suite/soa/14.1.2/develop/introduction-cross-reference-tables.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite: SuiteTalk REST and External IDs",
+        "url": "https://timdietrich.me/blog/netsuite-suitetalk-rest-external-ids/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Duplicate Detection and Natural Key Management Across ERPs",
+    "description": "Cross-system comparison of duplicate detection mechanisms and natural key management across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, and Oracle ERP Cloud. Includes ExternalId patterns, alternate keys, fuzzy matching, cross-reference mapping table design, and ID strategy decision tree.",
+    "keywords": ["duplicate detection", "natural keys", "ExternalId", "alternate keys", "ERP integration", "cross-reference table"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Duplicate Detection and Natural Key Management Across ERPs" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do duplicate detection and natural key management differ across ERPs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP handles duplicate detection differently — Salesforce and NetSuite provide native ExternalId upsert, Dynamics 365 uses alternate keys at the database level, SAP relies on fuzzy matching or custom fields, and Oracle ERP Cloud uses OrigSystemReference with source system registration. Choose your ID strategy before writing integration code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Cross-ERP duplicate prevention strategies and ExternalId patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP handles duplicate detection differently — Salesforce and NetSuite provide native ExternalId upsert, Dynamics 365 uses alternate keys at the database level, SAP relies on fuzzy matching or custom fields, and Oracle ERP Cloud uses OrigSystemReference with source system registration. Choose your ID strategy before writing integration code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Natural key vs surrogate key for ERP integration deduplication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP handles duplicate detection differently — Salesforce and NetSuite provide native ExternalId upsert, Dynamics 365 uses alternate keys at the database level, SAP relies on fuzzy matching or custom fields, and Oracle ERP Cloud uses OrigSystemReference with source system registration. Choose your ID strategy before writing integration code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to prevent duplicate records when syncing between ERPs",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP handles duplicate detection differently — Salesforce and NetSuite provide native ExternalId upsert, Dynamics 365 uses alternate keys at the database level, SAP relies on fuzzy matching or custom fields, and Oracle ERP Cloud uses OrigSystemReference with source system registration. Choose your ID strategy before writing integration code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ID mapping table design for multi-system ERP integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP handles duplicate detection differently — Salesforce and NetSuite provide native ExternalId upsert, Dynamics 365 uses alternate keys at the database level, SAP relies on fuzzy matching or custom fields, and Oracle ERP Cloud uses OrigSystemReference with source system registration. Choose your ID strategy before writing integration code."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Duplicate Detection and Natural Key Management Across ERPs</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do duplicate detection and natural key management differ across ERPs?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/duplicate-detection-natural-keys/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, Oracle ERP Cloud</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Every ERP handles duplicate detection differently — Salesforce and NetSuite provide native ExternalId upsert, Dynamics 365 uses alternate keys at the database level, SAP relies on fuzzy matching or custom fields, and Oracle ERP Cloud uses OrigSystemReference with source system registration. Choose your ID strategy before writing integration code.</li>
+    <li><strong>Key limit</strong>: Salesforce max 7 External ID fields/std object; NetSuite 1 externalId value/record; D365 max 5 fields per alternate key with 10 keys per entity.</li>
+    <li><strong>Watch out for</strong>: NetSuite external IDs are case-insensitive — <code>ORD-001</code> and <code>ord-001</code> collide silently, causing 400 errors in production.</li>
+    <li><strong>Best for</strong>: Integration architects designing cross-system sync, middleware teams building ID mapping strategies, and developers implementing upsert logic across heterogeneous ERP landscapes.</li>
+    <li><strong>Decision</strong>: Use native ExternalId/alternate key when integrating 2 systems; build a cross-reference mapping table when integrating 3+ systems or when no native mechanism exists (SAP).</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card compares duplicate detection and natural key management across five major ERP systems. Each system takes a fundamentally different approach: Salesforce and NetSuite provide first-class External ID fields with native upsert support, Microsoft Dynamics 365 enforces uniqueness through database-level alternate keys, SAP S/4HANA relies on fuzzy matching (ICM) for business partners and custom Z-fields for other entities, and Oracle ERP Cloud uses a source system reference model (OrigSystemReference) that supports multiple source system registrations per record.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">Duplicate Detection Approach</th><th scope="col">Native Upsert?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>CRM / Platform</td><td>ExternalId fields + Duplicate Rules</td><td>Yes — PATCH upsert by ExternalId</td></tr>
+      <tr><td>Oracle NetSuite</td><td>ERP / Financials</td><td>ExternalId + internalId</td><td>Yes — upsert/upsertList operations</td></tr>
+      <tr><td>SAP S/4HANA</td><td>ERP / Manufacturing</td><td>Fuzzy matching (ICM) + custom Z-fields</td><td>No native upsert — use BAPI + custom logic</td></tr>
+      <tr><td>Microsoft Dynamics 365</td><td>CRM / ERP</td><td>Alternate Keys (DB index) + Duplicate Detection Rules</td><td>Yes — PATCH upsert by alternate key</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>ERP / Financials</td><td>OrigSystemReference + Source System Registration</td><td>Partial — FBDI merge, REST create-or-update</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Per-ERP Duplicate Prevention -->
+  <section id="per-erp-duplicate-prevention">
+  <h2>Per-ERP Duplicate Prevention</h2>
+
+  <h3>Salesforce: ExternalId + Duplicate Rules</h3>
+  <p>Salesforce provides the most integration-friendly duplicate prevention. Custom fields can be marked as <code>External ID</code> (checkbox) and optionally <code>Unique</code> (checkbox). An External ID field that is also marked Unique creates a database-level unique index, enabling deterministic upsert. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src1</a>]</p>
+  <p><strong>How it works</strong>: The REST API upsert endpoint (<code>PATCH /services/data/v62.0/sobjects/{Object}/{ExtIdField}/{ExtIdValue}</code>) performs an atomic insert-or-update. If a record with the given External ID value exists, it updates; otherwise, it creates.</p>
+  <p><strong>Duplicate Rules</strong> (separate feature): Configurable matching rules that fire on create/update via UI. By default, Duplicate Rules do NOT fire on API operations — you must explicitly set the <code>Sforce-Duplicate-Rule-Header</code> to <code>false</code> to enable them.</p>
+  <p><strong>Limits</strong>: Max 7 External ID fields per standard object, 25 per custom object. External ID fields count toward the custom field limit.</p>
+
+  <h3>Oracle NetSuite: ExternalId + internalId</h3>
+  <p>NetSuite uses a single <code>externalId</code> attribute on most record types, set via SOAP web services (SuiteTalk). The <code>upsert</code> and <code>upsertList</code> operations match on externalId — if found, update; if not, create. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</p>
+  <p><strong>Critical constraint</strong>: Each record can have only ONE externalId value, and only one integrated application should own the externalId for a given record type.</p>
+  <p><strong>Case sensitivity</strong>: External IDs in NetSuite are case-insensitive. <code>CUST-001</code> and <code>cust-001</code> are treated as the same value.</p>
+  <p><strong>REST API</strong>: Use <code>eid:</code> prefix in URLs — e.g., <code>GET /record/v1/customer/eid:CUST-001</code>. [<a href="https://timdietrich.me/blog/netsuite-suitetalk-rest-external-ids/">src8</a>]</p>
+  <p><strong>Not supported on</strong>: Accounting Periods, Budget Categories, Custom Field types, Custom Lists, Custom Record Types, Gift Certificates, Landed Costs, State records. SuiteScript does not support external IDs — only SOAP web services.</p>
+
+  <h3>SAP S/4HANA: Fuzzy Matching (ICM) + Custom Z-Fields</h3>
+  <p>SAP S/4HANA has NO native External ID field for arbitrary record types. Duplicate detection varies by object type. [<a href="https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-sap/sap-s-4hana-business-partner-duplicate-check/ba-p/13494543">src3</a>]</p>
+  <p><strong>Business Partners (BP)</strong>: Built-in fuzzy duplicate checking using Information Consistency Management (ICM). The system evaluates address data, name fields, and other attributes using configurable threshold values (0-100). A threshold of 90 means 90% data similarity triggers a duplicate flag.</p>
+  <p><strong>Other entities</strong>: No built-in duplicate check. Integration teams must either create custom Z-fields (e.g., <code>ZEXT_SYSTEM_ID</code>) with custom ABAP duplicate checks, or implement deduplication in middleware.</p>
+  <p><strong>BAPI considerations</strong>: BAPIs are not inherently idempotent. Calling <code>BAPI_BUPA_CREATE_FROM_DATA</code> twice with the same data creates two business partners. For idempotent creates, you must first call a search BAPI, then conditionally create or update.</p>
+
+  <h3>Microsoft Dynamics 365: Alternate Keys + Duplicate Detection Rules</h3>
+  <p>Dynamics 365 (Dataverse) provides two distinct mechanisms. [<a href="https://dynamics-chronicles.com/article/dataverse-duplicate-detection-rules-vs-alternate-keys">src4</a>]</p>
+  <p><strong>Alternate Keys</strong>: Database-level unique indexes. Once defined, they enforce absolute uniqueness. Alternate keys enable upsert via the Web API: <code>PATCH /api/data/v9.2/{entityset}({keyfield}='{value}')</code>. [<a href="https://www.crmsoftwareblog.com/2021/01/improving-dynamics-365-data-integrations-with-alternate-keys/">src6</a>]</p>
+  <p><strong>Duplicate Detection Rules</strong>: Application-level matching with configurable criteria. By default, these do NOT apply to Web API/SDK operations. To enable programmatically, set <code>MSCRM.SuppressDuplicateDetection: false</code> in the request header.</p>
+  <p><strong>Key restrictions</strong>: Max 10 alternate keys per entity, max 5 fields per key. Only certain field types allowed: Decimal Number, Whole Number, Single Line of Text, DateTime, Lookup, Option Set. Special characters (<code>/,&lt;,&gt;,*,%,&amp;,:,\,?,+</code>) in key field values break retrieve/update/upsert operations.</p>
+
+  <h3>Oracle ERP Cloud: OrigSystemReference + Source System Registration</h3>
+  <p>Oracle Fusion Cloud uses a source system reference model. Records are tracked through <code>HZ_ORIG_SYS_REFERENCES</code>, which maps source system names and source system reference IDs to internal Oracle party/object IDs. [<a href="https://docs.oracle.com/en/cloud/saas/customer-data-management/faudm/import-your-hub-source-system-reference-data.html">src5</a>]</p>
+  <p><strong>Multiple source references</strong>: Unlike Salesforce or NetSuite, Oracle allows multiple source system references per record. A customer record can simultaneously have references from SAP, Salesforce, and a legacy system.</p>
+  <p><strong>Source system registration</strong>: Each source system must be explicitly registered in Oracle Fusion before it can write source system references.</p>
+  <p><strong>Merge behavior</strong>: When importing data with <code>Allow Multiple Source System References</code> enabled, Oracle can merge duplicate source records into a single Oracle record.</p>
+  </section>
+
+  <!-- Natural Key Design -->
+  <section id="natural-key-design">
+  <h2>Natural Key Design Strategies</h2>
+
+  <h3>GUID vs Business Key vs Surrogate Key</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Strategy</th><th scope="col">Example</th><th scope="col">Pros</th><th scope="col">Cons</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Natural business key</strong></td><td>PO-2026-00142, SKU-WIDGET-BLU</td><td>Human-readable, meaningful, stable across systems</td><td>May not be unique across systems, can change</td><td>Orders, Products, Invoices</td></tr>
+      <tr><td><strong>GUID/UUID</strong></td><td><code>f47ac10b-58cc-4372...</code></td><td>Globally unique, no coordination needed</td><td>Not human-readable, large (36 chars), no semantic meaning</td><td>Greenfield systems, event IDs</td></tr>
+      <tr><td><strong>Composite key</strong></td><td><code>SF:ACC-1001</code> (system + local ID)</td><td>Unique across systems, traceable to source</td><td>Requires consistent formatting</td><td>Cross-system mapping with 2 systems</td></tr>
+      <tr><td><strong>Surrogate + mapping table</strong></td><td>Internal integer ID + xref table</td><td>Decouples systems, handles N-to-N mappings</td><td>Additional infrastructure, lookup overhead</td><td>3+ system integrations, MDM</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>ID Strategy Decision Tree</h3>
+  <pre><code>START — Choosing a cross-system ID strategy
+├── How many systems are being integrated?
+│   ├── 2 systems
+│   │   ├── Does the target ERP have native External ID?
+│   │   │   ├── YES (Salesforce, NetSuite, D365)
+│   │   │   │   └── Use native ExternalId/alternate key with source system ID
+│   │   │   └── NO (SAP, some Oracle scenarios)
+│   │   │       └── Create custom field + mapping table in middleware
+│   │   └── Is this bidirectional sync?
+│   │       ├── YES → Each system stores the other's ID in its External ID field
+│   │       └── NO → Source ID stored in target's External ID field
+│   ├── 3+ systems
+│   │   └── Build a cross-reference mapping table
+│   │       ├── In middleware/iPaaS (MuleSoft xref, Boomi cross-reference)
+│   │       └── OR in a dedicated mapping database
+│   └── Hub-and-spoke (MDM)
+│       └── Use Oracle OrigSystemReference pattern or MDM registry
+├── Do records have a natural business key?
+│   ├── YES (PO numbers, invoice numbers, SKUs)
+│   │   └── Use the natural key as External ID value
+│   └── NO (auto-generated IDs only)
+│       └── Generate a composite key: {source_system}:{local_id}
+└── Will records be created in multiple systems?
+    ├── YES → Pre-assign IDs before any system creates the record (UUID)
+    └── NO → Use source system's native ID as the External ID in target</code></pre>
+  </section>
+
+  <!-- Cross-Reference Mapping Table Design -->
+  <section id="xref-table-design">
+  <h2>Cross-Reference Mapping Table Design</h2>
+  <p>For integrations spanning 3+ systems, a dedicated cross-reference (xref) table is the most scalable approach. This pattern is used by Oracle SOA Suite, MuleSoft, Boomi, and most enterprise middleware platforms. [<a href="https://docs.oracle.com/en/middleware/soa-suite/soa/14.1.2/develop/introduction-cross-reference-tables.html">src7</a>]</p>
+
+  <h3>Schema Design</h3>
+  <pre><code class="language-sql">-- Cross-reference mapping table — one row per entity per system
+CREATE TABLE integration_xref (
+    xref_id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    entity_type     VARCHAR(50)  NOT NULL,  -- 'customer', 'order', 'product'
+    canonical_id    VARCHAR(100) NOT NULL,  -- System-neutral ID (GUID or sequence)
+    source_system   VARCHAR(30)  NOT NULL,  -- 'salesforce', 'netsuite', 'sap'
+    source_id       VARCHAR(255) NOT NULL,  -- ID in the source system
+    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted      BOOLEAN      NOT NULL DEFAULT FALSE,
+
+    CONSTRAINT uq_xref_entity_system_id
+        UNIQUE (entity_type, source_system, source_id),
+    CONSTRAINT uq_xref_entity_canonical_system
+        UNIQUE (entity_type, canonical_id, source_system)
+);
+
+CREATE INDEX idx_xref_lookup
+    ON integration_xref (entity_type, source_system, source_id);</code></pre>
+
+  <h3>Lookup Pattern</h3>
+  <pre><code class="language-sql">-- Translate Salesforce Account ID to NetSuite Customer ID
+SELECT target.source_id AS netsuite_id
+FROM integration_xref source
+JOIN integration_xref target
+    ON source.entity_type   = target.entity_type
+   AND source.canonical_id  = target.canonical_id
+WHERE source.entity_type  = 'customer'
+  AND source.source_system = 'salesforce'
+  AND source.source_id     = '001ABC123DEF'
+  AND target.source_system = 'netsuite'
+  AND target.is_deleted    = FALSE;</code></pre>
+
+  <h3>Common Value Pattern</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">canonical_id</th><th scope="col">salesforce</th><th scope="col">netsuite</th><th scope="col">sap</th><th scope="col">d365</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CM-001</td><td>001ABC</td><td>12345</td><td>BP-0001</td><td>{guid-1}</td></tr>
+      <tr><td>CM-002</td><td>001DEF</td><td>12346</td><td>BP-0002</td><td>{guid-2}</td></tr>
+      <tr><td>CM-003</td><td>001GHI</td><td>null</td><td>BP-0003</td><td>{guid-3}</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">NetSuite</th><th scope="col">SAP S/4HANA</th><th scope="col">Dynamics 365</th><th scope="col">Oracle ERP Cloud</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Native External ID field</strong></td><td>Yes — custom field, checkbox</td><td>Yes — built-in attribute</td><td>No — use custom Z-field</td><td>No — use Alternate Keys</td><td>Yes — OrigSystemReference</td></tr>
+      <tr><td><strong>Upsert operation</strong></td><td>PATCH by ExternalId</td><td>upsert/upsertList (SOAP), eid: (REST)</td><td>No native upsert</td><td>PATCH by Alternate Key</td><td>FBDI merge / REST with source key</td></tr>
+      <tr><td><strong>Uniqueness enforcement</strong></td><td>DB unique index (if Unique checked)</td><td>DB unique per record type</td><td>Fuzzy threshold (ICM, BP only)</td><td>DB unique nonclustered index</td><td>Unique per source system + ref</td></tr>
+      <tr><td><strong>Max external ID fields</strong></td><td>7/std, 25/custom</td><td>1 per record (single value)</td><td>Unlimited custom Z-fields</td><td>10 keys, 5 fields/key</td><td>Multiple source system refs</td></tr>
+      <tr><td><strong>Case sensitivity</strong></td><td>Case-sensitive</td><td>Case-insensitive</td><td>N/A (custom field dependent)</td><td>Case-sensitive</td><td>Case-sensitive</td></tr>
+      <tr><td><strong>Multi-system support</strong></td><td>1 field per source system</td><td>1 owner per record type</td><td>Custom design required</td><td>1 key per source system</td><td>Multiple refs per record (native)</td></tr>
+      <tr><td><strong>Duplicate rules (advisory)</strong></td><td>Yes — configurable matching</td><td>Limited (saved search)</td><td>Yes — ICM fuzzy (BP)</td><td>Yes — configurable rules</td><td>Yes — CDM duplicate identification</td></tr>
+      <tr><td><strong>API dedup default</strong></td><td>OFF — opt-in via header</td><td>Always (via upsert)</td><td>ON for BP fuzzy check</td><td>OFF — opt-in via header</td><td>ON for source system refs</td></tr>
+      <tr><td><strong>Bulk import dedup</strong></td><td>External ID on Bulk API 2.0</td><td>CSV import with externalId</td><td>Custom ABAP / middleware</td><td>DMF with alternate key</td><td>FBDI with source system key</td></tr>
+      <tr><td><strong>Best for</strong></td><td>CRM integration, multi-field matching</td><td>2-system ERP sync</td><td>Master data (BP) dedup</td><td>Platform integrations</td><td>Hub-and-spoke MDM</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Salesforce Upsert with ExternalId</h3>
+  <pre><code class="language-python"># Input:  Account record with external system ID
+# Output: Upserted record — created (201) or updated (204)
+
+import requests  # requests==2.32.3
+
+def sf_upsert_by_external_id(instance_url, access_token, sobject, ext_id_field, ext_id_value, record_data):
+    url = f"{instance_url}/services/data/v62.0/sobjects/{sobject}/{ext_id_field}/{ext_id_value}"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "Sforce-Duplicate-Rule-Header": "allowSave=true"
+    }
+    resp = requests.patch(url, json=record_data, headers=headers)
+    if resp.status_code == 201:    # Created
+        return resp.status_code, resp.json().get("id")
+    elif resp.status_code == 204:  # Updated (no content)
+        return resp.status_code, None
+    else:
+        raise Exception(f"Upsert failed: {resp.status_code} — {resp.text}")</code></pre>
+  <p>[<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src1</a>]</p>
+
+  <h3>JavaScript: NetSuite Upsert with ExternalId (SuiteTalk)</h3>
+  <pre><code class="language-javascript">// Input:  Customer record with externalId from source system
+// Output: Upserted NetSuite customer — created or updated
+
+const customer = {
+  recordType: 'customer',
+  externalId: externalId,         // Source system ID — case-insensitive!
+  companyName: customerData.name,
+  email: customerData.email,
+  subsidiary: { internalId: '1' } // Required for OneWorld
+};
+const result = await client.upsert({ record: customer });
+
+// REST alternative — use eid: prefix for external ID reference
+// GET    /record/v1/customer/eid:CUST-001       (retrieve)
+// PATCH  /record/v1/customer/eid:CUST-001       (update)</code></pre>
+  <p>[<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>, <a href="https://timdietrich.me/blog/netsuite-suitetalk-rest-external-ids/">src8</a>]</p>
+
+  <h3>Python: Dynamics 365 Upsert with Alternate Key</h3>
+  <pre><code class="language-python"># Input:  Contact record with alternate key (integration ID)
+# Output: Upserted D365 contact — created or updated
+
+def d365_upsert_by_alternate_key(org_url, access_token, entity_set, key_field, key_value, record_data):
+    url = f"{org_url}/api/data/v9.2/{entity_set}({key_field}='{key_value}')"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0"
+    }
+    resp = requests.patch(url, json=record_data, headers=headers)
+    if resp.status_code == 204:    return "updated", None
+    elif resp.status_code == 201:  return "created", resp.headers.get("OData-EntityId")
+    else: raise Exception(f"Upsert failed: {resp.status_code} — {resp.text}")</code></pre>
+  <p>[<a href="https://dynamics-chronicles.com/article/dataverse-duplicate-detection-rules-vs-alternate-keys">src4</a>, <a href="https://www.crmsoftwareblog.com/2021/01/improving-dynamics-365-data-integrations-with-alternate-keys/">src6</a>]</p>
+
+  <h3>cURL: SAP S/4HANA — Search Before Create (Duplicate Check)</h3>
+  <pre><code class="language-bash"># Step 1: Search for existing Business Partners matching the name
+curl -X GET \
+  "https://my-s4hana.com/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?\$filter=BusinessPartnerFullName eq 'Acme Corporation'" \
+  -H "Authorization: Basic $(echo -n 'user:pass' | base64)" \
+  -H "Accept: application/json"
+
+# Step 2: If no match found, create new BP with custom Z-field for external reference
+curl -X POST \
+  "https://my-s4hana.com/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner" \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: &lt;fetched-token&gt;" \
+  -d '{"BusinessPartnerCategory":"2","BusinessPartnerFullName":"Acme Corporation","YY1_ExtSystemID_bus":"SF:001ABC"}'
+
+# Note: SAP has no native upsert — you MUST search first, then create or update.</code></pre>
+  <p>[<a href="https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-sap/sap-s-4hana-business-partner-duplicate-check/ba-p/13494543">src3</a>]</p>
+  </section>
+
+  <!-- Error Handling -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code/Error</th><th scope="col">System</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>DUPLICATE_VALUE</code></td><td>Salesforce</td><td>Unique field constraint violated</td><td>Two records have same External ID value</td><td>Merge duplicates or fix source data</td></tr>
+      <tr><td><code>DUPLICATE_EXTERNAL_ID</code></td><td>Salesforce</td><td>Multiple source records share same External ID</td><td>Batch upsert file has duplicate keys</td><td>Deduplicate source file pre-submission</td></tr>
+      <tr><td>400 Bad Request</td><td>NetSuite</td><td>ExternalId collision</td><td>Attempting to set externalId to value already assigned to another record</td><td>Query existing record first, update instead</td></tr>
+      <tr><td><code>0x80040237</code></td><td>Dynamics 365</td><td>Alternate key violation</td><td>Record with same key values already exists</td><td>Use upsert (PATCH) instead of create (POST)</td></tr>
+      <tr><td><code>DUPLICATE_DETECTED</code></td><td>Dynamics 365</td><td>Duplicate Detection Rule triggered</td><td><code>SuppressDuplicateDetection: false</code> header set and match found</td><td>Merge records or set header to true</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Orphaned references after merge</strong>: When two duplicate records are merged in one ERP, the surviving record's External ID is kept but the losing record's ID becomes orphaned in other systems. Fix: <code>Subscribe to merge events and propagate the mapping update to all connected systems.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src1</a>]</li>
+    <li><strong>Case mismatch on NetSuite external IDs</strong>: Source system generates <code>ORD-001</code> and <code>ord-001</code> as different records; NetSuite treats them as the same. Fix: <code>Normalize all external IDs to uppercase before sending to NetSuite.</code> [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</li>
+    <li><strong>SAP duplicate check bypass on API</strong>: ICM fuzzy check fires in GUI but may only return warnings via OData/BAPI. Fix: <code>Implement pre-check search in middleware before BAPI create call.</code> [<a href="https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-sap/sap-s-4hana-business-partner-duplicate-check/ba-p/13494543">src3</a>]</li>
+    <li><strong>D365 alternate key special characters</strong>: If an External ID value contains <code>/,&lt;,&gt;,*,%,&amp;,:,\,?,+</code>, the upsert returns 400. Fix: <code>URL-encode values OR use a sanitized ID format (alphanumeric + hyphens only).</code> [<a href="https://dynamics-chronicles.com/article/dataverse-duplicate-detection-rules-vs-alternate-keys">src4</a>]</li>
+    <li><strong>Cascading update propagation failure</strong>: When a natural business key changes, all linked systems need updates. If one fails, the xref table becomes inconsistent. Fix: <code>Use surrogate keys (GUID/sequence) as canonical IDs — never use mutable business attributes as integration keys.</code> [<a href="https://docs.oracle.com/en/middleware/soa-suite/soa/14.1.2/develop/introduction-cross-reference-tables.html">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using Auto-Generated IDs as Integration Keys</h3>
+  <pre><code class="language-python"># BAD — Using Salesforce auto-generated record ID as the primary integration key
+# Salesforce IDs are org-specific — they change between sandboxes,
+# are meaningless to other systems, and cannot be pre-assigned.
+new_order = {
+    "sfdc_id": "a0B5e00000XYZ123",  # Salesforce auto-ID
+    "netsuite_id": None  # Race condition if NS create fails
+}</code></pre>
+
+  <h3>Correct: Using Stable Business Keys or Pre-Assigned GUIDs</h3>
+  <pre><code class="language-python"># GOOD — Pre-assign a canonical ID before creating in ANY system.
+import uuid
+canonical_id = str(uuid.uuid4())
+sf_external_id = f"INT:{canonical_id}"
+# Both systems receive the same cross-reference on first creation.
+# Retry-safe and traceable.</code></pre>
+
+  <h3>Wrong: Not Handling Case Sensitivity Across Systems</h3>
+  <pre><code class="language-javascript">// BAD — Passing External IDs without normalization
+const sourceId = "Acct-ABC-123";  // From Salesforce
+// NetSuite treats "Acct-ABC-123" and "acct-abc-123" as the SAME record</code></pre>
+
+  <h3>Correct: Normalize IDs Before Cross-System Operations</h3>
+  <pre><code class="language-javascript">// GOOD — Always normalize to consistent case before using as External ID
+function normalizeExternalId(systemId, targetSystem) {
+  if (targetSystem === 'netsuite') return systemId.toUpperCase();
+  return systemId.trim();
+}</code></pre>
+
+  <h3>Wrong: Single ExternalId Field for Multiple Source Systems</h3>
+  <pre><code class="language-python"># BAD — Reusing NetSuite's single externalId for multiple integration partners
+# System A writes externalId = "SYS_A:001"
+# System B overwrites externalId = "SYS_B:XYZ"
+# System A's reference is now broken.</code></pre>
+
+  <h3>Correct: Reserve ExternalId for Primary Integration, Use Custom Fields for Others</h3>
+  <pre><code class="language-python"># GOOD — Primary system uses externalId, others use custom fields
+netsuite_record = {
+    "externalId": "SALESFORCE:001ABC",          # Primary partner
+    "custentity_sap_bp_id": "BP-0001",           # Custom field for SAP
+    "custentity_legacy_crm_id": "C-3003"         # Custom field for legacy
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Not handling partial success in batch upserts</strong>: Salesforce Bulk API 2.0 processes records independently — some may succeed while others fail. If you retry the entire batch, you double-create the records that originally succeeded. Fix: <code>Parse the result file, retry only failed records using External ID upsert.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src1</a>]</li>
+    <li><strong>Assuming External ID uniqueness is global in NetSuite</strong>: External IDs are unique per record type, but Customer and Employee share an ID space. Fix: <code>Prefix external IDs with the record type: 'CUST:EMP-001' vs 'EMP:EMP-001'.</code> [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</li>
+    <li><strong>Confusing D365 Duplicate Detection Rules with enforcement</strong>: Duplicate Detection Rules are advisory and OFF by default for API calls. Alternate keys are absolute enforcement. Fix: <code>Define an alternate key for the integration key field; use duplicate detection rules only for UI-based data entry guidance.</code> [<a href="https://dynamics-chronicles.com/article/dataverse-duplicate-detection-rules-vs-alternate-keys">src4</a>]</li>
+    <li><strong>Forgetting to register source systems in Oracle ERP Cloud</strong>: Attempting to write OrigSystemReference values for an unregistered source system fails silently. Fix: <code>Register all source systems in Oracle Fusion Setup before running integrations.</code> [<a href="https://docs.oracle.com/en/cloud/saas/customer-data-management/faudm/import-your-hub-source-system-reference-data.html">src5</a>]</li>
+    <li><strong>Using mutable business attributes as natural keys</strong>: Company names change, email addresses change, even PO number formats change during ERP migrations. Fix: <code>Use immutable identifiers (auto-generated IDs, GUIDs) as integration keys. Store natural keys as searchable attributes, not as the integration key.</code> [<a href="https://docs.oracle.com/en/middleware/soa-suite/soa/14.1.2/develop/introduction-cross-reference-tables.html">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Salesforce: Check External ID field configuration
+curl -s "$SF_INSTANCE/services/data/v62.0/sobjects/Account/describe" \
+  -H "Authorization: Bearer $SF_TOKEN" | \
+  jq '.fields[] | select(.externalId==true) | {name, label, unique, type}'
+
+# NetSuite: Retrieve record by External ID (REST)
+curl -s "https://ACCOUNT_ID.suitetalk.api.netsuite.com/services/rest/record/v1/customer/eid:CUST-001" \
+  -H "Authorization: OAuth ..."
+
+# Dynamics 365: List alternate keys on an entity
+curl -s "$D365_URL/api/data/v9.2/EntityDefinitions(LogicalName='contact')/Keys" \
+  -H "Authorization: Bearer $D365_TOKEN" \
+  -H "OData-Version: 4.0"
+
+# Cross-reference table: Find orphaned mappings
+# SELECT x.* FROM integration_xref x
+# LEFT JOIN salesforce_accounts sf ON x.source_id = sf.id
+# WHERE sf.id IS NULL AND x.source_system = 'salesforce' AND x.is_deleted = FALSE;</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Building any multi-system integration that creates or syncs records</td><td>One-time data migration (load and done)</td><td>Pre-migration cleansing + dedup tools</td></tr>
+      <tr><td>Need deterministic insert-or-update behavior across systems</td><td>Single-system CRUD with no external references</td><td>Native platform duplicate rules only</td></tr>
+      <tr><td>Designing ID strategy for 3+ system integration</td><td>Systems only share read-only data (no writes)</td><td>Simple API queries — no dedup needed</td></tr>
+      <tr><td>Implementing real-time bidirectional sync</td><td>Event-driven read replicas with no writeback</td><td>Change Data Capture without dedup</td></tr>
+      <tr><td>MDM hub needs to track record provenance across sources</td><td>Already using a commercial MDM product</td><td>Vendor MDM (Informatica MDM, Reltio, Semarchy)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Duplicate detection capabilities vary dramatically between ERP editions — e.g., Salesforce Professional edition has limited External ID support; NetSuite OneWorld has different subsidiary-scoping rules for external IDs</li>
+    <li>SAP S/4HANA Cloud and On-Premise have different duplicate check capabilities — Cloud has restricted customization options for ICM threshold configuration</li>
+    <li>This card covers API-level duplicate detection; it does not cover UI-based data quality tools (Salesforce Data.com, D365 Data Quality add-on) which are separate product features</li>
+    <li>Dynamics 365 alternate key indexes may take minutes to hours to activate after creation — test in non-production before relying on them for integration</li>
+    <li>Oracle ERP Cloud's OrigSystemReference model requires Oracle Customer Data Management (CDM) module for full duplicate identification beyond basic source system matching</li>
+    <li>Cross-reference mapping table performance degrades with millions of mappings if not properly indexed — partition by entity_type for large-scale deployments</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="depends_on">Idempotency in ERP Integrations</a>
+    <a href="/business/erp-integration/master-data-management-erp/2026" data-relationship="related_to">Master Data Management for ERP</a>
+    <a href="/business/erp-integration/field-mapping-data-type-comparison/2026" data-relationship="related_to">Field Mapping and Data Type Comparison</a>
+    <a href="/business/erp-integration/salesforce-netsuite-integration/2026" data-relationship="solves">Salesforce-NetSuite Integration</a>
+    <a href="/business/erp-integration/salesforce-sap-integration/2026" data-relationship="solves">Salesforce-SAP Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

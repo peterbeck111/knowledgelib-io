@@ -1,0 +1,27 @@
+START — Query is slow
+├── Step 1: WHERE is time being spent?
+│   ├── pg_stat_statements → ORDER BY total_exec_time/mean_exec_time DESC
+│   ├── pg_stat_activity → real-time long-running queries
+│   └── slow query log → log_min_duration_statement = 500 [src2, src6]
+│
+├── Step 2: EXPLAIN (ANALYZE, BUFFERS) on the slow query
+│   ├── "Seq Scan" on table with many rows?
+│   │   ├── No WHERE clause → expected (full scan)
+│   │   ├── Low selectivity column → partial index or composite index needed [src1]
+│   │   └── Missing index → CREATE INDEX CONCURRENTLY [src1]
+│   ├── "estimated rows" >> "actual rows" (or >> actual)?
+│   │   └── Stale statistics → ANALYZE tablename; consider autovacuum tuning [src1]
+│   ├── Nested Loop with large outer row count?
+│   │   └── Join order/type issue → check enable_nestloop, add index on join col [src1, src4]
+│   ├── Sort in plan (no index for ORDER BY)?
+│   │   └── Add index on ORDER BY columns [src1]
+│   ├── "Buffers: shared hit=X read=Y" — high Y (reads)?
+│   │   └── Data not in shared_buffers → increase shared_buffers; check work_mem [src1, src4]
+│   └── Hash Join with high Memory Usage?
+│       └── Increase work_mem for the session [src1]
+│
+└── Step 3: Fix
+    ├── Add index → CREATE INDEX CONCURRENTLY [src1]
+    ├── Rewrite query → avoid SELECT *, func on indexed col, OFFSET pagination [src4, src5]
+    ├── Update stats → ANALYZE table; tune autovacuum [src1]
+    └── Tune memory → SET work_mem = '64MB'; increase shared_buffers [src1, src4]

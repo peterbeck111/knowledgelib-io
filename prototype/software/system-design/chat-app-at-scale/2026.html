@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Designing a Scalable Chat Application | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a scalable chat application like WhatsApp, Slack, or Discord.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/chat-app-at-scale/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Designing a Scalable Chat Application | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a scalable chat application like WhatsApp, Slack, or Discord. Component architecture table with 13 subsystems, decision tree by scale tier, WebSocket gateway + Kafka + Cassandra patterns, Node.js and Python code examples. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/chat-app-at-scale/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Designing a Scalable Chat Application | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a scalable chat application like WhatsApp, Slack, or Discord. Component architecture table with 13 subsystems, decision tree by scale tier, WebSocket gateway + Kafka + Cassandra patterns, Node.js and Python code examples. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.91">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/chat_app_at_scale">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a scalable chat application (WhatsApp/Slack clone)?">
+  <meta name="ai:aliases" content="design scalable chat system; WhatsApp system design architecture; Slack clone system design; real-time messaging system design; chat application architecture at scale; design messaging platform like Discord; scalable instant messaging backend; chat system design interview">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/chat-app-at-scale/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,chat_type,encryption">
+  <meta name="ai:constraints" content="WebSocket connections are stateful -- never route same user to different gateways mid-session; Message ordering must use monotonic sequence IDs per conversation, not wall-clock timestamps; E2E encryption means server cannot read content -- search/indexing must happen client-side; Database choice is load-dependent: PostgreSQL <10M msg/day, Cassandra/ScyllaDB >100M msg/day; Never fan out writes to all group members synchronously">
+  <meta name="ai:skip_this_unit_if" content="Building a simple chatbot with <100 users -> Use managed service (Intercom, Crisp); Need social media feed design -> software/system-design/news-feed-system/2026; Need video/voice calling -> software/system-design/video-calling-system/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Designing a Scalable Chat Application (WhatsApp/Slack Clone)",
+    "headline": "Designing a Scalable Chat Application (WhatsApp/Slack Clone)",
+    "description": "Complete system design reference for building a scalable real-time chat application. Covers WebSocket gateway architecture, message routing with Kafka, storage with Cassandra/ScyllaDB, presence with Redis, push notifications, media handling, and end-to-end encryption. Includes component architecture table, scale-based decision tree, and production code examples.",
+    "keywords": ["chat application architecture", "system design", "WhatsApp", "Slack", "Discord", "WebSocket", "Kafka", "Cassandra", "ScyllaDB", "real-time messaging", "scalable messaging", "presence service", "push notifications", "Signal Protocol", "message queue"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "WebSocket, Apache Kafka, Cassandra/ScyllaDB, Redis, PostgreSQL, FCM/APNs",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "How Discord Stores Trillions of Messages",
+        "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Real-time Messaging at Slack",
+        "url": "https://slack.engineering/real-time-messaging/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How WhatsApp Handles 40 Billion Messages Per Day",
+        "url": "https://blog.bytebytego.com/p/how-whatsapp-handles-40-billion-messages"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design a Chat Application like WhatsApp",
+        "url": "https://blog.algomaster.io/p/design-a-chat-application-like-whatsapp"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Messenger End-to-End Encryption Overview",
+        "url": "https://engineering.fb.com/wp-content/uploads/2023/12/MessengerEnd-to-EndEncryptionOverview_12-6-2023.pdf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Scaling Pub/Sub with WebSockets and Redis",
+        "url": "https://ably.com/blog/scaling-pub-sub-with-websockets-and-redis"
+      },
+      {
+        "@type": "WebPage",
+        "name": "WhatsApp Engineering — System Design Newsletter",
+        "url": "https://newsletter.systemdesign.one/p/whatsapp-engineering"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Designing a Scalable Chat Application (WhatsApp/Slack Clone)",
+    "description": "Structured knowledge unit covering scalable chat application system design: component architecture for 13 subsystems, scale-based decision tree (small to hyperscale), step-by-step implementation guide, WebSocket + Kafka + Cassandra patterns, Node.js and Python code examples, anti-patterns, and common pitfalls.",
+    "keywords": ["chat application", "system design", "WhatsApp architecture", "Slack architecture", "Discord architecture", "WebSocket", "Kafka", "Cassandra", "real-time messaging", "scalable backend"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Discord Engineering"},
+      {"@type": "Organization", "name": "Slack Engineering"},
+      {"@type": "Organization", "name": "ByteByteGo"},
+      {"@type": "Organization", "name": "Meta Engineering"},
+      {"@type": "Organization", "name": "AlgoMaster"},
+      {"@type": "Organization", "name": "Ably"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Designing a Scalable Chat Application (WhatsApp/Slack Clone)" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a scalable chat application (WhatsApp/Slack clone)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub — separated into stateless services behind a load balancer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "design scalable chat system",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub — separated into stateless services behind a load balancer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "WhatsApp system design architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub — separated into stateless services behind a load balancer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Slack clone system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub — separated into stateless services behind a load balancer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "real-time messaging system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub — separated into stateless services behind a load balancer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "chat application architecture at scale",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub — separated into stateless services behind a load balancer."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Designing a Scalable Chat Application (WhatsApp/Slack Clone)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a scalable chat application (WhatsApp/Slack clone)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/chat-app-at-scale/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A scalable chat app requires WebSocket gateways for persistent connections, a message queue (Kafka/NATS) for async delivery, a write-optimized database (Cassandra/ScyllaDB) for message storage, and Redis for presence/pub-sub &mdash; separated into stateless services behind a load balancer.</li>
+    <li><strong>Key tool/command</strong>: <code>WebSocket + Kafka + Cassandra + Redis Pub/Sub</code></li>
+    <li><strong>Watch out for</strong>: Storing messages in a relational database without partitioning &mdash; PostgreSQL works for &lt;10M messages/day, but unsharded SQL becomes a bottleneck at scale.</li>
+    <li><strong>Works with</strong>: Any language/framework. Production stacks: Erlang/Elixir (WhatsApp/Discord), Java (Slack), Go (large-scale custom), Node.js (startups/MVPs).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>WebSocket connections are stateful &mdash; never route the same user to different gateway servers mid-session without a reconnection protocol</li>
+    <li>Message ordering must be guaranteed per-conversation &mdash; use a monotonic sequence ID per chat, not wall-clock timestamps</li>
+    <li>End-to-end encryption (Signal Protocol) means the server cannot read message content &mdash; all search/indexing must happen client-side</li>
+    <li>Database choice is load-dependent: PostgreSQL for &lt;10M messages/day, Cassandra/ScyllaDB for &gt;100M messages/day</li>
+    <li>Never fan out writes to all group members synchronously &mdash; use async message queues (Kafka/NATS) to decouple send from deliver</li>
+    <li>Group messages create O(N) fanout per message &mdash; cap group size or use tiered delivery (online members via WebSocket, offline via push queue)</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core component architecture table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Gateway / Load Balancer</td><td>Route client connections, TLS termination, rate limiting</td><td>Nginx, HAProxy, AWS ALB, Envoy</td><td>Horizontal &mdash; add more LB instances behind DNS round-robin</td></tr>
+      <tr><td>WebSocket Gateway</td><td>Maintain persistent bidirectional connections with clients</td><td>Custom (Elixir/Erlang, Go, Node.js), Socket.IO</td><td>Horizontal &mdash; shard by user_id; each server handles 100K-1M connections</td></tr>
+      <tr><td>Chat Service</td><td>Message validation, routing, conversation logic</td><td>Java, Go, Node.js, Elixir</td><td>Stateless &mdash; scale horizontally behind gateway</td></tr>
+      <tr><td>Message Queue</td><td>Decouple send from deliver, buffer during spikes, guarantee delivery</td><td>Apache Kafka, NATS JetStream, RabbitMQ, Amazon SQS</td><td>Partition by conversation_id; add partitions for throughput</td></tr>
+      <tr><td>Message Storage</td><td>Persist all messages durably</td><td>Cassandra, ScyllaDB, PostgreSQL (small scale), TiDB</td><td>Partition by (conversation_id, time_bucket); add nodes for capacity</td></tr>
+      <tr><td>User/Group Metadata DB</td><td>User profiles, contacts, group membership, settings</td><td>PostgreSQL, MySQL, CockroachDB</td><td>Read replicas + connection pooling; shard at extreme scale</td></tr>
+      <tr><td>Presence Service</td><td>Track online/offline/typing status per user</td><td>Redis (TTL keys + Pub/Sub), custom Erlang process</td><td>Redis Cluster with key-based sharding; TTL for auto-expiry</td></tr>
+      <tr><td>Media Storage</td><td>Store images, videos, voice messages, file attachments</td><td>AWS S3, Google Cloud Storage, Cloudflare R2</td><td>Object storage is inherently scalable; use CDN for delivery</td></tr>
+      <tr><td>Push Notification Service</td><td>Deliver messages to offline/backgrounded users</td><td>FCM (Android), APNs (iOS), custom push gateway</td><td>Queue-based &mdash; consume from message queue for offline users</td></tr>
+      <tr><td>Search / Indexing</td><td>Full-text search across message history</td><td>Elasticsearch, OpenSearch, Meilisearch</td><td>Shard by user_id or workspace_id; index asynchronously</td></tr>
+      <tr><td>Cache Layer</td><td>Hot data: recent messages, session data, user profiles</td><td>Redis, Memcached</td><td>Redis Cluster; cache aside pattern with TTL</td></tr>
+      <tr><td>CDN</td><td>Deliver static assets and media globally</td><td>Cloudflare, CloudFront, Fastly</td><td>Edge-based; auto-scales</td></tr>
+      <tr><td>Encryption Service</td><td>Key exchange, E2E encryption (Signal Protocol)</td><td>libsignal, custom X3DH + Double Ratchet</td><td>Stateless &mdash; keys stored client-side; server only brokers key exchange</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START &mdash; How many concurrent users?
+&#9500;&#9472;&#9472; &lt;1K concurrent users?
+&#9474;   &#9500;&#9472;&#9472; YES &rarr; SIMPLE STACK
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Single Node.js/Go server with WebSocket (Socket.IO or ws)
+&#9474;   &#9474;   &#9500;&#9472;&#9472; PostgreSQL for messages + users
+&#9474;   &#9474;   &#9500;&#9472;&#9472; In-memory presence (Map/Set on the server)
+&#9474;   &#9474;   &#9492;&#9472;&#9472; No message queue needed
+&#9474;   &#9492;&#9472;&#9472; NO &darr;
+&#9500;&#9472;&#9472; 1K&ndash;100K concurrent users?
+&#9474;   &#9500;&#9472;&#9472; YES &rarr; DISTRIBUTED STACK
+&#9474;   &#9474;   &#9500;&#9472;&#9472; 2-10 WebSocket gateways behind load balancer
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Redis Pub/Sub for cross-server message routing
+&#9474;   &#9474;   &#9500;&#9472;&#9472; PostgreSQL (partitioned) or MongoDB
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Kafka or RabbitMQ for async delivery
+&#9474;   &#9474;   &#9492;&#9472;&#9472; S3 + CDN for media
+&#9474;   &#9492;&#9472;&#9472; NO &darr;
+&#9500;&#9472;&#9472; 100K&ndash;10M concurrent users?
+&#9474;   &#9500;&#9472;&#9472; YES &rarr; LARGE-SCALE STACK
+&#9474;   &#9474;   &#9500;&#9472;&#9472; 50-500 WebSocket gateways, sharded by user_id
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Kafka for all message routing
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Cassandra/ScyllaDB for message storage
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Redis Cluster for presence + cache
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Elasticsearch for search
+&#9474;   &#9492;&#9472;&#9472; NO &darr;
+&#9492;&#9472;&#9472; &gt;10M concurrent users (WhatsApp/Discord scale)?
+    &#9500;&#9472;&#9472; YES &rarr; HYPERSCALE STACK
+    &#9474;   &#9500;&#9472;&#9472; Custom WebSocket layer (Erlang/BEAM or Rust)
+    &#9474;   &#9500;&#9472;&#9472; Per-user message queues
+    &#9474;   &#9500;&#9472;&#9472; ScyllaDB or custom storage
+    &#9474;   &#9500;&#9472;&#9472; Multi-region deployment with geo-routing
+    &#9474;   &#9500;&#9472;&#9472; Signal Protocol E2E encryption
+    &#9474;   &#9492;&#9472;&#9472; Dedicated teams per subsystem (&gt;50 engineers)
+    &#9492;&#9472;&#9472; DEFAULT &rarr; Start with DISTRIBUTED STACK, evolve as needed</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define message data model and API contract</h3>
+  <p>Design the core message schema before writing any code. Every message needs a globally unique ID, a conversation reference, sender, timestamp, and content. Use a snowflake-style ID or ULID for sortable unique IDs. [<a href="https://blog.algomaster.io/p/design-a-chat-application-like-whatsapp">src4</a>]</p>
+  <pre><code class="language-sql">-- Core message schema (PostgreSQL for small scale)
+CREATE TABLE messages (
+    message_id    BIGINT PRIMARY KEY,  -- Snowflake ID
+    conversation_id BIGINT NOT NULL,
+    sender_id     BIGINT NOT NULL,
+    content       TEXT,
+    content_type  VARCHAR(20) DEFAULT 'text',
+    media_url     TEXT,
+    created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+    status        VARCHAR(10) DEFAULT 'sent',
+    sequence_num  BIGINT NOT NULL
+);
+
+CREATE INDEX idx_messages_conv_seq
+  ON messages (conversation_id, sequence_num DESC);</code></pre>
+  <p><strong>Verify</strong>: Schema supports both 1:1 and group conversations with the same table structure.</p>
+
+  <h3>2. Build the WebSocket gateway layer</h3>
+  <p>The gateway maintains persistent WebSocket connections. Use consistent hashing on user_id to route reconnections to the same server. Each server handles 100K-1M connections. [<a href="https://slack.engineering/real-time-messaging/">src2</a>]</p>
+  <pre><code>                ┌─────────────────────────────────────────┐
+                │           Load Balancer (L4/L7)         │
+                │    (sticky sessions by user_id hash)    │
+                └──────────┬──────────┬──────────┬────────┘
+                           │          │          │
+                ┌──────────▼┐  ┌──────▼──────┐  ┌▼─────────┐
+                │ Gateway-1  │  │  Gateway-2  │  │ Gateway-3 │
+                │ 500K conns │  │  500K conns │  │ 500K conns│
+                └──────┬─────┘  └──────┬──────┘  └─────┬─────┘
+                       │               │               │
+                ┌──────▼───────────────▼───────────────▼──────┐
+                │          Redis Pub/Sub Cluster               │
+                └──────────────────┬──────────────────────────┘
+                                   │
+                ┌──────────────────▼──────────────────────────┐
+                │              Kafka Cluster                   │
+                └─────────────────────────────────────────────┘</code></pre>
+  <p><strong>Verify</strong>: Load test with <code>artillery</code> &mdash; each gateway should handle 100K+ concurrent WebSocket connections on a 16GB RAM instance.</p>
+
+  <h3>3. Implement message routing and delivery</h3>
+  <p>When User A sends a message: Gateway receives &rarr; Chat Service validates &rarr; Kafka queue &rarr; Consumer delivers to User B's gateway (or push notification if offline). [<a href="https://blog.bytebytego.com/p/how-whatsapp-handles-40-billion-messages">src3</a>]</p>
+  <pre><code>Message Flow (1:1):
+
+User A     Gateway-1     Chat Service     Kafka     Gateway-2     User B
+  │            │               │            │            │           │
+  │── send ──&gt;│               │            │            │           │
+  │            │── validate ─&gt;│            │            │           │
+  │            │&lt;── ack ──────│            │            │           │
+  │&lt;── ack ───│               │            │            │           │
+  │            │               │── produce &gt;│            │           │
+  │            │               │            │── consume &gt;│           │
+  │            │               │            │            │── deliver &gt;│
+  │            │               │            │            │&lt;─ delivered│
+  │&lt;── delivered (via Redis Pub/Sub) ──────────────────│           │</code></pre>
+  <p><strong>Verify</strong>: Send a message between two users on different gateways &mdash; arrival in &lt;500ms.</p>
+
+  <h3>4. Set up message storage with write optimization</h3>
+  <p>For high-volume messaging (&gt;100M msg/day), use Cassandra/ScyllaDB partitioned by (conversation_id, time_bucket) for O(1) writes and efficient range reads. Discord migrated from Cassandra to ScyllaDB in 2022 for 5x performance improvement. [<a href="https://discord.com/blog/how-discord-stores-trillions-of-messages">src1</a>]</p>
+  <pre><code class="language-sql">-- Cassandra/ScyllaDB schema
+CREATE TABLE chat.messages (
+    conversation_id bigint,
+    bucket          text,       -- '2026-02'
+    message_id      bigint,
+    sender_id       bigint,
+    content         blob,
+    content_type    text,
+    media_url       text,
+    created_at      timestamp,
+    PRIMARY KEY ((conversation_id, bucket), message_id)
+) WITH CLUSTERING ORDER BY (message_id DESC);</code></pre>
+  <p><strong>Verify</strong>: Cassandra handles &gt;100K writes/sec per node. Read recent 50 messages in &lt;10ms.</p>
+
+  <h3>5. Implement presence and typing indicators</h3>
+  <p>Use Redis TTL keys for presence. Each connected user has a key expiring after 30s. Clients send heartbeats every 15s. Typing indicators are ephemeral &mdash; never persist them. [<a href="https://ably.com/blog/scaling-pub-sub-with-websockets-and-redis">src6</a>]</p>
+  <pre><code>Presence Architecture:
+
+Client heartbeat (every 15s)
+        │
+        ▼
+┌─────────────────┐     ┌─────────────────┐
+│  Gateway Server  │────&gt;│  Redis Cluster   │
+└─────────────────┘     │  presence:{uid}  │
+                         │  TTL = 30s       │
+                         └────────┬────────┘
+                                  │ Pub/Sub
+                    ┌─────────────┼──────────────┐
+                    │             │              │
+               Gateway-1    Gateway-2      Gateway-3</code></pre>
+  <p><strong>Verify</strong>: Set presence key with 30s TTL, wait 31s, confirm key expired. Typing indicator latency &lt;200ms.</p>
+
+  <h3>6. Add push notifications for offline delivery</h3>
+  <p>When the consumer detects the recipient is offline (no presence key in Redis), route to push notification service. Use FCM for Android and APNs for iOS. Batch notifications to avoid spamming. [<a href="https://newsletter.systemdesign.one/p/whatsapp-engineering">src7</a>]</p>
+  <p><strong>Verify</strong>: Disconnect a user, send a message, verify push arrives within 3 seconds. On reconnect, all missed messages sync.</p>
+
+  <h3>7. Design media handling pipeline</h3>
+  <p>Never send media through WebSocket or message queue. Use pre-signed URL upload: client uploads directly to S3/R2, then sends a message with the media reference (&lt;1KB). [<a href="https://blog.bytebytego.com/p/how-whatsapp-handles-40-billion-messages">src3</a>]</p>
+  <p><strong>Verify</strong>: Upload 10MB image, accessible via CDN in &lt;2 seconds. Message with media reference is &lt;1KB.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js: WebSocket Chat Gateway Server</h3>
+  <pre><code class="language-javascript">// Input:  WebSocket connections from authenticated clients
+// Output: Real-time message delivery between connected users
+// Deps:   npm install ws ioredis uuid (ws@8.x, ioredis@5.x)
+
+const WebSocket = require('ws');
+const Redis = require('ioredis');
+
+const HEARTBEAT_INTERVAL = 15000;
+const PRESENCE_TTL = 30;
+
+const redisPub = new Redis(process.env.REDIS_URL);
+const redisSub = new Redis(process.env.REDIS_URL);
+const redisStore = new Redis(process.env.REDIS_URL);
+
+const wss = new WebSocket.Server({ port: 8080 });
+const clients = new Map(); // user_id -&gt; WebSocket
+
+wss.on('connection', (ws, req) =&gt; {
+  const userId = authenticateFromToken(req);
+  if (!userId) { ws.close(4001, 'Unauthorized'); return; }
+
+  clients.set(userId, ws);
+  refreshPresence(userId);
+  redisSub.subscribe(`deliver:${userId}`);
+
+  ws.on('message', async (data) =&gt; {
+    const msg = JSON.parse(data);
+    if (msg.type === 'heartbeat') { refreshPresence(userId); return; }
+    if (msg.type === 'send_message') {
+      const messageId = generateSnowflakeId();
+      const envelope = {
+        message_id: messageId,
+        conversation_id: msg.conversation_id,
+        sender_id: userId,
+        content: msg.content,
+        content_type: msg.content_type || 'text',
+        created_at: new Date().toISOString(),
+      };
+      ws.send(JSON.stringify({ type: 'ack', message_id: messageId }));
+      await redisPub.publish(
+        `conversation:${msg.conversation_id}`,
+        JSON.stringify(envelope)
+      );
+    }
+  });
+
+  ws.on('close', () =&gt; {
+    clients.delete(userId);
+    redisStore.del(`presence:${userId}`);
+    redisSub.unsubscribe(`deliver:${userId}`);
+  });
+});
+
+redisSub.on('message', (channel, message) =&gt; {
+  const [prefix, targetUserId] = channel.split(':');
+  if (prefix === 'deliver' &amp;&amp; clients.has(targetUserId)) {
+    const ws = clients.get(targetUserId);
+    if (ws.readyState === WebSocket.OPEN) ws.send(message);
+  }
+});
+
+async function refreshPresence(userId) {
+  await redisStore.setex(`presence:${userId}`, PRESENCE_TTL, Date.now());
+}
+
+function generateSnowflakeId() {
+  return Date.now() * 1000 + Math.floor(Math.random() * 1000);
+}
+
+console.log('WebSocket gateway running on :8080');</code></pre>
+
+  <h3>Python: Kafka Message Consumer with Delivery Logic</h3>
+  <pre><code class="language-python"># Input:  Kafka messages from chat service
+# Output: Routes to online users (Redis) or push notifications (offline)
+# Deps:   pip install confluent-kafka==2.3.0 redis==5.0.0 firebase-admin==6.4.0
+
+import json
+from confluent_kafka import Consumer, KafkaError
+import redis
+import firebase_admin
+from firebase_admin import messaging
+
+redis_client = redis.Redis.from_url("redis://localhost:6379", decode_responses=True)
+firebase_admin.initialize_app()
+
+consumer = Consumer({
+    'bootstrap.servers': 'kafka:9092',
+    'group.id': 'message-delivery-group',
+    'auto.offset.reset': 'earliest',
+    'enable.auto.commit': False,
+})
+consumer.subscribe(['chat.messages'])
+
+def is_user_online(user_id: str) -&gt; bool:
+    return redis_client.exists(f"presence:{user_id}") &gt; 0
+
+def deliver_to_online_user(user_id: str, message: dict):
+    redis_client.publish(f"deliver:{user_id}", json.dumps(message))
+
+def send_push_notification(user_id: str, message: dict):
+    token = redis_client.get(f"device_token:{user_id}")
+    if not token:
+        return
+    notification = messaging.Message(
+        token=token,
+        notification=messaging.Notification(
+            title=f"New message from {message.get('sender_name', 'Someone')}",
+            body=message.get('content', '')[:100],
+        ),
+        data={'conversation_id': str(message['conversation_id'])},
+    )
+    messaging.send(notification)
+
+def process_message(raw_message: str):
+    message = json.loads(raw_message)
+    sender_id = str(message['sender_id'])
+    members = redis_client.smembers(f"conv_members:{message['conversation_id']}")
+    for member_id in members:
+        if member_id == sender_id:
+            continue
+        if is_user_online(member_id):
+            deliver_to_online_user(member_id, message)
+        else:
+            send_push_notification(member_id, message)
+
+try:
+    while True:
+        msg = consumer.poll(timeout=1.0)
+        if msg is None or msg.error():
+            continue
+        process_message(msg.value().decode('utf-8'))
+        consumer.commit(msg)
+except KeyboardInterrupt:
+    pass
+finally:
+    consumer.close()</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Polling for new messages via HTTP</h3>
+  <pre><code class="language-javascript">// ❌ BAD &mdash; HTTP polling wastes bandwidth and adds latency.
+// At 100K users polling every 2s = 50K req/sec for mostly empty responses.
+setInterval(async () =&gt; {
+  const res = await fetch('/api/messages?since=' + lastTimestamp);
+  const messages = await res.json();
+  messages.forEach(renderMessage);
+}, 2000);</code></pre>
+
+  <h3>Correct: Use persistent WebSocket connections</h3>
+  <pre><code class="language-javascript">// ✅ GOOD &mdash; WebSocket: server pushes instantly, zero wasted requests.
+const ws = new WebSocket('wss://chat.example.com?token=JWT_HERE');
+ws.onmessage = (event) =&gt; {
+  const message = JSON.parse(event.data);
+  renderMessage(message);
+};
+ws.onclose = () =&gt; setTimeout(connect, Math.min(1000 * 2 ** retries++, 30000));</code></pre>
+
+  <h3>Wrong: Sending media files through the message pipeline</h3>
+  <pre><code class="language-python"># ❌ BAD &mdash; 10MB video through Kafka + WebSocket = memory pressure
+message = {
+    "conversation_id": 123,
+    "content": base64.b64encode(video_bytes).decode(),  # 13MB base64!
+    "content_type": "video"
+}
+kafka_producer.produce('chat.messages', json.dumps(message))</code></pre>
+
+  <h3>Correct: Upload media to object storage, send reference only</h3>
+  <pre><code class="language-python"># ✅ GOOD &mdash; Upload to S3, send &lt;1KB reference through message pipeline.
+upload_url = s3.generate_presigned_url('put_object',
+    Params={'Bucket': 'chat-media', 'Key': f'{uuid4()}.mp4'},
+    ExpiresIn=3600)
+# Client uploads directly to S3, then sends:
+message = {
+    "conversation_id": 123,
+    "media_key": "abc123.mp4",
+    "content_type": "video"
+}</code></pre>
+
+  <h3>Wrong: Using wall-clock timestamps for message ordering</h3>
+  <pre><code class="language-python"># ❌ BAD &mdash; Clock skew between servers causes out-of-order messages.
+message = {
+    "id": uuid4(),
+    "created_at": datetime.utcnow(),  # different servers = different clocks
+    "content": "Hello"
+}</code></pre>
+
+  <h3>Correct: Use per-conversation monotonic sequence numbers</h3>
+  <pre><code class="language-python"># ✅ GOOD &mdash; Atomic increment per conversation guarantees order.
+sequence_num = redis_client.incr(f"seq:{conversation_id}")
+message = {
+    "id": generate_snowflake_id(),
+    "sequence_num": sequence_num,
+    "created_at": datetime.utcnow(),  # informational only
+    "content": "Hello"
+}</code></pre>
+
+  <h3>Wrong: Shared database for all microservices</h3>
+  <pre><code class="language-sql">-- ❌ BAD &mdash; Chat, presence, and notification services
+-- all reading/writing the same PostgreSQL instance.
+-- One slow query in notifications blocks message delivery.</code></pre>
+
+  <h3>Correct: Dedicated databases per service domain</h3>
+  <pre><code class="language-yaml"># ✅ GOOD &mdash; Each service owns its data store. Failures are isolated.
+services:
+  chat-service:
+    database: cassandra-cluster
+  user-service:
+    database: postgresql-primary
+  presence-service:
+    database: redis-cluster
+  search-service:
+    database: elasticsearch-cluster</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Thundering herd on reconnect</strong>: When a gateway server restarts, all its clients (100K+) reconnect simultaneously to surviving servers, causing cascading failures. Fix: implement exponential backoff with jitter &mdash; <code>delay = min(base * 2^attempt + random(0, 1000), 30000)</code>. [<a href="https://slack.engineering/real-time-messaging/">src2</a>]</li>
+    <li><strong>Unbounded group fanout</strong>: A message to a 10K-member group triggers 10K write operations synchronously. Fix: cap group delivery at 256 via WebSocket, use push notification batching for the rest and tiered delivery. [<a href="https://blog.bytebytego.com/p/how-whatsapp-handles-40-billion-messages">src3</a>]</li>
+    <li><strong>Hot partition in Cassandra</strong>: A viral group chat puts millions of messages into one partition. Fix: add a time-bucket to the partition key &mdash; <code>PRIMARY KEY ((conversation_id, bucket), message_id)</code> where bucket is <code>YYYY-MM</code>. [<a href="https://discord.com/blog/how-discord-stores-trillions-of-messages">src1</a>]</li>
+    <li><strong>Missing messages on reconnect</strong>: User goes offline for 2 hours, reconnects, but only gets messages since their last seen timestamp (clock skew loses messages). Fix: use last received <code>sequence_num</code> per conversation to request sync. [<a href="https://blog.algomaster.io/p/design-a-chat-application-like-whatsapp">src4</a>]</li>
+    <li><strong>Presence storm</strong>: Broadcasting online/offline to all contacts on every state change overwhelms the system. Fix: batch presence updates (publish every 5s) and only send to contacts who have the app open. [<a href="https://ably.com/blog/scaling-pub-sub-with-websockets-and-redis">src6</a>]</li>
+    <li><strong>No backpressure on WebSocket sends</strong>: Server pushes faster than client can process, filling OS send buffers. Fix: monitor <code>ws.bufferedAmount</code>; if it exceeds threshold, queue messages server-side and deliver on drain. [<a href="https://slack.engineering/real-time-messaging/">src2</a>]</li>
+    <li><strong>Single Redis instance for Pub/Sub</strong>: All cross-server routing through one Redis creates a SPOF and throughput ceiling (~200K msg/sec). Fix: use Redis Cluster with hash-tag routing. [<a href="https://ably.com/blog/scaling-pub-sub-with-websockets-and-redis">src6</a>]</li>
+    <li><strong>Not separating read and write paths</strong>: Read-heavy ops compete with write-heavy ops on the same database. Fix: CQRS &mdash; writes to Cassandra, reads from a separate cache or read-optimized store. [<a href="https://discord.com/blog/how-discord-stores-trillions-of-messages">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern/Technology</th><th scope="col">Status</th><th scope="col">Notable Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>WebSocket (RFC 6455)</td><td>Standard since 2011</td><td>HTTP/2 WebSocket (RFC 8441, 2018)</td><td>All modern browsers support; use <code>wss://</code> in production</td></tr>
+      <tr><td>Cassandra 4.x &rarr; ScyllaDB</td><td>Industry shift 2022-2024</td><td>Discord migrated 2022; 5x performance</td><td>ScyllaDB is Cassandra-compatible; drop-in replacement with CQL</td></tr>
+      <tr><td>Signal Protocol (libsignal)</td><td>Current E2EE standard</td><td>PQXDH (2023): post-quantum key agreement</td><td>WhatsApp, Messenger, Google Messages all use Signal Protocol</td></tr>
+      <tr><td>Kafka &rarr; NATS JetStream</td><td>Emerging alternative 2024+</td><td>Lower latency, simpler operations</td><td>NATS better for &lt;1M msg/sec; Kafka for higher throughput</td></tr>
+      <tr><td>Socket.IO &rarr; native WebSocket</td><td>Simplification trend</td><td>Socket.IO adds overhead</td><td>For &gt;100K connections, use raw <code>ws</code> library</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Building a real-time 1:1 and group messaging product</td><td>Need async communication (email-like, hours between replies)</td><td>Email system design or task queue architecture</td></tr>
+      <tr><td>Users expect &lt;500ms message delivery latency</td><td>Message delivery can be delayed 5-30 seconds</td><td>HTTP-based notification system with polling</td></tr>
+      <tr><td>Need to support 10K+ concurrent connected users</td><td>&lt;100 concurrent users on a single server</td><td>Simple WebSocket server without distributed infrastructure</td></tr>
+      <tr><td>Messages must be persisted and searchable</td><td>Ephemeral messages only (no persistence needed)</td><td>WebRTC data channels for P2P ephemeral messaging</td></tr>
+      <tr><td>Multiple client platforms (web, iOS, Android, desktop)</td><td>Single-platform internal tool</td><td>Platform-specific SDK (e.g., Firebase Realtime Database)</td></tr>
+      <tr><td>End-to-end encryption is a requirement</td><td>Server needs to read/process content (moderation, NLP)</td><td>Standard TLS + server-side encryption at rest</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>End-to-end encryption eliminates server-side search, content moderation, and spam filtering &mdash; these must be implemented client-side or on metadata only</li>
+    <li>WebSocket connections consume server memory (2-10KB per connection) &mdash; at 1M connections, that is 2-10GB of RAM for connection state alone</li>
+    <li>Cassandra/ScyllaDB require careful data modeling upfront &mdash; changing partition keys later means migrating the entire dataset</li>
+    <li>Group size limits have cascading effects: a 256-member group at 100 msg/day = 25,600 fanout events/day; 100K-member channels require a fundamentally different fanout architecture</li>
+    <li>Multi-region deployment introduces message ordering challenges &mdash; use a single Kafka cluster per conversation partition or implement vector clocks</li>
+    <li>Mobile clients have battery and bandwidth constraints &mdash; implement message compression (protobuf instead of JSON), batch sync on reconnect, and respect OS background execution limits</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

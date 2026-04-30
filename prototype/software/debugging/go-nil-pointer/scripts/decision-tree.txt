@@ -1,0 +1,27 @@
+START — panic: runtime error: invalid memory address or nil pointer dereference
+├── Read stack trace → identify exact file:line
+│   └── Which variable is being dereferenced on that line?
+│
+├── Is it a struct pointer variable?
+│   ├── Was it declared with `var p *T`? → Initialize: `p = &T{}` or `p = new(T)` [src2]
+│   ├── Was it returned from a function? → Check error return: `if err != nil` [src3, src5]
+│   └── Is it a struct field? → Initialize in constructor function [src7]
+│
+├── Is it a map?
+│   ├── Writing to nil map? → Initialize: `m = make(map[K]V)` [src1]
+│   └── Reading from nil map? → Safe (returns zero value), not the cause
+│
+├── Is it an interface?
+│   ├── Interface itself is nil? → Initialize or check before calling methods
+│   └── Interface non-nil but holds nil value? → Return plain `nil` from functions [src6]
+│
+├── Is it a function value?
+│   └── `var fn func()`? → Check: `if fn != nil { fn() }` [src1]
+│
+├── Is it intermittent / under concurrent load?
+│   └── Race condition → Add sync.Mutex; run `go run -race` [src3]
+│
+└── Still unclear?
+    ├── Add `fmt.Printf("%v %p\n", variable, variable)` before panic line [src3]
+    ├── Use Delve: `dlv debug`, set breakpoint, inspect [src4]
+    └── Run `go vet ./...` and `staticcheck ./...` for static nil analysis [src4]

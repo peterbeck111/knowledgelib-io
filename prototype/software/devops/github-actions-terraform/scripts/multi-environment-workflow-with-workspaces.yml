@@ -1,0 +1,42 @@
+# .github/workflows/terraform-multi-env.yml
+# Input:  Terraform code with workspace-based environments
+# Output: Per-environment plan and apply
+
+name: Terraform Multi-Environment
+
+on:
+  push:
+    branches: [main]
+    paths: ['terraform/**']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        environment: [dev, staging, production]
+    environment: ${{ matrix.environment }}
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - run: terraform init
+      - run: terraform workspace select ${{ matrix.environment }} || terraform workspace new ${{ matrix.environment }}
+      - run: terraform plan -var-file="envs/${{ matrix.environment }}.tfvars" -out=tfplan
+      - run: terraform apply tfplan

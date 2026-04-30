@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Debug Kubernetes CrashLoopBackOff | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to debugging Kubernetes CrashLoopBackOff: 11 causes ranked by likelihood, exit code analysis, liveness/readiness/startup probes,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/kubernetes-crashloopbackoff/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug Kubernetes CrashLoopBackOff | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to debugging Kubernetes CrashLoopBackOff: 11 causes ranked by likelihood, exit code analysis, liveness/readiness/startup probes, OOMKilled, sidecar containers, K8s 1.32+ configurable backoff, 3 code examples, 4 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/kubernetes-crashloopbackoff/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-18">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug Kubernetes CrashLoopBackOff | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to debugging Kubernetes CrashLoopBackOff: 11 causes ranked by likelihood, exit code analysis, liveness/readiness/startup probes, OOMKilled, sidecar containers, K8s 1.32+ configurable backoff, 3 code examples, 4 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/kubernetes_crashloopbackoff">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug Kubernetes CrashLoopBackOff?">
+    <meta name="ai:aliases"
+        content="Kubernetes CrashLoopBackOff; K8s pod keeps restarting; Kubernetes pod crash loop; kubectl CrashLoopBackOff fix; Kubernetes container keeps crashing; K8s pod restart loop; Kubernetes backoff restarting failed container; Kubernetes pod exit code 1 137">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/kubernetes-crashloopbackoff/2026.md">
+    <meta name="ai:token_estimate" content="5800">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-18">
+    <meta name="ai:inputs_needed" content="exit_code,k8s_version,workload_type">
+    <meta name="ai:constraints"
+        content="kubectl logs --previous only retrieves last crash logs; Never delete pod without capturing logs first; startupProbe disables liveness/readiness until it succeeds; Memory limits are hard cgroups enforcement; Init containers restart as a group; Sidecar containers have separate lifecycle">
+    <meta name="ai:skip_this_unit_if"
+        content="Pod stuck in Pending state → software/debugging/kubernetes-pod-pending/2026; Pod shows ImagePullBackOff → software/debugging/kubernetes-imagepullbackoff/2026; Docker OOM not Kubernetes → software/debugging/docker-oomkilled/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Debug Kubernetes CrashLoopBackOff",
+    "headline": "How to Debug Kubernetes CrashLoopBackOff",
+    "description": "Complete debugging guide for Kubernetes CrashLoopBackOff covering 11 ranked causes, exit code analysis, liveness/readiness/startup probes, OOMKilled, sidecar containers (K8s 1.29+ GA), configurable backoff (K8s 1.32+), and resource limits.",
+    "keywords": ["Kubernetes", "CrashLoopBackOff", "pod debugging", "kubectl", "liveness probe", "OOMKilled", "exit code", "sidecar containers", "startupProbe"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-18",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.20+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Kubernetes — Debugging Pods", "url": "https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/" },
+      { "@type": "WebPage", "name": "Kubernetes — Probes", "url": "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" },
+      { "@type": "WebPage", "name": "Komodor — CrashLoopBackOff", "url": "https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/" },
+      { "@type": "WebPage", "name": "Groundcover — CrashLoopBackOff", "url": "https://www.groundcover.com/blog/kubernetes-crashloopbackoff" },
+      { "@type": "WebPage", "name": "Atmosly — CrashLoopBackOff (2025)", "url": "https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025" },
+      { "@type": "WebPage", "name": "KodeKloud — CrashLoopBackOff", "url": "https://kodekloud.com/blog/crashloopbackoff-fix/" },
+      { "@type": "WebPage", "name": "Kubernetes — Init Containers", "url": "https://kubernetes.io/docs/concepts/workloads/pods/init-containers/" },
+      { "@type": "WebPage", "name": "Kubernetes v1.32 Release", "url": "https://kubernetes.io/blog/2024/12/11/kubernetes-v1-32-release/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Debug Kubernetes CrashLoopBackOff",
+    "description": "Structured reference for Kubernetes CrashLoopBackOff debugging with 11 ranked causes, exit code analysis, probe configuration patterns, and sidecar container lifecycle.",
+    "keywords": ["Kubernetes", "CrashLoopBackOff", "pod debugging", "container orchestration", "sidecar containers"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-18",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes (CNCF)"},
+      {"@type": "Organization", "name": "Komodor"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Debug Kubernetes CrashLoopBackOff" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug Kubernetes CrashLoopBackOff?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 minutes). It's not an error itself — it's Kubernetes telling you the container can't stay running. The root cause is always in the container: app error, bad config, missing dependency, OOM, or failing health probes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes CrashLoopBackOff",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 minutes). It's not an error itself — it's Kubernetes telling you the container can't stay running. The root cause is always in the container: app error, bad config, missing dependency, OOM, or failing health probes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "K8s pod keeps restarting",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 minutes). It's not an error itself — it's Kubernetes telling you the container can't stay running. The root cause is always in the container: app error, bad config, missing dependency, OOM, or failing health probes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes pod crash loop",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 minutes). It's not an error itself — it's Kubernetes telling you the container can't stay running. The root cause is always in the container: app error, bad config, missing dependency, OOM, or failing health probes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "kubectl CrashLoopBackOff fix",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 minutes). It's not an error itself — it's Kubernetes telling you the container can't stay running. The root cause is always in the container: app error, bad config, missing dependency, OOM, or failing health probes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes container keeps crashing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 minutes). It's not an error itself — it's Kubernetes telling you the container can't stay running. The root cause is always in the container: app error, bad config, missing dependency, OOM, or failing health probes."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Debug Kubernetes CrashLoopBackOff</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug Kubernetes CrashLoopBackOff?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/kubernetes-crashloopbackoff/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: CrashLoopBackOff means a container in a pod keeps crashing and Kubernetes
+                keeps restarting it with increasing delays (10s, 20s, 40s, ... up to 5 min max). It's not an error itself
+                — it's Kubernetes telling you the container can't stay running. The root cause is always in the
+                container.</li>
+            <li><strong>Key tool/command</strong>: <code>kubectl describe pod &lt;pod&gt;</code> shows events, exit
+                codes, and probe config. <code>kubectl logs &lt;pod&gt; --previous</code> shows the crashed container's
+                last output. These two solve 90% of cases.</li>
+            <li><strong>Watch out for</strong>: Liveness probes with too-short <code>initialDelaySeconds</code> —
+                Kubernetes kills the container before it starts. Use <code>startupProbe</code> for slow starters.</li>
+            <li><strong>Works with</strong>: All Kubernetes versions (1.20+). Same concepts apply to OpenShift, EKS,
+                GKE, AKS, k3s, minikube. K8s 1.32+ adds configurable max backoff via
+                <code>KubeletCrashLoopBackOffMax</code>.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>Capture before deleting</strong>: Never delete a CrashLoopBackOff pod without first running
+                <code>kubectl logs --previous</code> and <code>kubectl describe pod</code> — deletion permanently
+                destroys crash logs and events. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]</li>
+            <li><strong>Logs are ephemeral</strong>: <code>kubectl logs --previous</code> only retrieves the last crash.
+                Earlier crash logs require centralized logging (ELK, Loki, Datadog). [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]</li>
+            <li><strong>startupProbe blocks other probes</strong>: When a <code>startupProbe</code> is configured, it
+                disables liveness and readiness probes until it succeeds. If the startup probe never passes, the pod
+                enters CrashLoopBackOff with no liveness/readiness evaluation. [<a
+                    href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>]
+            </li>
+            <li><strong>Memory limits are hard cgroups enforcement</strong>: Setting
+                <code>resources.limits.memory</code> below an app's baseline working set guarantees OOMKill (exit 137).
+                Always profile memory usage with <code>kubectl top pod</code> before setting limits. [<a
+                    href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>, <a
+                    href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]</li>
+            <li><strong>Init containers restart as a group</strong>: If any init container fails, ALL init containers
+                restart from the beginning — not just the failed one. [<a
+                    href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">src7</a>]</li>
+            <li><strong>Sidecar containers have separate lifecycle</strong>: Sidecar containers (K8s 1.29+ GA, defined
+                as init containers with <code>restartPolicy: Always</code>) survive main container restarts. Debug them
+                separately with <code>kubectl logs -c &lt;sidecar-name&gt;</code>. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">src7</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Key Signal</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Application error / crash</td>
+                        <td>~30%</td>
+                        <td>Exit code 1; error in logs</td>
+                        <td>Fix application code [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Missing/wrong env vars or config</td>
+                        <td>~20%</td>
+                        <td>Exit 1; "env var not set"</td>
+                        <td>Fix ConfigMap/Secret/env [<a
+                                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>,
+                            <a href="https://www.groundcover.com/blog/kubernetes-crashloopbackoff">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>OOMKilled (exit 137)</td>
+                        <td>~15%</td>
+                        <td><code>OOMKilled: true</code></td>
+                        <td>Increase <code>resources.limits.memory</code> [<a
+                                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>,
+                            <a
+                                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Liveness probe failure</td>
+                        <td>~10%</td>
+                        <td>"Liveness probe failed" in events</td>
+                        <td>Use <code>startupProbe</code> [<a
+                                href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>,
+                            <a href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Command not found (exit 127)</td>
+                        <td>~5%</td>
+                        <td>"exec format error"</td>
+                        <td>Fix CMD/entrypoint [<a
+                                href="https://www.groundcover.com/blog/kubernetes-crashloopbackoff">src4</a>, <a
+                                href="https://kodekloud.com/blog/crashloopbackoff-fix/">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Missing ConfigMap or Secret</td>
+                        <td>~5%</td>
+                        <td>"CreateContainerConfigError"</td>
+                        <td>Create missing resource [<a
+                                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>,
+                            <a
+                                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Init container failure</td>
+                        <td>~4%</td>
+                        <td>Init container crashing</td>
+                        <td><code>kubectl logs -c init-name</code> [<a
+                                href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Volume mount failure</td>
+                        <td>~4%</td>
+                        <td>"MountVolume.SetUp failed"</td>
+                        <td>Fix PVC/storage class [<a
+                                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>,
+                            <a
+                                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Permission denied (exit 126)</td>
+                        <td>~3%</td>
+                        <td>"Permission denied" in logs</td>
+                        <td>Fix <code>securityContext</code> [<a
+                                href="https://www.groundcover.com/blog/kubernetes-crashloopbackoff">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Image pull issues then crash</td>
+                        <td>~2%</td>
+                        <td>"ImagePullBackOff"</td>
+                        <td>Fix image/registry [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Container exits successfully (exit 0)</td>
+                        <td>~2%</td>
+                        <td>Repeated exit 0</td>
+                        <td>Use Job; or keep process running [<a
+                                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>,
+                            <a href="https://kodekloud.com/blog/crashloopbackoff-fix/">src6</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — Pod shows CrashLoopBackOff
+├── kubectl describe pod → Check "Last State" Exit Code
+│   ├── Exit 0 → App exits but shouldn't → needs long-running process or Job [src6]
+│   ├── Exit 1 → App error → check logs: kubectl logs --previous [src1, src3]
+│   ├── Exit 126 → Permission denied → fix securityContext [src4]
+│   ├── Exit 127 → Command not found → fix image/CMD; check arch [src4, src6]
+│   ├── Exit 137 → OOMKilled? → increase memory limits [src3, src5]
+│   └── Exit 143 → SIGTERM → check probe timing or preStop hook [src2]
+├── Check Events section
+│   ├── "Liveness probe failed" → fix probe config; use startupProbe [src2, src3]
+│   ├── "MountVolume.SetUp failed" → fix PVC [src3]
+│   └── "configmap/secret not found" → create resource [src3, src5]
+├── Check Init Containers
+│   └── Failing? → kubectl logs -c &lt;init-name&gt; [src7]
+├── Check Sidecar Containers (K8s 1.29+)
+│   └── Sidecar healthy but main crashing? → debug main container separately [src7]
+└── kubectl logs --previous → find the error message [src1]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Get the pod status and restart count</h3>
+        <p>Identify which pods are in CrashLoopBackOff. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]</p>
+        <pre><code class="language-bash">kubectl get pods -A | grep CrashLoopBackOff
+kubectl get pod &lt;pod&gt; -o jsonpath='{.status.containerStatuses[0].restartCount}'</code></pre>
+
+        <h3>2. Describe the pod for events and state</h3>
+        <p>The single most important debugging command. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>, <a
+                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]</p>
+        <pre><code class="language-bash">kubectl describe pod &lt;pod&gt; -n &lt;ns&gt;
+kubectl get pod &lt;pod&gt; -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}'
+kubectl get pod &lt;pod&gt; -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason}'</code></pre>
+
+        <h3>3. Read the previous container's logs</h3>
+        <p>The *previous* container has the crash output. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>, <a
+                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]</p>
+        <pre><code class="language-bash">kubectl logs &lt;pod&gt; --previous
+kubectl logs &lt;pod&gt; -c &lt;container&gt; --previous
+kubectl logs &lt;pod&gt; -c &lt;init-container-name&gt;
+kubectl logs &lt;pod&gt; -c &lt;sidecar-name&gt;  # K8s 1.29+</code></pre>
+
+        <h3>4. Fix OOMKilled (exit code 137)</h3>
+        <p>Container exceeded its memory limit. [<a
+                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>, <a
+                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]</p>
+        <pre><code class="language-yaml">resources:
+  requests:
+    memory: 256Mi
+  limits:
+    memory: 512Mi</code></pre>
+        <pre><code class="language-bash">kubectl top pod &lt;pod&gt;</code></pre>
+
+        <h3>5. Fix liveness probe failures</h3>
+        <p>Use startupProbe for slow starters. [<a
+                href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>,
+            <a href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]</p>
+        <pre><code class="language-yaml">startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 10
+  failureThreshold: 30    # 5 min startup allowance
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 15
+  failureThreshold: 3</code></pre>
+
+        <h3>6. Fix missing ConfigMap / Secret / env vars</h3>
+        <p>Missing configuration causes immediate crashes. [<a
+                href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>, <a
+                href="https://www.groundcover.com/blog/kubernetes-crashloopbackoff">src4</a>, <a
+                href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]</p>
+        <pre><code class="language-bash">kubectl get configmap -n &lt;ns&gt;
+kubectl get secret -n &lt;ns&gt;
+kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.containers[0].env}'</code></pre>
+
+        <h3>7. Debug with ephemeral containers</h3>
+        <p>When logs don't show enough. K8s 1.25+ GA. [<a
+                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                href="https://www.groundcover.com/blog/kubernetes-crashloopbackoff">src4</a>]</p>
+        <pre><code class="language-bash">kubectl debug -it &lt;pod&gt; --image=busybox --target=&lt;container&gt;
+kubectl exec -it &lt;pod&gt; -- /bin/sh
+kubectl get events -n &lt;ns&gt; --sort-by='.lastTimestamp' | tail -20</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Comprehensive CrashLoopBackOff diagnostic script</h3>
+        <pre><code class="language-bash">#!/bin/bash
+POD="$1"; NS="${2:-default}"
+if [ -z "$POD" ]; then
+    echo "Usage: $0 &lt;pod&gt; [namespace]"
+    kubectl get pods -A | grep CrashLoopBackOff; exit 1
+fi
+
+echo "=== CrashLoopBackOff Diagnostic: $POD (ns: $NS) ==="
+RESTARTS=$(kubectl get pod "$POD" -n "$NS" -o jsonpath='{.status.containerStatuses[0].restartCount}')
+EXIT=$(kubectl get pod "$POD" -n "$NS" -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}')
+REASON=$(kubectl get pod "$POD" -n "$NS" -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason}')
+echo "Restarts: $RESTARTS | Exit: $EXIT | Reason: $REASON"
+
+case "$EXIT" in
+    0)   echo "Exit 0 — completed (shouldn't for services)" ;;
+    1)   echo "Exit 1 — Application error" ;;
+    126) echo "Exit 126 — Permission denied" ;;
+    127) echo "Exit 127 — Command not found" ;;
+    137) echo "Exit 137 — $( [ "$REASON" = "OOMKilled" ] &amp;&amp; echo "OOMKilled" || echo "SIGKILL")" ;;
+    143) echo "Exit 143 — SIGTERM" ;;
+esac
+
+echo "=== Resources ==="
+kubectl get pod "$POD" -n "$NS" -o jsonpath='{range .spec.containers[*]}{.name}: req={.resources.requests.memory} lim={.resources.limits.memory}{"\n"}{end}'
+kubectl top pod "$POD" -n "$NS" 2&gt;/dev/null || echo "(metrics unavailable)"
+
+echo "=== Events ==="
+kubectl get events -n "$NS" --field-selector "involvedObject.name=$POD" --sort-by='.lastTimestamp' | tail -10
+
+echo "=== Previous Logs (30 lines) ==="
+kubectl logs "$POD" -n "$NS" --previous --tail=30 2&gt;/dev/null || echo "(none)"</code></pre>
+
+        <h3>Production-ready pod with proper probes and resources</h3>
+        <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -zv db-service 5432; do sleep 2; done']
+          resources:
+            limits: { cpu: 50m, memory: 32Mi }
+        - name: log-shipper      # Sidecar (K8s 1.29+)
+          image: fluentbit:2.2
+          restartPolicy: Always   # Survives main container restarts
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 100m, memory: 128Mi }
+      containers:
+        - name: api
+          image: myapp:1.2.3
+          ports: [{ containerPort: 8080 }]
+          envFrom:
+            - configMapRef: { name: api-config }
+            - secretRef: { name: api-secrets }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          startupProbe:
+            httpGet: { path: /health, port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet: { path: /health, port: 8080 }
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /ready, port: 8080 }
+            periodSeconds: 10
+      terminationGracePeriodSeconds: 30</code></pre>
+
+        <h3>Automated CrashLoopBackOff watcher</h3>
+        <pre><code class="language-python">#!/usr/bin/env python3
+import subprocess, json, time
+from datetime import datetime
+
+def get_crash_pods():
+    result = subprocess.run(
+        "kubectl get pods -A -o json".split(), capture_output=True, text=True)
+    if result.returncode != 0: return []
+    pods = json.loads(result.stdout)
+    crash = []
+    for pod in pods.get("items", []):
+        for cs in pod.get("status", {}).get("containerStatuses", []):
+            w = cs.get("state", {}).get("waiting", {})
+            if w.get("reason") == "CrashLoopBackOff":
+                last = cs.get("lastState", {}).get("terminated", {})
+                crash.append({
+                    "name": pod["metadata"]["name"],
+                    "ns": pod["metadata"]["namespace"],
+                    "restarts": cs.get("restartCount", 0),
+                    "exit": last.get("exitCode"),
+                    "reason": last.get("reason", "Unknown"),
+                })
+    return crash
+
+def monitor(interval=30):
+    seen = set()
+    while True:
+        for p in get_crash_pods():
+            key = f"{p['ns']}/{p['name']}"
+            if key not in seen:
+                seen.add(key)
+                print(f"[{datetime.now():%H:%M:%S}] ALERT {key} "
+                      f"exit={p['exit']} ({p['reason']}) restarts={p['restarts']}")
+        time.sleep(interval)
+
+if __name__ == "__main__":
+    monitor()</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: No resource limits</h3>
+        <pre><code class="language-yaml"># BAD — unlimited resources; OOM kills other pods [src3, src5]
+containers:
+  - name: app
+    image: myapp:latest</code></pre>
+
+        <h3>Correct: Always set resource requests and limits</h3>
+        <pre><code class="language-yaml"># GOOD — predictable; scheduler places properly [src3, src5]
+containers:
+  - name: app
+    image: myapp:1.2.3
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 500m, memory: 512Mi }</code></pre>
+
+        <h3>Wrong: Aggressive liveness probe on slow-starting app</h3>
+        <pre><code class="language-yaml"># BAD — kills Spring Boot during startup [src2, src3]
+livenessProbe:
+  httpGet: { path: /health, port: 8080 }
+  initialDelaySeconds: 5
+  periodSeconds: 3
+  failureThreshold: 3</code></pre>
+
+        <h3>Correct: Use startupProbe for slow starters</h3>
+        <pre><code class="language-yaml"># GOOD — startupProbe allows up to 5 min init [src2]
+startupProbe:
+  httpGet: { path: /health, port: 8080 }
+  periodSeconds: 10
+  failureThreshold: 30
+livenessProbe:
+  httpGet: { path: /health, port: 8080 }
+  periodSeconds: 15</code></pre>
+
+        <h3>Wrong: Using :latest tag</h3>
+        <pre><code class="language-yaml"># BAD — unpredictable; hard to rollback [src3, src6]
+containers:
+  - name: app
+    image: myapp:latest
+    imagePullPolicy: Always</code></pre>
+
+        <h3>Correct: Pin specific image version</h3>
+        <pre><code class="language-yaml"># GOOD — reproducible; easy rollback [src3, src6]
+containers:
+  - name: app
+    image: myapp:1.2.3
+    imagePullPolicy: IfNotPresent</code></pre>
+
+        <h3>Wrong: Sidecar as regular container (K8s 1.29+)</h3>
+        <pre><code class="language-yaml"># BAD — sidecar dies with main container [src7]
+containers:
+  - name: app
+    image: myapp:1.2.3
+  - name: log-shipper
+    image: fluentbit:2.2</code></pre>
+
+        <h3>Correct: Sidecar as init container with restartPolicy: Always</h3>
+        <pre><code class="language-yaml"># GOOD — sidecar survives main container restarts [src7, src8]
+initContainers:
+  - name: log-shipper
+    image: fluentbit:2.2
+    restartPolicy: Always
+containers:
+  - name: app
+    image: myapp:1.2.3</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>--previous</code> flag forgotten</strong>: <code>kubectl logs &lt;pod&gt;</code> shows the
+                current (just-restarted) container. Use <code>--previous</code> for the crash logs. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                    href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]</li>
+            <li><strong>Liveness probe killing healthy containers</strong>: Too-short <code>initialDelaySeconds</code>
+                creates permanent CrashLoopBackOff. Use <code>startupProbe</code> (K8s 1.20+ GA). [<a
+                    href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>,
+                <a href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>]</li>
+            <li><strong>Exit 0 CrashLoopBackOff</strong>: <code>restartPolicy: Always</code> (default) restarts even
+                successful exits. Use a Job for one-shot tasks. [<a
+                    href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>, <a
+                    href="https://kodekloud.com/blog/crashloopbackoff-fix/">src6</a>]</li>
+            <li><strong>ConfigMap/Secret race condition</strong>: Pod starts before config exists — crash. Ensure
+                configs exist before deployments. [<a
+                    href="https://komodor.com/learn/how-to-fix-crashloopbackoff-kubernetes-error/">src3</a>, <a
+                    href="https://atmosly.com/blog/crashloopbackoff-in-kubernetes-causes-solutions-2025">src5</a>]</li>
+            <li><strong>Node resource pressure</strong>: Node memory/disk evicts pods. Check
+                <code>kubectl describe node</code> Conditions. [<a
+                    href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]</li>
+            <li><strong>Image architecture mismatch</strong>: amd64 image on arm64 node — "exec format error". Use
+                multi-arch images. [<a href="https://www.groundcover.com/blog/kubernetes-crashloopbackoff">src4</a>]
+            </li>
+            <li><strong>Sidecar masking real failure</strong>: In K8s 1.29+, sidecar containers survive main container
+                restarts. Check each container status individually. [<a
+                    href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">src7</a>]</li>
+            <li><strong>Backoff timer confusion</strong>: The 5-minute max backoff means long waits. Delete and recreate
+                to reset. On K8s 1.32+, use <code>KubeletCrashLoopBackOffMax</code> to reduce max delay. [<a
+                    href="https://kubernetes.io/blog/2024/12/11/kubernetes-v1-32-release/">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Find CrashLoopBackOff pods ===
+kubectl get pods -A | grep CrashLoopBackOff
+
+# === Pod details ===
+kubectl describe pod &lt;pod&gt; -n &lt;ns&gt;
+kubectl get pod &lt;pod&gt; -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}'
+
+# === Logs ===
+kubectl logs &lt;pod&gt; --previous
+kubectl logs &lt;pod&gt; -c &lt;container&gt; --previous
+kubectl logs &lt;pod&gt; -c &lt;init-container&gt;
+kubectl logs &lt;pod&gt; -c &lt;sidecar&gt;
+
+# === Events ===
+kubectl get events -n &lt;ns&gt; --sort-by='.lastTimestamp' | tail -20
+
+# === Resources ===
+kubectl top pod &lt;pod&gt;
+kubectl top nodes
+
+# === Debugging ===
+kubectl debug -it &lt;pod&gt; --image=busybox --target=&lt;container&gt;
+kubectl exec -it &lt;pod&gt; -- /bin/sh
+
+# === Config ===
+kubectl get configmap -n &lt;ns&gt;
+kubectl get secret -n &lt;ns&gt;
+
+# === Node health ===
+kubectl describe node &lt;node&gt; | grep -A5 "Conditions"</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>K8s 1.32+</td>
+                        <td>Current</td>
+                        <td><code>KubeletCrashLoopBackOffMax</code> alpha — configurable max backoff [<a
+                                href="https://kubernetes.io/blog/2024/12/11/kubernetes-v1-32-release/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.29+</td>
+                        <td>Stable</td>
+                        <td>Sidecar containers GA; better init container lifecycle [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>, <a
+                                href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.28</td>
+                        <td>Stable</td>
+                        <td>Sidecar alpha; improved probe logging [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.25</td>
+                        <td>Ephemeral GA</td>
+                        <td>Ephemeral debug containers GA [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.23</td>
+                        <td>Debug beta</td>
+                        <td><code>kubectl debug</code> beta [<a
+                                href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.20</td>
+                        <td>startupProbe GA</td>
+                        <td>startupProbe graduated to stable [<a
+                                href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.18</td>
+                        <td>startupProbe beta</td>
+                        <td>startupProbe for slow-starting containers [<a
+                                href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>K8s 1.16</td>
+                        <td>Stable probes</td>
+                        <td>Liveness/readiness stable in all workloads [<a
+                                href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">src2</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Pod shows CrashLoopBackOff</td>
+                        <td>Pod stuck in Pending</td>
+                        <td>Debug scheduling: <code>kubectl describe pod</code></td>
+                    </tr>
+                    <tr>
+                        <td>Container keeps restarting</td>
+                        <td>Pod in ImagePullBackOff</td>
+                        <td>Fix image name/registry</td>
+                    </tr>
+                    <tr>
+                        <td>Exit code is non-zero</td>
+                        <td>Pod running but not ready</td>
+                        <td>Debug readiness probe</td>
+                    </tr>
+                    <tr>
+                        <td>Events show probe failures</td>
+                        <td>Container is Evicted</td>
+                        <td>Check node pressure</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Backoff delay doubles: 10s, 20s, 40s, 80s, 160s, 300s (max 5 min). Delete and recreate to reset.
+                K8s 1.32+ allows configuring max backoff via <code>KubeletCrashLoopBackOffMax</code> feature gate.</li>
+            <li><code>kubectl logs --previous</code> only shows the <em>last</em> crash. For earlier crashes, use
+                centralized logging (ELK, Loki, Datadog).</li>
+            <li>Resource <code>requests</code> affect scheduling; <code>limits</code> affect runtime. Don't set them
+                equal unless you need QoS "Guaranteed".</li>
+            <li><code>startupProbe</code> disables liveness/readiness until it succeeds. A failing startup probe
+                prevents the pod from ever being "live".</li>
+            <li>Init containers run sequentially. If any fails, all restart from the beginning.</li>
+            <li>Always use <code>resources.requests</code> and <code>limits</code> in production for predictable
+                scheduling and OOM prevention.</li>
+            <li>K8s 1.35 introduces <code>RestartAllContainers</code> (alpha) — per-container restart rules that trigger
+                in-place restart of all containers on specific exit codes, avoiding expensive pod rescheduling for AI/ML
+                workloads.</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/docker-oomkilled/2026" data-relationship="related_to">Docker OOMKilled
+            Debugging</a>
+        <a href="/software/debugging/docker-container-wont-start/2026" data-relationship="related_to">Docker Container
+            Won't Start</a>
+        <a href="/software/debugging/kubernetes-pod-pending/2026" data-relationship="often_confused_with">Kubernetes Pod
+            Pending</a>
+        <a href="/software/debugging/nodejs-econnrefused/2026" data-relationship="often_confused_with">Node.js
+            ECONNREFUSED</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

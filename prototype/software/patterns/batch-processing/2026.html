@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Batch Processing Patterns | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to batch processing patterns: sequential, parallel chunks, MapReduce, micro-batching, fan-out/fan-in with cursor-based chunking,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/batch-processing/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Batch Processing Patterns | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to batch processing patterns: sequential, parallel chunks, MapReduce, micro-batching, fan-out/fan-in with cursor-based chunking, idempotent upserts, dead letter queues, and progress tracking. Code examples in Python, Node.js, Go. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/batch-processing/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Batch Processing Patterns | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to batch processing patterns: sequential, parallel chunks, MapReduce, micro-batching, fan-out/fan-in with cursor-based chunking, idempotent upserts, dead letter queues, and progress tracking. Code examples in Python, Node.js, Go. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/batch processing">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the best batch processing patterns?">
+  <meta name="ai:aliases" content="How to implement batch processing; Batch job design patterns and best practices; Chunked data processing with error handling; Batch vs stream processing when to use">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/batch-processing/2026.md">
+  <meta name="ai:token_estimate" content="3600">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="dataset_size,failure_tolerance,language">
+  <meta name="ai:constraints" content="Every batch item must be idempotent; Always persist progress checkpoints to durable storage; Never load entire dataset into memory; Dead letter queues mandatory for production; Chunk size must be tuned per workload">
+  <meta name="ai:skip_this_unit_if" content="You need sub-second latency on individual events -> Stream processing; You need single request-response, not a collection -> Standard API patterns">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Batch Processing Patterns",
+    "headline": "Batch Processing Patterns",
+    "description": "Comprehensive guide to batch processing patterns covering sequential, parallel chunks, MapReduce, micro-batching, streaming, fan-out/fan-in, and pipeline patterns with cursor-based chunking, idempotent upserts, dead letter queues, progress tracking, code examples in Python, Node.js, and Go, anti-patterns, and decision tree.",
+    "keywords": ["batch processing", "chunked processing", "MapReduce", "fan-out fan-in", "dead letter queue", "idempotent", "cursor pagination", "ETL", "data pipeline"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL, Python 3.9+, Node.js 18+, Go 1.21+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Batch Processing Demystified: Tools, Challenges, and Solutions",
+        "url": "https://www.acceldata.io/blog/batch-processing-demystified-tools-challenges-and-solutions"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Common Batch Patterns -- Spring Batch Reference",
+        "url": "https://docs.spring.io/spring-batch/reference/common-patterns.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Understanding Idempotency: A Key to Reliable Data Pipelines",
+        "url": "https://airbyte.com/data-engineering-resources/idempotency-in-data-pipelines"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dead Letter Queues (DLQ): The Complete Developer-Friendly Guide",
+        "url": "https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Batch Processing vs Stream Processing: Key Differences",
+        "url": "https://airbyte.com/data-engineering-resources/batch-processing-vs-stream-processing"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Building Reliable Reprocessing and Dead Letter Queues with Kafka",
+        "url": "https://www.uber.com/blog/reliable-reprocessing/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design Patterns for Batch Processing in Financial Services",
+        "url": "https://www.databricks.com/blog/design-patterns-batch-processing-financial-services"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Batch Processing Patterns",
+    "description": "Structured reference for batch processing design patterns including sequential, parallel chunks, MapReduce, micro-batching, fan-out/fan-in, and pipeline patterns with code examples, anti-patterns, and decision tree.",
+    "keywords": ["batch processing", "chunked processing", "MapReduce", "fan-out fan-in", "dead letter queue", "idempotent", "ETL"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Acceldata"},
+      {"@type": "Organization", "name": "VMware / Spring"},
+      {"@type": "Organization", "name": "Airbyte"},
+      {"@type": "Organization", "name": "Uber Engineering"},
+      {"@type": "Organization", "name": "Databricks"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Batch Processing Patterns" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best batch processing patterns?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Chunk work into resumable units, track progress in durable storage, handle failures idempotently, and route poison messages to a dead letter queue."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to implement batch processing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Chunk work into resumable units, track progress in durable storage, handle failures idempotently, and route poison messages to a dead letter queue."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Batch job design patterns and best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Chunk work into resumable units, track progress in durable storage, handle failures idempotently, and route poison messages to a dead letter queue."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Chunked data processing with error handling",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Chunk work into resumable units, track progress in durable storage, handle failures idempotently, and route poison messages to a dead letter queue."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Batch vs stream processing when to use",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Chunk work into resumable units, track progress in durable storage, handle failures idempotently, and route poison messages to a dead letter queue."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Batch Processing Patterns</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best batch processing patterns?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/batch-processing/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Chunk work into resumable units, track progress in durable storage, handle failures idempotently, and route poison messages to a dead letter queue.</li>
+    <li><strong>Key tool/command</strong>: <code>cursor-based chunking + dead letter queue + idempotent upserts</code></li>
+    <li><strong>Watch out for</strong>: Loading the entire dataset into memory -- the #1 cause of OOM kills in batch jobs.</li>
+    <li><strong>Works with</strong>: Any language/runtime. Patterns are language-agnostic; examples cover Python, Node.js, and Go.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Every batch item must be idempotent -- re-processing the same item must produce the same result without side effects</li>
+    <li>Always persist progress checkpoints to durable storage so jobs can resume after failure</li>
+    <li>Never load the entire dataset into memory -- use cursor-based iteration or chunked reads</li>
+    <li>Dead letter queues are mandatory for production batches -- failed items must not block the rest</li>
+    <li>Chunk size must be tuned per workload: too small = overhead, too large = memory pressure and blast radius</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Throughput</th><th scope="col">Resumability</th><th scope="col">Complexity</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Sequential</td><td>Low</td><td>Easy (checkpoint per item)</td><td>Minimal</td><td>Small datasets (&lt;10K), strict ordering</td></tr>
+      <tr><td>Parallel Chunks</td><td>High</td><td>Good (checkpoint per chunk)</td><td>Moderate</td><td>Medium datasets (10K-1M), independent items</td></tr>
+      <tr><td>MapReduce</td><td>Very High</td><td>Good (per-partition)</td><td>High</td><td>Huge datasets (&gt;1M), aggregation/analytics</td></tr>
+      <tr><td>Micro-Batching</td><td>High</td><td>Moderate (per micro-batch)</td><td>Moderate</td><td>Near-real-time with batch semantics</td></tr>
+      <tr><td>Streaming (Kafka/Flink)</td><td>Very High</td><td>Built-in (offsets)</td><td>High</td><td>Continuous unbounded data, sub-second needs</td></tr>
+      <tr><td>Fan-Out/Fan-In</td><td>Very High</td><td>Good (per worker)</td><td>High</td><td>Heterogeneous tasks, cloud functions</td></tr>
+      <tr><td>Pipeline (multi-stage)</td><td>High</td><td>Per-stage checkpoints</td><td>Moderate</td><td>ETL with distinct transform steps</td></tr>
+      <tr><td>Retry + DLQ</td><td>N/A (overlay)</td><td>Excellent</td><td>Low (add-on)</td><td>Any pattern above -- handles poison messages</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Dataset size &lt; 10K items?
+|   |-- YES -> Sequential processing with per-item checkpoint
+|   +-- NO  v
+|-- Items independent (no ordering dependency)?
+|   |-- YES v
+|   |   |-- Dataset &lt; 1M items?
+|   |   |   |-- YES -> Parallel Chunks (worker pool, chunk size 100-1000)
+|   |   |   +-- NO  v
+|   |   |-- Need aggregation/reduce step?
+|   |   |   |-- YES -> MapReduce (partition, map, shuffle, reduce)
+|   |   |   +-- NO  -> Fan-Out/Fan-In (distribute to workers, collect results)
+|   +-- NO (ordering required) v
+|-- Need near-real-time (&lt;5s latency)?
+|   |-- YES -> Micro-Batching (buffer 50-500ms, flush as batch)
+|   +-- NO  -> Pipeline with stage-level checkpoints
++-- DEFAULT -> Parallel Chunks + Retry/DLQ overlay</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define chunk boundaries using cursor-based iteration</h3>
+  <p>Never use OFFSET/LIMIT for large datasets -- it rescans rows. Use a cursor column (auto-increment ID or timestamp) to paginate. This ensures O(1) cost per page regardless of dataset size. [<a href="https://www.acceldata.io/blog/batch-processing-demystified-tools-challenges-and-solutions">src1</a>]</p>
+  <pre><code class="language-sql">-- Cursor-based chunking: fetch next 1000 items after last processed ID
+SELECT * FROM items
+WHERE id &gt; :last_processed_id
+ORDER BY id ASC
+LIMIT 1000;</code></pre>
+  <p><strong>Verify</strong>: Check that each chunk returns exactly LIMIT rows (except the final chunk), and no items are skipped or duplicated.</p>
+
+  <h3>2. Implement idempotent processing with upserts</h3>
+  <p>Every write operation must be safe to retry. Use UPSERT (INSERT ... ON CONFLICT) so reprocessing the same item overwrites rather than duplicates. [<a href="https://airbyte.com/data-engineering-resources/idempotency-in-data-pipelines">src3</a>]</p>
+  <pre><code class="language-sql">-- Idempotent upsert: safe to replay
+INSERT INTO processed_items (id, result, processed_at)
+VALUES (:id, :result, NOW())
+ON CONFLICT (id) DO UPDATE SET
+  result = EXCLUDED.result,
+  processed_at = EXCLUDED.processed_at;</code></pre>
+  <p><strong>Verify</strong>: Run the same item twice -- the row count should not increase, and the result should be identical.</p>
+
+  <h3>3. Add progress tracking with checkpoints</h3>
+  <p>Store the last successfully processed cursor value in a durable checkpoint table. On restart, read the checkpoint and resume from that point. [<a href="https://docs.spring.io/spring-batch/reference/common-patterns.html">src2</a>]</p>
+  <pre><code class="language-sql">-- Save checkpoint after each successful chunk
+INSERT INTO batch_checkpoints (job_id, last_cursor, items_processed, updated_at)
+VALUES (:job_id, :last_cursor, :count, NOW())
+ON CONFLICT (job_id) DO UPDATE SET
+  last_cursor = EXCLUDED.last_cursor,
+  items_processed = batch_checkpoints.items_processed + EXCLUDED.items_processed,
+  updated_at = EXCLUDED.updated_at;</code></pre>
+  <p><strong>Verify</strong>: Kill the job mid-run, restart it, and confirm it resumes from the checkpoint without reprocessing completed items.</p>
+
+  <h3>4. Route failures to a dead letter queue</h3>
+  <p>When an item fails after N retries, write it to a dead letter table/queue with the error details. The main batch continues processing remaining items. [<a href="https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/">src4</a>]</p>
+  <pre><code class="language-sql">-- Dead letter entry for failed items
+INSERT INTO dead_letter_queue (job_id, item_id, payload, error_message, retry_count, failed_at)
+VALUES (:job_id, :item_id, :payload, :error, :retries, NOW());</code></pre>
+  <p><strong>Verify</strong>: Intentionally corrupt one item in the batch -- confirm the batch completes and the bad item appears in the DLQ.</p>
+
+  <h3>5. Add monitoring and alerting</h3>
+  <p>Track batch metrics: items processed, items failed, elapsed time, throughput (items/sec). Alert when failure rate exceeds threshold (e.g., &gt;5% of items fail). [<a href="https://www.databricks.com/blog/design-patterns-batch-processing-financial-services">src7</a>]</p>
+  <pre><code class="language-python"># Log batch summary
+logger.info(f"Batch complete: {processed}/{total} items, "
+            f"{failed} failed ({failed/total*100:.1f}%), "
+            f"{elapsed:.1f}s, {processed/elapsed:.0f} items/sec")</code></pre>
+  <p><strong>Verify</strong>: Check logs after a batch run to confirm all five metrics are present.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Chunked batch processor with retry and DLQ</h3>
+  <pre><code class="language-python"># Input:  Database table with items to process
+# Output: Processed items written back, failures in DLQ
+
+import time
+import psycopg2  # psycopg2==2.9.9
+
+CHUNK_SIZE = 500
+MAX_RETRIES = 3
+
+def process_batch(conn, job_id):
+    cursor = get_checkpoint(conn, job_id) or 0
+    total, failed = 0, 0
+
+    while True:
+        items = fetch_chunk(conn, cursor, CHUNK_SIZE)
+        if not items:
+            break
+        for item in items:
+            for attempt in range(MAX_RETRIES):
+                try:
+                    result = process_item(item)  # your logic
+                    upsert_result(conn, item["id"], result)
+                    break
+                except Exception as e:
+                    if attempt == MAX_RETRIES - 1:
+                        write_to_dlq(conn, job_id, item, str(e))
+                        failed += 1
+                    else:
+                        time.sleep(2 ** attempt)  # exponential backoff
+            total += 1
+        cursor = items[-1]["id"]
+        save_checkpoint(conn, job_id, cursor, len(items))
+    return {"processed": total, "failed": failed}</code></pre>
+
+  <h3>Node.js: Parallel chunk processor with concurrency control</h3>
+  <pre><code class="language-javascript">// Input:  Array of item IDs or cursor-based DB query
+// Output: Processed results, failures logged to DLQ
+
+// p-limit@5.0.0
+import pLimit from "p-limit";
+
+const CHUNK_SIZE = 500;
+const CONCURRENCY = 4;
+const MAX_RETRIES = 3;
+
+async function processBatch(db, jobId) {
+  const limit = pLimit(CONCURRENCY);
+  let cursor = (await getCheckpoint(db, jobId)) || 0;
+  let total = 0, failed = 0;
+
+  while (true) {
+    const items = await db.query(
+      "SELECT * FROM items WHERE id > $1 ORDER BY id LIMIT $2",
+      [cursor, CHUNK_SIZE]
+    );
+    if (items.rows.length === 0) break;
+
+    const tasks = items.rows.map((item) =&gt;
+      limit(async () =&gt; {
+        for (let attempt = 0; attempt &lt; MAX_RETRIES; attempt++) {
+          try {
+            const result = await processItem(item);
+            await upsertResult(db, item.id, result);
+            return;
+          } catch (err) {
+            if (attempt === MAX_RETRIES - 1) {
+              await writeToDLQ(db, jobId, item, err.message);
+              failed++;
+            } else {
+              await sleep(Math.pow(2, attempt) * 1000);
+            }
+          }
+        }
+      })
+    );
+    await Promise.all(tasks);
+    cursor = items.rows[items.rows.length - 1].id;
+    await saveCheckpoint(db, jobId, cursor, items.rows.length);
+    total += items.rows.length;
+  }
+  return { processed: total, failed };
+}</code></pre>
+
+  <h3>Go: Fan-out/fan-in with worker pool and progress tracking</h3>
+  <pre><code class="language-go">// Input:  Database rows fetched via cursor pagination
+// Output: Processed results, errors sent to DLQ channel
+
+const (
+    chunkSize  = 500
+    numWorkers = 8
+    maxRetries = 3
+)
+
+func processBatch(ctx context.Context, db *sql.DB, jobID string) (int, int) {
+    items := make(chan Item, chunkSize)
+    dlq := make(chan DLQEntry, 100)
+    var wg sync.WaitGroup
+    var processed, failed int64
+
+    // Fan-out: start worker pool
+    for i := 0; i &lt; numWorkers; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            for item := range items {
+                if err := processWithRetry(ctx, db, item, maxRetries); err != nil {
+                    dlq &lt;- DLQEntry{JobID: jobID, Item: item, Err: err}
+                    atomic.AddInt64(&amp;failed, 1)
+                }
+                atomic.AddInt64(&amp;processed, 1)
+            }
+        }()
+    }
+
+    // Producer: cursor-based chunk reads
+    go func() {
+        defer close(items)
+        cursor := getCheckpoint(db, jobID)
+        for {
+            chunk := fetchChunk(db, cursor, chunkSize)
+            if len(chunk) == 0 { break }
+            for _, item := range chunk {
+                items &lt;- item
+            }
+            cursor = chunk[len(chunk)-1].ID
+            saveCheckpoint(db, jobID, cursor, len(chunk))
+        }
+    }()
+
+    wg.Wait()
+    close(dlq)
+    return int(processed), int(failed)
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Loading entire dataset into memory</h3>
+  <pre><code class="language-python"># BAD -- loads all rows into memory at once; OOM on large datasets
+all_items = db.query("SELECT * FROM items").fetchall()
+for item in all_items:
+    process(item)</code></pre>
+
+  <h3>Correct: Cursor-based chunked iteration</h3>
+  <pre><code class="language-python"># GOOD -- fetches one chunk at a time; constant memory usage
+cursor = 0
+while True:
+    chunk = db.query("SELECT * FROM items WHERE id > %s ORDER BY id LIMIT 500", cursor)
+    if not chunk:
+        break
+    for item in chunk:
+        process(item)
+    cursor = chunk[-1]["id"]</code></pre>
+
+  <h3>Wrong: No progress tracking (restart = reprocess everything)</h3>
+  <pre><code class="language-python"># BAD -- no checkpoint; crash at item 999,999 means starting over
+for item in get_all_items():
+    process(item)</code></pre>
+
+  <h3>Correct: Checkpoint after each chunk</h3>
+  <pre><code class="language-python"># GOOD -- resume from last successful chunk on restart
+cursor = load_checkpoint(job_id) or 0
+while True:
+    chunk = fetch_chunk(cursor, 500)
+    if not chunk:
+        break
+    for item in chunk:
+        process(item)
+    cursor = chunk[-1]["id"]
+    save_checkpoint(job_id, cursor)</code></pre>
+
+  <h3>Wrong: Non-idempotent processing (duplicates on retry)</h3>
+  <pre><code class="language-python"># BAD -- INSERT creates duplicates if item is retried
+db.execute("INSERT INTO results (item_id, value) VALUES (%s, %s)", (item_id, value))</code></pre>
+
+  <h3>Correct: Idempotent upsert</h3>
+  <pre><code class="language-python"># GOOD -- ON CONFLICT prevents duplicates on retry
+db.execute("""
+    INSERT INTO results (item_id, value, updated_at)
+    VALUES (%s, %s, NOW())
+    ON CONFLICT (item_id) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+""", (item_id, value))</code></pre>
+
+  <h3>Wrong: Failed items block the entire batch</h3>
+  <pre><code class="language-python"># BAD -- one poisoned item stops the whole batch
+for item in chunk:
+    result = process(item)  # unhandled exception halts everything
+    save(result)</code></pre>
+
+  <h3>Correct: Catch, retry, then dead-letter</h3>
+  <pre><code class="language-python"># GOOD -- failures go to DLQ; batch continues
+for item in chunk:
+    try:
+        result = process(item)
+        save(result)
+    except Exception as e:
+        if retries_exhausted(item):
+            write_to_dlq(item, e)
+        else:
+            schedule_retry(item)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>OFFSET/LIMIT pagination on large tables</strong>: Performance degrades linearly -- OFFSET 1000000 scans 1M rows. Fix: use cursor-based pagination with <code>WHERE id &gt; :last_id ORDER BY id LIMIT :size</code>. [<a href="https://www.acceldata.io/blog/batch-processing-demystified-tools-challenges-and-solutions">src1</a>]</li>
+    <li><strong>Unbounded retry loops</strong>: Retrying a poisoned message forever wastes resources and blocks progress. Fix: set <code>MAX_RETRIES</code> (typically 3-5) and route to DLQ after exhaustion. [<a href="https://swenotes.com/2025/09/25/dead-letter-queues-dlq-the-complete-developer-friendly-guide/">src4</a>]</li>
+    <li><strong>Single-threaded bottleneck on CPU-bound work</strong>: Processing items sequentially when they are independent wastes available cores. Fix: use worker pool with <code>CONCURRENCY = num_CPUs</code> for CPU-bound or <code>CONCURRENCY = 10-50</code> for I/O-bound work. [<a href="https://www.acceldata.io/blog/batch-processing-demystified-tools-challenges-and-solutions">src1</a>]</li>
+    <li><strong>Chunk size too large for available memory</strong>: A chunk of 100K rows with 10KB each = 1GB in memory per chunk. Fix: profile memory, start with 100-500 items per chunk, and tune up. [<a href="https://docs.spring.io/spring-batch/reference/common-patterns.html">src2</a>]</li>
+    <li><strong>No backpressure between producer and consumer</strong>: Producer fills an unbounded channel/queue faster than consumers can drain, causing OOM. Fix: use bounded channels/queues. [<a href="https://www.uber.com/blog/reliable-reprocessing/">src6</a>]</li>
+    <li><strong>Ignoring transaction boundaries</strong>: Processing and checkpointing in separate transactions means a crash between them causes reprocessing. Fix: wrap chunk processing + checkpoint update in a single transaction. [<a href="https://docs.spring.io/spring-batch/reference/common-patterns.html">src2</a>]</li>
+    <li><strong>Clock-based cursors with duplicate timestamps</strong>: Using <code>WHERE created_at &gt; :last_ts</code> skips items created in the same millisecond. Fix: use a monotonic column (auto-increment ID) as cursor, or compound cursor <code>(timestamp, id)</code>. [<a href="https://airbyte.com/data-engineering-resources/idempotency-in-data-pipelines">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Processing a bounded dataset (files, DB tables, API exports)</td><td>Data arrives continuously and needs &lt;1s processing</td><td>Stream processing (Kafka Streams, Flink)</td></tr>
+      <tr><td>Items can tolerate minutes/hours of latency</td><td>User is waiting for a synchronous response</td><td>Request/response API pattern</td></tr>
+      <tr><td>You need atomicity per chunk (all-or-nothing within a chunk)</td><td>Each event triggers an independent side effect</td><td>Event-driven architecture</td></tr>
+      <tr><td>Cost efficiency matters -- batch infra is idle between runs</td><td>24/7 low-latency processing is required</td><td>Always-on streaming consumers</td></tr>
+      <tr><td>Complex multi-step transformations (ETL/ELT)</td><td>Simple event routing or pub/sub fan-out</td><td>Message broker + consumer groups</td></tr>
+      <tr><td>Regulatory/compliance requires auditable batch runs</td><td>Real-time fraud detection or alerting</td><td>Stream processing with CEP</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Batch and stream are not mutually exclusive. Many production systems use Lambda architecture (batch layer for completeness + stream layer for speed). Choose based on latency requirements, not ideology.</li>
+    <li>Cloud-native batch (AWS Batch, GCP Cloud Run Jobs, Azure Container Apps Jobs) auto-scales workers but charges per vCPU-second. Profile your chunk processing time to avoid cost surprises on large datasets.</li>
+    <li>Spring Batch is the most mature framework for JVM batch processing with built-in chunk-oriented processing, skip/retry policies, and job restartability. If you are on the JVM, use it rather than building from scratch.</li>
+    <li>Idempotency requires a natural or synthetic unique key per item. If your data lacks one, generate a deterministic hash from the item's content before processing.</li>
+    <li>DLQ reprocessing should be a deliberate manual operation, not automatic -- automatic DLQ replay without fixing the root cause creates infinite loops.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/concurrency-parallelism/2026" data-relationship="related_to">Concurrency &amp; Parallelism Patterns</a>
+    <a href="/software/patterns/connection-pooling/2026" data-relationship="related_to">Connection Pooling</a>
+    <a href="/software/patterns/error-handling-strategies/2026" data-relationship="solves">Error Handling Strategies</a>
+    <a href="/software/patterns/database-migration-strategies/2026" data-relationship="often_confused_with">Database Migration Strategies</a>
+    <a href="/software/system-design/message-queue-event-driven/2026" data-relationship="related_to">Message Queue &amp; Event-Driven Architecture</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

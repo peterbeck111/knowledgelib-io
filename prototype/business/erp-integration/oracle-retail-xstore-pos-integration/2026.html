@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Oracle Retail Xstore POS Integration | knowledgelib.io</title>
+  <meta name="description" content="Oracle Retail Xstore POS integration -- transaction posting to ReSA (REST broadcaster + RTLog), foundation data sync from RMS (items, pricing, hierarchy), customer lookup via XOCS REST API, offline mode constraints. 7 sources, all cited. Verified 2026-03-09.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/oracle-retail-xstore-pos-integration/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Oracle Retail Xstore POS Integration | knowledgelib.io">
+  <meta property="og:description" content="Oracle Retail Xstore POS integration -- transaction posting to ReSA (REST broadcaster + RTLog), foundation data sync from RMS (items, pricing, hierarchy), customer lookup via XOCS REST API, offline mode constraints. 7 sources, all cited. Verified 2026-03-09.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/oracle-retail-xstore-pos-integration/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-09">
+  <meta property="article:modified_time" content="2026-03-09">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Oracle Retail Xstore POS Integration | knowledgelib.io">
+  <meta name="twitter:description" content="Oracle Retail Xstore POS integration -- transaction posting to ReSA (REST broadcaster + RTLog), foundation data sync from RMS (items, pricing, hierarchy), customer lookup via XOCS REST API, offline mode constraints. 7 sources, all cited. Verified 2026-03-09.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.85">
+  <meta name="ai:last_verified" content="2026-03-09">
+  <meta name="ai:domain" content="business/erp-integration/oracle-retail-xstore-pos-integration">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How does Oracle Retail Xstore POS integration work - transaction posting, inventory sync, customer lookup?">
+  <meta name="ai:aliases" content="How do Xstore POS transactions flow to Oracle Retail Merchandising (RMS) via ReSA?; What APIs does Oracle Xstore Office Cloud Service expose for store data?; How does Xstore sync inventory and pricing with Oracle Merchandising Cloud?; What is the RTLog format and how does Xstore use it for transaction posting?">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/oracle-retail-xstore-pos-integration/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-03-09">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-09">
+  <meta name="ai:systems" content="Oracle Retail Xstore POS (v24.0/v23.0/v22.0); Oracle Retail Merchandising System (16.x/Cloud); Oracle Retail Sales Audit (16.x/Cloud)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction">
+  <meta name="ai:constraints" content="Xstore does NOT manage inventory when integrated with RMS -- use SIM/SIOCS; Direct transaction posting to RMS bypassing ReSA is not supported; RTLog export jobs must run daily to prevent delta record loss; Mobile devices have no local database -- require server connectivity">
+  <meta name="ai:skip_this_unit_if" content="Need Oracle Retail SIM/SIOCS inventory details -> business/erp-integration/oracle-retail-sim-siocs-integration/2026; Need Oracle ERP Cloud (Financials/SCM) -> business/erp-integration/oracle-erp-cloud-rest-api/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Oracle Retail Xstore POS Integration",
+    "headline": "Oracle Retail Xstore POS Integration",
+    "description": "Oracle Retail Xstore POS integration reference -- transaction posting to Sales Audit (ReSA) via REST broadcaster and RTLog files, foundation data sync from RMS, customer lookup via XOCS REST API, offline mode constraints, and deployment architecture.",
+    "keywords": ["Oracle Retail Xstore", "Xstore POS", "ERP integration", "ReSA", "RTLog", "Oracle RMS", "POS integration", "retail technology"],
+    "dateModified": "2026-03-09",
+    "datePublished": "2026-03-09",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Oracle Retail Xstore POS v22.0-v24.0, Oracle RMS/ORMCS, Oracle ReSA",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Introduction to Oracle Retail Xstore POS",
+        "url": "https://docs.oracle.com/en/industries/retail/retail-xstore-point-of-service/22.0/rpxmo/introduction-oracle-retail-xstore-pos.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Transaction Flow from Xstore to Sales Audit",
+        "url": "https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Integration with Xstore -- RMS Operations Guide",
+        "url": "https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Oracle Supercharges Retail Operations with New POS (Xstore 2025)",
+        "url": "https://www.oracle.com/news/announcement/oraclexstore-2025-01-13/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Implement Oracle Retail Xstore Point of Service on Oracle Cloud Infrastructure",
+        "url": "https://docs.oracle.com/en/solutions/deploy-xstore-oci/index.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Oracle Merchandising Cloud Integration Guide: POS and ERP Systems",
+        "url": "https://www.skillnetinc.com/resources/blogs/a-complete-guide-to-oracle-merchandising-cloud-service-integration-with-pos-erp-systems/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Xstore Office Cloud Service Administration Guide",
+        "url": "https://docs.oracle.com/en/industries/retail/retail-xstore-cloud/24.0.101.0/xocag/F89761_01.pdf"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Oracle Retail Xstore POS Integration",
+    "description": "Integration reference for Oracle Retail Xstore POS -- transaction posting flows, foundation data sync, customer lookup APIs, deployment architecture, and operational constraints.",
+    "keywords": ["Oracle Retail Xstore", "POS integration", "RTLog", "ReSA", "Oracle RMS", "retail ERP"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-09",
+    "datePublished": "2026-03-09",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "SkillNet Solutions"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Oracle Retail Xstore POS Integration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Oracle Retail Xstore POS integration work - transaction posting, inventory sync, customer lookup?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Xstore POS transactions flow to Oracle Retail Merchandising via Sales Audit (ReSA) using either REST broadcasting (near-real-time) or RTLog file-based export (batch); foundation data (items, pricing, hierarchy) flows from RMS to Xstore via daily pipe-delimited flat file exports."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do Xstore POS transactions flow to Oracle Retail Merchandising (RMS) via ReSA?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Xstore POS transactions flow to Oracle Retail Merchandising via Sales Audit (ReSA) using either REST broadcasting (near-real-time) or RTLog file-based export (batch); foundation data (items, pricing, hierarchy) flows from RMS to Xstore via daily pipe-delimited flat file exports."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What APIs does Oracle Xstore Office Cloud Service expose for store data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Xstore POS transactions flow to Oracle Retail Merchandising via Sales Audit (ReSA) using either REST broadcasting (near-real-time) or RTLog file-based export (batch); foundation data (items, pricing, hierarchy) flows from RMS to Xstore via daily pipe-delimited flat file exports."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Xstore sync inventory and pricing with Oracle Merchandising Cloud?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Xstore POS transactions flow to Oracle Retail Merchandising via Sales Audit (ReSA) using either REST broadcasting (near-real-time) or RTLog file-based export (batch); foundation data (items, pricing, hierarchy) flows from RMS to Xstore via daily pipe-delimited flat file exports."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the RTLog format and how does Xstore use it for transaction posting?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Xstore POS transactions flow to Oracle Retail Merchandising via Sales Audit (ReSA) using either REST broadcasting (near-real-time) or RTLog file-based export (batch); foundation data (items, pricing, hierarchy) flows from RMS to Xstore via daily pipe-delimited flat file exports."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Oracle Retail Xstore POS Integration</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How does Oracle Retail Xstore POS integration work - transaction posting, inventory sync, customer lookup?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/oracle-retail-xstore-pos-integration/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Oracle Retail Xstore POS (v24.0/v23.0/v22.0)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.85 out of 1">0.85</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-09</span></span>
+    <span><strong>Freshness:</strong> 2026-03-09</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Xstore POS transactions flow to Oracle Retail Merchandising via Sales Audit (ReSA) using either REST broadcasting (near-real-time) or RTLog file-based export (batch); foundation data (items, pricing, hierarchy) flows from RMS to Xstore via daily pipe-delimited flat file exports.</li>
+    <li><strong>Key limit</strong>: Direct transaction posting to RMS bypassing ReSA is not supported -- all POS transactions must route through Sales Audit for validation before impacting inventory in Merchandising.</li>
+    <li><strong>Watch out for</strong>: Xstore does not manage store inventory when integrated with RMS -- inventory is handled by SIM/SIOCS. Many integrators mistakenly try to configure Xstore inventory features alongside RMS.</li>
+    <li><strong>Best for</strong>: Multi-format retailers needing unified POS across desktop, thin client, tablet, and handheld devices with transaction posting to Oracle Retail Merchandising and Sales Audit.</li>
+    <li><strong>Authentication</strong>: OAuth 2.0 for Xstore Office Cloud Service REST APIs; basic auth or certificate-based for on-premise Xcenter web services.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -- which ERP and version -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>Oracle Retail Xstore Point of Service is Oracle's enterprise POS platform for specialty, department, and grocery retailers. The 2025 release introduced a containerized architecture on Oracle Cloud Infrastructure (OCI) and Oracle Autonomous Database. Xstore supports multiple form factors: Classic, Desktop, Thin Client, Tablet (iOS/Android), and Handheld. The integration ecosystem centers on Xstore POS, Xcenter/XOCS as the central data hub, and RMS/ORMCS as the merchandise and inventory master. Sales Audit (ReSA) serves as the mandatory intermediary for transaction validation. [<a href="https://docs.oracle.com/en/industries/retail/retail-xstore-point-of-service/22.0/rpxmo/introduction-oracle-retail-xstore-pos.htm">src1</a>, <a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Xstore POS</strong></td><td>Point of sale -- captures transactions, customer data, tender</td><td>POSLog XML (internal)</td><td>Outbound (transactions)</td></tr>
+      <tr><td><strong>Xcenter / XOCS</strong></td><td>Central store server -- aggregation, broadcasting, admin</td><td>REST API, SOAP, DTXQL</td><td>Orchestrator (bidirectional)</td></tr>
+      <tr><td><strong>Oracle Retail Sales Audit (ReSA)</strong></td><td>Transaction validation and audit</td><td>REST (v21+), RTLog file import</td><td>Inbound (receives transactions)</td></tr>
+      <tr><td><strong>Oracle RMS / ORMCS</strong></td><td>Merchandise master -- items, pricing, inventory</td><td>Batch file export, REST</td><td>Outbound (foundation data to Xstore)</td></tr>
+      <tr><td><strong>Oracle Retail SIM / SIOCS</strong></td><td>Store inventory management</td><td>REST, file-based</td><td>Bidirectional (inventory operations)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -- all available API surfaces -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Direction</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>REST Broadcaster (ReSA)</td><td>HTTPS/JSON</td><td>Transaction posting from Xstore to Sales Audit</td><td>Outbound</td><td>Near-real-time</td><td>No</td></tr>
+      <tr><td>RTLog File Export</td><td>File-based (pipe-delimited)</td><td>Legacy transaction posting to ReSA</td><td>Outbound</td><td>No (batch)</td><td>Yes</td></tr>
+      <tr><td>XOCS REST API</td><td>HTTPS/JSON</td><td>Customer lookup, store data queries, admin operations</td><td>Bidirectional</td><td>Yes</td><td>No</td></tr>
+      <tr><td>DTXQL Queries</td><td>REST/HTTPS</td><td>Ad-hoc data queries against Xstore Office tables</td><td>Outbound</td><td>Yes</td><td>No</td></tr>
+      <tr><td>RMS Foundation Export</td><td>File-based (pipe-delimited)</td><td>Item master, pricing, hierarchy sync to Xstore</td><td>Inbound</td><td>No (daily batch)</td><td>Yes</td></tr>
+      <tr><td>Xcenter SOAP Services</td><td>SOAP/XML</td><td>Legacy integrations, inventory/tax engine calls</td><td>Bidirectional</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Xcenter REST Services</td><td>HTTPS/JSON</td><td>Inventory (SIOCS), tax engine integration</td><td>Bidirectional</td><td>Yes</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -- the highest-value section -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>RTLog file size</td><td>System-dependent</td><td>RTLog generator</td><td>Files generated multiple times per day; size depends on transaction volume</td></tr>
+      <tr><td>REST broadcaster payload</td><td>Per-transaction JSON</td><td>ReSA REST endpoint</td><td>Each transaction posted individually in temporal order</td></tr>
+      <tr><td>DTXQL query results</td><td>Configurable page size</td><td>XOCS REST API</td><td>Pagination via GetByQueryResource</td></tr>
+      <tr><td>Foundation export file size</td><td>Unlimited (pipe-delimited)</td><td>RMS batch exports</td><td>One file per entity type per run; store-specific files for items</td></tr>
+      <tr><td>Bulk export threads</td><td>1-20 threads</td><td>Item/location/VAT exports</td><td>Threading parameter Y/N with configurable thread count</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Foundation data exports</td><td>Must run daily</td><td>24h</td><td>Delta records purged after 7 days -- daily runs mandatory</td></tr>
+      <tr><td>RTLog generation</td><td>Multiple per day</td><td>Configurable</td><td>Generated by Xcenter RTLog generator component</td></tr>
+      <tr><td>REST transaction posting</td><td>Near-real-time continuous</td><td>Ongoing</td><td>Temporal ordering preserved; no explicit rate cap documented</td></tr>
+      <tr><td>Rejected transaction query</td><td>Hourly</td><td>Scheduled</td><td>XOCS queries ReSA for rejected transactions hourly</td></tr>
+      <tr><td>Staging table purge</td><td>Weekly</td><td>7-day retention</td><td>export_stg_purge.ksh removes all records older than 7 days</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -- flows and gotchas -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.0 (XOCS Cloud)</td><td>Accessing Xstore Office Cloud Service REST APIs</td><td>Session-based</td><td>Yes</td><td>Set up OAuth Client per XOCS Security Guide</td></tr>
+      <tr><td>Basic Authentication</td><td>On-premise Xcenter web services</td><td>Session-based</td><td>N/A</td><td>Legacy; used for SOAP and some REST endpoints</td></tr>
+      <tr><td>Certificate-based</td><td>Server-to-server integration (on-premise)</td><td>Certificate validity</td><td>N/A</td><td>Used for secure Xcenter-to-ReSA communication</td></tr>
+      <tr><td>IDCS/OCI IAM</td><td>Cloud-native deployments on OCI</td><td>Token-based</td><td>Yes</td><td>Required for OCI Container Instances deployment</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>OAuth Client setup for XOCS requires following the Oracle Retail Xstore Office Cloud Service Security Guide exactly -- missing scopes cause silent permission failures [<a href="https://docs.oracle.com/en/industries/retail/retail-xstore-cloud/24.0.101.0/xocag/F89761_01.pdf">src7</a>]</li>
+    <li>On-premise to cloud migration requires switching from basic auth / certificates to OAuth 2.0 -- this is not backward-compatible [<a href="https://docs.oracle.com/en/solutions/deploy-xstore-oci/index.html">src5</a>]</li>
+    <li>REST broadcaster authentication to ReSA Cloud Service uses a separate credential set from the XOCS admin credentials [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any integration approach -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Xstore inventory functionality must be disabled when integrated with RMS -- no inventory data is exchanged between Xstore and RMS other than sales-related data. Store inventory must be managed by SIM or SIOCS.</li>
+    <li>All POS transaction data must flow through Sales Audit (ReSA) before reaching Merchandising. Direct Xstore-to-RMS transaction posting is not supported.</li>
+    <li>Foundation data (items, pricing, hierarchy) flows only from RMS to Xstore -- Xstore cannot write back master data changes to RMS.</li>
+    <li>RTLog/foundation export delta mode relies on staging tables that are purged weekly. If export jobs do not run daily, delta records are permanently lost.</li>
+    <li>Handheld devices (2x4 form factor) do not support offline transactions, reporting, employee maintenance, or training mode.</li>
+    <li>Mobile devices (tablet, handheld, thin client) have no local database and require persistent mobile server connectivity for all operations.</li>
+    <li>REST broadcaster mapping changes take approximately 30 minutes to propagate through the system.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Integrating Oracle Retail Xstore POS
+|-- What data are you integrating?
+|   |-- POS Transactions (sales, returns, voids)
+|   |   |-- Xstore version >= 21.0?
+|   |   |   |-- YES -> REST Broadcaster to ReSA (near-real-time, recommended)
+|   |   |   |-- NO -> RTLog file-based export to ReSA (batch)
+|   |   |-- Need real-time transaction visibility?
+|   |   |   |-- YES -> REST Broadcaster (temporal ordering preserved)
+|   |   |   |-- NO -> RTLog files (multiple times/day or once daily)
+|   |
+|   |-- Foundation Data (items, pricing, hierarchy, stores)
+|   |   |-- Initial load? -> RMS FULL mode export
+|   |   |-- Ongoing sync? -> RMS DELTA mode export (daily)
+|   |
+|   |-- Customer Data (lookup, enrollment)
+|   |   |-- Cloud (XOCS)? -> XOCS REST API with OAuth 2.0 + DTXQL queries
+|   |   |-- On-premise? -> Xcenter SOAP/REST web services
+|   |
+|   |-- Inventory Data
+|       |-- DO NOT use Xstore inventory features when integrated with RMS
+|       |-- Use Oracle Retail SIM/SIOCS for store inventory management
+|
+|-- Deployment model?
+|   |-- Cloud-native (OCI) -> Containerized Xstore on OCI
+|   |-- On-premise -> Traditional Xcenter server deployment
+|   |-- Hybrid -> Cloud XOCS with on-premise POS terminals
+|
+|-- Error handling?
+    |-- REST Broadcaster -> Rejected transactions queried hourly via Xadmin
+    |-- RTLog files -> saimptlog/saimptlogi validates and creates auditor errors
+    |-- Foundation exports -> Monitor staging table purge schedule (weekly)</code></pre>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Transaction Posting Flow</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Step</th><th scope="col">Source</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">Data Format</th><th scope="col">Failure Handling</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Xstore POS Register</td><td>Captures sale/return/void</td><td>Local POSLog</td><td>POSLog XML</td><td>Stored locally until broadcast</td></tr>
+      <tr><td>2</td><td>Xcenter Broadcaster</td><td>Translates POSLog to JSON or RTLog</td><td>ReSA</td><td>JSON (REST) or RTLog (file)</td><td>Retry; rejected queue</td></tr>
+      <tr><td>3</td><td>ReSA REST Endpoint</td><td>Validates and accepts transaction</td><td>Staging tables</td><td>JSON</td><td>Returns success/reject; hourly reject query</td></tr>
+      <tr><td>4</td><td>ReSA Batch Process</td><td>Imports into ReSA tables</td><td>ReSA tables</td><td>RTLog</td><td>saimptlog/saimptlogi validation + auditor errors</td></tr>
+      <tr><td>5</td><td>ReSA Export</td><td>Exports to Merchandising</td><td>RMS/ORMCS</td><td>Batch export</td><td>Impacts perpetual inventory via uploadsales_all.ksh</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Foundation Data Export Jobs</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Job Script</th><th scope="col">Entity</th><th scope="col">Output File Pattern</th><th scope="col">Mode</th><th scope="col">Contract</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>export_itemmaster.ksh</td><td>Item master data</td><td>itemhdr_{date}_{scope}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000208</td></tr>
+      <tr><td>export_itemloc.ksh</td><td>Item-location data</td><td>itemloc_{date}_{loc}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000209</td></tr>
+      <tr><td>export_merchhier.ksh</td><td>Merchandise hierarchy</td><td>merchhierarchy_{date}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000207</td></tr>
+      <tr><td>export_orghier.ksh</td><td>Org hierarchy</td><td>orghierarchy_{date}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000203</td></tr>
+      <tr><td>export_stores.ksh</td><td>Store master + addresses</td><td>store_{date}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000204</td></tr>
+      <tr><td>export_itemvat.ksh</td><td>Item VAT by region</td><td>vatitem_{date}_{scope}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000214</td></tr>
+      <tr><td>export_vat.ksh</td><td>VAT regions/codes/rates</td><td>vat_{date}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000215</td></tr>
+      <tr><td>export_diffs.ksh</td><td>Differentiators</td><td>diffs_{date}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000206</td></tr>
+      <tr><td>export_relitem.ksh</td><td>Related items</td><td>relitemhead_{date}_{scope}_{mode}_{lines}.dat</td><td>Full/Delta</td><td>IntCon000210</td></tr>
+      <tr><td>export_stg_purge.ksh</td><td>Staging cleanup</td><td>N/A</td><td>Purge (weekly)</td><td>RMS265</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Configure Xstore-to-ReSA REST Broadcasting (v21+)</h3>
+  <p>Set up the REST broadcaster in Xcenter to post transactions to Sales Audit in near-real-time. The broadcaster translates POSLog XML into JSON payloads. [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</p>
+  <pre><code>Endpoint: POST https://&lt;resa-host&gt;:&lt;port&gt;/&lt;tenancyId&gt;/ResaReSTServices/services/private/Resa/salesService
+
+Configuration steps:
+1. Configure ReSA REST endpoint URL in Xcenter broadcaster settings
+2. Set authentication credentials (OAuth 2.0 for cloud, basic auth for on-premise)
+3. Enable temporal ordering to preserve transaction sequence
+4. Configure Broadcaster Customize tab for any custom YAML mapping</code></pre>
+  <p><strong>Verify</strong>: Check Xadmin SystemTools &gt; Publish PosLog Data for transaction status.</p>
+
+  <h3>2. Set Up Foundation Data Exports from RMS</h3>
+  <p>Configure daily batch exports to push item master, pricing, and hierarchy data from RMS to Xcenter/Xstore. [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</p>
+  <pre><code class="language-bash"># Run full export for initial load
+./export_itemmaster.ksh &lt;db_connection&gt; full N
+
+# Run delta export for daily sync
+./export_itemmaster.ksh &lt;db_connection&gt; delta Y
+
+# Run item location export (store-specific)
+./export_itemloc.ksh &lt;db_connection&gt; delta Y &lt;store_number&gt;</code></pre>
+  <p><strong>Verify</strong>: Check output files. Pattern: <code>itemhdr_{date}_corp_{mode}_{linecount}.dat</code></p>
+
+  <h3>3. Configure Customer Lookup via XOCS REST API</h3>
+  <p>Set up OAuth 2.0 client and use DTXQL queries for customer lookup operations. [<a href="https://docs.oracle.com/en/industries/retail/retail-xstore-cloud/24.0.101.0/xocag/F89761_01.pdf">src7</a>]</p>
+  <pre><code class="language-bash"># Obtain access token
+curl -X POST "https://&lt;idcs-host&gt;/oauth2/v1/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&amp;scope=&lt;xocs-scope&gt;" \
+  -u "&lt;client_id&gt;:&lt;client_secret&gt;"
+
+# Query customer data using DTXQL
+curl -X GET "https://&lt;xocs-host&gt;/xocs/rest/v1/query" \
+  -H "Authorization: Bearer &lt;access_token&gt;"</code></pre>
+  <p><strong>Verify</strong>: HTTP 200 response with valid JSON customer records.</p>
+
+  <h3>4. Monitor Rejected Transactions</h3>
+  <p>Configure the hourly rejected transaction query and enable republishing from Xadmin UI. [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</p>
+  <pre><code>Endpoint: GET https://&lt;resa-host&gt;/&lt;tenancyId&gt;/ResaReSTServices/services/private/Resa/getRejectedTransactions
+
+Rejected transactions marked in TRN_POSLOG_WORK_ITEM table:
+WORK_STATUS = "REJECTED"
+
+Republish via: Xadmin &gt; SystemTools &gt; Publish PosLog Data &gt; Republish</code></pre>
+  <p><strong>Verify</strong>: Count of WORK_STATUS = 'REJECTED' records should decrease after republishing.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Query Customer Data via XOCS REST API</h3>
+  <pre><code class="language-python"># Input:  XOCS host, OAuth credentials, customer search criteria
+# Output: Customer records matching the query
+
+import requests
+
+def get_xocs_token(idcs_host, client_id, client_secret, scope):
+    """Obtain OAuth 2.0 access token from IDCS."""
+    resp = requests.post(
+        f"https://{idcs_host}/oauth2/v1/token",
+        data={"grant_type": "client_credentials", "scope": scope},
+        auth=(client_id, client_secret),
+        timeout=30
+    )
+    resp.raise_for_status()
+    return resp.json()["access_token"]
+
+def lookup_customer(xocs_host, token, last_name):
+    """Query customer by last name via DTXQL."""
+    resp = requests.get(
+        f"https://{xocs_host}/xocs/rest/v1/query",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"q": f"last_name = '{last_name}'", "table": "crm_customer"},
+        timeout=30
+    )
+    resp.raise_for_status()
+    return resp.json()</code></pre>
+
+  <h3>Bash: Monitor RTLog Export and Staging Table Health</h3>
+  <pre><code class="language-bash"># Input:  Export directory path, database connection
+# Output: Export status and staging table record counts
+
+EXPORT_DIR="/path/to/exports"
+TODAY=$(date +%Y%m%d)
+
+echo "=== Foundation Data Export Status ==="
+for entity in itemhdr itemloc merchhierarchy orghierarchy store; do
+  FILE=$(ls ${EXPORT_DIR}/${entity}_${TODAY}_* 2>/dev/null | head -1)
+  if [ -n "$FILE" ]; then
+    LINES=$(wc -l &lt; "$FILE")
+    echo "OK: ${entity} exported (${LINES} records)"
+  else
+    echo "MISSING: ${entity} -- no export file for today"
+  fi
+done</code></pre>
+
+  <h3>cURL: Test ReSA REST Endpoint Connectivity</h3>
+  <pre><code class="language-bash"># Input:  ReSA host, tenancy ID, auth token
+# Output: HTTP status code confirming endpoint is reachable
+
+curl -s -o /dev/null -w "%{http_code}" \
+  "https://&lt;resa-host&gt;:&lt;port&gt;/&lt;tenancyId&gt;/ResaReSTServices/services/private/Resa/salesService" \
+  -H "Authorization: Bearer &lt;token&gt;"
+# Expected: 200 or 405 (Method Not Allowed for GET on POST-only endpoint)</code></pre>
+  </section>
+
+  <!-- Data Mapping -- field mapping and transformation rules -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>RTLog Record Types</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Record Type</th><th scope="col">Code</th><th scope="col">Description</th><th scope="col">Frequency</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>File Header</td><td>FHEAD</td><td>File-level metadata</td><td>1 per file (required)</td></tr>
+      <tr><td>Transaction Header</td><td>THEAD</td><td>Transaction-level header</td><td>1 per transaction</td></tr>
+      <tr><td>Customer Record</td><td>TCUST</td><td>Customer associated with transaction</td><td>0-1 per transaction</td></tr>
+      <tr><td>Item Record</td><td>TITEM</td><td>Line item detail</td><td>1+ per transaction</td></tr>
+      <tr><td>Discount Record</td><td>IDISC</td><td>Discount applied to item</td><td>0+ per item</td></tr>
+      <tr><td>Tax Record</td><td>IGTAX</td><td>Tax applied to item</td><td>0+ per item</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Foundation Data Field Mapping (RMS to Xstore)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">RMS Source</th><th scope="col">Xstore Target</th><th scope="col">Type</th><th scope="col">Transform</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ITEM_MASTER.ITEM</td><td>Xstore item ID</td><td>String</td><td>Direct mapping</td><td>Parent items exported as separate records</td></tr>
+      <tr><td>ITEM_MASTER.ITEM_DESC</td><td>Xstore item description</td><td>String</td><td>Direct</td><td>Truncation may occur on handheld displays</td></tr>
+      <tr><td>ITEM_LOC.UNIT_RETAIL</td><td>Xstore selling price</td><td>Currency</td><td>Direct</td><td>Multi-currency requires separate VAT export</td></tr>
+      <tr><td>SUBCLASS.SUB</td><td>Xstore subclass</td><td>String</td><td>Via hierarchy export</td><td>Must match merchandise hierarchy export</td></tr>
+      <tr><td>STORE.STORE</td><td>Xstore location ID</td><td>Integer</td><td>Direct</td><td>Store-specific item files filter by ITEM_LOC</td></tr>
+      <tr><td>VAT_CODE_RATES.VAT_RATE</td><td>Xstore tax rate</td><td>Decimal</td><td>Percentage to decimal</td><td>Exempt VAT regions (SVAT type) excluded</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>POSLog XML uses UTC timestamps internally, but Xstore displays in store-local timezone. RTLog exports use the store timezone, causing potential mismatches in cross-timezone reporting. [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</li>
+    <li>RMS foundation exports use pipe-delimited flat files. Any pipe characters in source data will corrupt file parsing. [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</li>
+    <li>FULL mode exports exclude deleted records entirely, while DELTA mode includes deletion markers. Downstream systems must handle both patterns. [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Scenarios</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Symptom</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>REST broadcast rejection</td><td>Transaction in REJECTED status</td><td>ReSA validation failure</td><td>Review in Xadmin; fix data and republish</td></tr>
+      <tr><td>RTLog import failure</td><td>saimptlog error log entries</td><td>Malformed RTLog file or corrupt data</td><td>Check RTLogMappingConfig.xml; verify mapping</td></tr>
+      <tr><td>Foundation export empty</td><td>Zero-line .dat files</td><td>No delta changes or staging already purged</td><td>Run FULL mode export to resync</td></tr>
+      <tr><td>Lost delta records</td><td>Items missing in Xstore</td><td>Export jobs not run for >7 days</td><td>Run FULL mode export to resync all records</td></tr>
+      <tr><td>OAuth token expiration</td><td>HTTP 401 on XOCS API calls</td><td>Token expired or insufficient scope</td><td>Refresh token; verify OAuth client in IDCS</td></tr>
+      <tr><td>Mobile server disconnection</td><td>Tablet/handheld cannot transact</td><td>Network outage to mobile server</td><td>Desktop/thin client can go offline; mobile cannot</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Staging table purge destroys unextracted deltas</strong>: If export_stg_purge.ksh runs before delta exports, changed records are permanently lost. Fix: <code>Schedule export jobs daily BEFORE the weekly purge job.</code> [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</li>
+    <li><strong>REST broadcaster mapping propagation delay</strong>: Custom YAML mapping changes take ~30 minutes to propagate. Fix: <code>Schedule mapping changes during low-transaction periods.</code> [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</li>
+    <li><strong>Offline transactions not syncing</strong>: Desktop/thin client offline transactions may not auto-broadcast on reconnection. Fix: <code>Monitor offline queue; force manual broadcast via Xadmin if needed.</code> [<a href="https://docs.oracle.com/en/industries/retail/retail-xstore-point-of-service/22.0/rpxmo/introduction-oracle-retail-xstore-pos.htm">src1</a>]</li>
+    <li><strong>saimptlogi vs saimptlog confusion</strong>: Using the wrong import process causes incomplete loading or duplicates. Fix: <code>saimptlogi for continuous intraday; saimptlog for once-daily batch. Never mix both.</code> [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</li>
+    <li><strong>Store-specific vs corporate item files</strong>: Corporate files include items not ranged to the store, causing phantom inventory. Fix: <code>Always use store-specific files for individual store loads.</code> [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs correct integration approach -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Bypassing ReSA for Direct RMS Transaction Posting</h3>
+  <pre><code>// BAD -- Attempting to post Xstore transactions directly to RMS
+// This is not supported and will cause inventory discrepancies
+Xstore -> Custom middleware -> RMS (direct insert to inventory tables)</code></pre>
+
+  <h3>Correct: Route All Transactions Through Sales Audit</h3>
+  <pre><code>// GOOD -- Mandatory transaction flow through ReSA
+Xstore -> Xcenter Broadcaster -> ReSA (validation) -> RMS (inventory impact)</code></pre>
+
+  <h3>Wrong: Enabling Xstore Inventory Features with RMS</h3>
+  <pre><code>// BAD -- Configuring Xstore inventory management when RMS is active
+// Xstore inventory must be DISABLED when integrated with RMS</code></pre>
+
+  <h3>Correct: Use SIM/SIOCS for Store Inventory</h3>
+  <pre><code>// GOOD -- Proper inventory architecture with RMS
+Xstore (sales only) -> ReSA -> RMS (inventory impact)
+SIM/SIOCS (inventory mgmt) &lt;-> RMS (inventory master)
+Xstore (inventory lookup) &lt;-> SIM/SIOCS (real-time stock)</code></pre>
+
+  <h3>Wrong: Skipping Daily Exports</h3>
+  <pre><code class="language-bash"># BAD -- Skipping exports because "nothing changed"
+# Delta records in staging tables are purged after 7 days
+if [ "$CHANGES_EXPECTED" = "true" ]; then
+    ./export_itemmaster.ksh $DB delta Y
+fi</code></pre>
+
+  <h3>Correct: Run Exports on a Fixed Daily Schedule</h3>
+  <pre><code class="language-bash"># GOOD -- Always run exports daily regardless of expected changes
+./export_itemmaster.ksh $DB delta Y
+./export_itemloc.ksh $DB delta Y
+./export_merchhier.ksh $DB delta
+./export_orghier.ksh $DB delta
+./export_stores.ksh $DB delta</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Confusing Oracle Retail with Oracle ERP Cloud</strong>: Oracle Retail Xstore is part of the Oracle Retail suite (RMS, ReSA, SIM), NOT Oracle ERP Cloud (Financials, SCM, HCM). Integration patterns and APIs are completely different. Fix: <code>Verify you are referencing Oracle Retail documentation, not Oracle ERP Cloud.</code> [<a href="https://docs.oracle.com/en/industries/retail/retail-xstore-point-of-service/22.0/rpxmo/introduction-oracle-retail-xstore-pos.htm">src1</a>]</li>
+    <li><strong>Not pinning the export mode (FULL vs DELTA)</strong>: Running FULL mode daily wastes processing time. Running DELTA mode for initial loads misses pre-existing records. Fix: <code>Use FULL for initial load and periodic resync. Use DELTA for daily incremental updates.</code> [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</li>
+    <li><strong>Ignoring the threading parameter on large exports</strong>: Single-threaded item exports on retailers with 500K+ items can take hours. Fix: <code>Enable threading (Y) with 5-10 threads for item, location, and VAT exports.</code> [<a href="https://docs.oracle.com/cd/E79623_01/rms/pdf/160025/html/operations_guide1/rms-integr_xstore.htm">src3</a>]</li>
+    <li><strong>Deploying tablet/handheld without offline fallback</strong>: Tablet and handheld devices have no local database and cannot transact when the mobile server is unreachable. Fix: <code>Ensure at least one Desktop or Thin Client register per store for offline capability.</code> [<a href="https://docs.oracle.com/en/industries/retail/retail-xstore-point-of-service/22.0/rpxmo/introduction-oracle-retail-xstore-pos.htm">src1</a>]</li>
+    <li><strong>Assuming REST broadcaster is instantaneous</strong>: While near-real-time, temporal ordering means high-volume stores may experience posting delays during peak hours. Fix: <code>Monitor broadcaster queue depth. Scale Xcenter broadcaster instances for high-volume stores.</code> [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</li>
+    <li><strong>Not monitoring rejected transactions queue</strong>: Rejected transactions silently fail to reach Merchandising, causing inventory discrepancies. Fix: <code>Configure alerting on TRN_POSLOG_WORK_ITEM for WORK_STATUS = 'REJECTED'. Review daily.</code> [<a href="https://docs.oracle.com/cd/F13595_01/xocs/pdf/210/html/xstore_merch_impl/xstore_to_resa.htm">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check RTLog export file generation (today's files)
+ls -la /path/to/exports/*_$(date +%Y%m%d)_*.dat
+
+# Verify staging table record counts
+sqlplus -S $DB_CONN &lt;&lt;EOF
+SELECT 'ITEM_EXPORT_STG' AS tbl, COUNT(*) AS cnt FROM ITEM_EXPORT_STG
+UNION ALL SELECT 'STORE_EXPORT_STG', COUNT(*) FROM STORE_EXPORT_STG
+UNION ALL SELECT 'MERCHHIER_EXPORT_STG', COUNT(*) FROM MERCHHIER_EXPORT_STG;
+EOF
+
+# Check rejected transaction count
+curl -X GET "https://&lt;xocs-host&gt;/ResaReSTServices/services/private/Resa/getRejectedTransactions" \
+  -H "Authorization: Bearer &lt;token&gt;" | python -c "import sys,json; print(len(json.load(sys.stdin)))"
+
+# Test XOCS REST API authentication
+curl -s -o /dev/null -w "%{http_code}" \
+  "https://&lt;xocs-host&gt;/xocs/rest/v1/health" \
+  -H "Authorization: Bearer &lt;token&gt;"
+
+# Verify foundation data export schedule compliance
+find /path/to/exports -name "*.dat" -mtime +1 -printf "%f -- STALE (>1 day old)\n"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Release Date</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>v24.0</td><td>2024-10</td><td>Current</td><td>Containerized architecture on OCI; OCI Roving Edge</td><td>Major architecture change; requires OCI for new model</td></tr>
+      <tr><td>v23.0</td><td>2023-10</td><td>Supported</td><td>Pay By Link tenders; enhanced mobile</td><td>Incremental upgrade; REST APIs backward-compatible</td></tr>
+      <tr><td>v22.0</td><td>2023-01</td><td>Supported</td><td>Dark mode; enhanced accessibility</td><td>Standard upgrade path</td></tr>
+      <tr><td>v21.0</td><td>2022-01</td><td>Supported (EOL approaching)</td><td>REST broadcaster for ReSA introduced</td><td>First REST-based posting; upgrade recommended</td></tr>
+      <tr><td>v20.0</td><td>2021-01</td><td>EOL</td><td>Last version before REST broadcaster</td><td>RTLog file-based only; upgrade to v21+</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Integrating Oracle Retail POS with RMS/ORMCS for merchandise and transaction management</td><td>You need financial ERP integration (AP, AR, GL)</td><td>Oracle ERP Cloud REST API or Financials integration</td></tr>
+      <tr><td>Deploying multi-format retail POS (desktop + tablet + handheld)</td><td>You need e-commerce / digital commerce integration</td><td>Oracle Commerce Cloud / ATG integration</td></tr>
+      <tr><td>Posting POS transactions through Sales Audit (ReSA) for validation</td><td>You need warehouse management integration</td><td>Oracle WMS or SIM/SIOCS integration</td></tr>
+      <tr><td>Syncing foundation data (items, pricing, hierarchy) from RMS to POS</td><td>You need real-time inventory availability across channels</td><td>Oracle Retail SIOCS or OMS integration</td></tr>
+      <tr><td>You are an Oracle Retail ecosystem customer (RMS, RPM, SIM, ReSA)</td><td>You use a non-Oracle merchandising system</td><td>Custom POS integration or alternative POS platform</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Xstore integration architecture varies significantly between on-premise (Xcenter server) and cloud (XOCS) deployments. API authentication, endpoint URLs, and configuration methods differ.</li>
+    <li>The 2025 containerized architecture (v24+) is a major shift that may affect existing custom integrations. Custom Xcenter extensions may need to be re-containerized.</li>
+    <li>Foundation data exports are file-based and batch-oriented. There is no real-time API for pushing item/pricing changes from RMS to Xstore. Expect a minimum 24-hour delay.</li>
+    <li>Offline transaction capability is only available on Desktop and Thin Client form factors. Retailers relying heavily on mobile POS must ensure robust network infrastructure.</li>
+    <li>Rate limits and throughput for REST broadcaster transaction posting are not explicitly documented by Oracle. Performance depends on server capacity and network bandwidth.</li>
+    <li>This card covers the Oracle Retail-specific integration. Oracle ERP Cloud (Fusion) uses completely different APIs and is a separate product line.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/oracle-erp-cloud-rest-api/2026" data-relationship="often_confused_with">Oracle ERP Cloud REST API -- Different Oracle product line (Financials/SCM, not Retail)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

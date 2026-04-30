@@ -1,0 +1,100 @@
+# Docker Compose: Redis Sentinel (1 Master + 2 Replicas + 3 Sentinels)
+# Source: knowledgelib.io -- AI Knowledge Library (verified 2026-02-27)
+# Usage: docker compose -f docker-compose-sentinel.yml up -d
+# Requires: sentinel.conf in the same directory
+
+services:
+  redis-master:
+    image: redis:7.4-alpine
+    container_name: redis-master
+    ports:
+      - "6379:6379"
+    volumes:
+      - master-data:/data
+    command: redis-server --appendonly yes --appendfsync everysec --save 60 1000
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - redis-sentinel
+
+  redis-replica-1:
+    image: redis:7.4-alpine
+    container_name: redis-replica-1
+    ports:
+      - "6380:6379"
+    volumes:
+      - replica1-data:/data
+    command: redis-server --replicaof redis-master 6379 --appendonly yes
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      - redis-sentinel
+
+  redis-replica-2:
+    image: redis:7.4-alpine
+    container_name: redis-replica-2
+    ports:
+      - "6381:6379"
+    volumes:
+      - replica2-data:/data
+    command: redis-server --replicaof redis-master 6379 --appendonly yes
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      - redis-sentinel
+
+  redis-sentinel-1:
+    image: redis:7.4-alpine
+    container_name: redis-sentinel-1
+    ports:
+      - "26379:26379"
+    volumes:
+      - ./sentinel.conf:/usr/local/etc/redis/sentinel.conf
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      - redis-sentinel
+
+  redis-sentinel-2:
+    image: redis:7.4-alpine
+    container_name: redis-sentinel-2
+    ports:
+      - "26380:26379"
+    volumes:
+      - ./sentinel.conf:/usr/local/etc/redis/sentinel.conf
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      - redis-sentinel
+
+  redis-sentinel-3:
+    image: redis:7.4-alpine
+    container_name: redis-sentinel-3
+    ports:
+      - "26381:26379"
+    volumes:
+      - ./sentinel.conf:/usr/local/etc/redis/sentinel.conf
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      - redis-sentinel
+
+networks:
+  redis-sentinel:
+    driver: bridge
+
+volumes:
+  master-data:
+  replica1-data:
+  replica2-data:

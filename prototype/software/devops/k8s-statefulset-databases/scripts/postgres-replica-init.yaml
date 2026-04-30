@@ -1,0 +1,68 @@
+# Input:  Kubernetes cluster with headless Service + postgres-secret
+# Output: PostgreSQL primary (ordinal 0) + read replicas with role detection
+# Usage:  kubectl apply -f postgres-replica-init.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres-hl
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      initContainers:
+        - name: init-role
+          image: postgres:16-alpine
+          command: ['sh', '-c']
+          args:
+            - |
+              ORDINAL=$(echo $HOSTNAME | rev | cut -d'-' -f1 | rev)
+              if [ "$ORDINAL" = "0" ]; then
+                echo "primary" > /config/role
+              else
+                echo "replica" > /config/role
+                # Wait for primary to be ready before proceeding
+                until pg_isready -h postgres-0.postgres-hl -U postgres; do
+                  echo "Waiting for primary..."
+                  sleep 2
+                done
+              fi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 10Gi

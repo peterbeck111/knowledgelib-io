@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes Security Checklist: Cluster Hardening | knowledgelib.io</title>
+  <meta name="description" content="Complete Kubernetes security checklist covering RBAC, network policies, pod security standards, secrets encryption, image scanning, API server...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/kubernetes-security/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes Security Checklist: Cluster Hardening | knowledgelib.io">
+  <meta property="og:description" content="Complete Kubernetes security checklist covering RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, audit logging, and runtime monitoring with Falco. 8 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/kubernetes-security/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes Security Checklist: Cluster Hardening | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Kubernetes security checklist covering RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, audit logging, and runtime monitoring with Falco. 8 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/Kubernetes Security">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What is the Kubernetes security checklist?">
+  <meta name="ai:aliases" content="Kubernetes security best practices; K8s cluster hardening checklist; how to secure a Kubernetes cluster; Kubernetes RBAC network policy pod security; CIS Kubernetes Benchmark controls; NSA CISA Kubernetes hardening guide; Kubernetes security audit checklist; K8s production security configuration">
+  <meta name="ai:raw" content="/api/v1/units/software/security/kubernetes-security/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="environment,security_focus">
+  <meta name="ai:constraints" content="NEVER run workloads as root unless required; NEVER leave etcd unencrypted or without mTLS; NEVER use system:masters for regular auth; ALWAYS apply default-deny NetworkPolicies; NEVER store secrets in plaintext; ALWAYS run latest supported K8s version">
+  <meta name="ai:skip_this_unit_if" content="Need Docker/container image security only → software/security/container-image-security/2026; Need cloud-specific K8s security (EKS/GKE/AKS) → software/security/cloud-kubernetes-security/2026; Need application-level web security → software/security/xss-prevention/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes Security Checklist: Cluster Hardening Guide",
+    "headline": "Kubernetes Security Checklist: Cluster Hardening Guide",
+    "description": "Complete Kubernetes security checklist covering 12 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, audit logging, runtime monitoring, resource limits, node security, and service mesh mTLS. Based on official K8s docs, CIS Benchmark, NSA/CISA guide, and OWASP.",
+    "keywords": ["Kubernetes security", "K8s hardening", "RBAC", "NetworkPolicy", "Pod Security Standards", "CIS Benchmark", "etcd security", "Falco", "container security", "cluster security"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.28+, kube-bench, Falco 0.37+, Trivy 0.50+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Security Checklist",
+        "url": "https://kubernetes.io/docs/concepts/security/security-checklist/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Security Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Hardening Guide v1.2",
+        "url": "https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CIS Kubernetes Benchmarks",
+        "url": "https://www.cisecurity.org/benchmark/kubernetes"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pod Security Standards",
+        "url": "https://kubernetes.io/docs/concepts/security/pod-security-standards/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Security: 2025 Stable Features and 2026 Preview",
+        "url": "https://www.cncf.io/blog/2025/12/15/kubernetes-security-2025-stable-features-and-2026-preview/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OWASP Kubernetes Top Ten",
+        "url": "https://owasp.org/www-project-kubernetes-top-ten/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Falco - Cloud Native Runtime Security",
+        "url": "https://falco.org/docs/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes Security Checklist: Cluster Hardening Guide",
+    "description": "Structured knowledge unit on Kubernetes security covering RBAC configuration, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, audit logging, and runtime monitoring with code examples and diagnostic commands.",
+    "keywords": ["Kubernetes security", "K8s hardening", "RBAC", "NetworkPolicy", "Pod Security Standards", "CIS Benchmark", "etcd security", "Falco", "container security"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes Project"},
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "NSA/CISA"},
+      {"@type": "Organization", "name": "Center for Internet Security"},
+      {"@type": "Organization", "name": "CNCF"},
+      {"@type": "Organization", "name": "Falco Project"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes Security Checklist" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the Kubernetes security checklist?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes security best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "K8s cluster hardening checklist",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to secure a Kubernetes cluster",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes RBAC network policy pod security",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CIS Kubernetes Benchmark controls",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes Security Checklist: Cluster Hardening Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What is the Kubernetes security checklist?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/kubernetes-security/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Kubernetes security requires defense-in-depth across 8 domains: RBAC, network policies, pod security standards, secrets encryption, image scanning, API server hardening, etcd protection, and audit logging -- no single control is sufficient.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl auth can-i --list --as=system:serviceaccount:ns:sa</code> to audit RBAC permissions; <code>kube-bench run</code> to check CIS Benchmark compliance.</li>
+    <li><strong>Watch out for</strong>: Default Kubernetes allows all pod-to-pod communication and runs containers as root -- you must explicitly apply NetworkPolicies and Pod Security Standards to every namespace.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.28+ (Pod Security Admission GA). CIS Benchmark covers 1.29-1.31. NSA/CISA guide applies to all versions. Falco 0.37+.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER run workloads as root unless absolutely required -- enforce runAsNonRoot: true and drop ALL capabilities</li>
+    <li>NEVER leave etcd unencrypted or accessible without mTLS -- write access to etcd equals root on the entire cluster</li>
+    <li>NEVER use the system:masters group for regular authentication -- reserve for break-glass emergency access only</li>
+    <li>ALWAYS apply default-deny NetworkPolicies in every namespace before deploying workloads</li>
+    <li>NEVER store secrets in plaintext in manifests or environment variables -- use encryption at rest and external secret managers</li>
+    <li>ALWAYS run the latest supported Kubernetes minor version -- only the 3 most recent minors receive security patches</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Security Domain</th><th scope="col">Risk Level</th><th scope="col">Key Control</th><th scope="col">Verification Command</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>RBAC</td><td>Critical</td><td>Least-privilege Roles; no system:masters for users</td><td><code>kubectl auth can-i --list --as=&lt;user&gt;</code></td></tr>
+      <tr><td>2</td><td>Network Policies</td><td>Critical</td><td>Default-deny ingress/egress in every namespace</td><td><code>kubectl get networkpolicy -A</code></td></tr>
+      <tr><td>3</td><td>Pod Security Standards</td><td>Critical</td><td>Enforce restricted or baseline per namespace</td><td><code>kubectl label ns &lt;ns&gt; pod-security.kubernetes.io/enforce=restricted</code></td></tr>
+      <tr><td>4</td><td>Secrets Management</td><td>Critical</td><td>Encryption at rest; external secret manager (Vault, AWS SM)</td><td><code>kubectl get secrets -o yaml</code> (check no plaintext)</td></tr>
+      <tr><td>5</td><td>Image Security</td><td>High</td><td>Scan images in CI; allow only signed/trusted images</td><td><code>trivy image &lt;image:tag&gt;</code></td></tr>
+      <tr><td>6</td><td>API Server</td><td>Critical</td><td>Disable anonymous auth; enable audit logging; use OIDC</td><td><code>curl -k https://&lt;api&gt;:6443/healthz</code> (should require auth)</td></tr>
+      <tr><td>7</td><td>etcd</td><td>Critical</td><td>mTLS; isolate behind firewall; encrypt at rest</td><td><code>etcdctl endpoint health --cluster</code></td></tr>
+      <tr><td>8</td><td>Audit Logging</td><td>High</td><td>Enable audit policy; protect log storage</td><td><code>--audit-policy-file</code> flag on kube-apiserver</td></tr>
+      <tr><td>9</td><td>Runtime Security</td><td>High</td><td>Deploy Falco or equivalent; detect anomalous syscalls</td><td><code>kubectl logs -n falco -l app=falco</code></td></tr>
+      <tr><td>10</td><td>Resource Limits</td><td>Medium</td><td>Set CPU/memory requests and limits on all pods</td><td><code>kubectl describe resourcequota -A</code></td></tr>
+      <tr><td>11</td><td>Node Security</td><td>High</td><td>Seccomp + AppArmor/SELinux; isolate sensitive workloads</td><td><code>kubectl get pod -o jsonpath='{.spec.securityContext}'</code></td></tr>
+      <tr><td>12</td><td>Service Mesh / mTLS</td><td>Medium</td><td>Encrypt all in-cluster traffic with mutual TLS</td><td><code>istioctl analyze</code> or mesh-specific check</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What is your primary Kubernetes security concern?
+&#9500;&#9472;&#9472; Setting up a new cluster from scratch?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Follow full checklist: Steps 1-8 below
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Hardening an existing production cluster?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Run kube-bench first (Step 1), then fix gaps by priority
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Investigating a specific security domain?
+&#9474;   &#9500;&#9472;&#9472; RBAC &#8594; Step 2 (RBAC) + Anti-Pattern #1
+&#9474;   &#9500;&#9472;&#9472; Network &#8594; Step 3 (NetworkPolicies)
+&#9474;   &#9500;&#9472;&#9472; Pod Security &#8594; Step 4 (Pod Security Standards)
+&#9474;   &#9500;&#9472;&#9472; Secrets &#8594; Step 5 (Secrets Management)
+&#9474;   &#9500;&#9472;&#9472; Images &#8594; Step 6 (Image Security)
+&#9474;   &#9500;&#9472;&#9472; Runtime &#8594; Step 7 (Runtime Monitoring)
+&#9474;   &#9492;&#9472;&#9472; Audit &#8594; Step 8 (Audit Logging)
+&#9500;&#9472;&#9472; Preparing for compliance audit (CIS/SOC2/PCI)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Run kube-bench + review CIS Benchmark sections
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Start with kube-bench scan, address Critical findings first</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Run CIS Benchmark assessment with kube-bench</h3>
+  <p>Establish a security baseline by running kube-bench against the CIS Kubernetes Benchmark. [<a href="https://www.cisecurity.org/benchmark/kubernetes">src4</a>]</p>
+  <pre><code class="language-bash"># Run kube-bench as a Kubernetes Job
+kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml
+kubectl logs job/kube-bench</code></pre>
+  <p><strong>Verify</strong>: Review output for <code>[FAIL]</code> items -- these are CIS Benchmark violations. Expected: zero FAIL items for a hardened cluster.</p>
+
+  <h3>2. Configure least-privilege RBAC</h3>
+  <p>Implement RBAC with the principle of least privilege. Use namespace-scoped Roles wherever possible. [<a href="https://kubernetes.io/docs/concepts/security/security-checklist/">src1</a>]</p>
+  <pre><code class="language-yaml"># Role: Read-only access to pods in a specific namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: production
+  name: read-pods-binding
+subjects:
+- kind: Group
+  name: "developers"
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl auth can-i create pods --as=developer1 -n production</code> &#8594; expected: <code>no</code></p>
+
+  <h3>3. Apply default-deny NetworkPolicies</h3>
+  <p>Default Kubernetes allows all pod-to-pod communication. Apply default-deny in every namespace. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html">src2</a>]</p>
+  <pre><code class="language-yaml"># Default deny all ingress and egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get networkpolicy -n production</code> &#8594; should list default-deny-all.</p>
+
+  <h3>4. Enforce Pod Security Standards</h3>
+  <p>Apply Pod Security Standards at the namespace level. Use <code>restricted</code> for security-critical workloads. [<a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/">src5</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl run test --image=nginx --privileged -n production</code> &#8594; expected: rejected by Pod Security Admission.</p>
+
+  <h3>5. Secure secrets with encryption at rest</h3>
+  <p>Enable Kubernetes secret encryption at rest and use external secret managers for production. [<a href="https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+    - secrets
+    providers:
+    - aescbc:
+        keys:
+        - name: key1
+          secret: &lt;base64-encoded-32-byte-key&gt;
+    - identity: {}</code></pre>
+  <p><strong>Verify</strong>: Check etcd data with hexdump -- should show encryption prefix, not plaintext.</p>
+
+  <h3>6. Implement image scanning in CI/CD</h3>
+  <p>Scan container images for vulnerabilities before deployment. Block images with critical CVEs. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html">src2</a>]</p>
+  <pre><code class="language-bash"># Scan with Trivy -- exit code 1 fails CI build
+trivy image --severity CRITICAL,HIGH --exit-code 1 myregistry/myapp:latest</code></pre>
+  <p><strong>Verify</strong>: <code>trivy image myapp:latest --severity CRITICAL</code> &#8594; expected: 0 critical vulnerabilities.</p>
+
+  <h3>7. Deploy runtime security monitoring (Falco)</h3>
+  <p>Install Falco to detect anomalous runtime behavior: shell execution, unexpected file access, privilege escalation. [<a href="https://falco.org/docs/">src8</a>]</p>
+  <pre><code class="language-bash">helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm install falco falcosecurity/falco \
+  --namespace falco --create-namespace \
+  --set falcosidekick.enabled=true</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl logs -n falco -l app.kubernetes.io/name=falco</code> &#8594; should show Falco running.</p>
+
+  <h3>8. Enable Kubernetes audit logging</h3>
+  <p>Configure API server audit logging to track all authentication, authorization, and resource operations. [<a href="https://kubernetes.io/docs/concepts/security/security-checklist/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["secrets", "configmaps"]
+  - level: RequestResponse
+    resources:
+    - group: "rbac.authorization.k8s.io"
+      resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+  - level: Metadata
+    omitStages:
+    - RequestReceived</code></pre>
+  <p><strong>Verify</strong>: <code>cat /var/log/kubernetes/audit.log | jq '.verb' | head</code> &#8594; should show recent API operations.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Complete RBAC Configuration for a Microservice</h3>
+  <pre><code class="language-yaml"># Input:  Microservice needing ConfigMap and Secret access in its namespace
+# Output: Least-privilege RBAC with separate service account
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: order-service
+  namespace: orders
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: orders
+  name: order-service-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["order-config"]
+  verbs: ["get", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["order-db-creds"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: orders
+  name: order-service-binding
+subjects:
+- kind: ServiceAccount
+  name: order-service
+  namespace: orders
+roleRef:
+  kind: Role
+  name: order-service-role
+  apiGroup: rbac.authorization.k8s.io</code></pre>
+
+  <h3>YAML: Comprehensive NetworkPolicy for Multi-Tier App</h3>
+  <pre><code class="language-yaml"># Input:  Three-tier app (frontend, backend, database)
+# Output: NetworkPolicies allowing only required paths
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: frontend
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53</code></pre>
+
+  <h3>YAML: Falco Custom Runtime Security Rules</h3>
+  <pre><code class="language-yaml"># Input:  Kubernetes cluster with security monitoring
+# Output: Falco rules detecting common attack patterns
+
+- rule: Shell Spawned in Container
+  desc: Detect shell execution inside a container
+  condition: &gt;
+    spawned_process and container and
+    proc.name in (bash, sh, zsh, csh, ksh)
+  output: &gt;
+    Shell spawned (user=%user.name container=%container.name
+    image=%container.image.repository pod=%k8s.pod.name
+    ns=%k8s.ns.name shell=%proc.name)
+  priority: WARNING
+  tags: [container, shell, mitre_execution]
+
+- rule: Read Sensitive File in Container
+  desc: Detect reading of sensitive files
+  condition: &gt;
+    open_read and container and
+    (fd.name startswith /etc/shadow or
+     fd.name startswith /root/.ssh)
+  output: &gt;
+    Sensitive file read (file=%fd.name container=%container.name
+    pod=%k8s.pod.name)
+  priority: ERROR
+  tags: [container, filesystem, mitre_credential_access]</code></pre>
+
+  <h3>Bash: Automated Security Audit Script</h3>
+  <pre><code class="language-bash">#!/usr/bin/env bash
+# Input:  kubectl access to a Kubernetes cluster
+# Output: Security posture report
+
+set -euo pipefail
+echo "=== Kubernetes Security Audit ==="
+echo "Cluster: $(kubectl config current-context)"
+
+# Check pods running as root
+echo "--- Pods Running as Root ---"
+kubectl get pods -A -o json | \
+  jq -r '.items[] | select(.spec.securityContext.runAsNonRoot != true) |
+  "\(.metadata.namespace)/\(.metadata.name)"' | head -20
+
+# Namespaces without PSS enforcement
+echo "--- Namespaces Without PSS ---"
+kubectl get ns -o json | \
+  jq -r '.items[] | select(.metadata.labels["pod-security.kubernetes.io/enforce"] == null) |
+  .metadata.name' | grep -v "^kube-"
+
+echo "=== Audit Complete ==="</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Granting cluster-admin to application service accounts</h3>
+  <pre><code class="language-yaml"># BAD -- cluster-admin gives full control over the entire cluster
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: app-admin
+subjects:
+- kind: ServiceAccount
+  name: my-app
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io</code></pre>
+
+  <h3>Correct: Scoped Role with minimum required permissions</h3>
+  <pre><code class="language-yaml"># GOOD -- namespace-scoped Role with only needed permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: my-app-ns
+  name: my-app-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["my-app-config"]
+  verbs: ["get", "watch"]</code></pre>
+
+  <h3>Wrong: No NetworkPolicy (default allow-all)</h3>
+  <pre><code class="language-yaml"># BAD -- no NetworkPolicy means any pod can reach any other pod
+# This is the default Kubernetes behavior
+# (No manifest needed -- this is what you get by doing nothing)</code></pre>
+
+  <h3>Correct: Default-deny with explicit allow rules</h3>
+  <pre><code class="language-yaml"># GOOD -- default deny everything, then allow specific traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress</code></pre>
+
+  <h3>Wrong: Running containers as root with all capabilities</h3>
+  <pre><code class="language-yaml"># BAD -- running as root with privilege escalation enabled
+apiVersion: v1
+kind: Pod
+metadata:
+  name: insecure-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    securityContext:
+      privileged: true
+      runAsUser: 0</code></pre>
+
+  <h3>Correct: Non-root with dropped capabilities and read-only filesystem</h3>
+  <pre><code class="language-yaml"># GOOD -- restricted security context
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: app
+    image: myapp:1.0.0
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]</code></pre>
+
+  <h3>Wrong: Storing secrets in plaintext environment variables</h3>
+  <pre><code class="language-yaml"># BAD -- plaintext secrets in manifest, exposed via env vars
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+    env:
+    - name: DB_PASSWORD
+      value: "super-secret-password"</code></pre>
+
+  <h3>Correct: External secret manager with volume mount</h3>
+  <pre><code class="language-yaml"># GOOD -- secrets managed externally, mounted as read-only files
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+    volumeMounts:
+    - name: db-creds
+      mountPath: /etc/secrets
+      readOnly: true
+  volumes:
+  - name: db-creds
+    secret:
+      secretName: db-credentials</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Auto-mounted service account tokens</strong>: Every pod gets a service account token by default, expanding blast radius if compromised. Fix: Set <code>automountServiceAccountToken: false</code> on ServiceAccounts and Pods. [<a href="https://kubernetes.io/docs/concepts/security/security-checklist/">src1</a>]</li>
+    <li><strong>Wildcard RBAC rules</strong>: Using <code>resources: ["*"]</code> or <code>verbs: ["*"]</code> grants far more access than intended. Fix: Enumerate specific resources and verbs; use <code>resourceNames</code> to restrict to specific objects. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html">src2</a>]</li>
+    <li><strong>Missing egress NetworkPolicies</strong>: Teams apply ingress rules but forget egress, allowing compromised pods to exfiltrate data. Fix: Apply both ingress AND egress default-deny, explicitly allow DNS (UDP 53). [<a href="https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF">src3</a>]</li>
+    <li><strong>Pod Security Standards only in warn mode</strong>: Setting <code>pod-security.kubernetes.io/warn</code> without <code>enforce</code> logs violations but does not block non-compliant pods. Fix: Use <code>enforce</code> mode. [<a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/">src5</a>]</li>
+    <li><strong>etcd accessible without mTLS</strong>: Exposing etcd without mutual TLS allows anyone with network access to read all cluster data. Fix: Configure <code>--peer-client-cert-auth=true</code> on etcd. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html">src2</a>]</li>
+    <li><strong>Stale RBAC bindings for departed team members</strong>: Users who leave retain cluster access. Fix: Implement periodic access reviews; use OIDC with IdP for automatic deprovisioning. [<a href="https://kubernetes.io/docs/concepts/security/security-checklist/">src1</a>]</li>
+    <li><strong>Cloud metadata API exposure</strong>: Pods can access 169.254.169.254 to steal instance credentials. Fix: Block metadata API via NetworkPolicy egress rules. [<a href="https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF">src3</a>]</li>
+    <li><strong>Running kube-bench without acting on results</strong>: Teams scan but fail to remediate findings. Fix: Integrate kube-bench into CI/CD with threshold-based gating. [<a href="https://www.cisecurity.org/benchmark/kubernetes">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Run CIS Benchmark check
+kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml
+kubectl logs job/kube-bench
+
+# Audit RBAC permissions for a service account
+kubectl auth can-i --list --as=system:serviceaccount:production:my-app -n production
+
+# Check PSS enforcement across namespaces
+kubectl get ns -o json | jq -r '.items[] | "\(.metadata.name): \(.metadata.labels["pod-security.kubernetes.io/enforce"] // "NONE")"'
+
+# List all NetworkPolicies
+kubectl get networkpolicy -A
+
+# Check for pods running as root
+kubectl get pods -A -o json | jq -r '.items[] | select(.spec.securityContext.runAsNonRoot != true) | "\(.metadata.namespace)/\(.metadata.name)"'
+
+# Scan cluster images for vulnerabilities
+trivy k8s --report summary cluster
+
+# Check Falco runtime alerts
+kubectl logs -n falco -l app.kubernetes.io/name=falco --tail=50
+
+# List all ClusterRoleBindings to cluster-admin
+kubectl get clusterrolebindings -o json | jq -r '.items[] | select(.roleRef.name == "cluster-admin") | "\(.metadata.name): \(.subjects[].name)"'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Kubernetes Version</th><th scope="col">Status</th><th scope="col">Key Security Features</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1.34-1.35 (2025)</td><td>Current</td><td>User namespaces GA; finer-grained authorization; pod mTLS certificates (beta)</td></tr>
+      <tr><td>1.30-1.33 (2024-2025)</td><td>Supported</td><td>Validating Admission Policy GA; bound SA token improvements; recursive read-only mounts</td></tr>
+      <tr><td>1.28-1.29 (2023-2024)</td><td>LTS</td><td>Pod Security Admission GA; seccomp RuntimeDefault GA</td></tr>
+      <tr><td>1.25 (2022)</td><td>EOL</td><td>PodSecurityPolicy removed -- must migrate to Pod Security Standards</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Tool</th><th scope="col">Version</th><th scope="col">Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>kube-bench</td><td>0.8.x</td><td>CIS Benchmark compliance scanning</td></tr>
+      <tr><td>Falco</td><td>0.37+</td><td>Runtime threat detection</td></tr>
+      <tr><td>Trivy</td><td>0.50+</td><td>Image + cluster vulnerability scanning</td></tr>
+      <tr><td>OPA/Gatekeeper</td><td>3.16+</td><td>Policy enforcement via admission controller</td></tr>
+      <tr><td>Kyverno</td><td>1.12+</td><td>Kubernetes-native policy management</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Deploying any production Kubernetes cluster</td><td>Running local dev cluster (minikube, kind) with no sensitive data</td><td>Basic kubectl access controls only</td></tr>
+      <tr><td>Preparing for SOC 2, PCI DSS, or HIPAA compliance</td><td>Using serverless containers (Fargate, Cloud Run) without K8s</td><td>Cloud provider's native security controls</td></tr>
+      <tr><td>Multi-tenant clusters sharing infrastructure</td><td>Single-tenant cluster with full trust between all workloads</td><td>Simplified RBAC + network policies may suffice</td></tr>
+      <tr><td>Clusters exposed to the internet (ingress controllers)</td><td>Air-gapped clusters with no external access</td><td>Focus on internal controls</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>CIS Benchmark recommendations vary between self-managed clusters (kubeadm) and managed services (EKS, GKE, AKS) -- many control plane settings are not configurable on managed platforms</li>
+    <li>NetworkPolicies require a CNI plugin that supports them (Calico, Cilium, Weave Net) -- the default kubenet CNI does NOT enforce NetworkPolicies</li>
+    <li>Pod Security Standards enforcement only prevents creation of non-compliant pods -- it does not retroactively terminate existing non-compliant pods</li>
+    <li>Kubernetes secrets are only base64-encoded by default, NOT encrypted -- encryption at rest must be explicitly configured via EncryptionConfiguration</li>
+    <li>Falco and similar runtime tools add CPU overhead (~1-5%) on each node -- plan capacity accordingly</li>
+    <li>RBAC authorization cannot be granular at the individual Pod level -- authorization applies to all Pods of a resource type within the namespace scope</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/security/container-image-security/2026" data-relationship="related_to">Container Image Security</a>
+    <a href="/software/security/cloud-kubernetes-security/2026" data-relationship="often_confused_with">Cloud-Managed Kubernetes Security (EKS/GKE/AKS)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

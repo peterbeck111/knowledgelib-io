@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SQL Full-Text Search: PostgreSQL tsvector, MySQL | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to implementing full-text search in PostgreSQL (tsvector, GIN indexes, pg_trgm) and MySQL (FULLTEXT, boolean mode).">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-fulltext-search/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SQL Full-Text Search: PostgreSQL tsvector, MySQL | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to implementing full-text search in PostgreSQL (tsvector, GIN indexes, pg_trgm) and MySQL (FULLTEXT, boolean mode). Decision matrix with 12 patterns, 5 code examples, 5 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-fulltext-search/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Full-Text Search: PostgreSQL tsvector, MySQL | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to implementing full-text search in PostgreSQL (tsvector, GIN indexes, pg_trgm) and MySQL (FULLTEXT, boolean mode). Decision matrix with 12 patterns, 5 code examples, 5 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/patterns/sql_fulltext_search">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement full-text search in PostgreSQL and MySQL?">
+  <meta name="ai:aliases" content="PostgreSQL full-text search tsvector tsquery; MySQL FULLTEXT index search; pg_trgm trigram fuzzy search; SQL full-text search GIN index; PostgreSQL vs MySQL text search comparison; database full-text search without Elasticsearch; tsvector tsquery GIN index tutorial; MySQL boolean mode full-text search; PostgreSQL generated column tsvector; SQL text search ranking relevance">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-fulltext-search/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="database, search_type, dataset_size">
+  <meta name="ai:constraints" content="PostgreSQL tsvector requires a text search configuration (language dictionary); MySQL InnoDB FULLTEXT minimum token size is 3 characters by default; GIN indexes are read-optimized and slow down writes; MySQL FULLTEXT NATURAL LANGUAGE MODE ignores terms in >50% of rows; PostgreSQL ts_rank does NOT use the GIN index; pg_trgm similarity threshold defaults to 0.3">
+  <meta name="ai:skip_this_unit_if" content="Need to search >100M documents with sub-50ms latency -> Dedicated search engine; Looking for semantic/vector similarity search -> software/patterns/vector-similarity-search/2026; Debugging slow PostgreSQL queries in general -> software/debugging/postgresql-slow-queries/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SQL Full-Text Search: PostgreSQL tsvector, MySQL FULLTEXT, and pg_trgm",
+    "headline": "SQL Full-Text Search: PostgreSQL tsvector, MySQL FULLTEXT, and pg_trgm",
+    "description": "Complete guide to implementing full-text search in PostgreSQL and MySQL. Covers tsvector with GIN indexes, MySQL FULLTEXT in boolean and natural language modes, pg_trgm trigram fuzzy search, weighted ranking with ts_rank, and when to use a dedicated search engine instead.",
+    "keywords": ["PostgreSQL full-text search", "MySQL FULLTEXT", "tsvector", "tsquery", "GIN index", "pg_trgm", "trigram search", "text search ranking", "boolean mode", "websearch_to_tsquery"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 12+ or MySQL 5.7+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Documentation: Full Text Search — Tables and Indexes",
+        "url": "https://www.postgresql.org/docs/current/textsearch-tables.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Documentation: Controlling Text Search (ts_rank, Weighting)",
+        "url": "https://www.postgresql.org/docs/current/textsearch-controls.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Documentation: pg_trgm — Trigram Matching",
+        "url": "https://www.postgresql.org/docs/current/pgtrgm.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MySQL 8.4 Reference Manual: Boolean Full-Text Searches",
+        "url": "https://dev.mysql.com/doc/refman/8.4/en/fulltext-boolean.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MySQL 8.4 Reference Manual: Fine-Tuning MySQL Full-Text Search",
+        "url": "https://dev.mysql.com/doc/refman/8.4/en/fulltext-fine-tuning.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Comparing Postgres, ElasticSearch, and pg_search for Full-Text Search",
+        "url": "https://neon.com/blog/postgres-full-text-search-vs-elasticsearch"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Optimizing Full Text Search with Postgres tsvector Columns and Triggers",
+        "url": "https://thoughtbot.com/blog/optimizing-full-text-search-with-postgres-tsvector-columns-and-triggers"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SQL Full-Text Search: PostgreSQL tsvector, MySQL FULLTEXT, and pg_trgm",
+    "description": "Structured knowledge unit covering full-text search implementation patterns in PostgreSQL (tsvector, GIN indexes, pg_trgm) and MySQL (FULLTEXT, boolean mode, natural language mode). Includes decision matrix, code examples, anti-patterns, and diagnostic commands.",
+    "keywords": ["PostgreSQL full-text search", "MySQL FULLTEXT", "tsvector", "GIN index", "pg_trgm", "database search patterns"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Oracle Corporation"},
+      {"@type": "Organization", "name": "Neon"},
+      {"@type": "Organization", "name": "thoughtbot"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SQL Full-Text Search" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement full-text search in PostgreSQL and MySQL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL full-text search tsvector tsquery",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MySQL FULLTEXT index search",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "pg_trgm trigram fuzzy search",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL full-text search GIN index",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL vs MySQL text search comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SQL Full-Text Search: PostgreSQL tsvector, MySQL FULLTEXT, and pg_trgm</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement full-text search in PostgreSQL and MySQL?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-fulltext-search/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: PostgreSQL and MySQL both offer built-in full-text search that eliminates the need for Elasticsearch in small-to-medium workloads; PostgreSQL's tsvector/tsquery with GIN indexes is more powerful, while MySQL's FULLTEXT is simpler to set up.</li>
+    <li><strong>Key tool/command</strong>: <code>CREATE INDEX idx ON table USING GIN (to_tsvector('english', column));</code></li>
+    <li><strong>Watch out for</strong>: MySQL silently drops words shorter than 3 characters and words appearing in &gt;50% of rows in NATURAL LANGUAGE MODE.</li>
+    <li><strong>Works with</strong>: PostgreSQL 12+ (generated columns), PostgreSQL 9.1+ (basic tsvector), MySQL 5.7+ (InnoDB FULLTEXT).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>PostgreSQL tsvector requires specifying a text search configuration (e.g., <code>'english'</code>) &mdash; using the wrong language dictionary silently drops valid stemmed tokens</li>
+    <li>MySQL InnoDB FULLTEXT minimum token size is 3 characters by default &mdash; words like "Go", "AI", "C#" are excluded unless <code>innodb_ft_min_token_size</code> is changed (requires index rebuild)</li>
+    <li>GIN indexes are read-optimized; they slow down writes &mdash; never use GIN on a table with &gt;10K inserts/second without <code>fastupdate=on</code> (default) or consider GiST</li>
+    <li>MySQL FULLTEXT in NATURAL LANGUAGE MODE silently returns zero results for terms in &gt;50% of rows &mdash; use BOOLEAN MODE to bypass this</li>
+    <li>PostgreSQL <code>ts_rank()</code> does NOT use the GIN index for scoring &mdash; ranking always has I/O cost proportional to result set size</li>
+    <li>pg_trgm similarity threshold defaults to 0.3 &mdash; failing to tune <code>pg_trgm.similarity_threshold</code> produces either too many false positives or too few results</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Pattern</th><th scope="col">Index Type</th><th scope="col">Strengths</th><th scope="col">Limitations</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL keyword search</td><td><code>to_tsvector()</code> + <code>@@</code> + <code>to_tsquery()</code></td><td>GIN</td><td>Stemming, ranking, language-aware, boolean ops</td><td>No fuzzy/typo tolerance</td><td>Structured natural-language queries</td></tr>
+      <tr><td>PostgreSQL phrase search</td><td><code>to_tsvector()</code> + <code>@@</code> + <code>phraseto_tsquery()</code></td><td>GIN</td><td>Word proximity, phrase matching</td><td>Exact phrase order required</td><td>"Near me" or multi-word lookups</td></tr>
+      <tr><td>PostgreSQL fuzzy search</td><td><code>pg_trgm</code> <code>%</code> operator</td><td>GIN (gin_trgm_ops)</td><td>Typo-tolerant, LIKE/ILIKE acceleration</td><td>Higher index size, no stemming</td><td>Search-as-you-type, user input with typos</td></tr>
+      <tr><td>PostgreSQL combined</td><td>tsvector + pg_trgm fallback</td><td>GIN (both)</td><td>Best coverage: stemmed + fuzzy</td><td>Two indexes, more storage</td><td>Production search with autocomplete</td></tr>
+      <tr><td>PostgreSQL weighted search</td><td><code>setweight()</code> + <code>ts_rank()</code></td><td>GIN</td><td>Title &gt; body boosting (A/B/C/D weights)</td><td>Ranking not index-accelerated</td><td>Relevance-ranked results</td></tr>
+      <tr><td>PostgreSQL generated column</td><td><code>GENERATED ALWAYS AS (to_tsvector(...)) STORED</code></td><td>GIN</td><td>No trigger needed, auto-maintained</td><td>PostgreSQL 12+ only</td><td>Clean, maintainable tsvector storage</td></tr>
+      <tr><td>MySQL natural language</td><td><code>MATCH(...) AGAINST('...')</code></td><td>FULLTEXT</td><td>Simple setup, built-in relevance</td><td>50% threshold, 3-char minimum</td><td>Basic search on InnoDB tables</td></tr>
+      <tr><td>MySQL boolean mode</td><td><code>MATCH(...) AGAINST('...' IN BOOLEAN MODE)</code></td><td>FULLTEXT</td><td>+/- operators, no 50% threshold</td><td>No relevance ranking by default</td><td>Precise inclusion/exclusion queries</td></tr>
+      <tr><td>MySQL query expansion</td><td><code>MATCH(...) AGAINST('...' WITH QUERY EXPANSION)</code></td><td>FULLTEXT</td><td>Finds related terms automatically</td><td>Can return noisy results</td><td>Expanding vague search queries</td></tr>
+      <tr><td>MySQL multi-column</td><td><code>FULLTEXT(col1, col2, col3)</code></td><td>FULLTEXT</td><td>Single index across columns</td><td>All columns must be same table</td><td>Cross-field search</td></tr>
+      <tr><td>Elasticsearch (comparison)</td><td>REST API + inverted index</td><td>Lucene segments</td><td>Sub-10ms on billions of docs, fuzzy, facets</td><td>Separate infrastructure, data sync</td><td>&gt;10M docs, complex relevance tuning</td></tr>
+      <tr><td>pg_trgm word similarity</td><td><code>word_similarity()</code> + <code>&lt;%</code> operator</td><td>GIN/GiST</td><td>Matches substrings, better for prefix search</td><td>PostgreSQL 9.6+ only</td><td>Autocomplete, partial word matching</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Using PostgreSQL?
+│   ├── YES
+│   │   ├── Need typo/fuzzy tolerance?
+│   │   │   ├── YES → Use pg_trgm with GIN(gin_trgm_ops) index
+│   │   │   └── NO ↓
+│   │   ├── Need relevance ranking with field weighting?
+│   │   │   ├── YES → Use tsvector + setweight() + ts_rank()
+│   │   │   └── NO ↓
+│   │   ├── Simple keyword/phrase search?
+│   │   │   ├── YES → Use to_tsvector() + to_tsquery() with GIN index
+│   │   │   └── NO ↓
+│   │   └── Need both fuzzy AND ranked search?
+│   │       └── YES → Combine tsvector + pg_trgm with fallback
+│   └── NO ↓
+├── Using MySQL?
+│   ├── YES
+│   │   ├── Need precise inclusion/exclusion (+/- operators)?
+│   │   │   ├── YES → Use BOOLEAN MODE
+│   │   │   └── NO ↓
+│   │   ├── Simple relevance-ranked search?
+│   │   │   ├── YES → Use NATURAL LANGUAGE MODE
+│   │   │   └── NO ↓
+│   │   └── Need to find related terms from vague input?
+│   │       └── YES → Use WITH QUERY EXPANSION
+│   └── NO ↓
+└── Dataset &gt;10M docs OR need sub-50ms p99 OR complex faceting?
+    └── YES → Use dedicated search engine (Elasticsearch, Typesense, Meilisearch)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create a tsvector column with GIN index (PostgreSQL)</h3>
+  <p>Use a generated column (PostgreSQL 12+) to automatically maintain the tsvector. This avoids triggers and ensures the search vector stays in sync with source columns. [<a href="https://www.postgresql.org/docs/current/textsearch-tables.html">src1</a>]</p>
+  <pre><code class="language-sql">-- Step 1a: Add generated tsvector column
+ALTER TABLE articles ADD COLUMN search_vector tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('english',
+      coalesce(title, '') || ' ' ||
+      coalesce(body, '')
+    )
+  ) STORED;
+
+-- Step 1b: Create GIN index for fast lookups
+CREATE INDEX idx_articles_search ON articles USING GIN (search_vector);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT count(*) FROM articles WHERE search_vector IS NOT NULL;</code> &rarr; expected: should equal total row count</p>
+
+  <h3>2. Query with tsquery and rank results (PostgreSQL)</h3>
+  <p>Use <code>websearch_to_tsquery()</code> (PostgreSQL 11+) for Google-style query parsing, or <code>plainto_tsquery()</code> for simpler input. [<a href="https://www.postgresql.org/docs/current/textsearch-controls.html">src2</a>]</p>
+  <pre><code class="language-sql">SELECT
+  id, title,
+  ts_rank(search_vector, query) AS rank
+FROM articles,
+  websearch_to_tsquery('english', 'full text search postgresql') AS query
+WHERE search_vector @@ query
+ORDER BY rank DESC
+LIMIT 20;</code></pre>
+  <p><strong>Verify</strong>: <code>EXPLAIN ANALYZE</code> on the query &rarr; expected: "Bitmap Index Scan" on <code>idx_articles_search</code></p>
+
+  <h3>3. Add field weighting for relevance (PostgreSQL)</h3>
+  <p>Use <code>setweight()</code> to boost title matches (weight A) over body matches (weight D). Default weights: A=1.0, B=0.4, C=0.2, D=0.1. [<a href="https://www.postgresql.org/docs/current/textsearch-controls.html">src2</a>]</p>
+  <pre><code class="language-sql">ALTER TABLE articles DROP COLUMN search_vector;
+ALTER TABLE articles ADD COLUMN search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(body, '')), 'D')
+  ) STORED;
+
+CREATE INDEX idx_articles_search ON articles USING GIN (search_vector);</code></pre>
+  <p><strong>Verify</strong>: Title matches should rank higher (~0.6+) than body-only matches (~0.1)</p>
+
+  <h3>4. Create a FULLTEXT index and query (MySQL)</h3>
+  <p>MySQL FULLTEXT works on VARCHAR, CHAR, and TEXT columns. InnoDB supports FULLTEXT from MySQL 5.7+. [<a href="https://dev.mysql.com/doc/refman/8.4/en/fulltext-boolean.html">src4</a>]</p>
+  <pre><code class="language-sql">ALTER TABLE articles ADD FULLTEXT INDEX ft_articles (title, body);
+
+SELECT id, title,
+  MATCH(title, body) AGAINST('full text search') AS relevance
+FROM articles
+WHERE MATCH(title, body) AGAINST('full text search')
+ORDER BY relevance DESC
+LIMIT 20;</code></pre>
+  <p><strong>Verify</strong>: <code>EXPLAIN</code> &rarr; expected: "fulltext" in type column</p>
+
+  <h3>5. Use boolean mode for precise control (MySQL)</h3>
+  <p>Boolean mode supports <code>+</code> (must include), <code>-</code> (must exclude), <code>*</code> (wildcard), and <code>"..."</code> (exact phrase). [<a href="https://dev.mysql.com/doc/refman/8.4/en/fulltext-boolean.html">src4</a>]</p>
+  <pre><code class="language-sql">SELECT id, title
+FROM articles
+WHERE MATCH(title, body) AGAINST('+postgresql -mysql +index*' IN BOOLEAN MODE)
+ORDER BY id DESC
+LIMIT 20;</code></pre>
+  <p><strong>Verify</strong>: Results should contain 'postgresql' and not contain 'mysql'</p>
+
+  <h3>6. Enable pg_trgm for fuzzy search (PostgreSQL)</h3>
+  <p>The pg_trgm extension provides typo-tolerant search using trigram matching. [<a href="https://www.postgresql.org/docs/current/pgtrgm.html">src3</a>]</p>
+  <pre><code class="language-sql">CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX idx_articles_trgm ON articles
+  USING GIN (title gin_trgm_ops);
+
+SELECT id, title, similarity(title, 'postgrsql') AS sim
+FROM articles
+WHERE title % 'postgrsql'
+ORDER BY sim DESC
+LIMIT 10;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT similarity('postgresql', 'postgrsql');</code> &rarr; expected: ~0.53</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Weighted multi-column search with ranking</h3>
+  <pre><code class="language-sql">-- Input:  Table with title and body text columns
+-- Output: Ranked search results with relevance score and snippet
+
+ALTER TABLE articles ADD COLUMN search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(body, '')), 'D')
+  ) STORED;
+
+CREATE INDEX idx_fts ON articles USING GIN (search_vector);
+
+SELECT id, title,
+  ts_rank(search_vector, q) AS rank,
+  ts_headline('english', body, q,
+    'StartSel=&lt;b&gt;, StopSel=&lt;/b&gt;, MaxWords=35, MinWords=15'
+  ) AS snippet
+FROM articles,
+  websearch_to_tsquery('english', 'database full text search') AS q
+WHERE search_vector @@ q
+ORDER BY rank DESC
+LIMIT 20;</code></pre>
+
+  <h3>MySQL: Boolean mode with relevance sorting</h3>
+  <pre><code class="language-sql">-- Input:  Table with FULLTEXT index on title and body
+-- Output: Filtered results with relevance score
+
+ALTER TABLE articles ADD FULLTEXT INDEX ft_idx (title, body);
+
+SELECT id, title,
+  MATCH(title, body) AGAINST('+"full text" +search -elasticsearch' IN BOOLEAN MODE) AS score
+FROM articles
+WHERE MATCH(title, body) AGAINST('+"full text" +search -elasticsearch' IN BOOLEAN MODE)
+HAVING score &gt; 0
+ORDER BY score DESC
+LIMIT 20;</code></pre>
+
+  <h3>PostgreSQL: Combined tsvector + pg_trgm fallback</h3>
+  <pre><code class="language-sql">-- Input:  User search query (may contain typos)
+-- Output: Best results from exact FTS, falling back to fuzzy trigram
+
+WITH fts_results AS (
+  SELECT id, title, ts_rank(search_vector, q) AS rank, 'fts' AS source
+  FROM articles, websearch_to_tsquery('english', $1) AS q
+  WHERE search_vector @@ q
+  ORDER BY rank DESC LIMIT 20
+),
+trgm_results AS (
+  SELECT id, title, similarity(title, $1) AS rank, 'trgm' AS source
+  FROM articles
+  WHERE title % $1
+    AND id NOT IN (SELECT id FROM fts_results)
+  ORDER BY rank DESC LIMIT 10
+)
+SELECT * FROM fts_results
+UNION ALL
+SELECT * FROM trgm_results
+ORDER BY rank DESC;</code></pre>
+
+  <h3>Python (psycopg2): Parameterized full-text search</h3>
+  <pre><code class="language-python"># Input:  User search string
+# Output: Ranked search results as list of dicts
+
+import psycopg2
+
+def search_articles(conn, query: str, limit: int = 20) -&gt; list[dict]:
+    """Full-text search with parameterized query (SQL injection safe)."""
+    sql = """
+        SELECT id, title,
+          ts_rank(search_vector, websearch_to_tsquery('english', %s)) AS rank,
+          ts_headline('english', body, websearch_to_tsquery('english', %s),
+            'StartSel=&lt;b&gt;, StopSel=&lt;/b&gt;, MaxWords=35') AS snippet
+        FROM articles
+        WHERE search_vector @@ websearch_to_tsquery('english', %s)
+        ORDER BY rank DESC
+        LIMIT %s
+    """
+    with conn.cursor() as cur:
+        cur.execute(sql, (query, query, query, limit))
+        cols = [desc[0] for desc in cur.description]
+        return [dict(zip(cols, row)) for row in cur.fetchall()]</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using LIKE '%term%' for text search</h3>
+  <pre><code class="language-sql">-- BAD -- full table scan on every query, no ranking, no stemming
+SELECT * FROM articles
+WHERE body LIKE '%database%' OR body LIKE '%search%';</code></pre>
+
+  <h3>Correct: Use tsvector with GIN index</h3>
+  <pre><code class="language-sql">-- GOOD -- uses GIN index, supports stemming and ranking
+SELECT * FROM articles
+WHERE search_vector @@ to_tsquery('english', 'database &amp; search');</code></pre>
+
+  <h3>Wrong: Computing tsvector inline on every query</h3>
+  <pre><code class="language-sql">-- BAD -- recomputes tsvector for every row on every query
+SELECT *, ts_rank(to_tsvector('english', body), to_tsquery('english', 'search')) AS rank
+FROM articles
+WHERE to_tsvector('english', body) @@ to_tsquery('english', 'search');</code></pre>
+
+  <h3>Correct: Use a stored tsvector column with index</h3>
+  <pre><code class="language-sql">-- GOOD -- reads precomputed tsvector, GIN index filters rows
+SELECT *, ts_rank(search_vector, to_tsquery('english', 'search')) AS rank
+FROM articles
+WHERE search_vector @@ to_tsquery('english', 'search');</code></pre>
+
+  <h3>Wrong: MySQL NATURAL LANGUAGE MODE for high-frequency terms</h3>
+  <pre><code class="language-sql">-- BAD -- returns zero results if common terms appear in &gt;50% of rows
+SELECT * FROM articles
+WHERE MATCH(title, body) AGAINST('the best database' IN NATURAL LANGUAGE MODE);</code></pre>
+
+  <h3>Correct: Use BOOLEAN MODE to bypass the 50% threshold</h3>
+  <pre><code class="language-sql">-- GOOD -- boolean mode has no frequency threshold
+SELECT * FROM articles
+WHERE MATCH(title, body) AGAINST('+best +database' IN BOOLEAN MODE);</code></pre>
+
+  <h3>Wrong: Using pg_trgm without setting similarity threshold</h3>
+  <pre><code class="language-sql">-- BAD -- default threshold 0.3 returns too many false positives for short strings
+SELECT * FROM products WHERE name % 'cat';
+-- Returns: "catalog", "category", "caterpillar", "concatenate" ...</code></pre>
+
+  <h3>Correct: Tune the similarity threshold before querying</h3>
+  <pre><code class="language-sql">-- GOOD -- raise threshold for short queries to reduce noise
+SET pg_trgm.similarity_threshold = 0.5;
+SELECT *, similarity(name, 'cat') AS sim FROM products
+WHERE name % 'cat' ORDER BY sim DESC;</code></pre>
+
+  <h3>Wrong: Using plainto_tsquery for user input with operators</h3>
+  <pre><code class="language-sql">-- BAD -- user types "postgresql -mysql" but plainto_tsquery treats '-' as text
+SELECT * FROM articles
+WHERE search_vector @@ plainto_tsquery('english', 'postgresql -mysql');
+-- Searches for 'postgresql' AND 'mysql', ignoring the minus sign</code></pre>
+
+  <h3>Correct: Use websearch_to_tsquery for Google-style input</h3>
+  <pre><code class="language-sql">-- GOOD -- websearch_to_tsquery handles -, "quotes", and OR naturally
+SELECT * FROM articles
+WHERE search_vector @@ websearch_to_tsquery('english', 'postgresql -mysql');
+-- Correctly excludes rows containing 'mysql'</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>MySQL 3-character minimum</strong>: Words shorter than 3 characters (InnoDB) or 4 characters (MyISAM) are silently dropped. Fix: <code>SET innodb_ft_min_token_size = 1</code> in my.cnf and rebuild FULLTEXT index. [<a href="https://dev.mysql.com/doc/refman/8.4/en/fulltext-fine-tuning.html">src5</a>]</li>
+    <li><strong>PostgreSQL wrong language config</strong>: Using <code>'simple'</code> disables stemming; <code>'english'</code> on non-English text drops valid tokens. Fix: Match the config to your content language. [<a href="https://www.postgresql.org/docs/current/textsearch-tables.html">src1</a>]</li>
+    <li><strong>MySQL 50% threshold</strong>: NATURAL LANGUAGE MODE returns zero results for terms in &gt;50% of rows. Fix: Use <code>IN BOOLEAN MODE</code>. [<a href="https://dev.mysql.com/doc/refman/8.4/en/fulltext-boolean.html">src4</a>]</li>
+    <li><strong>GIN index bloat after bulk deletes</strong>: GIN indexes accumulate dead entries not cleaned by regular VACUUM. Fix: Run <code>REINDEX INDEX idx_name</code> periodically. [<a href="https://www.postgresql.org/docs/current/textsearch-tables.html">src1</a>]</li>
+    <li><strong>Missing COALESCE on nullable columns</strong>: <code>to_tsvector('english', NULL)</code> returns NULL, excluding the row from all search results. Fix: Wrap in <code>coalesce(column, '')</code>. [<a href="https://thoughtbot.com/blog/optimizing-full-text-search-with-postgres-tsvector-columns-and-triggers">src7</a>]</li>
+    <li><strong>ts_headline performance trap</strong>: <code>ts_headline()</code> re-parses original text for snippets &mdash; slow on large texts for hundreds of results. Fix: Apply only to the final limited result set. [<a href="https://www.postgresql.org/docs/current/textsearch-controls.html">src2</a>]</li>
+    <li><strong>MySQL FULLTEXT on JOINs</strong>: FULLTEXT index may not be used if optimizer chooses a different path. Fix: Isolate FULLTEXT search in a subquery. [<a href="https://dev.mysql.com/doc/refman/8.4/en/fulltext-boolean.html">src4</a>]</li>
+    <li><strong>pg_trgm index size</strong>: Trigram GIN indexes are 2-5x larger than tsvector GIN indexes. Fix: Create trigram indexes only on short columns (title), not large body columns. [<a href="https://www.postgresql.org/docs/current/pgtrgm.html">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-sql">-- Check if GIN index is being used (PostgreSQL)
+EXPLAIN ANALYZE SELECT * FROM articles
+WHERE search_vector @@ to_tsquery('english', 'search');
+-- Look for: "Bitmap Index Scan on idx_articles_search"
+
+-- Inspect tsvector content for a row (PostgreSQL)
+SELECT to_tsvector('english', 'The quick brown foxes jumped') AS vector;
+-- Output: 'brown':3 'fox':4 'jump':5 'quick':2
+
+-- Check MySQL FULLTEXT index status
+SHOW INDEX FROM articles WHERE Index_type = 'FULLTEXT';
+
+-- Check pg_trgm similarity between two strings
+SELECT similarity('postgresql', 'postgrsql');
+-- Output: ~0.53
+
+-- Check MySQL InnoDB FULLTEXT settings
+SHOW VARIABLES LIKE 'innodb_ft%';
+
+-- View PostgreSQL GIN index size
+SELECT pg_size_pretty(pg_relation_size('idx_articles_search')) AS index_size;</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Features</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL 17 (2024)</td><td>Current</td><td>General improvements</td><td>FTS unchanged</td></tr>
+      <tr><td>PostgreSQL 12 (2019)</td><td>Supported</td><td>Generated columns for tsvector</td><td>Major FTS ergonomic improvement</td></tr>
+      <tr><td>PostgreSQL 11 (2018)</td><td>EOL</td><td><code>websearch_to_tsquery()</code> added</td><td>Google-style query parsing</td></tr>
+      <tr><td>PostgreSQL 9.6 (2016)</td><td>EOL</td><td><code>word_similarity()</code> in pg_trgm</td><td>Improved substring matching</td></tr>
+      <tr><td>MySQL 8.4 (2024)</td><td>LTS</td><td>InnoDB FULLTEXT stable</td><td>Recommended version</td></tr>
+      <tr><td>MySQL 5.7 (2015)</td><td>EOL</td><td>InnoDB FULLTEXT support</td><td>Previously MyISAM only</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dataset &lt; 10M rows and full-text is not the primary product feature</td><td>Search is the core product (e.g., document search engine)</td><td>Elasticsearch, Typesense, or Meilisearch</td></tr>
+      <tr><td>Already using PostgreSQL/MySQL and want to avoid operational complexity</td><td>Need sub-10ms p99 latency on &gt;100M documents</td><td>Dedicated search infrastructure</td></tr>
+      <tr><td>Need stemming, ranking, and boolean operators in PostgreSQL</td><td>Need cross-language stemming with automatic language detection</td><td>Elasticsearch with language analyzers</td></tr>
+      <tr><td>Simple search page or admin filter on an existing application</td><td>Need faceted navigation, aggregations, or typeahead at scale</td><td>Elasticsearch or Algolia</td></tr>
+      <tr><td>Need typo-tolerant search on short fields (names, titles)</td><td>Need fuzzy search on large text bodies</td><td>pg_trgm on titles + tsvector on body (hybrid)</td></tr>
+      <tr><td>MySQL app needing basic keyword search with boolean operators</td><td>Need phrase proximity search or field-level boosting in MySQL</td><td>PostgreSQL tsvector or Elasticsearch</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>PostgreSQL tsvector is language-dependent: switching from <code>'english'</code> to <code>'simple'</code> changes which tokens are indexed &mdash; always rebuild indexes after changing the config</li>
+    <li>MySQL FULLTEXT indexes cannot span multiple tables &mdash; composite search across joined tables requires denormalization or a subquery pattern</li>
+    <li>GIN index updates use a "fastupdate" pending list by default &mdash; under heavy write load, the pending list can grow large and cause occasional slow searches</li>
+    <li>pg_trgm is not a replacement for tsvector &mdash; trigrams do not understand word boundaries, stemming, or stop words; use tsvector for natural language search and pg_trgm for fuzzy matching</li>
+    <li>MySQL FULLTEXT relevance scores are not comparable across different queries &mdash; scores are query-specific and should only be used for ordering within a single result set</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="related_to">PostgreSQL Slow Query Debugging</a>
+    <a href="/software/system-design/search-engine/2026" data-relationship="alternative_to">Search Engine Architecture</a>
+    <a href="/software/debugging/mysql-deadlocks/2026" data-relationship="related_to">MySQL Deadlock Debugging</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

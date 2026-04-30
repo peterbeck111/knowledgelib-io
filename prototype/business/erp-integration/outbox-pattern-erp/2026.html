@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Outbox Pattern for Reliable Event Publishing from | knowledgelib.io</title>
+  <meta name="description" content="Transactional outbox pattern for reliable event publishing from ERP transactions -- outbox table schema, polling vs Debezium CDC relay, Salesforce...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/outbox-pattern-erp/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Outbox Pattern for Reliable Event Publishing from | knowledgelib.io">
+  <meta property="og:description" content="Transactional outbox pattern for reliable event publishing from ERP transactions -- outbox table schema, polling vs Debezium CDC relay, Salesforce Platform Events, SAP Event Mesh, NetSuite SuiteScript, D365 Business Events. Decision tree: outbox vs CDC vs dual-write vs event sourcing. 7 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/outbox-pattern-erp/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Outbox Pattern for Reliable Event Publishing from | knowledgelib.io">
+  <meta name="twitter:description" content="Transactional outbox pattern for reliable event publishing from ERP transactions -- outbox table schema, polling vs Debezium CDC relay, Salesforce Platform Events, SAP Event Mesh, NetSuite SuiteScript, D365 Business Events. Decision tree: outbox vs CDC vs dual-write vs event sourcing. 7 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/outbox-pattern-erp">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you implement the outbox pattern for reliable event publishing from ERP transactions?">
+  <meta name="ai:aliases" content="Transactional outbox pattern for ERP integration; How to guarantee event delivery from ERP database transactions; Outbox table pattern vs CDC vs dual-write for ERP events; Reliable event publishing from Salesforce SAP NetSuite Dynamics 365">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/outbox-pattern-erp/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-03-07">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Cross-ERP (Pattern-level); Debezium (2.x); Salesforce Platform Events (API v62.0); SAP Event Mesh (BTP 2024)">
+  <meta name="ai:inputs_needed" content="integration_pattern,relay_preference,erp_system">
+  <meta name="ai:constraints" content="At-least-once delivery only -- consumers MUST be idempotent; Outbox table must be in SAME database as business data; CDC relay requires logical replication support; Event ordering per-aggregate only -- no global ordering">
+  <meta name="ai:skip_this_unit_if" content="Need ACID consistency across ERPs -> business/erp-integration/saga-pattern-erp-transactions/2026; Need full dataset replication -> business/erp-integration/change-data-capture-erp/2026; Simple request-reply -> Direct REST API call with retry">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Outbox Pattern for Reliable Event Publishing from ERP Transactions",
+    "headline": "Outbox Pattern for Reliable Event Publishing from ERP Transactions",
+    "description": "Transactional outbox pattern for reliable event publishing from ERP transactions -- outbox table schema, polling vs Debezium CDC relay, ERP-specific implementations, decision tree comparing outbox vs CDC vs dual-write vs event sourcing.",
+    "keywords": ["outbox pattern", "transactional outbox", "ERP integration", "Debezium", "event publishing", "dual-write problem", "CDC", "Salesforce Platform Events", "SAP Event Mesh"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Relational database, message broker (Kafka/RabbitMQ/SQS)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Pattern: Transactional Outbox",
+        "url": "https://microservices.io/patterns/data/transactional-outbox.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Outbox Event Router -- Debezium Documentation",
+        "url": "https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Transactional Outbox Pattern -- AWS Prescriptive Guidance",
+        "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The Transactional Outbox Pattern: Reliable Event Publishing",
+        "url": "https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design Considerations for Change Data Capture and Platform Events",
+        "url": "https://developer.salesforce.com/blogs/2022/10/design-considerations-for-change-data-capture-and-platform-events"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Reliable Microservices Data Exchange With the Outbox Pattern",
+        "url": "https://debezium.io/blog/2019/02/19/reliable-microservices-data-exchange-with-the-outbox-pattern/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Outbox Pattern for Reliable Event Publishing from ERP Transactions",
+    "description": "Architecture pattern reference covering transactional outbox for ERP integration -- outbox table schema, relay mechanisms, ERP-specific implementations, and comparison with alternatives.",
+    "keywords": ["outbox pattern", "ERP integration", "event publishing", "Debezium", "CDC"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "microservices.io"},
+      {"@type": "Organization", "name": "Red Hat (Debezium)"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Salesforce"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Outbox Pattern for Reliable Event Publishing from ERP Transactions" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you implement the outbox pattern for reliable event publishing from ERP transactions?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Write events to an outbox table in the same database transaction as business data, then use a separate relay process (polling or CDC) to publish events to a message broker. This solves the dual-write problem -- either both the data change AND the event are committed, or neither is."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Transactional outbox pattern for ERP integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Write events to an outbox table in the same database transaction as business data, then use a separate relay process (polling or CDC) to publish events to a message broker. This solves the dual-write problem -- either both the data change AND the event are committed, or neither is."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to guarantee event delivery from ERP database transactions",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Write events to an outbox table in the same database transaction as business data, then use a separate relay process (polling or CDC) to publish events to a message broker. This solves the dual-write problem -- either both the data change AND the event are committed, or neither is."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Outbox table pattern vs CDC vs dual-write for ERP events",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Write events to an outbox table in the same database transaction as business data, then use a separate relay process (polling or CDC) to publish events to a message broker. This solves the dual-write problem -- either both the data change AND the event are committed, or neither is."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Reliable event publishing from Salesforce SAP NetSuite Dynamics 365",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Write events to an outbox table in the same database transaction as business data, then use a separate relay process (polling or CDC) to publish events to a message broker. This solves the dual-write problem -- either both the data change AND the event are committed, or neither is."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Outbox Pattern for Reliable Event Publishing from ERP Transactions</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you implement the outbox pattern for reliable event publishing from ERP transactions?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/outbox-pattern-erp/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-ERP (Pattern-level)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> 2026-03-07</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Write events to an outbox table in the same database transaction as business data, then use a separate relay process (polling or CDC) to publish events to a message broker. This solves the dual-write problem -- either both the data change AND the event are committed, or neither is. [<a href="https://microservices.io/patterns/data/transactional-outbox.html">src1</a>]</li>
+    <li><strong>Key limit</strong>: At-least-once delivery only, not exactly-once. Consumers must be idempotent -- use event IDs and deduplication to handle inevitable duplicates. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</li>
+    <li><strong>Watch out for</strong>: Dual-writing directly to both database and message broker (without outbox) is the #1 anti-pattern. If the broker write fails after DB commit, the event is lost forever. [<a href="https://microservices.io/patterns/data/transactional-outbox.html">src1</a>]</li>
+    <li><strong>Best for</strong>: Any ERP integration requiring guaranteed event delivery from database transactions -- order creation, invoice posting, inventory adjustments, master data changes. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html">src3</a>]</li>
+    <li><strong>Authentication</strong>: N/A for the pattern itself. Each ERP and message broker authenticates independently. The relay process needs credentials for both source database and target broker.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>The transactional outbox pattern is an architecture pattern that applies to any system using a relational database for business data that needs to reliably publish events to external consumers. It is the canonical solution for the dual-write problem in distributed systems. This card covers the general pattern, ERP-specific adaptations for Salesforce/SAP/NetSuite/D365, relay mechanisms (polling and CDC), and a decision framework comparing outbox vs CDC vs dual-write vs event sourcing.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ERP Database (source)</td><td>Business data persistence + outbox table</td><td>SQL (same transaction)</td><td>Source</td></tr>
+      <tr><td>Relay Process</td><td>Reads outbox, publishes to broker</td><td>Polling SQL or CDC log tailing</td><td>Bridge</td></tr>
+      <tr><td>Message Broker (Kafka, RabbitMQ, SQS, Service Bus)</td><td>Event distribution to consumers</td><td>Broker-native protocol</td><td>Target</td></tr>
+      <tr><td>Debezium (optional)</td><td>CDC-based relay -- reads DB transaction log</td><td>Kafka Connect</td><td>Bridge</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>The outbox pattern does not define a specific API surface -- it defines how a database transaction atomically produces both business data and an event record. The relay mechanism bridges the outbox table to the message broker. [<a href="https://microservices.io/patterns/data/transactional-outbox.html">src1</a>, <a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html">src3</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Relay Mechanism</th><th scope="col">Latency</th><th scope="col">Infrastructure</th><th scope="col">DB Load</th><th scope="col">Ordering</th><th scope="col">Complexity</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Polling Publisher</td><td>1-5s (poll interval)</td><td>Minimal -- background worker</td><td>Moderate</td><td>Per-aggregate (sequence_id)</td><td>Low</td></tr>
+      <tr><td>Debezium CDC</td><td>Sub-second</td><td>Kafka + Kafka Connect</td><td>Minimal (reads WAL)</td><td>Per-partition (aggregate_id)</td><td>Medium</td></tr>
+      <tr><td>DynamoDB Streams</td><td>Sub-second</td><td>AWS-native</td><td>None -- built-in</td><td>Per-partition-key</td><td>Low (AWS-only)</td></tr>
+      <tr><td>Salesforce Platform Events</td><td>Near real-time</td><td>SF-native</td><td>None -- built-in</td><td>Per-replay-ID</td><td>Low (SF-only)</td></tr>
+      <tr><td>SAP Event Mesh</td><td>Near real-time</td><td>BTP</td><td>None -- built-in</td><td>Per-topic</td><td>Medium (SAP-only)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-System Event Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce Platform Events</td><td>Standard-volume events</td><td>100K/day (Enterprise), 500K/day (Unlimited)</td><td>High-volume requires add-on license</td></tr>
+      <tr><td>Salesforce CDC</td><td>Event delivery allocation</td><td>Shared with Platform Events daily limit</td><td>1 event per field change, not per record</td></tr>
+      <tr><td>SAP Event Mesh</td><td>Messages/month</td><td>1M (standard), custom enterprise tiers</td><td>Queue depth: 1,000 messages default</td></tr>
+      <tr><td>NetSuite SuiteScript</td><td>Governance units per script</td><td>1,000 (client), 10,000 (server)</td><td>Each https.request() costs 10 units</td></tr>
+      <tr><td>D365 Business Events</td><td>Endpoint throughput</td><td>Azure Service Bus limits apply</td><td>No D365-specific rate limit</td></tr>
+      <tr><td>Debezium (Kafka)</td><td>Throughput</td><td>100K+ events/sec</td><td>Bottleneck is source DB WAL throughput</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Outbox Table Performance Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Metric</th><th scope="col">Recommended Threshold</th><th scope="col">Impact of Exceeding</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Outbox table size</td><td>&lt; 100,000 unpublished rows</td><td>Query performance degrades; index bloat</td></tr>
+      <tr><td>Poll interval</td><td>1-5 seconds</td><td>Too low: DB load. Too high: delivery latency</td></tr>
+      <tr><td>Batch size per poll</td><td>100-500 rows</td><td>Too large: long transactions. Too small: relay overhead</td></tr>
+      <tr><td>Row retention</td><td>Delete after publish + 24h buffer</td><td>Unbounded growth causes vacuum/analyze issues</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Auth Method</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Outbox table (same DB)</td><td>DB credentials (connection pool)</td><td>Same transaction context -- no separate auth</td></tr>
+      <tr><td>Debezium connector</td><td>DB replication credentials</td><td>Requires REPLICATION role in PostgreSQL</td></tr>
+      <tr><td>Kafka broker</td><td>SASL/SCRAM or mTLS</td><td>Connector config includes broker credentials</td></tr>
+      <tr><td>Salesforce Pub/Sub API</td><td>OAuth 2.0 JWT bearer</td><td>For external subscribers consuming Platform Events</td></tr>
+      <tr><td>SAP Event Mesh</td><td>OAuth 2.0 client credentials</td><td>BTP service binding provides credentials</td></tr>
+      <tr><td>Azure Service Bus</td><td>Managed Identity or SAS token</td><td>D365 Business Events connect via SAS policy</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Debezium requires a dedicated PostgreSQL replication slot -- if the slot is dropped while Debezium is down, events are lost permanently. Monitor replication slot lag. [<a href="https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html">src2</a>]</li>
+    <li>Salesforce Platform Event subscriptions use CometD replay IDs -- if the subscriber falls behind by &gt;3 days (72h retention), events are lost. Use high-volume platform events for 72h guaranteed retention. [<a href="https://developer.salesforce.com/blogs/2022/10/design-considerations-for-change-data-capture-and-platform-events">src6</a>]</li>
+    <li>SAP Event Mesh requires BTP entitlement -- not included in base S/4HANA Cloud license. Check your BTP subscription before architecting around Event Mesh.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>At-least-once delivery only -- exactly-once requires idempotent consumers or transactional message consumption on the consumer side</li>
+    <li>Outbox table must be in the SAME database as business data -- cross-database transactions defeat the pattern's purpose</li>
+    <li>CDC relay (Debezium) requires database support: PostgreSQL (logical replication), MySQL (binlog), SQL Server (CT/CDC), Oracle (LogMiner)</li>
+    <li>Event ordering is per-aggregate (partition key) only -- no global ordering guarantee across different aggregates</li>
+    <li>Polling relay has a latency floor equal to the poll interval -- cannot achieve sub-second latency with polling</li>
+    <li>ERP-native event systems (Salesforce Platform Events, SAP Event Mesh) are NOT true outbox implementations -- they have platform-specific retention limits and volume caps</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Need reliable event publishing from ERP transactions?
+|
++-- Do you control the database schema?
+|   |
+|   +-- YES (custom DB, self-managed ERP)
+|   |   +-- Need sub-second latency?
+|   |   |   +-- YES --> Debezium CDC relay with outbox table
+|   |   |   +-- NO  --> Polling publisher (simpler, fewer moving parts)
+|   |   +-- Already running Kafka?
+|   |       +-- YES --> Debezium outbox event router (purpose-built)
+|   |       +-- NO  --> Polling publisher to SQS/RabbitMQ/Service Bus
+|   |
+|   +-- NO (SaaS ERP: Salesforce, NetSuite, D365)
+|       +-- Salesforce --> Platform Events + CDC (native outbox equivalent)
+|       +-- SAP S/4HANA Cloud --> Event Mesh + Business Event Handling
+|       +-- NetSuite --> SuiteScript afterSubmit + custom outbox record
+|       +-- D365 F&amp;O --> Business Events + Azure Service Bus
+|       +-- D365 CE/Dataverse --> Business Events + Power Automate/Webhooks
+|
++-- Pattern comparison:
+    +-- Need domain-specific events? --> Outbox pattern
+    +-- Need all row changes captured? --> CDC (without outbox)
+    +-- Cannot modify application code? --> CDC on existing tables
+    +-- Need audit trail of all state? --> Event sourcing</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Outbox Table Schema (PostgreSQL)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Purpose</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>UUID</td><td>Unique event identifier</td><td>PK, used for consumer deduplication</td></tr>
+      <tr><td><code>sequence_id</code></td><td>BIGSERIAL</td><td>Relay ordering</td><td>Monotonically increasing; DO NOT use created_at</td></tr>
+      <tr><td><code>aggregate_type</code></td><td>VARCHAR(255)</td><td>Entity type (SalesOrder, Invoice)</td><td>Used for topic routing</td></tr>
+      <tr><td><code>aggregate_id</code></td><td>UUID</td><td>Business entity ID</td><td>Kafka partition key; ensures per-entity ordering</td></tr>
+      <tr><td><code>event_type</code></td><td>VARCHAR(255)</td><td>Domain event name (OrderCreated)</td><td>Consumer uses this for deserialization</td></tr>
+      <tr><td><code>payload</code></td><td>JSONB</td><td>Serialized event data</td><td>Keep under 1MB for Kafka compatibility</td></tr>
+      <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>Event timestamp</td><td>NOT used for ordering</td></tr>
+      <tr><td><code>published_at</code></td><td>TIMESTAMPTZ</td><td>When relay published event</td><td>NULL = unpublished</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Debezium Outbox Event Router Configuration</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Default</th><th scope="col">Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>transforms.outbox.type</code></td><td>io.debezium.transforms.outbox.EventRouter</td><td>Enable outbox SMT</td></tr>
+      <tr><td><code>route.by.field</code></td><td>aggregatetype</td><td>Column that determines Kafka topic</td></tr>
+      <tr><td><code>route.topic.replacement</code></td><td>outbox.event.${routedByValue}</td><td>Topic naming pattern</td></tr>
+      <tr><td><code>table.field.event.id</code></td><td>id</td><td>Unique event ID column</td></tr>
+      <tr><td><code>table.field.event.key</code></td><td>aggregateid</td><td>Kafka message key column</td></tr>
+      <tr><td><code>table.field.event.payload</code></td><td>payload</td><td>Event data column</td></tr>
+      <tr><td><code>table.expand.json.payload</code></td><td>false</td><td>Expand JSON strings in payload</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Create the outbox table</h3>
+  <p>Create the outbox table in the same database as your business data. Use <code>BIGSERIAL</code> for reliable ordering and a partial index on unpublished rows for efficient polling. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE outbox_events (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sequence_id     BIGSERIAL NOT NULL,
+    aggregate_type  VARCHAR(255) NOT NULL,
+    aggregate_id    UUID NOT NULL,
+    event_type      VARCHAR(255) NOT NULL,
+    payload         JSONB NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    published_at    TIMESTAMPTZ
+);
+
+-- Partial index: relay queries ONLY unpublished rows
+CREATE INDEX idx_outbox_unpublished
+    ON outbox_events (sequence_id)
+    WHERE published_at IS NULL;
+
+-- Cleanup job index
+CREATE INDEX idx_outbox_published_at
+    ON outbox_events (published_at)
+    WHERE published_at IS NOT NULL;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM outbox_events WHERE published_at IS NULL;</code> --> expected: <code>0</code></p>
+
+  <h3>2. Write business data and outbox event in same transaction</h3>
+  <p>The critical guarantee: business data and outbox event are committed atomically. If either fails, both roll back. [<a href="https://microservices.io/patterns/data/transactional-outbox.html">src1</a>]</p>
+  <pre><code class="language-python">import uuid, json
+from datetime import datetime
+
+def create_order_with_event(conn, order_data):
+    """Write order + outbox event in single transaction."""
+    order_id = uuid.uuid4()
+    event_id = uuid.uuid4()
+
+    with conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO sales_orders (id, customer_id, total, status)
+            VALUES (%s, %s, %s, 'created')
+        """, (str(order_id), order_data['customer_id'], order_data['total']))
+
+        cur.execute("""
+            INSERT INTO outbox_events (id, aggregate_type, aggregate_id,
+                                       event_type, payload)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (str(event_id), 'SalesOrder', str(order_id), 'OrderCreated',
+              json.dumps({
+                  'order_id': str(order_id),
+                  'customer_id': order_data['customer_id'],
+                  'total': str(order_data['total']),
+                  'timestamp': datetime.utcnow().isoformat()
+              })))
+    conn.commit()
+    return order_id</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM outbox_events WHERE published_at IS NULL;</code> --> expected: <code>1</code></p>
+
+  <h3>3. Implement the polling publisher relay</h3>
+  <p>Background process polls outbox, publishes to broker, marks as published. Use <code>FOR UPDATE SKIP LOCKED</code> for safe concurrent relay instances. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</p>
+  <pre><code class="language-python">from confluent_kafka import Producer
+import json, time
+
+def poll_and_publish(conn, producer, batch_size=100, poll_interval=2.0):
+    while True:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, aggregate_type, aggregate_id, event_type, payload
+                FROM outbox_events WHERE published_at IS NULL
+                ORDER BY sequence_id ASC LIMIT %s
+                FOR UPDATE SKIP LOCKED
+            """, (batch_size,))
+            rows = cur.fetchall()
+            if not rows:
+                time.sleep(poll_interval)
+                continue
+
+            published_ids = []
+            for row in rows:
+                event_id, agg_type, agg_id, event_type, payload = row
+                producer.produce(
+                    topic=f"outbox.event.{agg_type}",
+                    key=str(agg_id),
+                    value=json.dumps(payload),
+                    headers={'event_id': str(event_id), 'event_type': event_type}
+                )
+                published_ids.append(str(event_id))
+            producer.flush()
+            cur.execute("""
+                UPDATE outbox_events SET published_at = NOW()
+                WHERE id = ANY(%s)
+            """, (published_ids,))
+        conn.commit()
+        time.sleep(poll_interval)</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM outbox_events WHERE published_at IS NULL;</code> --> expected: <code>0</code></p>
+
+  <h3>4. Configure Debezium CDC relay (alternative to polling)</h3>
+  <p>Use Debezium's outbox event router for sub-second relay without polling overhead. [<a href="https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html">src2</a>]</p>
+  <pre><code class="language-json">{
+  "name": "outbox-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "erp-db.example.com",
+    "database.port": "5432",
+    "database.user": "debezium_replication",
+    "database.dbname": "erp_production",
+    "topic.prefix": "erp",
+    "table.include.list": "public.outbox_events",
+    "transforms": "outbox",
+    "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+    "transforms.outbox.route.by.field": "aggregate_type",
+    "transforms.outbox.route.topic.replacement": "outbox.event.${routedByValue}",
+    "transforms.outbox.table.expand.json.payload": "true",
+    "plugin.name": "pgoutput",
+    "slot.name": "outbox_slot"
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: <code>curl http://kafka-connect:8083/connectors/outbox-connector/status</code> --> expected: <code>{"connector":{"state":"RUNNING"}}</code></p>
+
+  <h3>5. Implement outbox table cleanup</h3>
+  <p>Published events must be cleaned up to prevent unbounded table growth. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</p>
+  <pre><code class="language-sql">-- Delete published events older than 7 days
+DELETE FROM outbox_events
+WHERE published_at IS NOT NULL
+  AND published_at &lt; NOW() - INTERVAL '7 days';</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT pg_size_pretty(pg_total_relation_size('outbox_events'));</code> --> size should remain stable</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Idempotent consumer with deduplication</h3>
+  <pre><code class="language-python"># Input:  Kafka message from outbox relay
+# Output: Processed event with duplicate detection
+
+def process_event(conn, message):
+    """Idempotent event consumer -- deduplicates by event_id."""
+    event_id = dict(message.headers()).get('event_id', b'').decode()
+    payload = json.loads(message.value())
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM processed_events WHERE event_id = %s", (event_id,))
+        if cur.fetchone():
+            return  # Skip duplicate
+        handle_order_created(payload)
+        cur.execute(
+            "INSERT INTO processed_events (event_id, processed_at) VALUES (%s, NOW())",
+            (event_id,))
+    conn.commit()</code></pre>
+
+  <h3>JavaScript/Node.js: Outbox write with Knex.js</h3>
+  <pre><code class="language-javascript">// Input:  Order data + Knex transaction
+// Output: Order + outbox event committed atomically
+
+const { v4: uuidv4 } = require('uuid'); // uuid@9.x
+
+async function createOrderWithOutbox(knex, orderData) {
+  return knex.transaction(async (trx) => {
+    const orderId = uuidv4();
+    await trx('sales_orders').insert({
+      id: orderId, customer_id: orderData.customerId,
+      total: orderData.total, status: 'created'
+    });
+    await trx('outbox_events').insert({
+      id: uuidv4(), aggregate_type: 'SalesOrder',
+      aggregate_id: orderId, event_type: 'OrderCreated',
+      payload: JSON.stringify({
+        order_id: orderId, customer_id: orderData.customerId,
+        total: orderData.total
+      })
+    });
+    return orderId;
+  });
+}</code></pre>
+
+  <h3>Salesforce Apex: Platform Events as outbox equivalent</h3>
+  <pre><code class="language-java">// Platform Events participate in trigger transaction context
+// If the transaction rolls back, events are NOT published
+
+trigger OpportunityClosedWon on Opportunity (after update) {
+    List&lt;Order_Event__e&gt; events = new List&lt;Order_Event__e&gt;();
+    for (Opportunity opp : Trigger.new) {
+        Opportunity oldOpp = Trigger.oldMap.get(opp.Id);
+        if (opp.StageName == 'Closed Won' &amp;&amp; oldOpp.StageName != 'Closed Won') {
+            events.add(new Order_Event__e(
+                Order_Id__c = opp.Id, Account_Id__c = opp.AccountId,
+                Amount__c = opp.Amount, Event_Type__c = 'OpportunityClosedWon'
+            ));
+        }
+    }
+    if (!events.isEmpty()) {
+        List&lt;Database.SaveResult&gt; results = EventBus.publish(events);
+    }
+}</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Outbox Event Schema Mapping Across ERPs</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP Source Event</th><th scope="col">aggregate_type</th><th scope="col">event_type</th><th scope="col">Key Payload Fields</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce Opportunity closed-won</td><td>SalesOrder</td><td>OrderCreated</td><td>opportunity_id, account_id, amount, currency</td><td>Amount in org's default currency unless multi-currency</td></tr>
+      <tr><td>SAP Sales Order (VA01)</td><td>SalesOrder</td><td>SAPOrderCreated</td><td>VBELN, KUNNR, NETWR, WAERK</td><td>Amounts in smallest currency unit (cents)</td></tr>
+      <tr><td>NetSuite Sales Order created</td><td>SalesOrder</td><td>NSOrderCreated</td><td>internalid, entity, total, subsidiary</td><td>Entity ID is subsidiary-scoped in multi-sub orgs</td></tr>
+      <tr><td>D365 Sales Order confirmed</td><td>SalesOrder</td><td>D365OrderConfirmed</td><td>SalesOrderNumber, OrderAccount, InvoiceAccount</td><td>OrderAccount vs InvoiceAccount can differ</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Salesforce datetime is always UTC; SAP timestamps depend on user timezone preference in SU01. Always normalize to UTC in outbox payload. [<a href="https://developer.salesforce.com/blogs/2022/10/design-considerations-for-change-data-capture-and-platform-events">src6</a>]</li>
+    <li>SAP BAPI amounts return strings with leading zeros (e.g., <code>0000001234.56</code>) -- parse and normalize before inserting into outbox payload.</li>
+    <li>D365 OData dates use ISO 8601 but may include timezone offset. Kafka consumers expecting UTC will misparse <code>2026-03-07T14:30:00+01:00</code>.</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Scenarios</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Impact</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Relay crashes after Kafka publish, before marking row published</td><td>Duplicate event on next relay cycle</td><td>Consumer idempotency (deduplication by event_id)</td></tr>
+      <tr><td>Database transaction timeout during outbox write</td><td>Both business data and event rolled back (safe)</td><td>Retry the business operation</td></tr>
+      <tr><td>Kafka broker unavailable during relay</td><td>Events accumulate in outbox table</td><td>Relay retries with exponential backoff; alert if outbox depth &gt; threshold</td></tr>
+      <tr><td>Debezium replication slot dropped</td><td>Events between slot drop and recreation lost permanently</td><td>Monitor WAL lag; alert on slot state changes</td></tr>
+      <tr><td>Consumer processing fails</td><td>Event stays in consumer's dead letter queue</td><td>DLQ with manual review + retry mechanism</td></tr>
+      <tr><td>Outbox table bloat (no cleanup)</td><td>Increasing query latency, disk usage</td><td>Scheduled cleanup job (delete published events &gt; retention window)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Replication slot lag (Debezium)</strong>: If Debezium falls behind, PostgreSQL retains WAL segments, eventually filling disk. Fix: <code>monitor pg_replication_slots.active and pg_wal_lsn_diff(); alert when lag exceeds 100MB</code>. [<a href="https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html">src2</a>]</li>
+    <li><strong>Polling relay contention</strong>: Multiple relay instances without <code>FOR UPDATE SKIP LOCKED</code> process same events, causing duplicates. Fix: <code>always use FOR UPDATE SKIP LOCKED</code>. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</li>
+    <li><strong>Outbox table vacuum bloat</strong>: High insert+delete rate causes autovacuum to fall behind. Fix: <code>set autovacuum_vacuum_scale_factor = 0.01 on the outbox table</code>. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</li>
+    <li><strong>Salesforce Platform Event publish failure</strong>: EventBus.publish() silently fails if daily event limit reached. Fix: <code>check Database.SaveResult errors and implement fallback logging</code>. [<a href="https://developer.salesforce.com/blogs/2022/10/design-considerations-for-change-data-capture-and-platform-events">src6</a>]</li>
+    <li><strong>Consumer offset loss (Kafka)</strong>: Consumer group rebalance causes offset reset, reprocessing all events. Fix: <code>idempotent consumer with processed_events table</code>. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Dual-write -- publish event directly after DB commit</h3>
+  <pre><code class="language-python"># BAD -- event can be lost if publish fails after commit
+def create_order_bad(conn, producer, order_data):
+    order_id = save_order_to_db(conn, order_data)  # DB commit
+    producer.produce('orders', json.dumps({'order_id': order_id}))
+    # If this fails (network error, broker down), event is LOST</code></pre>
+
+  <h3>Correct: Outbox -- event written in same transaction</h3>
+  <pre><code class="language-python"># GOOD -- event is guaranteed to be published eventually
+def create_order_good(conn, order_data):
+    with conn.cursor() as cur:
+        order_id = uuid.uuid4()
+        cur.execute("INSERT INTO sales_orders ...", (order_id, ...))
+        cur.execute("INSERT INTO outbox_events ...", (order_id, 'OrderCreated', ...))
+    conn.commit()  # Atomic -- both or neither</code></pre>
+
+  <h3>Wrong: Publishing inside the transaction (phantom events)</h3>
+  <pre><code class="language-python"># BAD -- if publish succeeds but transaction rolls back,
+# consumers act on phantom events
+def create_order_phantom(conn, producer, order_data):
+    conn.begin()
+    order_id = insert_order(conn, order_data)
+    producer.produce('orders', json.dumps({'order_id': order_id}))
+    conn.commit()  # If this fails, event was already published!</code></pre>
+
+  <h3>Correct: Publish only from the relay, never from the application</h3>
+  <pre><code class="language-python"># GOOD -- application writes to outbox only
+def create_order_correct(conn, order_data):
+    conn.begin()
+    order_id = insert_order(conn, order_data)
+    insert_outbox_event(conn, 'OrderCreated', order_id, order_data)
+    conn.commit()
+    # Relay process handles broker publishing separately</code></pre>
+
+  <h3>Wrong: Using timestamps for relay ordering</h3>
+  <pre><code class="language-sql">-- BAD -- concurrent transactions produce out-of-order timestamps
+SELECT * FROM outbox_events WHERE published_at IS NULL
+ORDER BY created_at ASC;</code></pre>
+
+  <h3>Correct: Using monotonic sequence for ordering</h3>
+  <pre><code class="language-sql">-- GOOD -- BIGSERIAL guarantees monotonic ordering
+SELECT * FROM outbox_events WHERE published_at IS NULL
+ORDER BY sequence_id ASC
+FOR UPDATE SKIP LOCKED;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Not implementing consumer idempotency</strong>: Outbox guarantees at-least-once, meaning duplicates WILL happen. Fix: <code>every consumer must track processed event_ids and skip duplicates</code>. [<a href="https://microservices.io/patterns/data/transactional-outbox.html">src1</a>]</li>
+    <li><strong>Polling without SKIP LOCKED</strong>: Multiple relay instances process the same batch, causing massive duplication. Fix: <code>FOR UPDATE SKIP LOCKED in every poll query</code>. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</li>
+    <li><strong>Outbox table on a different database</strong>: Cross-database transactions defeat the pattern's atomicity guarantee. Fix: <code>outbox table MUST be in the same database as business data</code>. [<a href="https://microservices.io/patterns/data/transactional-outbox.html">src1</a>]</li>
+    <li><strong>Ignoring Debezium replication slot health</strong>: A dropped or lagging slot silently loses events. Fix: <code>monitor pg_replication_slots, alert on inactive slots and WAL lag &gt; 100MB</code>. [<a href="https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html">src2</a>]</li>
+    <li><strong>Publishing full entity state in every event</strong>: Payload bloat slows Kafka and increases storage cost. Fix: <code>publish only changed fields + entity ID; let consumers fetch full state if needed</code>. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</li>
+    <li><strong>No cleanup job for published events</strong>: Outbox table grows to millions of rows, degrading performance. Fix: <code>scheduled DELETE of published events older than retention window (7 days)</code>. [<a href="https://james-carr.org/posts/2026-01-15-transactional-outbox-pattern/">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check outbox depth (unpublished events) -- should be near 0
+psql -c "SELECT COUNT(*) as pending, MIN(created_at) as oldest_pending FROM outbox_events WHERE published_at IS NULL;"
+
+# Check outbox table size
+psql -c "SELECT pg_size_pretty(pg_total_relation_size('outbox_events'));"
+
+# Check Debezium connector status
+curl -s http://kafka-connect:8083/connectors/outbox-connector/status | jq '.connector.state'
+
+# Check PostgreSQL replication slot lag
+psql -c "SELECT slot_name, active, pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn) as lag_bytes FROM pg_replication_slots;"
+
+# Check Kafka consumer group lag
+kafka-consumer-groups.sh --bootstrap-server kafka:9092 --group outbox-consumer --describe
+
+# Check Salesforce Platform Event usage
+curl -H "Authorization: Bearer $SF_TOKEN" \
+  "https://yourorg.my.salesforce.com/services/data/v62.0/limits" | jq '.DailyStandardVolumePlatformEvents'
+
+# Monitor relay throughput (events/minute)
+psql -c "SELECT date_trunc('minute', published_at) as minute, COUNT(*) FROM outbox_events WHERE published_at &gt; NOW() - INTERVAL '1 hour' GROUP BY 1 ORDER BY 1;"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Debezium Outbox Event Router</td><td>2.x</td><td>Current (GA)</td><td>Stable since 1.9; MongoDB requires MongoEventRouter</td></tr>
+      <tr><td>Debezium Outbox Event Router</td><td>1.x</td><td>Deprecated</td><td>Upgrade to 2.x for improved JSON expansion</td></tr>
+      <tr><td>Salesforce Platform Events</td><td>API v62.0 (Spring '26)</td><td>Current</td><td>High-volume events GA since Winter '22</td></tr>
+      <tr><td>Salesforce CDC</td><td>API v62.0 (Spring '26)</td><td>Current</td><td>Enriched change events since Summer '23</td></tr>
+      <tr><td>SAP Event Mesh</td><td>BTP 2024</td><td>Current</td><td>Advanced Event Mesh is successor (Solace-based)</td></tr>
+      <tr><td>D365 Business Events</td><td>2024 Release Wave 2</td><td>Current</td><td>Available in F&amp;O and CE/Dataverse</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Business transaction must guarantee downstream event delivery</td><td>Simple request-reply with no delivery guarantee needed</td><td>Direct REST API call with retry</td></tr>
+      <tr><td>Source system uses a relational database</td><td>Source is a SaaS ERP with no DB access</td><td>ERP-native events (Platform Events, SuiteScript)</td></tr>
+      <tr><td>Need domain events (OrderCreated, InvoicePosted)</td><td>Need ALL row-level changes regardless of business meaning</td><td>CDC without outbox (Debezium on business tables)</td></tr>
+      <tr><td>Multiple consumers need the same event (fan-out)</td><td>Single consumer, point-to-point integration</td><td>Direct API call or simple queue</td></tr>
+      <tr><td>Already running Kafka and want sub-second relay</td><td>No Kafka and no plans to adopt it</td><td>Polling relay to SQS or RabbitMQ</td></tr>
+      <tr><td>Need event replay for debugging or rebuilding state</td><td>Events are ephemeral notifications with no replay value</td><td>Fire-and-forget webhooks</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Outbox + Polling</th><th scope="col">Outbox + Debezium CDC</th><th scope="col">Dual-Write (no outbox)</th><th scope="col">CDC on Business Tables</th><th scope="col">Event Sourcing</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Atomicity</strong></td><td>Guaranteed (same DB txn)</td><td>Guaranteed (same DB txn)</td><td>NOT guaranteed</td><td>N/A (reads existing txn log)</td><td>Guaranteed (event IS the write)</td></tr>
+      <tr><td><strong>Delivery guarantee</strong></td><td>At-least-once</td><td>At-least-once</td><td>At-most-once</td><td>At-least-once</td><td>At-least-once</td></tr>
+      <tr><td><strong>Latency</strong></td><td>1-5s (poll interval)</td><td>Sub-second</td><td>Near real-time</td><td>Sub-second</td><td>Sub-second</td></tr>
+      <tr><td><strong>DB load</strong></td><td>Moderate (polling)</td><td>Minimal (reads WAL)</td><td>None</td><td>Minimal (reads WAL)</td><td>None</td></tr>
+      <tr><td><strong>Infrastructure</strong></td><td>Background worker</td><td>Kafka + Kafka Connect</td><td>None additional</td><td>Kafka + Kafka Connect</td><td>Event store</td></tr>
+      <tr><td><strong>Event semantics</strong></td><td>Domain events (explicit)</td><td>Domain events (explicit)</td><td>App-level (fragile)</td><td>Row-level (implicit)</td><td>Domain events (inherent)</td></tr>
+      <tr><td><strong>Code changes</strong></td><td>Write to outbox</td><td>Write to outbox</td><td>Publish to broker</td><td>NONE (non-intrusive)</td><td>Complete rewrite</td></tr>
+      <tr><td><strong>Ordering</strong></td><td>Per-aggregate</td><td>Per-partition</td><td>No guarantee</td><td>Per-table</td><td>Per-aggregate</td></tr>
+      <tr><td><strong>Replay</strong></td><td>Yes (retain rows)</td><td>Yes (Kafka retention)</td><td>No</td><td>Yes (Kafka retention)</td><td>Yes (event store)</td></tr>
+      <tr><td><strong>Best for</strong></td><td>Simple setups, no Kafka</td><td>Production-grade, Kafka</td><td>Prototype only</td><td>Legacy, no code changes</td><td>Greenfield, complex domain</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>The outbox pattern provides at-least-once delivery, NOT exactly-once. Any architecture claiming exactly-once from outbox has pushed complexity to the consumer side (transactional message consumption).</li>
+    <li>ERP-native event systems (Salesforce Platform Events, SAP Event Mesh, D365 Business Events) are NOT true outbox implementations -- they approximate the pattern but have platform-specific retention limits, volume caps, and delivery semantics.</li>
+    <li>CDC-based relay (Debezium) requires careful operational management -- replication slot monitoring, WAL retention policies, and connector health checks are production-critical.</li>
+    <li>Outbox table cleanup is not optional. Without a retention policy, the table grows unbounded, causing query degradation and PostgreSQL autovacuum pressure.</li>
+    <li>This card covers the pattern at architecture level. See related units for Salesforce Platform Events, SAP Event Mesh, NetSuite SuiteScript, and D365 Business Events for system-specific guidance.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="depends_on">Idempotency Patterns for ERP Integrations</a>
+    <a href="/business/erp-integration/change-data-capture-erp/2026" data-relationship="related_to">Change Data Capture for ERP</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Error Handling and Dead Letter Queues</a>
+    <a href="/business/erp-integration/erp-event-driven-comparison/2026" data-relationship="related_to">Event-Driven Architecture Comparison</a>
+    <a href="/business/erp-integration/saga-pattern-erp-transactions/2026" data-relationship="alternative_to">Saga Pattern for ERP Transactions</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

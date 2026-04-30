@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>CDC Implementation Patterns: Debezium vs Oracle | knowledgelib.io</title>
+  <meta name="description" content="Cross-system comparison of CDC implementations: Debezium (log-based, open source), Oracle GoldenGate (redo log mining), Salesforce CDC...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/cdc-implementation-patterns/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="CDC Implementation Patterns: Debezium vs Oracle | knowledgelib.io">
+  <meta property="og:description" content="Cross-system comparison of CDC implementations: Debezium (log-based, open source), Oracle GoldenGate (redo log mining), Salesforce CDC (platform-native), SAP SLT (trigger-based). Capture methods, latency, throughput, licensing, code examples. 8 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/cdc-implementation-patterns/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CDC Implementation Patterns: Debezium vs Oracle | knowledgelib.io">
+  <meta name="twitter:description" content="Cross-system comparison of CDC implementations: Debezium (log-based, open source), Oracle GoldenGate (redo log mining), Salesforce CDC (platform-native), SAP SLT (trigger-based). Capture methods, latency, throughput, licensing, code examples. 8 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.86">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/cdc-implementation-patterns">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do CDC implementations differ across Debezium, Oracle GoldenGate, Salesforce CDC, and SAP SLT?">
+  <meta name="ai:aliases" content="Change data capture comparison Debezium GoldenGate Salesforce CDC SAP SLT; Which CDC tool should I use for ERP integration?; Debezium vs Oracle GoldenGate vs SAP SLT for real-time data replication">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/cdc-implementation-patterns/2026.md">
+  <meta name="ai:token_estimate" content="5200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Debezium (3.4.x); Oracle GoldenGate (23ai); Salesforce CDC (API v66.0); SAP SLT (DMIS 2018 SP4+)">
+  <meta name="ai:inputs_needed" content="cdc_use_case,source_system,budget_constraint">
+  <meta name="ai:constraints" content="Debezium requires Kafka or Kafka Connect cluster; GoldenGate licenses both source+target processors (~$17.5K/proc); Salesforce CDC shares 50K/day delivery with Platform Events; SAP SLT triggers add write overhead to source; SF CDC 3-day replay only; GoldenGate needs supplemental logging">
+  <meta name="ai:skip_this_unit_if" content="Need Salesforce-specific events -> business/erp-integration/salesforce-streaming-platform-events/2026; Need general ERP event comparison -> business/erp-integration/erp-event-driven-comparison/2026; Need batch/bulk comparison -> business/erp-integration/erp-bulk-import-comparison/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "CDC Implementation Patterns: Debezium vs Oracle GoldenGate vs Salesforce CDC vs SAP SLT",
+    "headline": "CDC Implementation Patterns: Debezium vs Oracle GoldenGate vs Salesforce CDC vs SAP SLT",
+    "description": "Cross-system comparison of Change Data Capture implementations for ERP integration: Debezium (log-based, open source), Oracle GoldenGate (redo log mining, enterprise), Salesforce CDC (platform-native streaming), and SAP SLT (trigger-based replication). Covers capture methods, latency, throughput limits, licensing, authentication, error handling, and code examples.",
+    "keywords": ["CDC", "change data capture", "Debezium", "Oracle GoldenGate", "Salesforce CDC", "SAP SLT", "ERP integration", "real-time replication", "log-based CDC", "Kafka Connect"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Debezium 3.4.x, Oracle GoldenGate 23ai, Salesforce API v66.0, SAP SLT DMIS 2018 SP4+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Debezium Documentation -- Architecture & Connectors",
+        "url": "https://debezium.io/documentation/reference/stable/architecture.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Oracle GoldenGate 23ai Documentation -- Configuring Extract",
+        "url": "https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/extract-manage-trail-files.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Salesforce Change Data Capture Developer Guide (Spring '26)",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP Landscape Transformation Replication Server Documentation",
+        "url": "https://help.sap.com/docs/SAP_LANDSCAPE_TRANSFORMATION_REPLICATION_SERVER"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "CDC Implementation Patterns: Debezium vs Oracle GoldenGate vs Salesforce CDC vs SAP SLT",
+    "description": "Cross-system comparison of Change Data Capture implementations for ERP integration covering capture methods, latency benchmarks, throughput limits, licensing costs, and deployment patterns",
+    "keywords": ["CDC", "change data capture", "Debezium", "Oracle GoldenGate", "Salesforce CDC", "SAP SLT", "ERP integration"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Red Hat / Debezium Community"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "SAP"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "CDC Implementation Patterns" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do CDC implementations differ across Debezium, Oracle GoldenGate, Salesforce CDC, and SAP SLT?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Debezium is the best default for log-based CDC with open-source budgets and Kafka ecosystems; GoldenGate excels in Oracle-to-Oracle with sub-second latency at enterprise cost; Salesforce CDC is the only option for Salesforce object changes; SAP SLT is the only supported CDC path for SAP HANA replication but uses triggers, not log-based capture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Change data capture comparison Debezium GoldenGate Salesforce CDC SAP SLT",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Debezium is the best default for log-based CDC with open-source budgets and Kafka ecosystems; GoldenGate excels in Oracle-to-Oracle with sub-second latency at enterprise cost; Salesforce CDC is the only option for Salesforce object changes; SAP SLT is the only supported CDC path for SAP HANA replication but uses triggers, not log-based capture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which CDC tool should I use for ERP integration?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Debezium is the best default for log-based CDC with open-source budgets and Kafka ecosystems; GoldenGate excels in Oracle-to-Oracle with sub-second latency at enterprise cost; Salesforce CDC is the only option for Salesforce object changes; SAP SLT is the only supported CDC path for SAP HANA replication but uses triggers, not log-based capture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Debezium vs Oracle GoldenGate vs SAP SLT for real-time data replication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Debezium is the best default for log-based CDC with open-source budgets and Kafka ecosystems; GoldenGate excels in Oracle-to-Oracle with sub-second latency at enterprise cost; Salesforce CDC is the only option for Salesforce object changes; SAP SLT is the only supported CDC path for SAP HANA replication but uses triggers, not log-based capture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CDC implementation patterns for enterprise ERP systems",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Debezium is the best default for log-based CDC with open-source budgets and Kafka ecosystems; GoldenGate excels in Oracle-to-Oracle with sub-second latency at enterprise cost; Salesforce CDC is the only option for Salesforce object changes; SAP SLT is the only supported CDC path for SAP HANA replication but uses triggers, not log-based capture."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>CDC Implementation Patterns: Debezium vs Oracle GoldenGate vs Salesforce CDC vs SAP SLT</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do CDC implementations differ across Debezium, Oracle GoldenGate, Salesforce CDC, and SAP SLT?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/cdc-implementation-patterns/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Debezium 3.4.x, GoldenGate 23ai, Salesforce CDC v66.0, SAP SLT DMIS 2018 SP4+</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.86 out of 1">0.86</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Debezium is the best default for log-based CDC with open-source budgets and Kafka ecosystems; GoldenGate excels in Oracle-to-Oracle with sub-second latency at enterprise cost; Salesforce CDC is the only option for Salesforce object changes; SAP SLT is the only supported CDC path for SAP HANA replication but uses triggers, not log-based capture.</li>
+    <li><strong>Key limit</strong>: Salesforce CDC shares its 50K event/day delivery allocation with Platform Events (Enterprise edition); GoldenGate requires licensing both source AND target database processors, effectively doubling expected cost.</li>
+    <li><strong>Watch out for</strong>: SAP SLT uses database triggers -- not log-based CDC -- which adds write overhead to source systems. This is fundamentally different from Debezium and GoldenGate's log-reading approach.</li>
+    <li><strong>Best for</strong>: Cross-system comparison when selecting a CDC tool for ERP integration -- each tool owns a different niche and none is universally best.</li>
+    <li><strong>Authentication</strong>: Debezium uses database credentials (user/pass or SSL certs); GoldenGate uses Oracle DB credentials + trail file encryption; Salesforce CDC uses OAuth 2.0; SAP SLT uses RFC credentials (ABAP user).</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card compares four CDC implementations that serve fundamentally different architectural niches. Debezium is an open-source, log-based CDC platform built on Kafka Connect. Oracle GoldenGate is a commercial, high-performance replication engine optimized for Oracle environments. Salesforce CDC is a proprietary, platform-native event stream for Salesforce object changes. SAP SLT is a trigger-based replication server purpose-built for SAP HANA data provisioning.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">Capture Method</th><th scope="col">Primary Target</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Debezium 3.4.x</td><td>Open-source log-based CDC</td><td>Transaction log reading (WAL, binlog, redo)</td><td>Kafka topics (any downstream consumer)</td></tr>
+      <tr><td>Oracle GoldenGate 23ai</td><td>Commercial log-based replication</td><td>Oracle redo log mining / LogMiner</td><td>Oracle, PostgreSQL, Kafka, Pulsar</td></tr>
+      <tr><td>Salesforce CDC (Spring '26)</td><td>Platform-native change events</td><td>Internal Salesforce change tracking</td><td>Pub/Sub API (gRPC) or CometD subscribers</td></tr>
+      <tr><td>SAP SLT (DMIS 2018 SP4+)</td><td>Trigger-based replication server</td><td>Database triggers + logging tables</td><td>SAP HANA, SAP BW/4HANA</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">CDC Tool</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Capture Granularity</th><th scope="col">Latency</th><th scope="col">Schema Evolution</th><th scope="col">Bulk Capable?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Debezium (Kafka Connect)</td><td>HTTP REST (mgmt), Kafka (data)</td><td>Heterogeneous DB-to-Kafka CDC</td><td>Row-level DML + DDL</td><td>Sub-second to seconds</td><td>Yes (schema registry)</td><td>Snapshots only</td></tr>
+      <tr><td>Debezium Server</td><td>HTTP REST (mgmt), configurable sinks</td><td>Non-Kafka deployments</td><td>Row-level DML + DDL</td><td>Sub-second to seconds</td><td>Yes</td><td>Snapshots only</td></tr>
+      <tr><td>GoldenGate Extract</td><td>CLI (GGSCI), REST Admin API</td><td>Oracle-to-Oracle, Oracle-to-Kafka</td><td>Row-level DML + DDL (committed txns)</td><td>50-200ms</td><td>Manual DDL replication</td><td>Via initial load</td></tr>
+      <tr><td>GoldenGate OCI (Managed)</td><td>Web console, REST API</td><td>Cloud-native Oracle replication</td><td>Same as Extract</td><td>50-200ms</td><td>Manual</td><td>Via initial load</td></tr>
+      <tr><td>Salesforce CDC</td><td>gRPC (Pub/Sub API), Bayeux (CometD)</td><td>Salesforce object change streaming</td><td>Field-level change events</td><td>Seconds</td><td>Automatic</td><td>No</td></tr>
+      <tr><td>SAP SLT</td><td>ABAP RFC, DB triggers</td><td>SAP-to-HANA real-time replication</td><td>Row-level via trigger capture</td><td>Seconds to minutes</td><td>Manual (transformation rules)</td><td>Initial load + delta</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Tool Throughput Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Debezium</th><th scope="col">GoldenGate</th><th scope="col">Salesforce CDC</th><th scope="col">SAP SLT</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max events/sec (sustained)</td><td>100K+ (Kafka-dependent)</td><td>100K+ (hardware-dependent)</td><td>Limited by delivery allocation</td><td>Trigger overhead-limited</td></tr>
+      <tr><td>Max concurrent connectors</td><td>Unlimited (Kafka Connect cluster)</td><td>Per-license (source+target CPUs)</td><td>N/A (platform-managed)</td><td>Per-configuration (1:N from DMIS 2018 SP4)</td></tr>
+      <tr><td>Max message/event size</td><td>Kafka default 1 MB (configurable)</td><td>Trail file segment 100 MB default</td><td>1 MB per change event</td><td>RFC packet size (~64 KB default)</td></tr>
+      <tr><td>Replay/rewind window</td><td>Kafka retention (configurable)</td><td>Trail file retention (configurable)</td><td>3 days (72 hours)</td><td>No replay</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Salesforce CDC-Specific Allocation</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Event delivery (CometD + Pub/Sub)</td><td>50,000 baseline</td><td>24h</td><td>Enterprise: 50K; with add-on: up to 4.5M/month</td></tr>
+      <tr><td>Event publishing</td><td>250,000</td><td>Per hour</td><td>Internal (triggers, flows)</td></tr>
+      <tr><td>Concurrent CometD clients</td><td>1,000</td><td>Per org</td><td>Shared across all streaming subscriptions</td></tr>
+      <tr><td>Event replay retention</td><td>3 days</td><td>Rolling</td><td>Same across all editions</td></tr>
+      <tr><td>Max entities tracked</td><td>Admin-selected</td><td>N/A</td><td>Standard + custom objects; not all standard objects supported</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Debezium Scaling Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Target Throughput</th><th scope="col">Kafka Connect Workers</th><th scope="col">Memory/Worker</th><th scope="col">Connector Tasks</th><th scope="col">Partitions</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1K events/sec</td><td>1</td><td>2 GB</td><td>1</td><td>3-6</td></tr>
+      <tr><td>10K events/sec</td><td>2</td><td>4 GB</td><td>2-4</td><td>12-24</td></tr>
+      <tr><td>100K events/sec</td><td>4+</td><td>4-8 GB</td><td>4-8</td><td>24-48</td></tr>
+      <tr><td>1M events/sec</td><td>8+</td><td>8 GB</td><td>8-16</td><td>48+</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">CDC Tool</th><th scope="col">Auth Method</th><th scope="col">Credential Type</th><th scope="col">Rotation</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Debezium</td><td>Database native</td><td>User/password, SSL certs, Kerberos</td><td>Manual</td><td>Needs SELECT + REPLICATION privileges</td></tr>
+      <tr><td>GoldenGate</td><td>Oracle DB auth + OS auth</td><td>DB credentials + trail encryption keys</td><td>Manual; OCI uses IAM</td><td>Requires DBMS_GOLDENGATE_AUTH grants</td></tr>
+      <tr><td>Salesforce CDC</td><td>OAuth 2.0</td><td>JWT bearer or web server flow</td><td>Refresh tokens auto-rotate</td><td>Connected App required</td></tr>
+      <tr><td>SAP SLT</td><td>RFC user auth</td><td>ABAP system user + auth objects</td><td>SAP user management (SU01)</td><td>Requires RFC trust between source and SLT server</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Debezium PostgreSQL connector requires a dedicated replication slot; dropping and recreating the slot loses unprocessed WAL segments permanently. [<a href="https://debezium.io/documentation/reference/stable/architecture.html">src1</a>]</li>
+    <li>GoldenGate requires supplemental logging enabled at database level; forgetting this silently produces incomplete change records. [<a href="https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/extract-manage-trail-files.html">src2</a>]</li>
+    <li>Salesforce CDC subscriptions require "View All Data" or object-level read permissions; field-level security still applies and can silently exclude fields. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm">src3</a>]</li>
+    <li>SAP SLT RFC user needs exact authorization objects (S_RFC, S_TABU_DIS, S_BTCH_JOB) -- missing any one causes silent replication failures. [<a href="https://help.sap.com/docs/SAP_LANDSCAPE_TRANSFORMATION_REPLICATION_SERVER">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Debezium requires Apache Kafka (or Kafka-compatible broker) for Kafka Connect deployment; Debezium Server is the alternative but has fewer production deployments.</li>
+    <li>Oracle GoldenGate licensing requires counting processors on BOTH source and target systems, effectively doubling expected license cost. On-premises ~$17,500/processor.</li>
+    <li>Salesforce CDC is limited to objects explicitly enabled by admin in Setup; not all standard objects are supported, and junction objects are not available for CDC.</li>
+    <li>SAP SLT trigger-based CDC adds write overhead to every INSERT, UPDATE, and DELETE on source tables -- each operation writes to a logging table, doubling write I/O.</li>
+    <li>Salesforce CDC replay window is 3 days only -- if a subscriber is offline >72 hours, events are permanently lost with no recovery except full re-sync.</li>
+    <li>GoldenGate requires supplemental logging on Oracle source; if redo logs cycle before Extract processes them, those transactions are permanently lost.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Need CDC for ERP integration
++-- What is the source system?
+|   +-- Salesforce
+|   |   +-- Salesforce CDC (only option for SF object changes)
+|   |       +-- Need >50K events/day? -> Add-on license required
+|   |       +-- Need >3-day replay? -> Store events externally
+|   |       +-- Pub/Sub API (gRPC) preferred over CometD
+|   +-- SAP S/4HANA or ECC -> target is SAP HANA?
+|   |   +-- YES -> SAP SLT (vendor-supported path)
+|   |   +-- NO (target is Kafka/warehouse) -> Debezium or ODP extraction
+|   +-- Oracle Database
+|   |   +-- Budget for licensing? (>$17.5K/processor)
+|   |   |   +-- YES -> GoldenGate (lowest latency, best Oracle integration)
+|   |   |   +-- NO -> Debezium with Oracle connector (LogMiner-based)
+|   |   +-- Need bidirectional? -> GoldenGate (native support)
+|   +-- PostgreSQL / MySQL / SQL Server / MongoDB
+|   |   +-- Debezium (best open-source coverage)
+|   +-- Multiple heterogeneous sources
+|       +-- All open-source DBs -> Debezium (one platform)
+|       +-- Mix Oracle + open-source -> Debezium for all or GoldenGate + Debezium
++-- What latency is required?
+|   +-- &lt;100ms -> GoldenGate (tuned) or Debezium (tuned Kafka)
+|   +-- &lt;1 second -> Debezium (default config)
+|   +-- &lt;10 seconds -> Any tool works
+|   +-- Minutes acceptable -> SAP SLT or polling
++-- What is the budget?
+    +-- Zero license cost -> Debezium (Apache 2.0)
+    +-- Moderate ($10K-100K/yr) -> Debezium + Confluent Cloud or OCI GG BYOL
+    +-- Enterprise (>$100K/yr) -> GoldenGate on-prem or OCI managed</code></pre>
+  </section>
+
+  <!-- Quick Reference -- comparison table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Debezium 3.4.x</th><th scope="col">Oracle GoldenGate 23ai</th><th scope="col">Salesforce CDC (Spring '26)</th><th scope="col">SAP SLT (DMIS 2018 SP4+)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Capture method</strong></td><td>Log-based (WAL, binlog, redo)</td><td>Log-based (redo log mining)</td><td>Platform-internal tracking</td><td>Database triggers + logging tables</td></tr>
+      <tr><td><strong>Latency</strong></td><td>Sub-second (Kafka-dependent)</td><td>50-200ms (tuned)</td><td>Seconds (near real-time)</td><td>Seconds to minutes</td></tr>
+      <tr><td><strong>Delivery semantics</strong></td><td>At-least-once (exactly-once in 3.3+)</td><td>At-least-once (trail-based)</td><td>At-least-once (replay-based)</td><td>At-least-once (logging table)</td></tr>
+      <tr><td><strong>Supported sources</strong></td><td>PostgreSQL, MySQL, SQL Server, MongoDB, Oracle, DB2, Cassandra, Vitess, Spanner</td><td>Oracle, PostgreSQL (23ai), MySQL, SQL Server, DB2</td><td>Salesforce objects only</td><td>SAP ECC, S/4HANA, BW (ABAP-based)</td></tr>
+      <tr><td><strong>Supported targets</strong></td><td>Kafka, Pulsar, Kinesis, EventHubs, Redis, HTTP</td><td>Oracle, PostgreSQL, Kafka, Pulsar (23ai), Big Data targets</td><td>Pub/Sub API / CometD subscribers</td><td>SAP HANA, SAP BW/4HANA</td></tr>
+      <tr><td><strong>Schema DDL capture</strong></td><td>Yes (schema history topic)</td><td>Yes (manual DDL replication)</td><td>No (data changes only)</td><td>No (schema pre-configured)</td></tr>
+      <tr><td><strong>Replay / rewind</strong></td><td>Kafka retention (configurable)</td><td>Trail file retention</td><td>3 days only</td><td>No replay</td></tr>
+      <tr><td><strong>Initial load / snapshot</strong></td><td>Yes (incremental snapshots in 3.0+)</td><td>Yes (initial load mode)</td><td>No (CDC only)</td><td>Yes (full load + delta)</td></tr>
+      <tr><td><strong>Bidirectional sync</strong></td><td>Not native</td><td>Yes (native bidirectional)</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>Licensing</strong></td><td>Apache 2.0 (free)</td><td>~$17.5K/processor or ~$0.32/OCPU-hr</td><td>Included (Enterprise+); add-on for high-volume</td><td>Included with S/4HANA license</td></tr>
+      <tr><td><strong>Deployment complexity</strong></td><td>Moderate (Kafka cluster required)</td><td>High (specialized DBA skills)</td><td>Low (platform-managed)</td><td>Moderate (ABAP + RFC config)</td></tr>
+      <tr><td><strong>Exactly-once support</strong></td><td>Yes (Kafka txns, v3.3+)</td><td>No</td><td>No</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Configure Debezium CDC connector for PostgreSQL</h3>
+  <p>Register a Debezium PostgreSQL connector via Kafka Connect REST API. Requires a running Kafka Connect cluster with the Debezium PostgreSQL plugin installed. [<a href="https://debezium.io/documentation/reference/stable/architecture.html">src1</a>]</p>
+  <pre><code class="language-bash"># Input:  Running Kafka Connect cluster, PostgreSQL with wal_level=logical
+# Output: Connector registered, change events flowing to Kafka topic
+
+curl -X POST http://localhost:8083/connectors \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "erp-postgres-cdc",
+    "config": {
+      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+      "database.hostname": "erp-db.example.com",
+      "database.port": "5432",
+      "database.user": "debezium_repl",
+      "database.password": "${file:/secrets/pg-password.txt:password}",
+      "database.dbname": "erp_production",
+      "topic.prefix": "erp.cdc",
+      "table.include.list": "public.orders,public.invoices,public.customers",
+      "plugin.name": "pgoutput",
+      "slot.name": "debezium_erp_slot",
+      "publication.name": "dbz_erp_publication",
+      "snapshot.mode": "initial",
+      "max.batch.size": "4096",
+      "max.queue.size": "16384",
+      "poll.interval.ms": "100",
+      "heartbeat.interval.ms": "10000",
+      "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+      "schema.history.internal.kafka.topic": "erp.schema-history"
+    }
+  }'</code></pre>
+  <p><strong>Verify</strong>: <code>curl http://localhost:8083/connectors/erp-postgres-cdc/status | jq '.connector.state'</code> -> expected: <code>"RUNNING"</code></p>
+
+  <h3>2. Subscribe to Salesforce CDC via Pub/Sub API (gRPC)</h3>
+  <p>Use the Salesforce Pub/Sub API to subscribe to change events for a specific object. Requires OAuth 2.0 access token. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm">src3</a>]</p>
+  <pre><code class="language-python"># Input:  Salesforce Connected App with OAuth JWT bearer flow configured
+# Output: Stream of change events for Account object
+
+import grpc
+from salesforce_pubsub_api import pubsub_api_pb2, pubsub_api_pb2_grpc
+
+access_token = get_salesforce_token()  # Your OAuth implementation
+instance_url = "https://yourorg.my.salesforce.com"
+tenant_id = "00D..."  # Your org ID
+
+channel = grpc.secure_channel(
+    "api.pubsub.salesforce.com:7443",
+    grpc.ssl_channel_credentials()
+)
+stub = pubsub_api_pb2_grpc.PubSubStub(channel)
+metadata = [
+    ("accesstoken", access_token),
+    ("instanceurl", instance_url),
+    ("tenantid", tenant_id),
+]
+
+topic = "/data/AccountChangeEvent"
+fetch_request = pubsub_api_pb2.FetchRequest(
+    topic_name=topic,
+    replay_preset=pubsub_api_pb2.ReplayPreset.LATEST,
+    num_requested=100
+)
+for response in stub.Subscribe(iter([fetch_request]), metadata=metadata):
+    for event in response.events:
+        schema = get_schema(stub, response.schema_id, metadata)
+        decoded = decode_avro(event.event.payload, schema)
+        print(f"Change: {decoded['ChangeEventHeader']}")</code></pre>
+  <p><strong>Verify</strong>: Create/update an Account record -> expected: change event appears in subscriber output within seconds.</p>
+
+  <h3>3. Configure Oracle GoldenGate Extract process</h3>
+  <p>Set up an Extract process to capture changes from an Oracle source database. [<a href="https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/extract-manage-trail-files.html">src2</a>]</p>
+  <pre><code class="language-sql">-- Enable supplemental logging on Oracle source
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
+
+-- Create GoldenGate admin user
+CREATE USER ggadmin IDENTIFIED BY "SecurePassword123";
+GRANT DBA TO ggadmin;
+EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('ggadmin');</code></pre>
+  <pre><code>-- GoldenGate Extract parameter file (dirprm/ext_erp.prm)
+EXTRACT ext_erp
+SETENV (NLS_LANG = "AMERICAN_AMERICA.AL32UTF8")
+USERID ggadmin, PASSWORD SecurePassword123, ENCRYPTKEY DEFAULT
+EXTTRAIL ./dirdat/et
+LOGALLSUPCOLS
+UPDATERECORDFORMAT COMPACT
+
+TABLE hr.employees;
+TABLE fin.invoices;
+TABLE fin.payments;
+TABLE sales.orders;</code></pre>
+  <pre><code class="language-bash"># Register and start Extract via GGSCI
+GGSCI> ADD EXTRACT ext_erp, INTEGRATED TRANLOG, BEGIN NOW
+GGSCI> ADD EXTTRAIL ./dirdat/et, EXTRACT ext_erp, MEGABYTES 200
+GGSCI> START EXTRACT ext_erp</code></pre>
+  <p><strong>Verify</strong>: <code>GGSCI> INFO EXTRACT ext_erp, DETAIL</code> -> expected: Status <code>RUNNING</code>, checkpoint advancing.</p>
+
+  <h3>4. Configure SAP SLT replication</h3>
+  <p>Set up SAP SLT to replicate tables from an SAP ECC or S/4HANA source to SAP HANA. [<a href="https://help.sap.com/docs/SAP_LANDSCAPE_TRANSFORMATION_REPLICATION_SERVER">src5</a>]</p>
+  <pre><code>-- Step 1: Open transaction LTRS in the SLT system
+-- Define a new configuration:
+--   Source system: RFC destination to SAP source (SM59 connection)
+--   Target system: DB connection to SAP HANA
+--   Mass transfer ID: unique identifier
+--   Number of data transfer jobs: 3-5 (based on sizing)
+--   Number of initial load jobs: 5-10
+
+-- Step 2: Configure RFC destination (SM59)
+--   Connection type: 3 (ABAP Connection)
+--   Target host: source system hostname
+--   Logon user: SLT replication user (S_RFC, S_TABU_DIS authorizations)
+
+-- Step 3: Add tables for replication (LTRC)
+-- Select configuration, add tables: VBAK, VBAP, BKPF
+-- Choose replication mode: "Replicate" (initial load + real-time delta)</code></pre>
+  <p><strong>Verify</strong>: Transaction <code>LTRC</code> -> Data Transfer Monitor -> expected: tables show status "Green" (active replication).</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Debezium CDC consumer with error handling</h3>
+  <pre><code class="language-python"># Input:  Kafka cluster with Debezium CDC topics
+# Output: Processed change events with idempotent handling
+
+from confluent_kafka import Consumer, KafkaError  # confluent-kafka==2.6.1
+import json
+
+def create_cdc_consumer(bootstrap_servers, group_id, topics):
+    consumer = Consumer({
+        "bootstrap.servers": bootstrap_servers,
+        "group.id": group_id,
+        "auto.offset.reset": "earliest",
+        "enable.auto.commit": False,
+        "max.poll.interval.ms": 300000,
+    })
+    consumer.subscribe(topics)
+    processed_lsns = set()
+
+    try:
+        while True:
+            msg = consumer.poll(timeout=1.0)
+            if msg is None:
+                continue
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    continue
+                raise Exception(f"Consumer error: {msg.error()}")
+
+            event = json.loads(msg.value().decode("utf-8"))
+            lsn = event.get("source", {}).get("lsn")
+            if lsn in processed_lsns:
+                consumer.commit(msg)
+                continue
+
+            op = event.get("op")  # c=create, u=update, d=delete, r=snapshot
+            if op in ("c", "u"):
+                process_upsert(event["source"]["table"], event.get("after", {}))
+            elif op == "d":
+                process_delete(event["source"]["table"], event.get("before", {}))
+
+            processed_lsns.add(lsn)
+            consumer.commit(msg)
+    finally:
+        consumer.close()</code></pre>
+
+  <h3>Bash: GoldenGate health check and diagnostics</h3>
+  <pre><code class="language-bash"># Input:  GoldenGate installation with running processes
+# Output: Status of all Extract and Replicat processes
+
+echo "INFO ALL" | $OGG_HOME/ggsci
+echo "INFO EXTRACT ext_erp, DETAIL" | $OGG_HOME/ggsci
+du -sh $OGG_HOME/dirdat/
+echo "STATS EXTRACT ext_erp, TOTAL, TABLE *.*" | $OGG_HOME/ggsci
+tail -50 $OGG_HOME/dirrpt/ext_erp*.rpt</code></pre>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Patterns</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">CDC Tool</th><th scope="col">Error</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Debezium</td><td>REPLICATION_SLOT_ALREADY_EXISTS</td><td>Previous connector not cleaned up</td><td>Drop slot: <code>SELECT pg_drop_replication_slot('slot_name');</code></td></tr>
+      <tr><td>Debezium</td><td>Kafka lag increasing, connector RUNNING</td><td>Slow consumer or insufficient partitions</td><td>Scale workers; increase max.batch.size and max.queue.size</td></tr>
+      <tr><td>GoldenGate</td><td>OGG-00868: Trail file corrupted</td><td>Disk full during trail write</td><td>Restore from checkpoint; ensure adequate disk space</td></tr>
+      <tr><td>GoldenGate</td><td>OGG-01028: Extract lag exceeds threshold</td><td>Source redo faster than Extract</td><td>Add parallel Extract threads; increase trail file size</td></tr>
+      <tr><td>Salesforce CDC</td><td>EXCEEDED_EVENT_DELIVERY_LIMIT</td><td>50K daily allocation consumed</td><td>Purchase add-on license; reduce subscribed objects</td></tr>
+      <tr><td>Salesforce CDC</td><td>Missed events after downtime</td><td>Subscriber offline >72 hours</td><td>Full re-sync required; implement external event store</td></tr>
+      <tr><td>SAP SLT</td><td>IUUC_REPL_RUNTIME: Job cancelled</td><td>Source table locked or RFC timeout</td><td>Check SM21 logs; increase RFC timeout in SM59</td></tr>
+      <tr><td>SAP SLT</td><td>Trigger creation failure</td><td>Missing authorizations</td><td>Grant S_TABU_DIS; verify tablespace availability</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Debezium replication slot growth</strong>: If consumer stops, PostgreSQL WAL segments accumulate behind the replication slot, eventually crashing the database. Fix: <code>Monitor pg_replication_slots; set max_slot_wal_keep_size (PostgreSQL 13+)</code>. [<a href="https://debezium.io/documentation/reference/stable/architecture.html">src1</a>]</li>
+    <li><strong>GoldenGate redo log gap</strong>: If Extract falls behind and Oracle recycles redo logs, transactions are permanently lost. Fix: <code>Size redo logs to hold 2x Extract processing time; use integrated Extract</code>. [<a href="https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/extract-manage-trail-files.html">src2</a>]</li>
+    <li><strong>Salesforce CDC silent field exclusion</strong>: Fields the integration user lacks FLS on are silently omitted from change events. Fix: <code>Grant explicit FLS on every needed field; audit on initial setup</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm">src3</a>]</li>
+    <li><strong>SAP SLT trigger-induced deadlocks</strong>: On high-volume tables, SLT triggers can cause deadlocks with application transactions. Fix: <code>Deploy SLT standalone with dedicated work processes; schedule off-peak for high-volume tables</code>. [<a href="https://help.sap.com/docs/SAP_LANDSCAPE_TRANSFORMATION_REPLICATION_SERVER">src5</a>]</li>
+    <li><strong>Debezium schema evolution breakage</strong>: Schema changes during active replication cause deserialization failures without schema registry. Fix: <code>Use Avro + Confluent Schema Registry with BACKWARD or FULL compatibility</code>. [<a href="https://debezium.io/documentation/reference/stable/architecture.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using CDC for bulk data migration</h3>
+  <pre><code class="language-python"># BAD -- CDC is designed for ongoing change streams, not one-time bulk loads.
+# Using Debezium snapshot for 500M-row migration will:
+# 1. Create massive Kafka lag
+# 2. Hold a replication slot for hours/days, growing WAL
+# 3. Block other replication slots from advancing
+config = {
+    "snapshot.mode": "initial",  # Scans entire 500M-row table
+    "table.include.list": "public.massive_history_table",
+}</code></pre>
+
+  <h3>Correct: Use bulk tools for migration, CDC for ongoing sync</h3>
+  <pre><code class="language-python"># GOOD -- Use purpose-built bulk tools for initial load, then switch to CDC
+# Step 1: Bulk migration with pg_dump/COPY or Spark
+# Step 2: Start Debezium from current position
+config = {
+    "snapshot.mode": "no_data",  # Skip snapshot, start from current LSN
+    "table.include.list": "public.massive_history_table",
+}</code></pre>
+
+  <h3>Wrong: Ignoring schema evolution in CDC pipelines</h3>
+  <pre><code class="language-python"># BAD -- Consuming CDC events as raw JSON without schema validation.
+# When source adds a column, downstream breaks with KeyError.
+event = json.loads(msg.value())
+customer_name = event["after"]["customer_name"]  # Breaks when field renamed
+order_total = event["after"]["total"]  # Breaks when type changes</code></pre>
+
+  <h3>Correct: Use schema registry with backward compatibility</h3>
+  <pre><code class="language-python"># GOOD -- Schema Registry enforces compatibility and handles evolution
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroDeserializer
+
+sr_client = SchemaRegistryClient({"url": "http://schema-registry:8081"})
+deserializer = AvroDeserializer(sr_client)
+event = deserializer(msg.value(), None)
+customer_name = event.get("after", {}).get("customer_name", "UNKNOWN")</code></pre>
+
+  <h3>Wrong: Subscribing to all Salesforce CDC events without filtering</h3>
+  <pre><code class="language-python"># BAD -- Subscribing to /data/ChangeEvents captures ALL enabled objects.
+# Burns through 50K/day delivery allocation in minutes on active orgs.
+topic = "/data/ChangeEvents"  # Every object, every field, every change</code></pre>
+
+  <h3>Correct: Subscribe to specific object change events</h3>
+  <pre><code class="language-python"># GOOD -- Subscribe only to specific objects you need
+topic = "/data/AccountChangeEvent"  # Only Account changes
+# Or use a Custom Channel to filter specific objects and fields</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Debezium: PostgreSQL replication slot limit</strong>: Default <code>max_replication_slots</code> is 10. Each connector uses one slot. Fix: <code>Set max_replication_slots = 2x expected connectors + headroom</code>. [<a href="https://debezium.io/documentation/reference/stable/architecture.html">src1</a>]</li>
+    <li><strong>GoldenGate: Trail file disk exhaustion</strong>: Trail files accumulate if Pump/Replicat lag behind. Fix: <code>Configure PURGEOLDEXTRACTS in Pump params; monitor dirdat/ size; alert at 70% disk</code>. [<a href="https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/extract-manage-trail-files.html">src2</a>]</li>
+    <li><strong>Salesforce CDC: Platform Events allocation sharing</strong>: CDC shares delivery allocation with Platform Events -- heavy PE usage starves CDC. Fix: <code>Monitor EventBus usage in Setup; separate high-volume PE to own allocation</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src4</a>]</li>
+    <li><strong>SAP SLT: Source system performance impact</strong>: Unlike log-based CDC, SLT triggers execute synchronously -- high-frequency tables can see 15-30% write degradation. Fix: <code>Deploy SLT standalone; replicate only needed columns; monitor source response times</code>. [<a href="https://help.sap.com/docs/SAP_LANDSCAPE_TRANSFORMATION_REPLICATION_SERVER">src5</a>]</li>
+    <li><strong>All tools: Ignoring timezone handling</strong>: CDC timestamps differ per tool. Debezium uses UTC, GoldenGate uses source DB timezone, Salesforce uses UTC, SAP SLT preserves source timezone. Fix: <code>Normalize all CDC timestamps to UTC at the consumer layer</code>.</li>
+    <li><strong>Debezium: Connector task failure not auto-recovering</strong>: Kafka Connect does NOT auto-restart failed tasks. Connector shows RUNNING but task shows FAILED. Fix: <code>Configure "errors.retry.timeout": "-1"; deploy health check sidecar</code>. [<a href="https://oneuptime.com/blog/post/2026-01-28-scale-debezium-deployments/view">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># === Debezium Diagnostics ===
+# Check connector status and task state
+curl -s http://localhost:8083/connectors/erp-postgres-cdc/status | jq '.'
+
+# Check PostgreSQL replication slot health
+psql -h erp-db.example.com -U debezium_repl -d erp_production \
+  -c "SELECT slot_name, active, restart_lsn, confirmed_flush_lsn,
+      pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn))
+      AS lag_bytes FROM pg_replication_slots;"
+
+# Monitor Kafka consumer group lag
+kafka-consumer-groups --bootstrap-server kafka:9092 \
+  --describe --group erp-cdc-consumer-group
+
+# === GoldenGate Diagnostics ===
+echo "INFO ALL" | $OGG_HOME/ggsci
+echo "SEND EXTRACT ext_erp, STATUS" | $OGG_HOME/ggsci
+echo "STATS EXTRACT ext_erp, TOTALSONLY *.*" | $OGG_HOME/ggsci
+
+# === Salesforce CDC Diagnostics ===
+curl -s "https://yourorg.my.salesforce.com/services/data/v66.0/limits" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq '.DailyDeliveredPlatformEvents'
+
+# === SAP SLT Diagnostics ===
+# Transaction LTRC -> Data Transfer Monitor
+# Transaction LTRS -> Trigger Administration
+# SE16 -> table IUUC_REPL_LOG (logging table sizes)
+# SM37 -> job name IUUC_* (background jobs)</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Tool/Version</th><th scope="col">Release Date</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Debezium 3.4.0</td><td>2025-12</td><td>Current</td><td>Kafka 4.1 baseline</td><td>Update Kafka Connect to 4.1+</td></tr>
+      <tr><td>Debezium 3.3.0</td><td>2025-10</td><td>Supported</td><td>Exactly-once for all core connectors</td><td>Enable Kafka transactions</td></tr>
+      <tr><td>Debezium 3.0.0</td><td>2025-01</td><td>Supported</td><td>Incremental snapshots GA</td><td>Replace ad-hoc snapshots</td></tr>
+      <tr><td>GoldenGate 23ai</td><td>2025-03</td><td>Current</td><td>PostgreSQL source, Pulsar output</td><td>New connector types require 23ai</td></tr>
+      <tr><td>GoldenGate 21c</td><td>2022-01</td><td>Supported</td><td>None</td><td>Minimum for OCI managed</td></tr>
+      <tr><td>Salesforce CDC (Spring '26)</td><td>2026-02</td><td>Current</td><td>Pub/Sub API v2 enhancements</td><td>Migrate from CometD to Pub/Sub API</td></tr>
+      <tr><td>SAP SLT DMIS 2018 SP4+</td><td>2023-01</td><td>Current</td><td>New CDC mechanism (1:N targets)</td><td>Legacy triggers limited to 4 targets</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Need real-time change streaming from relational databases to Kafka</td><td>One-time bulk data migration (>100M rows)</td><td>pg_dump, Oracle Data Pump, Bulk API, SAP DMF</td></tr>
+      <tr><td>Need event-driven integration between ERP systems</td><td>Simple scheduled batch sync (daily/weekly)</td><td>business/erp-integration/batch-vs-realtime-integration/2026</td></tr>
+      <tr><td>Source DB supports log-based capture (WAL, binlog, redo)</td><td>Source is SaaS with no DB access</td><td>Platform-native CDC or API polling</td></tr>
+      <tr><td>Need to capture every change including intermediate states</td><td>Only need current state / point-in-time snapshot</td><td>Full table replication or API-based sync</td></tr>
+      <tr><td>Budget allows Kafka infra or Oracle licensing</td><td>Zero infrastructure budget and no Kafka cluster</td><td>Platform-native webhooks or managed ETL</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Debezium 3.4.x</th><th scope="col">Oracle GoldenGate 23ai</th><th scope="col">Salesforce CDC</th><th scope="col">SAP SLT</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Architecture</strong></td><td>Kafka Connect connector</td><td>Extract/Pump/Replicat pipeline</td><td>Platform-native event stream</td><td>ABAP triggers + logging table</td><td></td></tr>
+      <tr><td><strong>Capture method</strong></td><td>Transaction log reading</td><td>Redo log mining</td><td>Internal object tracking</td><td>Database triggers</td><td>SLT only non-log-based tool</td></tr>
+      <tr><td><strong>Source DB overhead</strong></td><td>Minimal (reads logs)</td><td>Minimal (reads logs)</td><td>Zero (platform-managed)</td><td>Moderate (trigger writes)</td><td></td></tr>
+      <tr><td><strong>Latency (typical)</strong></td><td>100ms-2s</td><td>50-200ms</td><td>1-5 seconds</td><td>5-60 seconds</td><td>GoldenGate lowest latency</td></tr>
+      <tr><td><strong>Throughput ceiling</strong></td><td>1M+ events/sec</td><td>100K+ events/sec</td><td>50K-4.5M events/day</td><td>Hardware-dependent</td><td>Salesforce is daily, others per-second</td></tr>
+      <tr><td><strong>Exactly-once</strong></td><td>Yes (v3.3+)</td><td>No</td><td>No</td><td>No</td><td>Debezium only with Kafka txns</td></tr>
+      <tr><td><strong>Schema evolution</strong></td><td>Automatic (registry)</td><td>Manual DDL replication</td><td>Automatic</td><td>Manual (transformation rules)</td><td></td></tr>
+      <tr><td><strong>Data transformation</strong></td><td>SMTs</td><td>Column mapping, filtering</td><td>Field selection only</td><td>ABAP transformation rules</td><td></td></tr>
+      <tr><td><strong>Replay / rewind</strong></td><td>Kafka offset reset</td><td>Trail file replay</td><td>3-day replay</td><td>No replay</td><td></td></tr>
+      <tr><td><strong>Bidirectional sync</strong></td><td>No (custom logic)</td><td>Yes (native)</td><td>No</td><td>No</td><td>GoldenGate only</td></tr>
+      <tr><td><strong>Monitoring</strong></td><td>REST + JMX metrics</td><td>GGSCI + Enterprise Mgr</td><td>Setup > Platform Events</td><td>LTRC + SM37</td><td></td></tr>
+      <tr><td><strong>Total cost (mid-market)</strong></td><td>$0 + Kafka ($5K-50K/yr)</td><td>$50K-500K+/yr</td><td>Included; add-on $10K+/yr</td><td>Included with S/4HANA</td><td>GoldenGate most expensive</td></tr>
+      <tr><td><strong>Skill requirements</strong></td><td>Kafka + SQL DBA</td><td>Oracle DBA + GG specialist</td><td>SF admin + developer</td><td>SAP Basis + ABAP</td><td></td></tr>
+      <tr><td><strong>Cloud-native option</strong></td><td>Confluent Cloud, AWS MSK</td><td>OCI GoldenGate (managed)</td><td>Native (Salesforce)</td><td>SAP BTP (limited)</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Debezium's "exactly-once" semantics (v3.3+) require Kafka transactions enabled on the broker -- most existing Kafka clusters run without transactions, and enabling them has a ~10-15% throughput cost.</li>
+    <li>Oracle GoldenGate pricing is per-processor-core with Oracle's core factor table -- ARM and Intel cores count differently. Always verify the core factor for your specific hardware.</li>
+    <li>Salesforce CDC delivery allocations are shared with Platform Events across the org. An org that uses Platform Events for internal automation may have very little allocation remaining for CDC.</li>
+    <li>SAP SLT performance impact on the source system is highly variable -- simple tables may see &lt;5% overhead while tables with many triggers or complex indexes can see 20-30% write degradation.</li>
+    <li>This comparison covers CDC for ERP integration patterns. For analytics/data warehouse CDC (Fivetran, Airbyte, AWS DMS), the decision criteria are different.</li>
+    <li>All throughput numbers are approximate and hardware-dependent. Actual performance depends on source database load, network bandwidth, event size, and downstream consumer speed.</li>
+    <li>GoldenGate 23ai's PostgreSQL and Pulsar support is new (March 2025) and may have fewer production deployments than its mature Oracle-to-Oracle path.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/erp-event-driven-comparison/2026" data-relationship="depends_on">ERP Event-Driven Integration Comparison</a>
+    <a href="/business/erp-integration/salesforce-streaming-platform-events/2026" data-relationship="related_to">Salesforce Platform Events and Streaming</a>
+    <a href="/business/erp-integration/change-data-capture-erp/2026" data-relationship="related_to">General CDC Concepts for ERP Integration</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Error Handling and Dead Letter Queues</a>
+    <a href="/business/erp-integration/batch-vs-realtime-integration/2026" data-relationship="alternative_to">Batch vs Real-Time Integration</a>
+    <a href="/business/erp-integration/erp-bulk-import-comparison/2026" data-relationship="often_confused_with">Bulk Import Comparison</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+START -- ClassNotFoundException or NoClassDefFoundError?
+|
++-- ClassNotFoundException?
+|   +-- Using Class.forName() / ClassLoader.loadClass()?
+|   |   +-- YES --> Check class name for typos; verify JAR on classpath (Cause #6, #1)
+|   |   +-- NO --> Framework/container loading the class?
+|   |       +-- YES --> Check dependency scope (provided vs compile) and app server classloader (Cause #5)
+|   |       +-- NO --> Check transitive dependencies: mvn dependency:tree (Cause #7)
+|   +-- JDBC driver class?
+|       +-- YES --> Add driver JAR; use SPI auto-registration (Cause #8)
+|       +-- NO --> Verify exact FQCN and JAR presence on classpath
+|
++-- NoClassDefFoundError?
+|   +-- Error message contains "Could not initialize class"?
+|   |   +-- YES --> Failed static initializer (Cause #4)
+|   |   |   +-- Check logs for ExceptionInInitializerError on first attempt
+|   |   |   +-- Fix the exception in the static block/field
+|   |   +-- NO --> Class missing at runtime but present at compile time
+|   |       +-- Fat JAR? --> Check packaging plugin (shade/spring-boot/shadow) (Cause #3)
+|   |       +-- Dependency conflict? --> mvn dependency:tree (Cause #2, #10)
+|   |       +-- App server? --> Check classloader scope (Cause #5)
+|   +-- After ProGuard/R8?
+|       +-- YES --> Add -keep rules for affected classes (Cause #11)
+|       +-- NO --> Run java -verbose:class to trace class loading
+|
++-- DEFAULT --> Run java -verbose:class -cp ... MainClass and check which JARs are loaded

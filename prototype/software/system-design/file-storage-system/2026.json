@@ -1,0 +1,91 @@
+{
+  "id": "software/system-design/file-storage-system/2026",
+  "category": "software",
+  "subcategory": "system-design",
+  "topic": "file-storage-system",
+  "version_tag": "2026",
+  "canonical_question": "How do I design a file storage system (Dropbox/S3 clone)?",
+  "aliases": [
+    "design cloud file storage",
+    "build a Dropbox clone architecture",
+    "S3-like object storage system design",
+    "distributed file storage architecture",
+    "cloud storage system design interview",
+    "file sync service design",
+    "object storage system design",
+    "design Google Drive backend"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.91,
+  "token_estimate": 3800,
+  "source_count": 7,
+  "md_path": "/software/system-design/file-storage-system/2026.md",
+  "html_path": "/software/system-design/file-storage-system/2026.html",
+  "priority": "medium",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": null,
+    "next_review": "2026-05-23",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Never store file content and metadata in the same database -- metadata needs low-latency queries, blobs need throughput-optimized storage",
+    "Always encrypt files at rest (AES-256) and in transit (TLS 1.2+) -- regulatory requirement for any production file storage",
+    "Chunk size selection is irreversible at scale -- migrating billions of existing chunks to a new size requires a full rewrite pipeline",
+    "Presigned URLs must have short TTLs (5-15 min for uploads, 1-60 min for downloads) -- leaked URLs grant unauthenticated access",
+    "Replication factor and erasure coding scheme determine both durability and storage cost -- changing after deployment requires data migration"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need a CDN or content delivery network design",
+      "use_instead": "CDN design focuses on edge caching and geo-routing, not durable storage"
+    },
+    {
+      "condition": "Need a database or data warehouse design",
+      "use_instead": "Database system design focuses on query processing, indexing, and transactions"
+    },
+    {
+      "condition": "Need only a simple file upload endpoint, not a full storage system",
+      "use_instead": "Use managed object storage (AWS S3, GCS, Azure Blob) directly with presigned URLs"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      {
+        "id": "software/system-design/url-shortener/2026",
+        "label": "URL Shortener System Design"
+      },
+      {
+        "id": "software/system-design/rate-limiter/2026",
+        "label": "Rate Limiter System Design"
+      }
+    ],
+    "solves": [],
+    "alternative_to": [],
+    "often_confused_with": []
+  },
+  "inputs_needed": [
+    {
+      "key": "scale",
+      "question": "What is the expected scale? (number of files, total storage, concurrent users)",
+      "type": "choice",
+      "options": ["Small (<1TB, <1K users)", "Medium (1-100TB, 1K-100K users)", "Large (100TB+, 100K+ users)", "Massive (PB+, millions of users)"]
+    },
+    {
+      "key": "sync_requirement",
+      "question": "Do you need real-time file sync across devices (like Dropbox) or just store-and-retrieve (like S3)?",
+      "type": "choice",
+      "options": ["Store-and-retrieve only (S3-like)", "Real-time sync across devices (Dropbox-like)", "Both"]
+    },
+    {
+      "key": "storage_type",
+      "question": "What type of storage semantics do you need?",
+      "type": "choice",
+      "options": ["Object storage (flat namespace, immutable)", "File storage (hierarchical, mutable)", "Block storage (raw volumes)"]
+    }
+  ]
+}

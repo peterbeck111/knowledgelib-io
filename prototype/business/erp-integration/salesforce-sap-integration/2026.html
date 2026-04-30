@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Salesforce + SAP S/4HANA Integration | knowledgelib.io</title>
+  <meta name="description" content="Salesforce + SAP S/4HANA integration guide — OData vs RFC vs IDoc, customer/order sync patterns, MuleSoft vs SAP CPI middleware, rate limits, field...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/salesforce-sap-integration/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Salesforce + SAP S/4HANA Integration | knowledgelib.io">
+  <meta property="og:description" content="Salesforce + SAP S/4HANA integration guide — OData vs RFC vs IDoc, customer/order sync patterns, MuleSoft vs SAP CPI middleware, rate limits, field mapping, CSRF token handling, and production failure patterns. 7 sources, all cited. Verified 2026-03-02.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/salesforce-sap-integration/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-02">
+  <meta property="article:modified_time" content="2026-03-02">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Salesforce + SAP S/4HANA Integration | knowledgelib.io">
+  <meta name="twitter:description" content="Salesforce + SAP S/4HANA integration guide — OData vs RFC vs IDoc, customer/order sync patterns, MuleSoft vs SAP CPI middleware, rate limits, field mapping, CSRF token handling, and production failure patterns. 7 sources, all cited. Verified 2026-03-02.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.88">
+  <meta name="ai:last_verified" content="2026-03-02">
+  <meta name="ai:domain" content="business/erp-integration/salesforce-sap-integration">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you integrate Salesforce and SAP S/4HANA - customer/order sync, OData vs RFC, middleware?">
+  <meta name="ai:aliases" content="Salesforce SAP S/4HANA integration guide; How to sync customers and orders between Salesforce and SAP; OData vs RFC vs IDoc for Salesforce-SAP integration; MuleSoft vs SAP CPI for Salesforce-SAP middleware">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/salesforce-sap-integration/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-02">
+  <meta name="ai:systems" content="Salesforce (API v62.0); SAP S/4HANA (2408 / Cloud 2502)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction,sap_deployment,middleware">
+  <meta name="ai:constraints" content="SF API limit: 100K+1K/license per 24h (Enterprise); SAP OData: 1000 records/page default; SAP requires CSRF token for writes; RFC requires proprietary JCo connector; IDocs async-only; SF governor limits cascade through triggers; S/4HANA Cloud restricts custom ABAP; Middleware required for production">
+  <meta name="ai:skip_this_unit_if" content="Only needs Salesforce API (no SAP) -> business/erp-integration/salesforce-rest-api/2026; Only needs SAP API (no Salesforce) -> business/erp-integration/sap-s4hana-odata-api/2026; Needs Salesforce-to-NetSuite -> business/erp-integration/salesforce-netsuite-integration/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Salesforce + SAP S/4HANA Integration: Customer/Order Sync, OData vs RFC, Middleware",
+    "headline": "Salesforce + SAP S/4HANA Integration: Customer/Order Sync, OData vs RFC, Middleware",
+    "description": "Comprehensive integration guide for Salesforce and SAP S/4HANA covering OData vs RFC vs IDoc protocol selection, customer master and sales order sync patterns, MuleSoft vs SAP CPI middleware comparison, rate limits on both sides, field mapping reference, CSRF token handling, and production failure patterns.",
+    "keywords": ["Salesforce", "SAP S/4HANA", "ERP integration", "OData", "RFC", "IDoc", "MuleSoft", "SAP CPI", "customer sync", "order sync"],
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, SAP S/4HANA 2408 / Cloud 2502",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "SAP API Business Hub — API_SALES_ORDER_SRV and API_BUSINESS_PARTNER",
+        "url": "https://api.sap.com/api/API_SALES_ORDER_SRV/overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Salesforce Developer Limits and Allocations Quick Reference",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Integration Patterns in SAP — IDoc, RFC, OData, Events",
+        "url": "https://metalhatscats.com/sap/interview-prep/sap-integration-idocs-apis-middleware-interview-prep"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Complete Guide to SAP S/4HANA APIs: REST and SOAP Integration",
+        "url": "https://www.apideck.com/blog/guide-to-sap-4-hana-rest-and-soap-api"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practices for Integrating Salesforce with SAP S/4HANA",
+        "url": "https://www.vc-erp.com/sap-s4hana-salesforce-integration-best-practices/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "S/4HANA Cloud X-CSRF Token and E-Tag Validation",
+        "url": "https://community.sap.com/t5/technology-blog-posts-by-members/s-4hana-cloud-x-csrf-token-and-e-tag-validation/ba-p/13427700"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP S/4HANA Integration Solutions — MuleSoft",
+        "url": "https://www.mulesoft.com/integration/sap/s4hana"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Salesforce + SAP S/4HANA Integration: Customer/Order Sync, OData vs RFC, Middleware",
+    "description": "Integration reference for Salesforce and SAP S/4HANA with rate limits, field mapping, protocol comparison, authentication flows, and middleware selection guide",
+    "keywords": ["Salesforce", "SAP S/4HANA", "ERP integration", "OData", "API rate limits"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "MuleSoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Salesforce + SAP S/4HANA Integration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you integrate Salesforce and SAP S/4HANA - customer/order sync, OData vs RFC, middleware?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OData V2/V4 for greenfield Salesforce-to-SAP S/4HANA integrations; RFC/BAPI only for on-premise custom logic not exposed via OData; IDocs only for high-volume batch or legacy EDI. A middleware layer (MuleSoft or SAP CPI) is required for production — point-to-point breaks at scale."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce SAP S/4HANA integration guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OData V2/V4 for greenfield Salesforce-to-SAP S/4HANA integrations; RFC/BAPI only for on-premise custom logic not exposed via OData; IDocs only for high-volume batch or legacy EDI. A middleware layer (MuleSoft or SAP CPI) is required for production — point-to-point breaks at scale."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to sync customers and orders between Salesforce and SAP",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OData V2/V4 for greenfield Salesforce-to-SAP S/4HANA integrations; RFC/BAPI only for on-premise custom logic not exposed via OData; IDocs only for high-volume batch or legacy EDI. A middleware layer (MuleSoft or SAP CPI) is required for production — point-to-point breaks at scale."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OData vs RFC vs IDoc for Salesforce-SAP integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OData V2/V4 for greenfield Salesforce-to-SAP S/4HANA integrations; RFC/BAPI only for on-premise custom logic not exposed via OData; IDocs only for high-volume batch or legacy EDI. A middleware layer (MuleSoft or SAP CPI) is required for production — point-to-point breaks at scale."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MuleSoft vs SAP CPI for Salesforce-SAP middleware",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OData V2/V4 for greenfield Salesforce-to-SAP S/4HANA integrations; RFC/BAPI only for on-premise custom logic not exposed via OData; IDocs only for high-volume batch or legacy EDI. A middleware layer (MuleSoft or SAP CPI) is required for production — point-to-point breaks at scale."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Salesforce + SAP S/4HANA Integration: Customer/Order Sync, OData vs RFC, Middleware</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you integrate Salesforce and SAP S/4HANA - customer/order sync, OData vs RFC, middleware?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/salesforce-sap-integration/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Salesforce (API v62.0) + SAP S/4HANA (2408 / Cloud 2502)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.88 out of 1">0.88</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-02</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use OData V2/V4 for greenfield Salesforce-to-SAP S/4HANA integrations; RFC/BAPI only for on-premise custom logic not exposed via OData; IDocs only for high-volume batch or legacy EDI. A middleware layer (MuleSoft or SAP CPI) is required for production.</li>
+    <li><strong>Key limit</strong>: Salesforce API calls are capped at 100,000 + 1,000/user license per 24h (Enterprise); SAP OData returns max 1,000 records/page by default.</li>
+    <li><strong>Watch out for</strong>: SAP CSRF token handling — every write operation requires a fresh token fetched via GET + session cookies cached. Forgetting this is the #1 cause of 403 errors.</li>
+    <li><strong>Best for</strong>: Bidirectional customer master + sales order sync between Salesforce CRM and SAP S/4HANA ERP.</li>
+    <li><strong>Authentication</strong>: Salesforce uses OAuth 2.0 (JWT bearer for server-to-server); SAP S/4HANA Cloud uses OAuth 2.0 + CSRF; on-premise uses Basic Auth + CSRF or X.509.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers the integration between Salesforce (CRM, source of truth for leads, opportunities, and customer-facing data) and SAP S/4HANA (ERP, source of truth for financial master data, pricing, inventory, and order fulfillment). It applies to SAP S/4HANA Cloud (Public and Private Edition) and On-Premise 2021+ releases.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce (API v62.0)</td><td>CRM — customers, leads, opportunities</td><td>REST API, Bulk API 2.0, Platform Events</td><td>Outbound + Inbound</td></tr>
+      <tr><td>SAP S/4HANA (2408 / Cloud 2502)</td><td>ERP — financial master, inventory, fulfillment</td><td>OData V2/V4, SOAP, RFC/BAPI, IDoc</td><td>Inbound + Outbound</td></tr>
+      <tr><td>Middleware (MuleSoft / SAP CPI)</td><td>Integration orchestrator</td><td>Connectors for both systems</td><td>Bidirectional</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+
+  <h3>Salesforce Side</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Request</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>REST API</td><td>HTTPS/JSON</td><td>Individual record CRUD, &lt;2K records</td><td>2,000 per SOQL query</td><td>100K+ calls/24h</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Bulk API 2.0</td><td>HTTPS/CSV</td><td>ETL, data migration, &gt;2K records</td><td>150M per file</td><td>15,000 batches/24h</td><td>No</td><td>Yes</td></tr>
+      <tr><td>SOAP API</td><td>HTTPS/XML</td><td>Metadata operations, legacy</td><td>2,000 records</td><td>Shared with REST</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Composite API</td><td>HTTPS/JSON</td><td>Multi-object operations</td><td>25 subrequests</td><td>1 API call</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Platform Events</td><td>CometD/gRPC</td><td>Real-time event notifications</td><td>N/A</td><td>200K-1M events/24h</td><td>Yes</td><td>N/A</td></tr>
+      <tr><td>Change Data Capture</td><td>CometD</td><td>Field-level change tracking</td><td>N/A</td><td>24h replay window</td><td>Yes</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>SAP S/4HANA Side</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Request</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OData V2</td><td>HTTPS/JSON or XML</td><td>Standard CRUD (most services)</td><td>1,000/page</td><td>~100 req/s (Cloud)</td><td>Yes</td><td>Via $batch</td></tr>
+      <tr><td>OData V4</td><td>HTTPS/JSON</td><td>Newer APIs (greenfield)</td><td>1,000/page</td><td>~100 req/s (Cloud)</td><td>Yes</td><td>Via $batch</td></tr>
+      <tr><td>SOAP (WSDL)</td><td>HTTPS/XML</td><td>Legacy, WS-Security scenarios</td><td>Varies</td><td>Fair-use</td><td>Yes</td><td>No</td></tr>
+      <tr><td>RFC/BAPI</td><td>SAP protocol (JCo)</td><td>Custom ABAP logic</td><td>Single call</td><td>Pool-dependent</td><td>Yes</td><td>No</td></tr>
+      <tr><td>IDoc</td><td>ALE/EDI</td><td>Bulk document transfer</td><td>Unlimited (async)</td><td>Throughput-dep.</td><td>No</td><td>Yes</td></tr>
+      <tr><td>SAP Event Mesh</td><td>AMQP/MQTT/REST</td><td>Real-time pub/sub</td><td>N/A</td><td>Tier-dependent</td><td>Yes</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Salesforce Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max records per SOQL query</td><td>2,000</td><td>REST/SOAP API</td><td>Use queryMore for pagination</td></tr>
+      <tr><td>Max request body size</td><td>50 MB</td><td>REST API</td><td></td></tr>
+      <tr><td>Max composite subrequests</td><td>25</td><td>Composite API</td><td>All-or-nothing by default</td></tr>
+      <tr><td>Max batch file size</td><td>150 MB</td><td>Bulk API 2.0</td><td>Split larger files</td></tr>
+      <tr><td>Max records per batch</td><td>10,000</td><td>Bulk API 2.0</td><td></td></tr>
+      <tr><td>API request timeout</td><td>600,000 ms</td><td>All REST/SOAP</td><td>10 minutes</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Salesforce Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Total API calls</td><td>100,000 base</td><td>24h rolling</td><td>Enterprise: +1,000/license; Unlimited: +5,000/license; Developer: 15,000 total</td></tr>
+      <tr><td>Concurrent API requests</td><td>25</td><td>Per org</td><td>Developer/Trial: 5</td></tr>
+      <tr><td>Bulk API batches</td><td>15,000</td><td>24h rolling</td><td>Shared across editions</td></tr>
+      <tr><td>Streaming API events</td><td>200K-1M</td><td>24h</td><td>Enterprise: 200K; Unlimited: 1M</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Salesforce Governor Limits (Per Transaction)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Per-Transaction Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SOQL queries</td><td>100</td><td>Includes queries from triggers</td></tr>
+      <tr><td>DML statements</td><td>150</td><td>Each insert/update/delete counts as 1</td></tr>
+      <tr><td>Callouts (HTTP)</td><td>100</td><td>External HTTP requests within a transaction</td></tr>
+      <tr><td>CPU time</td><td>10,000 ms (sync) / 60,000 ms (async)</td><td>Exceeded = abort</td></tr>
+      <tr><td>Heap size</td><td>6 MB (sync) / 12 MB (async)</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>SAP S/4HANA Rate Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Default throughput</td><td>~100 req/s</td><td>OData (Cloud)</td><td>Managed via SAP API Management</td></tr>
+      <tr><td>Burst capacity</td><td>~200 req/s</td><td>OData (Cloud)</td><td>Short-burst before throttling</td></tr>
+      <tr><td>Max page size</td><td>1,000 records/page</td><td>OData queries</td><td>Configurable via $top</td></tr>
+      <tr><td>$batch max changesets</td><td>100 per request</td><td>OData $batch (Cloud)</td><td>On-premise varies</td></tr>
+      <tr><td>HTTP 429 response</td><td>Retry-After header</td><td>All Cloud APIs</td><td>Exponential backoff recommended</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+
+  <h3>Salesforce Authentication</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.0 JWT Bearer</td><td>Server-to-server (recommended)</td><td>2h default</td><td>New JWT per request</td><td>Requires connected app + certificate</td></tr>
+      <tr><td>OAuth 2.0 Client Credentials</td><td>Server-to-server (simpler)</td><td>2h</td><td>New token per request</td><td>Spring '23+; no user context</td></tr>
+      <tr><td>Username-Password (legacy)</td><td>Testing only</td><td>Session timeout</td><td>No</td><td>Do NOT use in production</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>SAP S/4HANA Authentication</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.0 Client Credentials</td><td>S/4HANA Cloud</td><td>12h default</td><td>Yes</td><td>Requires Communication Arrangement</td></tr>
+      <tr><td>Basic Auth + CSRF</td><td>On-premise</td><td>Session-based</td><td>Fetch new CSRF per session</td><td>CSRF required for all writes</td></tr>
+      <tr><td>X.509 Client Certificates</td><td>High-security on-prem</td><td>Cert validity</td><td>N/A</td><td>Recommended for production</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>SAP CSRF token is session-bound: fetch via GET with <code>X-CSRF-Token: Fetch</code>, cache token AND all Set-Cookie values. [<a href="https://community.sap.com/t5/technology-blog-posts-by-members/s-4hana-cloud-x-csrf-token-and-e-tag-validation/ba-p/13427700">src6</a>]</li>
+    <li>CSRF token expires on document update — ETag resets, re-fetch required. [<a href="https://community.sap.com/t5/technology-blog-posts-by-members/s-4hana-cloud-x-csrf-token-and-e-tag-validation/ba-p/13427700">src6</a>]</li>
+    <li>Salesforce JWT flow requires connected app with digital certificate — self-signed for dev, CA-signed for prod. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li>SAP Cloud Communication Arrangements are mandatory — direct API calls without one return 401. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Salesforce Enterprise: 100,000 + 1,000/user license API calls per 24h. High-frequency polling exhausts this quickly — use event-driven patterns.</li>
+    <li>SAP OData is not true REST — SAP-specific query conventions ($filter format, guid/datetime syntax).</li>
+    <li>SAP RFC requires proprietary SAP JCo or .NET Connector (licensed) — cannot run in serverless/containers without native libraries.</li>
+    <li>IDocs are asynchronous-only — no request-response pattern; unsuitable for real-time validation.</li>
+    <li>Salesforce governor limits cascade through triggers — integration writes can breach limits via trigger chains.</li>
+    <li>S/4HANA Cloud Public Edition restricts custom ABAP — only released OData/SOAP APIs or RAP extensions.</li>
+    <li>Both vendors recommend middleware for production — point-to-point is fragile at scale.</li>
+    <li>SAP $batch max 100 changesets per request (Cloud); Salesforce Composite max 25 subrequests.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — Salesforce &lt;-&gt; SAP S/4HANA Integration
++-- SAP protocol selection?
+|   +-- S/4HANA Cloud Public? -> OData V4 (preferred) or V2
+|   +-- Standard API exists on api.sap.com? -> OData
+|   +-- Custom logic not exposed via OData? -> RFC/BAPI (on-prem only)
+|   +-- High-volume batch (&gt;10K records)? -> IDoc or OData $batch
++-- Salesforce protocol selection?
+|   +-- Real-time &lt;2K records? -> REST API (Composite for multi-object)
+|   +-- Batch/bulk &gt;2K records? -> Bulk API 2.0
+|   +-- Change notifications FROM Salesforce? -> Platform Events or CDC
+|   +-- Show SAP data without copying? -> Salesforce Connect (read-only)
++-- Middleware selection?
+|   +-- Salesforce strategic? -> MuleSoft
+|   +-- SAP strategic? -> SAP Integration Suite / CPI
+|   +-- Neither dominant? -> Boomi, Workato, or Jitterbit
++-- Data direction?
+|   +-- SF -> SAP: Middleware maps SF objects to SAP OData entities
+|   +-- SAP -> SF: Middleware queries SAP OData, upserts to SF REST
+|   +-- Bidirectional: Define source-of-truth per field first
++-- Error handling?
+    +-- Zero-loss: idempotency keys + dead letter queue
+    +-- Best-effort: retry 3x with backoff, then log and alert</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Key SAP OData Services</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">SAP OData Service</th><th scope="col">API Hub ID</th><th scope="col">Use Case</th><th scope="col">OData Ver.</th><th scope="col">Key Entity Sets</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Business Partner</td><td>API_BUSINESS_PARTNER</td><td>Customer master sync</td><td>V2</td><td>A_BusinessPartner, A_BusinessPartnerAddress</td></tr>
+      <tr><td>Sales Order</td><td>API_SALES_ORDER_SRV</td><td>Order creation</td><td>V2</td><td>A_SalesOrder, A_SalesOrderItem</td></tr>
+      <tr><td>Sales Order (V4)</td><td>API_SALESORDER_0001</td><td>Order creation (newer)</td><td>V4</td><td>SalesOrder, SalesOrderItem</td></tr>
+      <tr><td>Product Master</td><td>API_PRODUCT_SRV</td><td>Product catalog sync</td><td>V2</td><td>A_Product, A_ProductDescription</td></tr>
+      <tr><td>Material Availability</td><td>API_MATERIAL_AVAILABILITY_INFO</td><td>ATP stock check</td><td>V2</td><td>SupplyDemandItem</td></tr>
+      <tr><td>Pricing Conditions</td><td>API_SLSPRICINGCONDITIONRECORD_SRV</td><td>Pricing sync</td><td>V2</td><td>A_SlsPrcgCndnRecdValidity</td></tr>
+      <tr><td>Outbound Delivery</td><td>API_OUTBOUND_DELIVERY_SRV_0002</td><td>Fulfillment status</td><td>V2</td><td>A_OutbDeliveryHeader, A_OutbDeliveryItem</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Salesforce Objects for SAP Integration</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Salesforce Object</th><th scope="col">SAP Equivalent</th><th scope="col">Sync Direction</th><th scope="col">Typical Frequency</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Account</td><td>Business Partner (BP)</td><td>Bidirectional</td><td>Real-time or 15-min batch</td></tr>
+      <tr><td>Contact</td><td>BP Contact</td><td>Bidirectional</td><td>Real-time</td></tr>
+      <tr><td>Opportunity (Closed Won)</td><td>Sales Order (VA01)</td><td>SF -&gt; SAP</td><td>Event-driven</td></tr>
+      <tr><td>Product2</td><td>Material Master (MM01)</td><td>SAP -&gt; SF</td><td>Daily batch</td></tr>
+      <tr><td>PricebookEntry</td><td>Condition Records (VK11)</td><td>SAP -&gt; SF</td><td>Daily or on-change</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Set up authentication on both sides</h3>
+  <p>Salesforce: Create a Connected App with OAuth 2.0 JWT Bearer flow. SAP S/4HANA Cloud: Create a Communication Arrangement. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</p>
+  <pre><code class="language-bash"># Test Salesforce auth
+curl -X POST https://login.salesforce.com/services/oauth2/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  -d "assertion=${JWT_TOKEN}"</code></pre>
+  <p><strong>Verify</strong>: Response includes <code>access_token</code> and <code>instance_url</code></p>
+
+  <h3>2. Fetch SAP CSRF token and test OData connectivity</h3>
+  <p>Every SAP write requires a CSRF token. Fetch with GET, cache token + cookies. [<a href="https://community.sap.com/t5/technology-blog-posts-by-members/s-4hana-cloud-x-csrf-token-and-e-tag-validation/ba-p/13427700">src6</a>]</p>
+  <pre><code class="language-bash"># Fetch CSRF token from SAP
+curl -X GET "https://{sap-host}/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?$top=1" \
+  -H "Authorization: Basic ${SAP_CREDENTIALS}" \
+  -H "X-CSRF-Token: Fetch" \
+  -c cookies.txt -D headers.txt</code></pre>
+  <p><strong>Verify</strong>: Response returns HTTP 200 with <code>x-csrf-token</code> header (not "Required")</p>
+
+  <h3>3. Sync customer data (Salesforce Account to SAP Business Partner)</h3>
+  <p>Map Account fields to Business Partner and POST via OData. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>, <a href="https://www.vc-erp.com/sap-s4hana-salesforce-integration-best-practices/">src5</a>]</p>
+  <pre><code class="language-bash">curl -X POST "https://{sap-host}/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner" \
+  -H "X-CSRF-Token: ${CSRF_TOKEN}" -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"BusinessPartnerCategory":"2","OrganizationBPName1":"Acme Corp"}'</code></pre>
+  <p><strong>Verify</strong>: HTTP 201 with BusinessPartner number in response</p>
+
+  <h3>4. Create Sales Order from Salesforce Opportunity</h3>
+  <p>On Opportunity closed-won, create Sales Order via API_SALES_ORDER_SRV. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</p>
+  <pre><code class="language-bash">curl -X POST "https://{sap-host}/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder" \
+  -H "X-CSRF-Token: ${CSRF_TOKEN}" -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"SalesOrderType":"OR","SalesOrganization":"1000","SoldToParty":"BP_NUM","to_Item":[{"Material":"MAT001","RequestedQuantity":"5"}]}'</code></pre>
+  <p><strong>Verify</strong>: HTTP 201 with SalesOrder number</p>
+
+  <h3>5. Implement delivery status sync (SAP to Salesforce)</h3>
+  <p>Query SAP for changed deliveries, upsert to Salesforce custom object. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</p>
+  <pre><code class="language-bash"># Query SAP for recent deliveries
+curl "https://{sap-host}/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV_0002/A_OutbDeliveryHeader?\
+$filter=LastChangeDateTime gt datetime'2026-03-01T00:00:00'"
+
+# Upsert to Salesforce
+curl -X PATCH "${SF_INSTANCE}/services/data/v62.0/sobjects/Delivery_Status__c/SAP_Delivery__c/${DOC}" \
+  -H "Authorization: Bearer ${SF_TOKEN}" -H "Content-Type: application/json" \
+  -d '{"Status__c":"Shipped"}'</code></pre>
+  <p><strong>Verify</strong>: Salesforce record updated with delivery status</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Bidirectional Customer Sync</h3>
+  <pre><code class="language-python"># Input:  Salesforce Account changes + SAP BP API access
+# Output: Synced customer records with conflict resolution
+
+import requests
+
+def get_sap_csrf_token(session, sap_host, auth):
+    """Fetch CSRF token + cookies. Must call before any write."""
+    resp = session.get(
+        f"{sap_host}/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?$top=1",
+        headers={"X-CSRF-Token": "Fetch", "Accept": "application/json"},
+        auth=auth
+    )
+    resp.raise_for_status()
+    return resp.headers["x-csrf-token"]
+
+def sync_account_to_bp(account, session, sap_host, auth, csrf):
+    """Create SAP Business Partner from Salesforce Account."""
+    payload = {
+        "BusinessPartnerCategory": "2",
+        "OrganizationBPName1": account["Name"][:40],
+        "SearchTerm1": account["Name"][:20].upper(),
+    }
+    resp = session.post(
+        f"{sap_host}/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner",
+        json=payload,
+        headers={"X-CSRF-Token": csrf},
+        auth=auth
+    )
+    if resp.status_code == 429:
+        raise Exception(f"Rate limited. Retry after {resp.headers.get('Retry-After', 5)}s")
+    resp.raise_for_status()
+    return resp.json()["d"]["BusinessPartner"]</code></pre>
+
+  <h3>JavaScript/Node.js: Sales Order Creation</h3>
+  <pre><code class="language-javascript">// Input:  Salesforce Opportunity (Closed Won event)
+// Output: SAP Sales Order number
+
+const axios = require('axios'); // v1.7+
+
+async function getSapCsrfToken(sapHost, auth) {
+  const resp = await axios.get(
+    `${sapHost}/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder?$top=1`,
+    { headers: { 'X-CSRF-Token': 'Fetch' }, auth, withCredentials: true }
+  );
+  return { token: resp.headers['x-csrf-token'], cookies: resp.headers['set-cookie'] };
+}
+
+async function createSalesOrder(sapHost, auth, orderData) {
+  const { token, cookies } = await getSapCsrfToken(sapHost, auth);
+  const resp = await axios.post(
+    `${sapHost}/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder`,
+    { SalesOrderType: 'OR', SalesOrganization: orderData.salesOrg,
+      SoldToParty: orderData.sapCustomerNumber,
+      to_Item: orderData.items.map((it, i) => ({
+        SalesOrderItem: String((i+1)*10).padStart(6,'0'),
+        Material: it.materialNumber, RequestedQuantity: String(it.qty)
+      }))
+    },
+    { headers: { 'X-CSRF-Token': token, 'Cookie': cookies.join('; ') }, auth }
+  );
+  return resp.data.d.SalesOrder;
+}</code></pre>
+
+  <h3>cURL: Quick End-to-End Connectivity Test</h3>
+  <pre><code class="language-bash"># Test Salesforce API
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Bearer ${SF_TOKEN}" "${SF_INSTANCE}/services/data/v62.0/"
+# Expected: 200
+
+# Test SAP OData + CSRF fetch
+curl -s -o /dev/null -w "%{http_code}" -H "X-CSRF-Token: Fetch" \
+  -u "${SAP_USER}:${SAP_PASS}" \
+  "https://${SAP_HOST}/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?\$top=1"
+# Expected: 200</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Field Mapping Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Salesforce Field</th><th scope="col">SAP S/4HANA Field</th><th scope="col">Type</th><th scope="col">Transform</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Account.Name</td><td>BP.OrganizationBPName1</td><td>String</td><td>Truncate to 40 chars</td><td>SAP max 40; SF max 255</td></tr>
+      <tr><td>Account.BillingStreet</td><td>BPAddress.StreetName</td><td>String</td><td>Direct</td><td>SAP splits street + house number</td></tr>
+      <tr><td>Account.BillingCountry</td><td>BPAddress.Country</td><td>String</td><td>ISO 3166-1 alpha-2</td><td>Must be 2-letter code</td></tr>
+      <tr><td>Opportunity.CloseDate</td><td>SO.RequestedDeliveryDate</td><td>Date</td><td>V2: datetime'...'; V4: ISO 8601</td><td>OData V2 uses epoch ms format</td></tr>
+      <tr><td>Product2.ProductCode</td><td>Material.Material</td><td>String</td><td>Pad to 18 chars (leading zeros)</td><td>SAP IDs are 18-char padded</td></tr>
+      <tr><td>OpportunityLineItem.Quantity</td><td>SOItem.RequestedQuantity</td><td>Decimal</td><td>Direct</td><td>SAP returns as string in OData</td></tr>
+      <tr><td>OpportunityLineItem.UnitPrice</td><td>SOItem (via pricing)</td><td>Currency</td><td>Cannot set directly</td><td>SAP pricing from condition records</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Date formats: SF uses ISO 8601; SAP OData V2 uses <code>datetime'...'</code> or epoch ms; V4 uses ISO 8601. [<a href="https://www.apideck.com/blog/guide-to-sap-4-hana-rest-and-soap-api">src4</a>]</li>
+    <li>Currency: SAP stores with currency-dependent decimals (JPY=0, USD=2). Always transmit currency code alongside amount. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</li>
+    <li>SAP Material IDs: 18-char with leading zeros. Salesforce stores trimmed. Middleware must pad/trim consistently. [<a href="https://www.vc-erp.com/sap-s4hana-salesforce-integration-best-practices/">src5</a>]</li>
+    <li>SAP OData returns empty strings for null fields, not JSON null. Treat "" as null to avoid overwriting good data. [<a href="https://www.apideck.com/blog/guide-to-sap-4-hana-rest-and-soap-api">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">System</th><th scope="col">Meaning</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>403</td><td>SAP</td><td>CSRF token invalid/expired</td><td>Re-fetch CSRF token with session cookies</td></tr>
+      <tr><td>429</td><td>Both</td><td>Rate limit exceeded</td><td>Exponential backoff (2^n seconds, max 5 retries)</td></tr>
+      <tr><td>401</td><td>SAP</td><td>Missing Communication Arrangement</td><td>Verify Communication User + Arrangement</td></tr>
+      <tr><td>REQUEST_LIMIT_EXCEEDED</td><td>Salesforce</td><td>Daily API limit hit</td><td>Check /limits/ endpoint; optimize or purchase add-on</td></tr>
+      <tr><td>UNABLE_TO_LOCK_ROW</td><td>Salesforce</td><td>Concurrent record update</td><td>Retry with jitter; serialize same-record updates</td></tr>
+      <tr><td>/IWBEP/CX_MGW_BUSI_EXCEPTION</td><td>SAP</td><td>Business logic rejection</td><td>Read structured error message for details</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>CSRF token caching without cookies</strong>: Middleware caches token but not session cookies — all SAP writes fail with 403. Fix: <code>Cache CSRF token AND Set-Cookie headers together</code>. [<a href="https://community.sap.com/t5/technology-blog-posts-by-members/s-4hana-cloud-x-csrf-token-and-e-tag-validation/ba-p/13427700">src6</a>]</li>
+    <li><strong>Governor limit breach from trigger cascading</strong>: 200 records trigger Apex with SOQL in loop = 200 queries (limit 100). Fix: <code>Bulkify triggers; use Composite/Bulk API to control batch size</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li><strong>OData V2 date format silently rejected</strong>: ISO 8601 dates fail in V2 with cryptic parse error. Fix: <code>Use datetime'YYYY-MM-DDT00:00:00' for V2; ISO 8601 for V4 only</code>. [<a href="https://www.apideck.com/blog/guide-to-sap-4-hana-rest-and-soap-api">src4</a>]</li>
+    <li><strong>Material number padding mismatch</strong>: SF sends "MAT001", SAP returns "not found". Fix: <code>Always pad to 18 chars with leading zeros</code>. [<a href="https://www.vc-erp.com/sap-s4hana-salesforce-integration-best-practices/">src5</a>]</li>
+    <li><strong>OData $batch partial failure unhandled</strong>: $batch returns 200 overall but individual changesets fail silently. Fix: <code>Parse each changeset response; log failures to dead letter queue</code>. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</li>
+    <li><strong>OAuth refresh token expiry after 90 days</strong>: SF refresh tokens expire after 90 days of non-use. Fix: <code>Set "valid until revoked" policy, or use JWT Bearer flow</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Polling SAP every 60 seconds for all records</h3>
+  <pre><code class="language-javascript">// BAD — wastes API calls; misses changes between polls
+setInterval(async () => {
+  const all = await fetchAllCustomersFromSAP();
+  for (const c of all) await upsertToSalesforce(c);
+}, 60000);</code></pre>
+
+  <h3>Correct: Use delta query with LastChangeDateTime filter</h3>
+  <pre><code class="language-javascript">// GOOD — fetch only changed records; minimize API calls
+async function syncDelta(lastSync) {
+  const filter = `LastChangeDateTime gt datetime'${lastSync}'`;
+  const changes = await fetchFromSAP(`/A_BusinessPartner?$filter=${filter}`);
+  const batches = chunk(changes, 25);
+  for (const batch of batches) await compositeUpsert(batch);
+}</code></pre>
+
+  <h3>Wrong: Direct SAP callouts inside Salesforce Apex triggers</h3>
+  <pre><code class="language-java">// BAD — callout in trigger context; cannot do DML after
+trigger OrderTrigger on Opportunity (after update) {
+    Http h = new Http();
+    h.send(new HttpRequest()); // Callout in trigger = BAD
+}</code></pre>
+
+  <h3>Correct: Fire Platform Events for async processing</h3>
+  <pre><code class="language-java">// GOOD — Platform Event; middleware picks it up
+trigger OrderTrigger on Opportunity (after update) {
+    List&lt;Order_Created__e&gt; events = new List&lt;Order_Created__e&gt;();
+    // ... build events for closed-won opportunities
+    EventBus.publish(events); // Async, no callout limit
+}</code></pre>
+
+  <h3>Wrong: Hardcoding SAP Material IDs without padding</h3>
+  <pre><code class="language-python"># BAD — SAP returns 404 for unpadded IDs
+material_id = "MAT001"  # SAP expects '000000000000MAT001'</code></pre>
+
+  <h3>Correct: Always pad to 18 characters</h3>
+  <pre><code class="language-python"># GOOD — pad with leading zeros
+material_id = "MAT001".zfill(18)  # '000000000000MAT001'</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Sandbox vs production API limits</strong>: SF sandboxes have 5M calls/24h vs production 100K+. Load tests pass in sandbox but fail in prod. Fix: <code>Calculate expected daily API consumption before go-live</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li><strong>SAP API version not pinned</strong>: S/4HANA Cloud upgrades quarterly; behavior may change. Fix: <code>Pin to specific Communication Scenario version; test after each upgrade</code>. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</li>
+    <li><strong>SAP field-level authorizations silently omit fields</strong>: OData returns 200 but restricted fields are missing (no error). Fix: <code>Test every mapped field; check authorization objects</code>. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</li>
+    <li><strong>Composite API partial success unhandled</strong>: Composite returns 200 overall but subrequests may fail. Fix: <code>Check httpStatusCode of each subrequest result</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li><strong>SAP number ranges not configured for external assignment</strong>: Creating BP with external number when range is internal = rejection. Fix: <code>Prefer internal numbering; store SAP-assigned number back in Salesforce</code>. [<a href="https://api.sap.com/api/API_SALES_ORDER_SRV/overview">src1</a>]</li>
+    <li><strong>Timezone mismatch in delta queries</strong>: SF datetimes are UTC; SAP on-prem may use app server timezone. Fix: <code>Always convert to UTC; store last-sync timestamp in UTC</code>. [<a href="https://www.apideck.com/blog/guide-to-sap-4-hana-rest-and-soap-api">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Salesforce API usage
+curl -s -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${SF_INSTANCE}/services/data/v62.0/limits/" | \
+  python3 -c "import sys,json; d=json.load(sys.stdin); \
+  print(f\"API remaining: {d['DailyApiRequests']['Remaining']}/{d['DailyApiRequests']['Max']}\")"
+
+# Test SAP OData metadata
+curl -s -u "${SAP_USER}:${SAP_PASS}" \
+  "https://${SAP_HOST}/sap/opu/odata/sap/API_BUSINESS_PARTNER/\$metadata" | head -50
+
+# Verify SAP Communication Arrangement
+curl -s -u "${SAP_USER}:${SAP_PASS}" \
+  "https://${SAP_HOST}/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?\$top=1"
+
+# Monitor SAP request performance
+curl -s -o /dev/null -w "HTTP %{http_code} | Time: %{time_total}s\n" \
+  -u "${SAP_USER}:${SAP_PASS}" \
+  "https://${SAP_HOST}/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder?\$top=10"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+
+  <h3>Salesforce API Versions</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Version</th><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>v62.0</td><td>Spring '26</td><td>Current</td><td>Latest composite API improvements</td></tr>
+      <tr><td>v61.0</td><td>Winter '26</td><td>Supported</td><td>Enhanced CDC replay</td></tr>
+      <tr><td>v60.0</td><td>Spring '24</td><td>Supported</td><td>Deprecated legacy SOAP partner endpoints</td></tr>
+      <tr><td>v58.0</td><td>Spring '23</td><td>Supported</td><td>Introduced Client Credentials flow</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>SAP S/4HANA Releases</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Release</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Cloud 2502</td><td>Feb 2026</td><td>Current</td><td>New OData V4 Sales Order API</td></tr>
+      <tr><td>2408 (On-Prem)</td><td>Aug 2024</td><td>Current LTS</td><td>Expanded OData V4 catalog</td></tr>
+      <tr><td>Cloud 2308</td><td>Aug 2023</td><td>Supported</td><td>Enhanced BP OData V4</td></tr>
+      <tr><td>2021 FPS02</td><td>2022</td><td>Supported</td><td>Min recommended for OData V4</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Bidirectional customer/order sync between SF CRM and SAP ERP</td><td>Only reading SAP data (no writes)</td><td>Salesforce Connect (OData external objects)</td></tr>
+      <tr><td>Real-time order creation on opportunity close</td><td>Batch migration &gt;100K records</td><td>SAP Data Migration Cockpit or LT Replication Server</td></tr>
+      <tr><td>Event-driven delivery/fulfillment status sync</td><td>Simple one-time data load</td><td>SAP Data Services or Informatica</td></tr>
+      <tr><td>Multi-object orchestration (account + order + items)</td><td>SAP ECC (pre-S/4HANA) without OData</td><td>SAP ECC integration (RFC/IDoc approach)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce (v62.0)</th><th scope="col">SAP S/4HANA (2408/Cloud)</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Style</td><td>REST (native) + SOAP</td><td>OData V2/V4 + SOAP + RFC</td><td>SAP OData has SAP-specific conventions</td></tr>
+      <tr><td>Rate Limits</td><td>100K+/24h (hard cap)</td><td>~100 req/s (configurable)</td><td>SF per-day; SAP per-second</td></tr>
+      <tr><td>Bulk Import</td><td>Bulk API 2.0 (150MB/file)</td><td>OData $batch (100 changesets) or IDoc</td><td>SF bulk more mature</td></tr>
+      <tr><td>Event-Driven</td><td>Platform Events, CDC</td><td>Event Mesh, Business Events</td><td>Different protocols</td></tr>
+      <tr><td>Authentication</td><td>OAuth 2.0</td><td>OAuth 2.0 + CSRF + Basic + X.509</td><td>SAP requires CSRF overlay</td></tr>
+      <tr><td>Sandbox</td><td>Full + Partial copies</td><td>Quality/Dev systems</td><td>SF sandboxes easier to create</td></tr>
+      <tr><td>API Versioning</td><td>Numbered (v62.0), 3yr support</td><td>Release-based (2408)</td><td>SF more predictable</td></tr>
+      <tr><td>Concurrent Requests</td><td>25 (hard cap)</td><td>Configurable</td><td>SF has hard cap; SAP tunable</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Salesforce edition determines API access: Enterprise gets 100K + 1K/license; Professional has no API access by default.</li>
+    <li>S/4HANA Cloud vs On-Premise differ fundamentally: Cloud restricts custom ABAP; On-Premise gives full access. Architecture may differ based on deployment.</li>
+    <li>Middleware costs are significant: MuleSoft ~$50K-150K/year; SAP CPI may be included in S/4HANA Cloud license.</li>
+    <li>SAP rate limits are not publicly documented — the ~100 req/s figure is approximate. Contact SAP support for tenant-specific limits.</li>
+    <li>All rate limits and endpoints are subject to change: Salesforce releases 3x/year; SAP Cloud quarterly. Verify against current release notes.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-rest-api/2026" data-relationship="related_to">Salesforce REST API capabilities and rate limits</a>
+    <a href="/business/erp-integration/sap-s4hana-odata-api/2026" data-relationship="related_to">SAP S/4HANA OData API capabilities and rate limits</a>
+    <a href="/business/erp-integration/lead-to-cash-salesforce-sap/2026" data-relationship="solves">Lead-to-cash integration playbook: Salesforce to SAP</a>
+    <a href="/business/erp-integration/salesforce-sap-ecc-integration/2026" data-relationship="alternative_to">Salesforce + SAP ECC integration (legacy RFC/IDoc)</a>
+    <a href="/business/erp-integration/salesforce-connect-odata/2026" data-relationship="often_confused_with">Salesforce Connect (OData external objects)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

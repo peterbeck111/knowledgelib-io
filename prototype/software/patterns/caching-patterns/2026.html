@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Caching Patterns: Cache-Aside, Write-Through | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to caching patterns -- cache-aside, read-through, write-through, write-behind, and refresh-ahead with decision tree, code examples in...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/caching-patterns/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Caching Patterns: Cache-Aside, Write-Through | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to caching patterns -- cache-aside, read-through, write-through, write-behind, and refresh-ahead with decision tree, code examples in Node.js/Python/Go, anti-patterns, and diagnostic commands. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/caching-patterns/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Caching Patterns: Cache-Aside, Write-Through | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to caching patterns -- cache-aside, read-through, write-through, write-behind, and refresh-ahead with decision tree, code examples in Node.js/Python/Go, anti-patterns, and diagnostic commands. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/caching patterns">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the caching patterns (cache-aside, write-through, write-behind)?">
+  <meta name="ai:aliases" content="Which caching strategy should I use?; Cache-aside vs read-through vs write-through comparison; How to implement write-behind caching; Redis caching patterns best practices">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/caching-patterns/2026.md">
+  <meta name="ai:token_estimate" content="3900">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="workload_type, consistency_requirement">
+  <meta name="ai:constraints" content="Never cache without TTL; Write-behind risks data loss on crash; Cache invalidation must be atomic with DB write; Distributed caches need consistent hashing; Never cache secrets without encryption">
+  <meta name="ai:skip_this_unit_if" content="HTTP/browser caching (Cache-Control, ETag, CDN) -> software/system-design/cdn-design/2026; Multi-layer caching architecture -> software/system-design/multi-layer-caching/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Caching Patterns: Cache-Aside, Write-Through, Write-Behind, and Beyond",
+    "headline": "Caching Patterns: Cache-Aside, Write-Through, Write-Behind, and Beyond",
+    "description": "Comprehensive guide to application-level caching patterns including cache-aside, read-through, write-through, write-behind, and refresh-ahead. Covers decision trees, code examples in Node.js, Python, and Go, anti-patterns, stampede protection, and diagnostic commands.",
+    "keywords": ["caching patterns", "cache-aside", "write-through", "write-behind", "read-through", "refresh-ahead", "Redis", "cache invalidation", "cache stampede", "distributed caching"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Redis 7.x, Memcached 1.6.x, or any key-value cache",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Database Caching Strategies Using Redis",
+        "url": "https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/caching-patterns.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cache-Aside Pattern",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Read-Through, Write-Through, Write-Behind Caching and Refresh-Ahead",
+        "url": "https://docs.oracle.com/cd/E13924_01/coh.340/e13819/readthrough.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Why Your Caching Strategies Might Be Holding You Back",
+        "url": "https://redis.io/blog/why-your-caching-strategies-might-be-holding-you-back-and-what-to-consider-next/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Caching Challenges and Strategies",
+        "url": "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A Hitchhiker's Guide to Caching Patterns",
+        "url": "https://hazelcast.com/blog/a-hitchhikers-guide-to-caching-patterns/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cache Stampede - Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Cache_stampede"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Caching Patterns: Cache-Aside, Write-Through, Write-Behind, and Beyond",
+    "description": "Structured reference covering 6 caching patterns with decision matrix, code examples, anti-patterns, and diagnostic commands for Redis and Memcached deployments.",
+    "keywords": ["caching patterns", "cache-aside", "write-through", "write-behind", "Redis", "cache invalidation"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "AWS"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "Redis"},
+      {"@type": "Organization", "name": "Hazelcast"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Caching Patterns" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the caching patterns (cache-aside, write-through, write-behind)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cache-aside (lazy loading) for most read-heavy workloads; it is the simplest, most battle-tested pattern with the fewest surprises."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which caching strategy should I use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cache-aside (lazy loading) for most read-heavy workloads; it is the simplest, most battle-tested pattern with the fewest surprises."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Cache-aside vs read-through vs write-through comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cache-aside (lazy loading) for most read-heavy workloads; it is the simplest, most battle-tested pattern with the fewest surprises."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to implement write-behind caching",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cache-aside (lazy loading) for most read-heavy workloads; it is the simplest, most battle-tested pattern with the fewest surprises."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis caching patterns best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cache-aside (lazy loading) for most read-heavy workloads; it is the simplest, most battle-tested pattern with the fewest surprises."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Caching Patterns: Cache-Aside, Write-Through, Write-Behind, and Beyond</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the caching patterns (cache-aside, write-through, write-behind)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/caching-patterns/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use cache-aside (lazy loading) for most read-heavy workloads; it is the simplest, most battle-tested pattern with the fewest surprises.</li>
+    <li><strong>Key tool/command</strong>: <code>SET key value EX ttl_seconds</code> (Redis) with TTL on every key -- never cache without expiration.</li>
+    <li><strong>Watch out for</strong>: Cache invalidation is the hardest problem -- stale data, cache stampedes, and cold-start thundering herds cause more production incidents than cache misses.</li>
+    <li><strong>Works with</strong>: Redis 7.x, Memcached 1.6.x, Hazelcast 5.x, any language with a Redis client. Patterns are technology-agnostic.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never cache without a TTL -- unbounded caches cause memory exhaustion in production</li>
+    <li>Write-behind risks data loss if the cache node crashes before async flush completes -- use only when data loss is tolerable or the cache is replicated</li>
+    <li>Cache invalidation must be atomic with the database write or bounded by a short TTL to prevent serving stale data beyond the consistency window</li>
+    <li>Distributed caches require consistent hashing or a coordination layer; naive sharding leads to hot spots and split-brain scenarios</li>
+    <li>Never cache authentication tokens, API keys, or secrets without encryption at rest and strict access controls</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Read Path</th><th scope="col">Write Path</th><th scope="col">Consistency</th><th scope="col">Complexity</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Cache-Aside</strong> (Lazy Loading)</td><td>App checks cache; on miss, reads DB, writes to cache</td><td>App writes to DB; invalidates or ignores cache</td><td>Eventual (TTL-bounded)</td><td>Low</td><td>Read-heavy workloads, general purpose</td></tr>
+      <tr><td><strong>Read-Through</strong></td><td>Cache itself fetches from DB on miss</td><td>App writes to DB; cache auto-populated on next read</td><td>Eventual (TTL-bounded)</td><td>Medium</td><td>Read-heavy with cache-provider support</td></tr>
+      <tr><td><strong>Write-Through</strong></td><td>App reads from cache (always populated)</td><td>App writes to cache; cache synchronously writes to DB</td><td>Strong</td><td>Medium</td><td>Read-heavy where consistency matters</td></tr>
+      <tr><td><strong>Write-Behind</strong> (Write-Back)</td><td>App reads from cache (always populated)</td><td>App writes to cache; cache asynchronously flushes to DB</td><td>Eventual (delay-bounded)</td><td>High</td><td>Write-heavy workloads, batch writes</td></tr>
+      <tr><td><strong>Refresh-Ahead</strong></td><td>Cache proactively refreshes before TTL expires</td><td>Same as underlying pattern</td><td>Strong (if refresh succeeds)</td><td>High</td><td>Hot keys with predictable access</td></tr>
+      <tr><td><strong>Distributed Cache</strong></td><td>Hash-routed to correct shard; local read</td><td>Hash-routed to correct shard; replicated writes</td><td>Eventual or strong (configurable)</td><td>High</td><td>Large-scale, multi-node deployments</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Read-heavy workload (>80% reads)?
+|   |-- YES --> Need strong consistency?
+|   |   |-- YES --> Write-through (cache always in sync with DB)
+|   |   +-- NO --> Cache-aside (simplest, most flexible)
+|   +-- NO |
+|-- Write-heavy workload (>50% writes)?
+|   |-- YES --> Can tolerate small data loss window?
+|   |   |-- YES --> Write-behind (best write throughput)
+|   |   +-- NO --> Write-through (safe but slower writes)
+|   +-- NO |
+|-- Balanced read/write?
+|   |-- YES --> Need automatic cache population?
+|   |   |-- YES --> Read-through + write-through combo
+|   |   +-- NO --> Cache-aside (manual control)
+|   +-- NO |
+|-- Hot keys with predictable access?
+|   |-- YES --> Refresh-ahead (pre-warm before expiry)
+|   +-- NO |
++-- DEFAULT --> Cache-aside with TTL (safest starting point)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Choose your caching layer</h3>
+  <p>Select Redis (most common), Memcached (simpler, multi-threaded), or an in-process cache. Redis is the default choice for most applications due to its data structure support and persistence options. [<a href="https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/caching-patterns.html">src1</a>]</p>
+  <pre><code class="language-bash"># Install Redis (Docker)
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Verify connection
+redis-cli ping
+# Expected: PONG</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli ping</code> &rarr; expected: <code>PONG</code></p>
+
+  <h3>2. Implement cache-aside pattern</h3>
+  <p>The application is responsible for reading from and writing to the cache. On a cache miss, read from the database, then populate the cache. On a write, update the database and invalidate the cache entry. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside">src2</a>]</p>
+  <pre><code class="language-javascript">// Node.js + ioredis cache-aside
+const Redis = require('ioredis');
+const redis = new Redis();
+
+async function getUser(userId) {
+  const cacheKey = `user:${userId}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) return JSON.parse(cached);          // cache hit
+
+  const user = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+  await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600); // TTL 1h
+  return user;
+}</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli INFO stats | grep keyspace_hits</code></p>
+
+  <h3>3. Add cache invalidation on writes</h3>
+  <p>When data changes, delete the cache key rather than updating it. Deletion is safer -- it avoids race conditions between concurrent reads and writes. [<a href="https://aws.amazon.com/builders-library/caching-challenges-and-strategies/">src5</a>]</p>
+  <pre><code class="language-javascript">async function updateUser(userId, data) {
+  await db.query('UPDATE users SET name = $1 WHERE id = $2', [data.name, userId]);
+  await redis.del(`user:${userId}`); // invalidate, don't update
+}</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli EXISTS user:123</code> &rarr; expected: <code>(integer) 0</code></p>
+
+  <h3>4. Add TTL jitter to prevent stampedes</h3>
+  <p>If many keys expire at the same time, all requests hit the database simultaneously (thundering herd). Add random jitter to spread expirations. [<a href="https://en.wikipedia.org/wiki/Cache_stampede">src7</a>]</p>
+  <pre><code class="language-javascript">const baseTTL = 3600; // 1 hour
+const jitter = Math.floor(Math.random() * baseTTL * 0.1);
+await redis.set(key, value, 'EX', baseTTL + jitter);</code></pre>
+  <p><strong>Verify</strong>: <code>redis-cli TTL user:123</code> &rarr; should vary between 3600-3960</p>
+
+  <h3>5. Implement cache stampede protection</h3>
+  <p>Use a distributed lock to ensure only one process recomputes on a cache miss while others wait or serve stale data. [<a href="https://en.wikipedia.org/wiki/Cache_stampede">src7</a>]</p>
+  <pre><code class="language-javascript">async function getWithLock(key, computeFn, ttl = 3600) {
+  const cached = await redis.get(key);
+  if (cached) return JSON.parse(cached);
+
+  const lockKey = `lock:${key}`;
+  const acquired = await redis.set(lockKey, '1', 'EX', 30, 'NX');
+  if (acquired) {
+    try {
+      const value = await computeFn();
+      await redis.set(key, JSON.stringify(value), 'EX', ttl);
+      return value;
+    } finally {
+      await redis.del(lockKey);
+    }
+  }
+  await new Promise(r =&gt; setTimeout(r, 100));
+  return getWithLock(key, computeFn, ttl);
+}</code></pre>
+  <p><strong>Verify</strong>: Under load test, database queries for the same key should be 1, not N.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js + Redis: Cache-Aside with Write-Through</h3>
+  <pre><code class="language-javascript">// Input:  Redis connection, database connection
+// Output: Cached read with consistent write-through
+
+const Redis = require('ioredis');       // ioredis@5.x
+const redis = new Redis({ host: '127.0.0.1', port: 6379 });
+
+// Cache-aside read
+async function cacheGet(key, fetchFn, ttlSec = 3600) {
+  const hit = await redis.get(key);
+  if (hit) return JSON.parse(hit);
+  const data = await fetchFn();
+  if (data) {
+    const jitter = Math.floor(Math.random() * ttlSec * 0.1);
+    await redis.set(key, JSON.stringify(data), 'EX', ttlSec + jitter);
+  }
+  return data;
+}
+
+// Write-through: update DB then cache atomically
+async function cacheSet(key, data, writeFn, ttlSec = 3600) {
+  await writeFn(data);                  // DB write first
+  await redis.set(key, JSON.stringify(data), 'EX', ttlSec);
+}</code></pre>
+
+  <h3>Python + Redis: Cache-Aside with Decorator</h3>
+  <pre><code class="language-python"># Input:  Redis connection, decorated function
+# Output: Transparent caching via decorator
+
+import json, random, functools
+import redis  # redis-py&gt;=5.0
+
+r = redis.Redis(host="127.0.0.1", port=6379, decode_responses=True)
+
+def cached(ttl=3600, prefix="cache"):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            key = f"{prefix}:{fn.__name__}:{args}:{kwargs}"
+            hit = r.get(key)
+            if hit:
+                return json.loads(hit)
+            result = fn(*args, **kwargs)
+            jitter = random.randint(0, int(ttl * 0.1))
+            r.set(key, json.dumps(result), ex=ttl + jitter)
+            return result
+        return wrapper
+    return decorator
+
+@cached(ttl=1800)
+def get_product(product_id: int) -&gt; dict:
+    return db.execute("SELECT * FROM products WHERE id = %s", (product_id,))</code></pre>
+
+  <h3>Go: Cache-Aside with singleflight (Stampede Protection)</h3>
+  <pre><code class="language-go">// Input:  Redis client, database connection
+// Output: Cache-aside reads with built-in stampede protection
+
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "math/rand"
+    "time"
+    "github.com/redis/go-redis/v9"
+    "golang.org/x/sync/singleflight"
+)
+
+var (
+    rdb = redis.NewClient(&amp;redis.Options{Addr: "localhost:6379"})
+    sf  singleflight.Group
+)
+
+func CacheGet(ctx context.Context, key string, fetchFn func() (any, error), ttl time.Duration) (any, error) {
+    val, err := rdb.Get(ctx, key).Result()
+    if err == nil {
+        var result any
+        json.Unmarshal([]byte(val), &amp;result)
+        return result, nil
+    }
+    v, err, _ := sf.Do(key, func() (any, error) {
+        data, err := fetchFn()
+        if err != nil { return nil, err }
+        b, _ := json.Marshal(data)
+        jitter := time.Duration(rand.Int63n(int64(ttl) / 10))
+        rdb.Set(ctx, key, b, ttl+jitter)
+        return data, nil
+    })
+    return v, err
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Caching without TTL</h3>
+  <pre><code class="language-javascript">// BAD -- no TTL means cache entries live forever
+// Memory grows unbounded; stale data served indefinitely
+await redis.set(`user:${id}`, JSON.stringify(user));</code></pre>
+
+  <h3>Correct: Always set a TTL</h3>
+  <pre><code class="language-javascript">// GOOD -- bounded TTL with jitter
+const ttl = 3600 + Math.floor(Math.random() * 360);
+await redis.set(`user:${id}`, JSON.stringify(user), 'EX', ttl);</code></pre>
+
+  <h3>Wrong: Update cache instead of invalidating on write</h3>
+  <pre><code class="language-javascript">// BAD -- race condition between concurrent read and write
+async function updateUser(id, data) {
+  await db.update(id, data);
+  const updated = await db.get(id);     // another write may happen here
+  await redis.set(`user:${id}`, JSON.stringify(updated), 'EX', 3600);
+}</code></pre>
+
+  <h3>Correct: Delete cache key on write (invalidation)</h3>
+  <pre><code class="language-javascript">// GOOD -- delete is idempotent and race-free
+async function updateUser(id, data) {
+  await db.update(id, data);
+  await redis.del(`user:${id}`);        // next read will re-populate
+}</code></pre>
+
+  <h3>Wrong: No stampede protection on cache miss</h3>
+  <pre><code class="language-javascript">// BAD -- 1000 concurrent requests all hit DB on cache miss
+async function getProduct(id) {
+  const cached = await redis.get(`product:${id}`);
+  if (cached) return JSON.parse(cached);
+  const product = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+  await redis.set(`product:${id}`, JSON.stringify(product), 'EX', 3600);
+  return product;
+}</code></pre>
+
+  <h3>Correct: Use locking or singleflight to coalesce requests</h3>
+  <pre><code class="language-javascript">// GOOD -- only one request recomputes; others wait
+async function getProduct(id) {
+  const cached = await redis.get(`product:${id}`);
+  if (cached) return JSON.parse(cached);
+
+  const lockKey = `lock:product:${id}`;
+  const locked = await redis.set(lockKey, '1', 'EX', 10, 'NX');
+  if (!locked) {
+    await sleep(50);
+    return getProduct(id);
+  }
+  try {
+    const product = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+    await redis.set(`product:${id}`, JSON.stringify(product), 'EX', 3600);
+    return product;
+  } finally {
+    await redis.del(lockKey);
+  }
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Cache stampede (thundering herd)</strong>: When a popular key expires, hundreds of concurrent requests hit the database simultaneously. Fix: use distributed locking (<code>SET key NX EX</code>), singleflight (Go), or probabilistic early expiration. [<a href="https://en.wikipedia.org/wiki/Cache_stampede">src7</a>]</li>
+    <li><strong>Cold start after deployment</strong>: A fresh cache means 100% miss rate, causing a burst of database queries. Fix: implement cache warming on startup -- preload the top N most-accessed keys from the database. [<a href="https://aws.amazon.com/builders-library/caching-challenges-and-strategies/">src5</a>]</li>
+    <li><strong>Serialization overhead</strong>: JSON.stringify/parse on every cache hit adds CPU cost, especially for large objects. Fix: use MessagePack, Protocol Buffers, or store pre-serialized responses. [<a href="https://redis.io/blog/why-your-caching-strategies-might-be-holding-you-back-and-what-to-consider-next/">src4</a>]</li>
+    <li><strong>Cache-database inconsistency window</strong>: Between a DB write and cache invalidation, stale data may be served. Fix: set short TTLs (5-60s for volatile data) and invalidate immediately after the DB write. [<a href="https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/caching-patterns.html">src1</a>]</li>
+    <li><strong>Hot key problem</strong>: A single key receiving disproportionate traffic can overwhelm one Redis shard. Fix: replicate hot keys across shards with key suffixes or use local in-process caching for the hottest keys. [<a href="https://hazelcast.com/blog/a-hitchhikers-guide-to-caching-patterns/">src6</a>]</li>
+    <li><strong>Over-caching</strong>: Caching every database query wastes memory and adds invalidation complexity. Fix: cache only data with a read:write ratio &gt; 10:1 and measure hit rates. [<a href="https://aws.amazon.com/builders-library/caching-challenges-and-strategies/">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Redis memory usage
+redis-cli INFO memory | grep used_memory_human
+
+# Check cache hit ratio (higher is better; aim for >90%)
+redis-cli INFO stats | grep keyspace
+# keyspace_hits / (keyspace_hits + keyspace_misses) = hit ratio
+
+# Monitor slow commands (>10ms)
+redis-cli SLOWLOG GET 10
+
+# Check TTL on a specific key
+redis-cli TTL user:123
+
+# Monitor real-time commands (use sparingly in production)
+redis-cli MONITOR | head -50
+
+# Check connected clients
+redis-cli INFO clients | grep connected_clients
+
+# Check eviction policy
+redis-cli CONFIG GET maxmemory-policy</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Read:write ratio exceeds 10:1</td><td>Data changes on every request</td><td>Direct database queries with connection pooling</td></tr>
+      <tr><td>Database query latency &gt; 50ms and same query repeats</td><td>Strong consistency is non-negotiable and TTL window is unacceptable</td><td>Synchronous read-through with write-through</td></tr>
+      <tr><td>Need to absorb traffic spikes without scaling DB</td><td>Working with small datasets that fit in app memory</td><td>In-process caching (Caffeine, node-cache, lru-cache)</td></tr>
+      <tr><td>Multiple app instances need shared cache state</td><td>Caching would only save &lt;5ms per request</td><td>No cache -- overhead not worth the complexity</td></tr>
+      <tr><td>Session storage, API rate limiting, leaderboards</td><td>Data has complex relational joins that change frequently</td><td>Materialized views in the database</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Cache-aside is not a silver bullet -- it adds a network round-trip on every read (cache check), which can be slower than a well-indexed database query for simple lookups</li>
+    <li>Write-behind pattern requires careful failure handling: if the cache crashes before flushing to the database, data is lost. Use Redis AOF persistence or replicated setups to mitigate this risk</li>
+    <li>Memcached does not support persistence, replication, or data structures beyond key-value strings. Use Redis if you need sorted sets, streams, or crash recovery</li>
+    <li>Redis single-threaded model means a single slow command (e.g., <code>KEYS *</code>) blocks all other operations. Use <code>SCAN</code> for iteration in production</li>
+    <li>Cache invalidation in microservices architectures often requires event-driven patterns (pub/sub, CDC) rather than direct delete calls, because the service that writes may not know all consumers</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/sql-materialized-views/2026" data-relationship="related_to">SQL Materialized Views</a>
+    <a href="/software/debugging/postgresql-connection-pool/2026" data-relationship="related_to">Connection Pooling</a>
+    <a href="/software/debugging/redis-memory-issues/2026" data-relationship="solves">Redis Memory Issues</a>
+    <a href="/software/system-design/cdn-design/2026" data-relationship="often_confused_with">CDN Design</a>
+    <a href="/software/system-design/multi-layer-caching/2026" data-relationship="often_confused_with">Multi-Layer Caching Architecture</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

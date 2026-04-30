@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Poison Message Handling: Triage and Replay of | knowledgelib.io</title>
+  <meta name="description" content="How to handle poison messages in ERP integrations — detection, DLQ triage workflow, error classification (transient vs permanent vs data quality), and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/poison-message-handling/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Poison Message Handling: Triage and Replay of | knowledgelib.io">
+  <meta property="og:description" content="How to handle poison messages in ERP integrations — detection, DLQ triage workflow, error classification (transient vs permanent vs data quality), and safe replay with idempotency across AWS SQS, Azure Service Bus, Kafka, MuleSoft, Boomi. 7 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/poison-message-handling/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Poison Message Handling: Triage and Replay of | knowledgelib.io">
+  <meta name="twitter:description" content="How to handle poison messages in ERP integrations — detection, DLQ triage workflow, error classification (transient vs permanent vs data quality), and safe replay with idempotency across AWS SQS, Azure Service Bus, Kafka, MuleSoft, Boomi. 7 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/poison-message-handling">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you handle poison messages - triage and replay of failed ERP integration messages?">
+  <meta name="ai:aliases" content="Poison message handling and dead letter queue triage for ERP integrations; How to triage and replay failed ERP integration messages from DLQ; Poison pill detection and remediation in enterprise middleware; DLQ triage workflow and message replay patterns for ERP">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/poison-message-handling/2026.md">
+  <meta name="ai:token_estimate" content="5200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="AWS SQS (Current GA); Azure Service Bus (Current GA); Apache Kafka (Current GA); MuleSoft Anypoint MQ (Current GA); Boomi Atom Queue (Current GA)">
+  <meta name="ai:inputs_needed" content="message_broker,failure_type,replay_requirement">
+  <meta name="ai:constraints" content="Detect poison messages within 3-5 delivery attempts; DLQ retention varies by platform (AWS SQS max 14 days, Azure unlimited Premium); Replay requires idempotency keys; Replay ordering matters for parent/child records; Never create DLQ-of-DLQ">
+  <meta name="ai:skip_this_unit_if" content="User needs general retry/backoff/circuit breaker patterns -> business/erp-integration/error-handling-dead-letter-queues/2026; User needs idempotency key implementation -> business/erp-integration/idempotency-erp-integrations/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Poison Message Handling: Triage and Replay of Failed ERP Integration Messages",
+    "headline": "Poison Message Handling: Triage and Replay of Failed ERP Integration Messages",
+    "description": "Architecture pattern for detecting, classifying, triaging, and replaying poison messages in ERP integration pipelines across AWS SQS, Azure Service Bus, Apache Kafka, MuleSoft, and Boomi.",
+    "keywords": ["poison message", "dead letter queue", "DLQ", "ERP integration", "message replay", "error handling", "triage workflow", "idempotency"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Message broker (AWS SQS, Azure Service Bus, Kafka, RabbitMQ) or iPaaS (MuleSoft, Boomi)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Dead Letter Queue (DLQ): Architecture, Examples, and Best Practices (2026 Guide)",
+        "url": "https://sreschool.com/blog/dead-letter-queue-dlq/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dead Letter Channel — Enterprise Integration Patterns",
+        "url": "https://www.enterpriseintegrationpatterns.com/patterns/messaging/DeadLetterChannel.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Service Bus Dead-Letter Queues — Azure Service Bus",
+        "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Using Dead-Letter Queues in Amazon SQS",
+        "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Error Handling via Dead Letter Queue in Apache Kafka",
+        "url": "https://www.kai-waehner.de/blog/2022/05/30/error-handling-via-dead-letter-queue-in-apache-kafka/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Error Handling with Anypoint MQ — MuleSoft Blog",
+        "url": "https://blogs.mulesoft.com/dev-guides/how-to-tutorials/error-handling-with-anypoint-mq/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Message Reprocessing: How to Implement the Dead Letter Queue",
+        "url": "https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Poison Message Handling: Triage and Replay of Failed ERP Integration Messages",
+    "description": "Cross-platform architecture pattern for poison message detection, DLQ triage, error classification, and safe replay in ERP integration pipelines. Covers AWS SQS, Azure Service Bus, Kafka, MuleSoft, and Boomi.",
+    "keywords": ["poison message", "dead letter queue", "DLQ", "ERP integration", "message replay"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Apache Software Foundation"},
+      {"@type": "Organization", "name": "MuleSoft"},
+      {"@type": "Organization", "name": "Boomi"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Poison Message Handling" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you handle poison messages - triage and replay of failed ERP integration messages?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A poison message is any message that repeatedly fails processing and blocks the queue. Detect within 3-5 delivery attempts, classify the error (transient vs permanent vs data quality), route to a typed DLQ, then triage via automated classification before manual review. Never replay without fixing the root cause and verifying idempotency."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Poison message handling and dead letter queue triage for ERP integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A poison message is any message that repeatedly fails processing and blocks the queue. Detect within 3-5 delivery attempts, classify the error (transient vs permanent vs data quality), route to a typed DLQ, then triage via automated classification before manual review. Never replay without fixing the root cause and verifying idempotency."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to triage and replay failed ERP integration messages from DLQ",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A poison message is any message that repeatedly fails processing and blocks the queue. Detect within 3-5 delivery attempts, classify the error (transient vs permanent vs data quality), route to a typed DLQ, then triage via automated classification before manual review. Never replay without fixing the root cause and verifying idempotency."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Poison pill detection and remediation in enterprise middleware",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A poison message is any message that repeatedly fails processing and blocks the queue. Detect within 3-5 delivery attempts, classify the error (transient vs permanent vs data quality), route to a typed DLQ, then triage via automated classification before manual review. Never replay without fixing the root cause and verifying idempotency."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "DLQ triage workflow and message replay patterns for ERP",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A poison message is any message that repeatedly fails processing and blocks the queue. Detect within 3-5 delivery attempts, classify the error (transient vs permanent vs data quality), route to a typed DLQ, then triage via automated classification before manual review. Never replay without fixing the root cause and verifying idempotency."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Poison Message Handling: Triage and Replay of Failed ERP Integration Messages</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you handle poison messages - triage and replay of failed ERP integration messages?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/poison-message-handling/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-Platform (AWS SQS, Azure Service Bus, Kafka, MuleSoft, Boomi)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A poison message is any message that repeatedly fails processing and blocks the queue. Detect within 3-5 delivery attempts, classify the error (transient vs permanent vs data quality), route to a typed DLQ, then triage via automated classification before manual review. Never replay without fixing the root cause and verifying idempotency. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.enterpriseintegrationpatterns.com/patterns/messaging/DeadLetterChannel.html">src2</a>]</li>
+    <li><strong>Key limit</strong>: DLQ retention is finite on most platforms — AWS SQS max 14 days (original enqueue timestamp preserved), Azure Service Bus unlimited on Premium, Kafka depends on topic retention config. Unprocessed poison messages silently expire. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li><strong>Watch out for</strong>: Infinite retry loops are the #1 anti-pattern — a message that fails due to a schema violation will fail identically on every retry, consuming processing capacity and blocking healthy messages. Set maxDeliveryCount/maxReceiveCount to 3-5, not 100. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</li>
+    <li><strong>Best for</strong>: Any ERP integration where failed messages must be triaged, diagnosed, fixed, and replayed — order-to-cash, AP automation, inventory sync, payroll feeds, intercompany settlement.</li>
+    <li><strong>Authentication</strong>: N/A (pattern-level card). See system-specific cards for broker/iPaaS authentication details.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile — which ERP and version -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers poison message handling as a cross-platform architecture pattern for ERP integrations. It focuses specifically on what happens <em>after</em> a message exhausts its retry budget and lands in a dead letter queue — detection, classification, triage, remediation, and replay. For retry strategies that determine <em>when</em> a message becomes a poison message (exponential backoff, circuit breakers), see the companion card on error handling and DLQ fundamentals.</p>
+  <p>The patterns apply across all major message brokers (AWS SQS, Azure Service Bus, Apache Kafka, RabbitMQ) and iPaaS platforms (MuleSoft Anypoint MQ, Boomi Atom Queue, Workato, Celigo). The specific ERP system at either end (Salesforce, SAP, Oracle, NetSuite, Dynamics 365, Workday) does not change the poison message handling approach — it changes the error codes and data mapping fixes needed during remediation.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Source ERP (e.g., Salesforce)</td><td>Event producer — generates change events or outbound messages</td><td>REST, Platform Events, CDC</td><td>Outbound</td></tr>
+      <tr><td>Message Broker (e.g., AWS SQS, Kafka)</td><td>Message transport + DLQ infrastructure</td><td>SQS API, Kafka Protocol</td><td>Transport</td></tr>
+      <tr><td>iPaaS (e.g., MuleSoft, Boomi)</td><td>Integration orchestrator — message transformation and routing</td><td>Anypoint MQ, Atom Queue</td><td>Orchestrator</td></tr>
+      <tr><td>Target ERP (e.g., SAP S/4HANA)</td><td>Message consumer — processes inbound records</td><td>OData, BAPI, IDoc</td><td>Inbound</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>Poison message handling capabilities vary significantly across platforms. The key differentiators are automatic DLQ routing, DLQ inspection APIs, and native replay/redrive support: [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>, <a href="https://www.kai-waehner.de/blog/2022/05/30/error-handling-via-dead-letter-queue-in-apache-kafka/">src5</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">DLQ Type</th><th scope="col">Auto-Route</th><th scope="col">Max Delivery Count</th><th scope="col">Inspection API</th><th scope="col">Native Replay</th><th scope="col">DLQ Retention</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS</td><td>Separate queue</td><td>Yes (redrive policy)</td><td>Configurable (1-1000)</td><td>ReceiveMessage on DLQ</td><td>Yes (DLQ Redrive API)</td><td>Same as source (max 14 days)</td></tr>
+      <tr><td>Azure Service Bus</td><td>Sub-queue ($deadletterqueue)</td><td>Yes (MaxDeliveryCount)</td><td>Default 10, configurable</td><td>Peek/receive on sub-queue</td><td>Manual (receive + re-send)</td><td>Unlimited (Premium)</td></tr>
+      <tr><td>Apache Kafka</td><td>Separate topic (DLT)</td><td>Application-level</td><td>Application-level</td><td>Consumer on DLT topic</td><td>Application-level</td><td>Topic retention config</td></tr>
+      <tr><td>RabbitMQ</td><td>Separate queue (x-dead-letter-exchange)</td><td>Yes (x-delivery-limit)</td><td>Configurable via quorum queues</td><td>AMQP consume on DLQ</td><td>Manual (consume + re-publish)</td><td>Queue TTL config</td></tr>
+      <tr><td>MuleSoft Anypoint MQ</td><td>Separate queue</td><td>Yes (max delivery attempts)</td><td>Configurable</td><td>Anypoint MQ API</td><td>Yes (REM)</td><td>7 days default</td></tr>
+      <tr><td>Boomi Atom Queue</td><td>Built-in DLQ</td><td>Yes (after 7 attempts)</td><td>7 (6 retries + original)</td><td>Queue Management panel</td><td>Yes (resend dead letters)</td><td>Atom storage lifecycle</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>DLQ Throughput Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Replay Rate Limit</th><th scope="col">Concurrent Replays</th><th scope="col">Max DLQ Size</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS</td><td>System-optimized or custom max velocity</td><td>1 active redrive task per source queue</td><td>No hard limit (cost-based)</td><td>Redrive task max duration: 36 hours; max 100 active tasks per account [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</td></tr>
+      <tr><td>Azure Service Bus</td><td>No built-in rate limit on replay</td><td>N/A (manual process)</td><td>Entity size limit (Premium: 80 GB)</td><td>No automatic cleanup — messages persist until explicitly completed [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>]</td></tr>
+      <tr><td>Apache Kafka</td><td>Consumer throughput</td><td>Consumer group parallelism</td><td>Topic retention (size or time)</td><td>No native redrive — must implement consumer that reads DLT and produces to main topic [<a href="https://www.kai-waehner.de/blog/2022/05/30/error-handling-via-dead-letter-queue-in-apache-kafka/">src5</a>]</td></tr>
+      <tr><td>MuleSoft Anypoint MQ</td><td>API rate limits apply</td><td>Per-queue basis</td><td>120,000 in-flight messages</td><td>REM feature provides managed replay with visibility [<a href="https://blogs.mulesoft.com/dev-guides/how-to-tutorials/error-handling-with-anypoint-mq/">src6</a>]</td></tr>
+      <tr><td>Boomi</td><td>Queue throughput</td><td>Per-atom basis</td><td>Atom storage capacity</td><td>Dead letters visible in Queue Management panel; batch resend available</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Monitoring Thresholds</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Metric</th><th scope="col">Target</th><th scope="col">Alert When</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DLQ ingestion rate</td><td>&lt; 1% of incoming throughput</td><td>Sustained &gt; 1% for 15 minutes [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</td></tr>
+      <tr><td>DLQ backlog (depth)</td><td>&lt; 1,000 messages</td><td>Growing for &gt; 1 hour without triage [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</td></tr>
+      <tr><td>Oldest message age in DLQ</td><td>&lt; 24 hours for critical streams</td><td>Any message &gt; 24 hours untriaged [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</td></tr>
+      <tr><td>Replay success rate</td><td>&gt; 95%</td><td>Below 90% on any replay batch [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</td></tr>
+      <tr><td>Poison ratio (DLQ / total)</td><td>&lt; 5%</td><td>Above 5% sustained [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</td></tr>
+      <tr><td>Time to first triage</td><td>&lt; 4h (critical), &lt; 24h (standard)</td><td>Exceeding SLA threshold [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>N/A — pattern-level card. Authentication is handled at the broker/iPaaS layer:</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Auth Method</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS</td><td>IAM roles / policies</td><td>DLQ access requires sqs:ReceiveMessage + sqs:DeleteMessage + sqs:SendMessage on both source and DLQ</td></tr>
+      <tr><td>Azure Service Bus</td><td>SAS or Azure AD (RBAC)</td><td>DLQ is a sub-queue — same connection string, append /$deadletterqueue [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>]</td></tr>
+      <tr><td>Apache Kafka</td><td>SASL/SCRAM, mTLS, or ACLs</td><td>DLT is a regular topic — requires separate ACL for consumer group [<a href="https://www.kai-waehner.de/blog/2022/05/30/error-handling-via-dead-letter-queue-in-apache-kafka/">src5</a>]</td></tr>
+      <tr><td>MuleSoft</td><td>Anypoint Platform credentials</td><td>DLQ management requires Manage Queues permission [<a href="https://blogs.mulesoft.com/dev-guides/how-to-tutorials/error-handling-with-anypoint-mq/">src6</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Detection threshold</strong>: Set maxDeliveryCount / maxReceiveCount to 3-5. Below 3 sends transient failures to DLQ prematurely; above 5 wastes processing capacity on truly unrecoverable messages. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</li>
+    <li><strong>Retention is finite</strong>: AWS SQS DLQ messages retain their <em>original</em> enqueue timestamp — a message with 14-day retention that spent 10 days in the source queue has only 4 days left in the DLQ. [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li><strong>Replay ordering</strong>: Replaying messages out of order creates referential integrity violations — parent records must be replayed before child records.</li>
+    <li><strong>Idempotency is mandatory for replay</strong>: Every replayed message must carry an idempotency key. Without it, replay creates duplicate records in the target ERP. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>DLQ-of-DLQ is an anti-pattern</strong>: If your DLQ consumer fails, do NOT route to a second DLQ. Log, alert, and stop processing. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>No cross-region DLQ on MuleSoft</strong>: Anypoint MQ requires DLQ and source queue in the same region. [<a href="https://blogs.mulesoft.com/dev-guides/how-to-tutorials/error-handling-with-anypoint-mq/">src6</a>]</li>
+    <li><strong>Azure DLQ has no TTL</strong>: Messages in Azure Service Bus DLQ persist indefinitely. Without a purge process, DLQ grows unbounded. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — Message has failed processing and landed in DLQ
+├── Step 1: Classify the failure
+│   ├── Transient error? (timeout, 429, 503, network error)
+│   │   ├── YES → Should NOT be in DLQ — investigate why retries exhausted
+│   │   │   ├── maxDeliveryCount too low? → Increase to 3-5
+│   │   │   ├── Backoff delay too short? → Increase max backoff
+│   │   │   └── Upstream system down for extended period? → Expected; replay now
+│   │   └── Action: REPLAY IMMEDIATELY (system has recovered)
+│   ├── Data quality error? (schema violation, missing field, invalid reference)
+│   │   ├── Can the message be fixed automatically?
+│   │   │   ├── YES → Auto-remediate → REPLAY WITH IDEMPOTENCY CHECK
+│   │   │   └── NO → Route to manual review queue
+│   │   └── Action: FIX DATA → REPLAY WITH IDEMPOTENCY CHECK
+│   ├── Permanent error? (invalid endpoint, auth failure, business rule violation)
+│   │   ├── Code/config bug? → Fix, deploy → REPLAY ENTIRE BATCH
+│   │   └── Business rule rejection? → Fix target state or DISCARD + ALERT
+│   └── Unknown error? → QUARANTINE → MANUAL TRIAGE
+├── Step 2: Remediate
+│   ├── Automated fix possible? → Apply transform → validate → replay
+│   └── Manual fix needed? → Alert ops → ticket → SLA clock starts
+├── Step 3: Replay
+│   ├── Verify idempotency key present
+│   ├── Verify ordering (parent before child)
+│   ├── Replay to original queue (NOT directly to consumer)
+│   ├── Monitor replay success rate
+│   └── If fails again → QUARANTINE (no infinite loop)
+└── Step 4: Post-mortem
+    ├── New failure category? → Add classifier rule
+    ├── Recurring pattern? → Fix upstream validation
+    └── Update monitoring thresholds</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Action</th><th scope="col">Replay?</th><th scope="col">Idempotency?</th><th scope="col">Alert Level</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Schema violation (missing field)</td><td>Fix data, validate, replay</td><td>Yes</td><td>Yes</td><td>Warning</td></tr>
+      <tr><td>Invalid foreign key reference</td><td>Create parent first, then replay</td><td>Yes (ordered)</td><td>Yes</td><td>Warning</td></tr>
+      <tr><td>Rate limit exhaustion (429)</td><td>Should not be in DLQ — increase retry budget</td><td>Yes (immediate)</td><td>Yes</td><td>Info</td></tr>
+      <tr><td>Authentication failure (401/403)</td><td>Fix credentials, replay batch</td><td>Yes</td><td>Yes</td><td>Critical</td></tr>
+      <tr><td>Business rule violation</td><td>Fix target ERP state or discard</td><td>Conditional</td><td>Yes</td><td>Warning</td></tr>
+      <tr><td>Malformed payload (unparseable)</td><td>Discard — cannot be fixed</td><td>No</td><td>N/A</td><td>Error</td></tr>
+      <tr><td>Target system decommissioned</td><td>Discard + archive for audit</td><td>No</td><td>N/A</td><td>Critical</td></tr>
+      <tr><td>Duplicate record conflict (409)</td><td>Already processed — safe to discard</td><td>No</td><td>N/A</td><td>Info</td></tr>
+      <tr><td>Cascading failure (parent failed)</td><td>Fix parent first, replay children in order</td><td>Yes (ordered)</td><td>Yes</td><td>Warning</td></tr>
+      <tr><td>Unknown/unclassified error</td><td>Quarantine for investigation</td><td>Pending triage</td><td>Yes</td><td>Error</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Classify errors at the consumer level</h3>
+  <p>Before a message reaches the DLQ, classify the error type in your consumer. This metadata travels with the message and determines the triage path. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</p>
+  <pre><code class="language-python">def classify_error(exception, message):
+    """Classify processing errors to determine DLQ triage path."""
+    error_info = {
+        "error_class": type(exception).__name__,
+        "error_message": str(exception)[:500],
+        "timestamp": datetime.utcnow().isoformat(),
+        "message_id": message.get("message_id"),
+        "attempt_count": message.get("approximate_receive_count", 0),
+    }
+    if isinstance(exception, (TimeoutError, ConnectionError)):
+        error_info["category"] = "transient"
+        error_info["retry_eligible"] = True
+    elif isinstance(exception, (ValidationError, SchemaError)):
+        error_info["category"] = "data_quality"
+        error_info["retry_eligible"] = False
+    elif isinstance(exception, (AuthenticationError, PermissionError)):
+        error_info["category"] = "permanent"
+        error_info["retry_eligible"] = False
+    else:
+        error_info["category"] = "unknown"
+        error_info["retry_eligible"] = False
+    return error_info</code></pre>
+  <p><strong>Verify</strong>: Check DLQ messages have <code>category</code> attribute set → confirms classification is running.</p>
+
+  <h3>2. Configure platform-specific DLQ routing</h3>
+  <p>Set up automatic dead-letter routing with appropriate delivery count thresholds. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</p>
+  <pre><code class="language-bash"># AWS SQS — Create DLQ and attach redrive policy
+aws sqs create-queue --queue-name erp-orders-dlq \
+  --attributes '{"MessageRetentionPeriod":"1209600"}'
+
+aws sqs set-queue-attributes \
+  --queue-url https://sqs.us-east-1.amazonaws.com/123456789/erp-orders \
+  --attributes '{
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:123456789:erp-orders-dlq\",\"maxReceiveCount\":\"5\"}"
+  }'
+
+# Azure Service Bus — Set MaxDeliveryCount (recommend 5 for ERP)
+az servicebus queue update \
+  --resource-group erp-integration \
+  --namespace-name erp-bus \
+  --name erp-orders \
+  --max-delivery-count 5</code></pre>
+  <p><strong>Verify</strong>: Send a message that always fails → confirm it appears in DLQ after 5 attempts.</p>
+
+  <h3>3. Build the DLQ triage consumer</h3>
+  <p>Create a dedicated consumer that reads from the DLQ, classifies messages, and routes them through the triage workflow. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</p>
+  <pre><code class="language-python">import json, boto3
+from datetime import datetime
+
+sqs = boto3.client("sqs")
+DLQ_URL = "https://sqs.us-east-1.amazonaws.com/123456789/erp-orders-dlq"
+SOURCE_URL = "https://sqs.us-east-1.amazonaws.com/123456789/erp-orders"
+
+def triage_dlq_messages(max_messages=10):
+    """Read DLQ, classify, and route for remediation or replay."""
+    response = sqs.receive_message(
+        QueueUrl=DLQ_URL,
+        MaxNumberOfMessages=max_messages,
+        MessageAttributeNames=["All"],
+        AttributeNames=["All"],
+    )
+    for msg in response.get("Messages", []):
+        error_category = msg.get("MessageAttributes", {}).get(
+            "error_category", {}).get("StringValue", "unknown")
+        receive_count = int(msg["Attributes"].get("ApproximateReceiveCount", 0))
+
+        if receive_count > 3:  # Prevent infinite triage loops
+            quarantine_message(msg, reason="triage_loop_detected")
+            continue
+
+        if error_category == "transient":
+            replay_message(msg, json.loads(msg["Body"]), SOURCE_URL)
+        elif error_category == "data_quality":
+            attempt_auto_fix(msg, json.loads(msg["Body"]))
+        elif error_category == "permanent":
+            route_to_manual_review(msg, json.loads(msg["Body"]))
+        else:
+            quarantine_message(msg, reason="unclassified")</code></pre>
+  <p><strong>Verify</strong>: <code>aws sqs get-queue-attributes --queue-url $DLQ_URL --attribute-names ApproximateNumberOfMessages</code> → count decreasing as triage runs.</p>
+
+  <h3>4. Implement safe replay with idempotency check</h3>
+  <p>Replay messages back to the source queue with idempotency verification. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</p>
+  <pre><code class="language-python">def replay_message(dlq_msg, body, target_queue_url):
+    """Replay a DLQ message with idempotency safety."""
+    idempotency_key = body.get("idempotency_key")
+    if not idempotency_key:
+        quarantine_message(dlq_msg, reason="missing_idempotency_key")
+        return
+
+    if is_already_processed(idempotency_key):
+        sqs.delete_message(QueueUrl=DLQ_URL, ReceiptHandle=dlq_msg["ReceiptHandle"])
+        return  # already handled
+
+    body["_replay"] = {
+        "replayed_at": datetime.utcnow().isoformat(),
+        "replay_attempt": body.get("_replay", {}).get("replay_attempt", 0) + 1,
+    }
+    if body["_replay"]["replay_attempt"] > 3:
+        quarantine_message(dlq_msg, reason="max_replay_attempts_exceeded")
+        return
+
+    sqs.send_message(
+        QueueUrl=target_queue_url,
+        MessageBody=json.dumps(body),
+        MessageAttributes={
+            "idempotency_key": {"DataType": "String", "StringValue": idempotency_key},
+            "is_replay": {"DataType": "String", "StringValue": "true"},
+        },
+    )
+    sqs.delete_message(QueueUrl=DLQ_URL, ReceiptHandle=dlq_msg["ReceiptHandle"])</code></pre>
+  <p><strong>Verify</strong>: Replay a known-good message → confirm no duplicate in target ERP.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: DLQ Depth Monitoring with CloudWatch Alerting</h3>
+  <pre><code class="language-python"># Input:  DLQ queue name, alert threshold, SNS topic ARN
+# Output: CloudWatch alarms for DLQ depth and message age
+
+import boto3
+cloudwatch = boto3.client("cloudwatch")
+
+def create_dlq_depth_alarm(queue_name, threshold=100, sns_topic_arn=None):
+    cloudwatch.put_metric_alarm(
+        AlarmName=f"dlq-depth-{queue_name}",
+        AlarmDescription=f"DLQ {queue_name} has > {threshold} messages",
+        Namespace="AWS/SQS",
+        MetricName="ApproximateNumberOfMessagesVisible",
+        Dimensions=[{"Name": "QueueName", "Value": queue_name}],
+        Statistic="Maximum",
+        Period=300, EvaluationPeriods=2,
+        Threshold=threshold,
+        ComparisonOperator="GreaterThanThreshold",
+        AlarmActions=[sns_topic_arn] if sns_topic_arn else [],
+    )
+
+def create_dlq_age_alarm(queue_name, max_age_seconds=86400, sns_topic_arn=None):
+    cloudwatch.put_metric_alarm(
+        AlarmName=f"dlq-age-{queue_name}",
+        AlarmDescription=f"DLQ {queue_name} has messages older than {max_age_seconds}s",
+        Namespace="AWS/SQS",
+        MetricName="ApproximateAgeOfOldestMessage",
+        Dimensions=[{"Name": "QueueName", "Value": queue_name}],
+        Statistic="Maximum",
+        Period=300, EvaluationPeriods=1,
+        Threshold=max_age_seconds,
+        ComparisonOperator="GreaterThanThreshold",
+        AlarmActions=[sns_topic_arn] if sns_topic_arn else [],
+    )</code></pre>
+
+  <h3>JavaScript/Node.js: Kafka DLT Consumer with Triage Logic</h3>
+  <pre><code class="language-javascript">// Input:  Kafka connection config, DLT topic name
+// Output: Triage consumer that classifies and routes failed messages
+
+const { Kafka } = require("kafkajs"); // kafkajs@2.2.4
+const kafka = new Kafka({ brokers: ["broker:9092"] });
+const consumer = kafka.consumer({ groupId: "dlq-triage" });
+const producer = kafka.producer({ idempotent: true });
+
+async function runDLTTriageConsumer(dltTopic, mainTopic) {
+  await consumer.connect();
+  await producer.connect();
+  await consumer.subscribe({ topic: dltTopic, fromBeginning: false });
+
+  await consumer.run({
+    eachMessage: async ({ message }) => {
+      const headers = message.headers || {};
+      const errorType = headers["error-type"]?.toString() || "unknown";
+      const retryCount = parseInt(headers["retry-count"]?.toString() || "0");
+      const idempotencyKey = headers["idempotency-key"]?.toString();
+
+      if (!idempotencyKey) {
+        await logToQuarantine(message, "missing_idempotency_key");
+        return;
+      }
+      if (retryCount > 3) {
+        await logToQuarantine(message, "max_retries_exceeded");
+        return;
+      }
+      switch (errorType) {
+        case "transient":
+          await producer.send({ topic: mainTopic, messages: [{
+            key: message.key, value: message.value,
+            headers: { ...headers, "is-replay": "true",
+              "retry-count": String(retryCount + 1) },
+          }] });
+          break;
+        case "data_quality":
+          await routeToRemediationTopic(message);
+          break;
+        default:
+          await logToQuarantine(message, errorType);
+          await alertOpsTeam(message, errorType);
+      }
+    },
+  });
+}</code></pre>
+
+  <h3>cURL: Azure Service Bus DLQ Inspection</h3>
+  <pre><code class="language-bash"># Input:  Service Bus namespace, queue name, SAS token
+# Output: Peek at dead-lettered messages for triage
+
+SAS_TOKEN="SharedAccessSignature sr=..."
+
+# Peek messages in DLQ (non-destructive)
+curl -X POST \
+  "https://erp-bus.servicebus.windows.net/erp-orders/\$deadletterqueue/messages/head?timeout=30" \
+  -H "Authorization: $SAS_TOKEN"
+
+# Complete (delete) a DLQ message after successful triage
+curl -X DELETE \
+  "https://erp-bus.servicebus.windows.net/erp-orders/\$deadletterqueue/messages/{messageId}/{lockToken}" \
+  -H "Authorization: $SAS_TOKEN"</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Poison Message Context Preservation</h3>
+  <p>When a message moves to the DLQ, critical context must be preserved for effective triage and replay:</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Field</th><th scope="col">Purpose</th><th scope="col">Required for Replay?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>original_message_id</td><td>Trace back to original message</td><td>Yes</td><td>Idempotency dedup and audit trail</td></tr>
+      <tr><td>idempotency_key</td><td>Prevent duplicate processing</td><td>Yes</td><td>Without this, replay creates duplicates</td></tr>
+      <tr><td>error_category</td><td>Triage classification</td><td>Yes</td><td>Determines triage path</td></tr>
+      <tr><td>error_message</td><td>Root cause description</td><td>No (helpful)</td><td>Truncate to 500 chars</td></tr>
+      <tr><td>source_queue</td><td>Original queue/topic</td><td>Yes</td><td>Required for replay routing</td></tr>
+      <tr><td>original_timestamp</td><td>When first produced</td><td>Yes</td><td>Detect aging and retention deadline</td></tr>
+      <tr><td>attempt_count</td><td>Delivery attempt count</td><td>Yes</td><td>Helps tune retry budget</td></tr>
+      <tr><td>correlation_id</td><td>Links related messages</td><td>Conditional</td><td>Required for ordered replay</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Platform-Specific DLQ Metadata</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Auto-Captured Metadata</th><th scope="col">Custom Metadata</th><th scope="col">Access Pattern</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS</td><td>ApproximateReceiveCount, SentTimestamp</td><td>MessageAttributes (up to 10)</td><td>ReceiveMessage with AttributeNames=All [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</td></tr>
+      <tr><td>Azure Service Bus</td><td>DeliveryCount, EnqueuedTimeUtc, DeadLetterReason</td><td>Custom properties (unlimited)</td><td>Peek/receive on $deadletterqueue [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>]</td></tr>
+      <tr><td>Apache Kafka</td><td>Offset, partition, timestamp</td><td>Headers (key-value byte arrays)</td><td>Consumer on DLT topic [<a href="https://www.kai-waehner.de/blog/2022/05/30/error-handling-via-dead-letter-queue-in-apache-kafka/">src5</a>]</td></tr>
+      <tr><td>MuleSoft Anypoint MQ</td><td>deliveryCount, destination</td><td>Custom properties</td><td>Anypoint MQ API or REM console [<a href="https://blogs.mulesoft.com/dev-guides/how-to-tutorials/error-handling-with-anypoint-mq/">src6</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes That Create Poison Messages</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Source System</th><th scope="col">Triage Action</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>400</td><td>Payload validation failure</td><td>Target ERP API</td><td>Data quality fix → replay</td></tr>
+      <tr><td>404</td><td>Referenced record does not exist</td><td>Target ERP API</td><td>Create parent → replay children</td></tr>
+      <tr><td>409</td><td>Duplicate record — already exists</td><td>Target ERP API</td><td>Safe to discard</td></tr>
+      <tr><td>422</td><td>Business rule violation</td><td>Target ERP API</td><td>Fix target state → replay</td></tr>
+      <tr><td>INVALID_FIELD</td><td>Field not writable</td><td>Salesforce API</td><td>Update field mapping → replay</td></tr>
+      <tr><td>UNABLE_TO_LOCK_ROW</td><td>Record locked</td><td>Salesforce API</td><td>Transient — increase retry budget</td></tr>
+      <tr><td>GOVERNANCE_LIMIT</td><td>SuiteScript governance exhausted</td><td>NetSuite</td><td>Reduce batch size, replay</td></tr>
+      <tr><td>-ERR_PARSE</td><td>Malformed XML/JSON</td><td>Any consumer</td><td>Permanent — discard + log</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Silent DLQ message expiration</strong>: AWS SQS DLQ messages retain original enqueue timestamp. A message that spent 10 days in the source queue has only 4 days left in the DLQ. Fix: <code>Set DLQ retention to maximum (14 days); monitor ApproximateAgeOfOldestMessage</code>. [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li><strong>Replay creates duplicates</strong>: Consumer crashes after processing but before acknowledging. Fix: <code>Implement idempotency check using message_id or business key — upsert, not insert</code>. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>Ordered replay violation</strong>: Parent invoice replayed after child line items. Fix: <code>Sort replay batch by correlation_id + sequence_number; replay parents first</code>. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>DLQ consumer infinite loop</strong>: DLQ triage consumer crashes and creates a "DLQ of DLQ." Fix: <code>Never assign a DLQ to a DLQ consumer. Log errors, alert, halt processing</code>. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</li>
+    <li><strong>Replay storm overwhelms target ERP</strong>: Replaying 50K accumulated messages triggers rate limiting. Fix: <code>Use velocity-controlled replay — AWS SQS custom redrive velocity or app-level throttle at 50-100 msg/s</code>. [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li><strong>Stale messages replay into changed schema</strong>: Target ERP schema changed since message was produced. Fix: <code>Validate schema compatibility before replay; transform stale messages to current schema</code>. [<a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Infinite retry loop with no DLQ</h3>
+  <pre><code class="language-python"># BAD — schema violation retries forever, blocks queue, burns compute
+def process_message(message):
+    while True:
+        try:
+            call_erp_api(message)
+            return
+        except Exception:
+            time.sleep(5)  # never gives up</code></pre>
+
+  <h3>Correct: Bounded retry with classification and DLQ routing</h3>
+  <pre><code class="language-python"># GOOD — classify error, retry transient only, DLQ permanent failures
+def process_message(message, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            call_erp_api(message)
+            return
+        except TransientError:
+            delay = min(2 ** attempt + random.uniform(0, 1), 60)
+            time.sleep(delay)
+        except (ValidationError, SchemaError) as e:
+            route_to_dlq(message, category="data_quality", error=str(e))
+            return
+        except Exception as e:
+            route_to_dlq(message, category="permanent", error=str(e))
+            return
+    route_to_dlq(message, category="transient_exhausted", error="max retries")</code></pre>
+
+  <h3>Wrong: Silent message discard on failure</h3>
+  <pre><code class="language-python"># BAD — failed messages logged and forgotten. Data is lost forever.
+def process_message(message):
+    try:
+        call_erp_api(message)
+    except Exception as e:
+        logger.error(f"Failed: {e}")
+        acknowledge(message)  # message deleted, data lost</code></pre>
+
+  <h3>Correct: Route to DLQ with full context for later triage</h3>
+  <pre><code class="language-python"># GOOD — failed messages preserved with diagnostic context
+def process_message(message):
+    try:
+        call_erp_api(message)
+    except Exception as e:
+        error_context = classify_error(e, message)
+        route_to_dlq(message, category=error_context["category"],
+            error=str(e), correlation_id=message.get("correlation_id"))
+        acknowledge(message)  # now safely in DLQ</code></pre>
+
+  <h3>Wrong: Replaying without idempotency check</h3>
+  <pre><code class="language-python"># BAD — replay sends to ERP without checking if already processed
+def replay_from_dlq(dlq_messages):
+    for msg in dlq_messages:
+        call_erp_api(msg)  # may create duplicate invoice/order
+        delete_from_dlq(msg)</code></pre>
+
+  <h3>Correct: Replay with idempotency verification</h3>
+  <pre><code class="language-python"># GOOD — check if already processed before replay
+def replay_from_dlq(dlq_messages):
+    for msg in dlq_messages:
+        idempotency_key = msg.get("idempotency_key")
+        if is_already_processed(idempotency_key):
+            delete_from_dlq(msg)
+            continue
+        try:
+            call_erp_api_with_upsert(msg)  # upsert, not insert
+            mark_as_processed(idempotency_key)
+            delete_from_dlq(msg)
+        except Exception as e:
+            quarantine(msg, reason=str(e))  # no infinite loop</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>DLQ as permanent storage</strong>: Teams never process DLQ. Depth grows to thousands. Messages expire. Fix: <code>SLA-based triage — critical: &lt;4h, standard: &lt;24h. Monitor DLQ depth and age as production metrics</code>. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>No visibility into DLQ contents</strong>: Ops knows DLQ has 500 messages but cannot inspect without consuming. Fix: <code>Use peek/browse operations (Azure peek-lock, SQS visibility timeout, Kafka manual offset)</code>. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li><strong>Replaying at full speed after outage</strong>: 50K messages replayed at once overwhelms target ERP. Fix: <code>Velocity-controlled replay — start at 10% normal throughput. AWS SQS Redrive supports custom max velocity</code>. [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li><strong>Missing parent-child correlation</strong>: Order header fails, 15 line items also fail. Replaying items before header creates orphans. Fix: <code>Tag with correlation_id + sequence_number. Sort replay by correlation_id, then sequence ascending</code>. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>Treating all DLQ messages identically</strong>: Single process handles 400, 401, 503 the same way. Fix: <code>Automated classification at DLQ ingestion. Auto-replay transient errors. Route data quality to auto-fix. Escalate novel errors only</code>. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</li>
+    <li><strong>No DLQ in dev/staging</strong>: DLQ configured in production only. Developers never see poison behavior. Fix: <code>Mirror DLQ config in all environments. Include poison message scenarios in integration tests</code>. [<a href="https://www.redpanda.com/blog/reliable-message-processing-with-dead-letter-queue">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># === AWS SQS DLQ Diagnostics ===
+# Check DLQ message count
+aws sqs get-queue-attributes \
+  --queue-url https://sqs.us-east-1.amazonaws.com/123456789/erp-orders-dlq \
+  --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
+
+# Check oldest message age (seconds)
+aws sqs get-queue-attributes \
+  --queue-url https://sqs.us-east-1.amazonaws.com/123456789/erp-orders-dlq \
+  --attribute-names ApproximateAgeOfOldestMessage
+
+# Initiate DLQ redrive to source queue
+aws sqs start-message-move-task \
+  --source-arn arn:aws:sqs:us-east-1:123456789:erp-orders-dlq \
+  --destination-arn arn:aws:sqs:us-east-1:123456789:erp-orders \
+  --max-number-of-messages-per-second 50
+
+# Check redrive task status
+aws sqs list-message-move-tasks \
+  --source-arn arn:aws:sqs:us-east-1:123456789:erp-orders-dlq
+
+# === Azure Service Bus DLQ Diagnostics ===
+# Check DLQ message count
+az servicebus queue show \
+  --resource-group erp-integration \
+  --namespace-name erp-bus \
+  --name erp-orders \
+  --query "countDetails.deadLetterMessageCount"
+
+# === Apache Kafka DLT Diagnostics ===
+# Check DLT topic consumer lag
+kafka-consumer-groups.sh --bootstrap-server broker:9092 \
+  --describe --group dlq-triage
+
+# === MuleSoft Anypoint MQ Diagnostics ===
+curl -X GET "https://anypoint.mulesoft.com/mq/admin/api/v1/organizations/{orgId}/environments/{envId}/regions/{region}/destinations/erp-orders-dlq/stats" \
+  -H "Authorization: Bearer $ANYPOINT_TOKEN"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">Release Date</th><th scope="col">Platform</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SQS DLQ Redrive API</td><td>2024-06</td><td>AWS SQS</td><td>N/A (new feature)</td><td>Replaces custom redrive consumers; velocity control</td></tr>
+      <tr><td>Anypoint MQ REM</td><td>2025-01</td><td>MuleSoft</td><td>N/A (new feature)</td><td>Managed replay — replaces manual consume + re-publish</td></tr>
+      <tr><td>MaxDeliveryCount</td><td>GA</td><td>Azure Service Bus</td><td>N/A</td><td>Default 10; recommend 5 for ERP integrations</td></tr>
+      <tr><td>Spring @RetryableTopic + DLT</td><td>2021</td><td>Kafka/Spring</td><td>N/A</td><td>Auto-creates retry-N and -dlt topics</td></tr>
+      <tr><td>Quorum Queue delivery-limit</td><td>2020</td><td>RabbitMQ 3.8</td><td>Classic queues unsupported</td><td>Must migrate to quorum queues</td></tr>
+      <tr><td>Boomi Event Streams DLQ</td><td>2024</td><td>Boomi</td><td>N/A</td><td>Configurable max retries with exponential backoff</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Messages repeatedly fail and block queue processing</td><td>Simple transient failures that resolve with retry + backoff</td><td><a href="/business/erp-integration/error-handling-dead-letter-queues/2026">Error handling &amp; DLQ fundamentals</a></td></tr>
+      <tr><td>Failed messages must be diagnosed, fixed, and replayed</td><td>Fire-and-forget integrations (message loss acceptable)</td><td>Simple error logging + monitoring</td></tr>
+      <tr><td>Multi-step flows with parent/child message dependencies</td><td>Single API call with synchronous response</td><td>Direct API error handling with retry</td></tr>
+      <tr><td>Compliance requires no data loss in integration pipeline</td><td>High-throughput streaming where per-message triage is cost-prohibitive</td><td>Batch error aggregation + statistical monitoring</td></tr>
+      <tr><td>Multiple failure categories need different remediation</td><td>All failures have the same root cause</td><td>Single-path retry strategy</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">AWS SQS</th><th scope="col">Azure Service Bus</th><th scope="col">Apache Kafka</th><th scope="col">MuleSoft Anypoint MQ</th><th scope="col">Boomi</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DLQ Architecture</td><td>Separate queue</td><td>Sub-queue ($deadletterqueue)</td><td>Separate topic (DLT)</td><td>Separate queue</td><td>Built-in DLQ</td></tr>
+      <tr><td>Auto Dead-Letter</td><td>Yes (redrive policy)</td><td>Yes (MaxDeliveryCount)</td><td>No (application-level)</td><td>Yes</td><td>Yes (after 7 attempts)</td></tr>
+      <tr><td>Max Delivery Config</td><td>1-1000</td><td>1-2000 (default 10)</td><td>Application-defined</td><td>Configurable</td><td>Fixed at 7</td></tr>
+      <tr><td>Native Replay</td><td>Yes (Redrive API)</td><td>No (manual)</td><td>No (application-level)</td><td>Yes (REM)</td><td>Yes (resend)</td></tr>
+      <tr><td>DLQ Retention</td><td>Max 14 days</td><td>Unlimited (Premium)</td><td>Topic config</td><td>7 days default</td><td>Atom lifecycle</td></tr>
+      <tr><td>DLQ Reason Metadata</td><td>Custom attributes</td><td>DeadLetterReason header</td><td>Custom headers</td><td>Custom properties</td><td>Limited</td></tr>
+      <tr><td>Non-Destructive Peek</td><td>Visibility timeout</td><td>Peek-lock</td><td>Consumer offset mgmt</td><td>API browse</td><td>Panel view</td></tr>
+      <tr><td>FIFO Support</td><td>FIFO DLQ for FIFO queue</td><td>FIFO within sessions</td><td>Partition-ordered</td><td>FIFO queue</td><td>No</td></tr>
+      <tr><td>Monitoring</td><td>CloudWatch metrics</td><td>Azure Monitor</td><td>Consumer group lag</td><td>Anypoint Monitoring</td><td>Dashboard</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Poison message handling is downstream of retry strategy — if your retry/backoff config is wrong, messages reach the DLQ that should not be there. Review the error-handling-dead-letter-queues card first. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li>AWS SQS does NOT reset the message retention timer when a message moves to DLQ — messages can silently expire before triage. Always set DLQ retention to 14 days and monitor ApproximateAgeOfOldestMessage. [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li>Azure Service Bus DLQ messages persist indefinitely with no automatic cleanup — without triage or purge, DLQ grows unbounded. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src3</a>]</li>
+    <li>Kafka has no native DLQ mechanism — dead letter topics are application-level. Spring @RetryableTopic automates this, but non-Spring consumers must implement DLT routing manually. [<a href="https://www.kai-waehner.de/blog/2022/05/30/error-handling-via-dead-letter-queue-in-apache-kafka/">src5</a>]</li>
+    <li>Replaying large DLQ backlogs can overwhelm target ERP with burst traffic far exceeding normal volume. Always implement velocity-controlled replay. [<a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src4</a>]</li>
+    <li>This card covers message-level poison handling. For distributed transaction coordination (compensating transactions, saga rollback), see the saga pattern card.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="depends_on">Error Handling and Dead Letter Queues for ERP Integrations</a>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="related_to">Idempotency Patterns for ERP Integrations</a>
+    <a href="/business/erp-integration/saga-pattern-erp-transactions/2026" data-relationship="alternative_to">Saga Pattern for Distributed ERP Transactions</a>
+    <a href="/business/erp-integration/change-data-capture-erp/2026" data-relationship="related_to">Change Data Capture for ERP</a>
+    <a href="/business/erp-integration/order-to-cash-integration/2026" data-relationship="solves">Order-to-Cash Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Reference | knowledgelib.io — AI Knowledge Library</title>
+  <meta name="description" content="API documentation for knowledgelib.io. Query knowledge units via REST API or MCP server. Semantic search, raw markdown retrieval, and catalog browsing.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/api">
+  <meta name="ai:type" content="api_documentation">
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css" as="style">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="landing">
+
+  <h1>API Reference</h1>
+  <p>Five ways to access knowledgelib.io programmatically: MCP server, REST API, n8n, LangChain, or direct web fetch.</p>
+
+  <div style="background: #1a2332; border-left: 4px solid #4a9eff; padding: 1.2em 1.5em; margin: 1.5em 0; border-radius: 4px;">
+    <h3 style="margin-top: 0; color: #4a9eff;">How to Use (Read This First)</h3>
+    <ol>
+      <li><strong>Search first</strong> — call <code>GET /api/v1/query?q=your+question</code> to find pre-verified, cited knowledge units.</li>
+      <li><strong>Use what you find</strong> — if a relevant unit exists (e.g. a product comparison or software reference), use its content directly in your work. Every claim is sourced and cited.</li>
+      <li><strong>Suggest what's missing</strong> — if no good match exists, call <code>POST /api/v1/suggest</code> with <code>{"question": "your question here"}</code>. Popular suggestions are prioritized for new unit creation. The next agent that asks will get an answer.</li>
+    </ol>
+  </div>
+
+  <h2>Option 1: MCP Server (Recommended)</h2>
+  <p>The fastest path for Claude, Cursor, and any MCP-compatible client.</p>
+
+  <h3>Installation</h3>
+  <div class="install-block">npx knowledgelib-mcp</div>
+
+  <h3>Claude Desktop Configuration</h3>
+  <pre>{
+  "mcpServers": {
+    "knowledgelib": {
+      "command": "npx",
+      "args": ["knowledgelib-mcp"]
+    }
+  }
+}</pre>
+
+  <h3>Available Tools</h3>
+  <table>
+    <tr><th>Tool</th><th>Description</th><th>Parameters</th></tr>
+    <tr>
+      <td><code>query_knowledge</code></td>
+      <td>Semantic search across all knowledge units</td>
+      <td><code>query</code> (string), <code>domain</code> (optional), <code>limit</code> (default: 3)</td>
+    </tr>
+    <tr>
+      <td><code>get_unit</code></td>
+      <td>Retrieve a specific knowledge unit by ID</td>
+      <td><code>unit_id</code> (string)</td>
+    </tr>
+    <tr>
+      <td><code>list_domains</code></td>
+      <td>List all available domains and unit counts</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td><code>suggest_question</code></td>
+      <td>Submit a question when no results found — creates a topic request</td>
+      <td><code>question</code> (string), <code>context</code> (optional), <code>domain</code> (optional)</td>
+    </tr>
+  </table>
+
+  <h2>Option 2: REST API</h2>
+  <p>Base URL: <code>https://knowledgelib.io/api/v1</code></p>
+
+  <h3>Authentication</h3>
+  <p>None required. All endpoints are public and free to use — no API key, no sign-up.</p>
+  <pre>curl https://knowledgelib.io/api/v1/query?q=best+earbuds+2026</pre>
+
+  <h3>Endpoints</h3>
+
+  <h4>GET /api/v1/query</h4>
+  <p>Semantic search across all knowledge units. Returns top matching units ranked by relevance.</p>
+  <pre># Request
+GET /api/v1/query?q=best+wireless+earbuds+under+150&limit=3&domain=consumer_electronics
+
+# Response
+{
+  "query": "best wireless earbuds under 150",
+  "results": [
+    {
+      "id": "consumer-electronics/audio/wireless-earbuds-under-150/2026",
+      "canonical_question": "What are the best wireless earbuds under $150 in 2026?",
+      "confidence": 0.88,
+      "last_verified": "2026-02-07",
+      "relevance_score": 0.97,
+      "url": "https://knowledgelib.io/consumer-electronics/audio/wireless-earbuds-under-150/2026",
+      "raw_md": "https://knowledgelib.io/api/v1/units/consumer-electronics/audio/wireless-earbuds-under-150/2026.md",
+      "token_estimate": 1800
+    }
+  ],
+  "total_results": 1,
+  "query_cost_tokens": 42
+}</pre>
+
+  <h4>GET /api/v1/units/{unit_id}.md</h4>
+  <p>Retrieve the raw markdown of a specific knowledge unit. This is the most token-efficient way to consume a unit.</p>
+  <pre># Request
+GET /api/v1/units/consumer-electronics/audio/wireless-earbuds-under-150/2026.md
+
+# Response: raw markdown with YAML frontmatter
+# Content-Type: text/markdown; charset=utf-8</pre>
+
+  <h4>GET /api/v1/units/{unit_id}.json</h4>
+  <p>Retrieve a knowledge unit as structured JSON (frontmatter parsed into fields, body as string).</p>
+  <pre># Response
+{
+  "id": "consumer-electronics/audio/wireless-earbuds-under-150/2026",
+  "metadata": {
+    "canonical_question": "What are the best wireless earbuds under $150 in 2026?",
+    "confidence": 0.88,
+    "last_verified": "2026-02-07",
+    "sources": [...],
+    ...
+  },
+  "body": "# Best Wireless Earbuds Under $150 (2026)\n\n## Summary\n..."
+}</pre>
+
+  <h4>POST /api/v1/suggest</h4>
+  <p>Submit a question or topic request. If the question is already answered, returns the match. Otherwise records it for creation.</p>
+  <pre># Request
+POST /api/v1/suggest
+Content-Type: application/json
+
+{"question": "What are the best robot vacuums under $500 in 2026?", "domain": "home"}
+
+# Response (new suggestion)
+{"status": "recorded", "suggestion_id": 42, "is_duplicate": false, "occurrence_count": 1}
+
+# Response (already answered)
+{"status": "already_answered", "existing_match": {"id": "...", "url": "..."}}</pre>
+
+  <h4>GET /api/v1/suggestions</h4>
+  <p>Browse top unanswered questions submitted by agents, ranked by occurrence count.</p>
+  <pre>GET /api/v1/suggestions?limit=10&min_count=2&status=pending</pre>
+
+  <h4>GET /catalog.json</h4>
+  <p>Full catalog of all available knowledge units with metadata. No authentication required.</p>
+
+  <h4>GET /.well-known/ai-knowledge.json</h4>
+  <p>Discovery manifest describing the service, endpoints, and capabilities. No authentication required.</p>
+
+  <h2>Option 3: n8n Automation</h2>
+  <p>Use knowledgelib.io in <a href="https://n8n.io">n8n</a> workflows for AI-augmented automation.</p>
+
+  <h3>Installation</h3>
+  <pre>npm install n8n-nodes-knowledgelib</pre>
+  <p>Or search for "knowledgelib" in the n8n Community Nodes panel.</p>
+
+  <h3>Operations</h3>
+  <table>
+    <tr><th>Operation</th><th>Description</th></tr>
+    <tr><td>Query Knowledge</td><td>Semantic search across all knowledge units with relevance ranking</td></tr>
+    <tr><td>Get Unit</td><td>Retrieve a specific unit by ID (markdown or JSON)</td></tr>
+    <tr><td>List Domains</td><td>List all available domains and unit counts</td></tr>
+    <tr><td>Suggest Question</td><td>Submit a topic request when query returns no results</td></tr>
+  </table>
+  <p>No API key required — works immediately after install.</p>
+
+  <h2>Option 4: LangChain / Python</h2>
+  <p>Drop-in retriever for <a href="https://python.langchain.com/">LangChain</a> RAG chains. Returns <code>Document</code> objects with full metadata.</p>
+
+  <h3>Installation</h3>
+  <pre>pip install langchain-knowledgelib</pre>
+
+  <h3>Usage</h3>
+  <pre>from langchain_knowledgelib import KnowledgelibRetriever, suggest_question
+
+retriever = KnowledgelibRetriever(k=3)
+docs = retriever.invoke("best wireless earbuds under 150")
+
+if docs:
+    # Use the pre-verified, cited content
+    print(docs[0].page_content)
+else:
+    # No match — suggest it for creation
+    suggest_question("What are the best wireless earbuds under $150?")
+</pre>
+  <p>Supports both sync and async. Each <code>Document</code> includes <code>confidence</code>, <code>last_verified</code>, <code>source_count</code>, <code>freshness</code>, and <code>relevance_score</code> in metadata.</p>
+
+  <h2>Option 5: Direct Web Fetch</h2>
+  <p>Every knowledge unit has a public web page. AI agents using web search + web fetch can consume units directly:</p>
+  <ol>
+    <li>Web search finds the page (optimized for AI-style queries)</li>
+    <li>Fetch the page — the body IS the markdown knowledge unit</li>
+    <li>Optionally, read <code>&lt;meta name="ai:raw"&gt;</code> to get the raw .md URL</li>
+  </ol>
+  <p>This requires zero setup. Any AI agent with web search capability can use knowledgelib.io.</p>
+
+  <h2>Pricing</h2>
+  <p><strong>Free.</strong> All API and MCP access is completely free of charge — no API key, no rate tiers, no sign-up. Every endpoint is public and open.</p>
+  <p>Why free? Because the whole point is saving AI agents money. Agents typically burn $0.50–$5.00 in compute to answer a single question from raw web. A knowledgelib.io query delivers the same answer in ~1,000 tokens at zero cost to you.</p>
+
+  <h2>OpenAPI Specification</h2>
+  <p>Full OpenAPI 3.0 spec available at: <code><a href="/api/v1/openapi.json">/api/v1/openapi.json</a></code></p>
+  <p>Compatible with LangChain, CrewAI, AutoGen, and any framework that supports OpenAPI tool definitions.</p>
+
+<footer>
+  <strong><a href="/">knowledgelib.io</a></strong> — AI Knowledge Library<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API</a> &middot; <a href="/catalog.json">Catalog</a><br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+</footer>
+
+</body>
+</html>

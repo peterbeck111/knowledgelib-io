@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+const { PipelineLoggerRest } = require('../db/pipeline_logger_rest');
 
 /**
  * IndexNow submission script.
@@ -104,36 +106,50 @@ async function submitToIndexNow(urls) {
 
 async function run() {
   const newOnly = process.argv.includes('--new');
+  const mode = newOnly ? 'new_only' : 'full';
+  const logger = new PipelineLoggerRest(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  let runId;
+  const startMs = Date.now();
 
-  if (!fs.existsSync(SITEMAP_PATH)) {
-    console.error(`Sitemap not found: ${SITEMAP_PATH}`);
-    console.error('Run reconcile.js first to generate it.');
+  try {
+    runId = await logger.start('indexnow', { mode });
+
+    if (!fs.existsSync(SITEMAP_PATH)) {
+      throw new Error(`Sitemap not found: ${SITEMAP_PATH}. Run reconcile.js first.`);
+    }
+
+    const sitemapXml = fs.readFileSync(SITEMAP_PATH, 'utf-8');
+    const allUrls = extractUrlsFromSitemap(sitemapXml);
+    console.log(`Found ${allUrls.length} URLs in sitemap.xml`);
+
+    let urlsToSubmit;
+
+    if (newOnly) {
+      const lastUrls = new Set(loadLastSnapshot());
+      urlsToSubmit = allUrls.filter(url => !lastUrls.has(url));
+      console.log(`New URLs since last submission: ${urlsToSubmit.length}`);
+    } else {
+      urlsToSubmit = allUrls;
+      console.log('Full submission mode — sending all URLs.');
+    }
+
+    let statusCode = null;
+    if (urlsToSubmit.length > 0) {
+      statusCode = await submitToIndexNow(urlsToSubmit);
+    }
+
+    saveSnapshot(allUrls);
+
+    await logger.complete(runId, {
+      cards_affected: urlsToSubmit.length,
+      duration_ms: Date.now() - startMs,
+      detail: { mode, urls_submitted: urlsToSubmit.length, urls_total: allUrls.length, status_code: statusCode },
+    });
+  } catch (err) {
+    console.error('IndexNow submission failed:', err.message);
+    if (runId) await logger.fail(runId, err, { duration_ms: Date.now() - startMs, detail: { mode } });
     process.exit(1);
   }
-
-  const sitemapXml = fs.readFileSync(SITEMAP_PATH, 'utf-8');
-  const allUrls = extractUrlsFromSitemap(sitemapXml);
-  console.log(`Found ${allUrls.length} URLs in sitemap.xml`);
-
-  let urlsToSubmit;
-
-  if (newOnly) {
-    const lastUrls = new Set(loadLastSnapshot());
-    urlsToSubmit = allUrls.filter(url => !lastUrls.has(url));
-    console.log(`New URLs since last submission: ${urlsToSubmit.length}`);
-  } else {
-    urlsToSubmit = allUrls;
-    console.log('Full submission mode — sending all URLs.');
-  }
-
-  if (urlsToSubmit.length > 0) {
-    await submitToIndexNow(urlsToSubmit);
-  }
-
-  saveSnapshot(allUrls);
 }
 
-run().catch(err => {
-  console.error('IndexNow submission failed:', err);
-  process.exit(1);
-});
+run();

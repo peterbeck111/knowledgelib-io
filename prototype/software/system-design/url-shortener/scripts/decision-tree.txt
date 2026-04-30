@@ -1,0 +1,29 @@
+START
+|-- Expected write volume?
+|   |-- <1K URLs/day (hobby/internal)?
+|   |   |-- Use single PostgreSQL instance + in-memory cache
+|   |   |-- Auto-increment ID + base62 encode
+|   |   +-- Single server is sufficient
+|   |-- 1K-100K URLs/day (startup)?
+|   |   |-- Use PostgreSQL with read replicas + Redis cache
+|   |   |-- Snowflake-style ID generator (single node)
+|   |   +-- 2-4 app server instances behind load balancer
+|   |-- 100K-10M URLs/day (mid-scale)?
+|   |   |-- Use Cassandra/DynamoDB + Redis Cluster
+|   |   |-- Distributed ID generator (Zookeeper counter ranges)
+|   |   |-- Separate read/write services
+|   |   +-- CDN for edge caching of popular redirects
+|   +-- >10M URLs/day (Bitly-scale)?
+|       |-- Use Cassandra with multi-DC replication + Redis Cluster
+|       |-- Pre-generated key pools (KGS) with range allocation
+|       |-- Geo-distributed deployment
+|       |-- Kafka analytics pipeline with ClickHouse
+|       +-- Dedicated abuse prevention and rate limiting layer
+|
+|-- Need analytics?
+|   |-- YES -> Use HTTP 302 + async Kafka pipeline
+|   +-- NO  -> Use HTTP 301 for better client-side caching
+|
++-- Need custom aliases?
+    |-- YES -> Separate alias table; validate uniqueness + reserved words
+    +-- NO  -> Auto-generated base62 codes only

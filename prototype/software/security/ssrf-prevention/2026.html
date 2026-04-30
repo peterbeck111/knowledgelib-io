@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SSRF Prevention: Server-Side Request Forgery | knowledgelib.io</title>
+  <meta name="description" content="Complete SSRF prevention guide covering URL validation with DNS pinning, cloud metadata protection (AWS IMDSv2, GCP, Azure), DNS rebinding defense, and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/ssrf-prevention/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SSRF Prevention: Server-Side Request Forgery | knowledgelib.io">
+  <meta property="og:description" content="Complete SSRF prevention guide covering URL validation with DNS pinning, cloud metadata protection (AWS IMDSv2, GCP, Azure), DNS rebinding defense, and code examples for Python, Node.js, Go, and Java. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/ssrf-prevention/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SSRF Prevention: Server-Side Request Forgery | knowledgelib.io">
+  <meta name="twitter:description" content="Complete SSRF prevention guide covering URL validation with DNS pinning, cloud metadata protection (AWS IMDSv2, GCP, Azure), DNS rebinding defense, and code examples for Python, Node.js, Go, and Java. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/SSRF Prevention">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I prevent Server-Side Request Forgery (SSRF)?">
+  <meta name="ai:aliases" content="SSRF prevention best practices; server-side request forgery mitigation; protect against SSRF attacks; CWE-918 prevention; block SSRF in cloud environments; prevent SSRF AWS metadata access; URL validation to prevent SSRF; how to stop SSRF in Python Node.js Go Java">
+  <meta name="ai:raw" content="/api/v1/units/software/security/ssrf-prevention/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="language,cloud_provider">
+  <meta name="ai:constraints" content="NEVER rely solely on blocklists; ALWAYS validate resolved IP after DNS resolution; NEVER allow access to cloud metadata endpoints; Disable HTTP redirects or re-validate after each redirect; Restrict URL schemes to http/https only; Network-layer controls are REQUIRED">
+  <meta name="ai:skip_this_unit_if" content="Need XSS prevention → software/security/xss-prevention/2026; Need CSRF protection → software/security/csrf-prevention/2026; Need general input validation → software/patterns/input-validation/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SSRF Prevention: Server-Side Request Forgery Defense Guide",
+    "headline": "SSRF Prevention: Server-Side Request Forgery Defense Guide",
+    "description": "Complete guide to preventing Server-Side Request Forgery (SSRF) attacks with URL validation, DNS pinning, cloud metadata protection, network-layer controls, and multi-language code examples for Python, Node.js, Go, and Java.",
+    "keywords": ["SSRF prevention", "server-side request forgery", "CWE-918", "URL validation", "DNS rebinding", "cloud metadata", "AWS IMDSv2", "OWASP Top 10"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Python requests, Node.js http/https, Go net/http, Java HttpURLConnection",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Server Side Request Forgery Prevention Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "What is SSRF (Server-side request forgery)?",
+        "url": "https://portswigger.net/web-security/ssrf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-918: Server-Side Request Forgery (SSRF)",
+        "url": "https://cwe.mitre.org/data/definitions/918.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A10:2021 -- Server-Side Request Forgery (SSRF)",
+        "url": "https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Defense in Depth Against SSRF with EC2 Instance Metadata Service",
+        "url": "https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Mitigating SSRF Vulnerabilities in Go",
+        "url": "https://snyk.io/blog/mitigating-ssrf-vulnerabilities-in-go/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Prevent SSRF Attacks in 2025",
+        "url": "https://ghostsecurity.com/blog/how-to-prevent-ssrf-attacks-in-2025"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SSRF Prevention: Server-Side Request Forgery Defense Guide",
+    "description": "Structured knowledge unit on preventing Server-Side Request Forgery (SSRF) attacks with URL validation, DNS pinning, cloud metadata protection, and multi-language code examples.",
+    "keywords": ["SSRF prevention", "server-side request forgery", "CWE-918", "URL validation", "DNS rebinding", "cloud metadata", "AWS IMDSv2"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "PortSwigger"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "AWS"},
+      {"@type": "Organization", "name": "Snyk"},
+      {"@type": "Organization", "name": "Ghost Security"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "SSRF Prevention" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I prevent Server-Side Request Forgery (SSRF)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SSRF prevention best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "server-side request forgery mitigation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "protect against SSRF attacks",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CWE-918 prevention",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "block SSRF in cloud environments",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SSRF Prevention: Server-Side Request Forgery Defense Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I prevent Server-Side Request Forgery (SSRF)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/ssrf-prevention/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Combine allowlist-based URL validation with DNS resolution checks and network-layer controls (firewall rules, VPC isolation) -- no single layer prevents all SSRF bypass techniques.</li>
+    <li><strong>Key tool/command</strong>: Validate parsed URL host against an allowlist, then verify the resolved IP is not in private/reserved ranges (<code>10.0.0.0/8</code>, <code>172.16.0.0/12</code>, <code>192.168.0.0/16</code>, <code>169.254.169.254</code>) before making the request.</li>
+    <li><strong>Watch out for</strong>: Blocklist-only approaches -- attackers bypass them via decimal/octal IP encoding, DNS rebinding, URL parser inconsistencies, and HTTP redirects to internal targets.</li>
+    <li><strong>Works with</strong>: All server-side languages and frameworks. Cloud-specific: enforce AWS IMDSv2, GCP metadata <code>Metadata-Flavor: Google</code> header, Azure IMDS token requirement.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER rely solely on blocklists to prevent SSRF -- blocklists are trivially bypassed via IP encoding, DNS rebinding, and URL parser inconsistencies</li>
+    <li>ALWAYS validate the resolved IP address after DNS resolution, not just the hostname -- DNS rebinding can change resolution between validation and fetch</li>
+    <li>NEVER allow user-controlled URLs to reach cloud metadata endpoints (169.254.169.254, fd00:ec2::254) -- credential theft leads to full cloud account compromise</li>
+    <li>Disable HTTP redirects in outbound requests or re-validate the target after each redirect -- open redirects bypass allowlist checks</li>
+    <li>NEVER trust user input for URL scheme -- restrict to http and https only to block file://, gopher://, dict:// protocol smuggling</li>
+    <li>Network-layer controls (firewall rules, VPC isolation) are REQUIRED in addition to application-layer validation -- defense in depth</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>SSRF Threat/Fix Checklist</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Vulnerability</th><th scope="col">Risk</th><th scope="col">Vulnerable Code</th><th scope="col">Secure Code</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Internal network access</td><td>Critical -- access admin panels, databases, internal APIs</td><td><code>requests.get(user_url)</code></td><td>Allowlist hosts + validate resolved IP is not private</td></tr>
+      <tr><td>2</td><td>Cloud metadata theft</td><td>Critical -- IAM credential exfiltration (Capital One breach)</td><td><code>fetch(url)</code> reaching <code>169.254.169.254</code></td><td>Block link-local ranges + enforce IMDSv2 (PUT + token)</td></tr>
+      <tr><td>3</td><td>DNS rebinding</td><td>High -- IP changes between validation and request</td><td>Validate hostname, then fetch (separate DNS lookups)</td><td>Pin DNS: resolve once, validate IP, fetch by IP</td></tr>
+      <tr><td>4</td><td>Protocol smuggling</td><td>High -- file://, gopher://, dict:// read local files or interact with services</td><td><code>urllib.urlopen(user_url)</code> with no scheme check</td><td>Allowlist only <code>http://</code> and <code>https://</code> schemes</td></tr>
+      <tr><td>5</td><td>Open redirect bypass</td><td>High -- redirect from allowed domain to internal target</td><td>Allow redirects to pre-validated domain</td><td>Disable redirects or re-validate after each hop</td></tr>
+      <tr><td>6</td><td>IP encoding bypass</td><td>Medium -- decimal, octal, hex IP representations bypass blocklists</td><td>Block <code>127.0.0.1</code> string only</td><td>Resolve to IP, then check against private ranges</td></tr>
+      <tr><td>7</td><td>URL parser confusion</td><td>Medium -- inconsistent parsing between validator and HTTP client</td><td>Validate URL with one parser, fetch with another</td><td>Use same URL parsing library for validation and request</td></tr>
+      <tr><td>8</td><td>IPv6 bypass</td><td>Medium -- <code>::1</code>, <code>[::]</code>, <code>::ffff:127.0.0.1</code> bypass IPv4 blocklists</td><td>Block only IPv4 loopback</td><td>Check both IPv4 and IPv6 private/reserved ranges</td></tr>
+      <tr><td>9</td><td>Blind SSRF</td><td>Medium -- no response but side-channel timing/errors leak info</td><td>Fetch user URL, discard response (side effects remain)</td><td>Same validation as full SSRF -- response visibility is irrelevant</td></tr>
+      <tr><td>10</td><td>TOCTOU race condition</td><td>Medium -- DNS changes between check and use</td><td>Validate, sleep/delay, then fetch</td><td>Resolve once, connect directly to resolved IP with Host header</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Does the application need to fetch user-supplied URLs?
+&#9500;&#9472;&#9472; Can you restrict to a fixed set of allowed hosts?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use strict allowlist of hostnames + validate resolved IP
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Does the app run in a cloud environment (AWS/GCP/Azure)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Block metadata IPs at network layer + enforce IMDSv2/equivalent + app-layer validation
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Does the URL come from user input or external data?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Parse URL, validate scheme (http/https only), resolve DNS,
+&#9474;   &#9474;          check resolved IP against private ranges, disable redirects
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Is the URL from a trusted internal configuration?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Still validate at network layer (defense in depth)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Deny outbound requests by default, allowlist specific destinations</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Validate URL scheme and parse safely</h3>
+  <p>Reject any URL that does not use <code>http</code> or <code>https</code>. Use a well-tested URL parser -- never construct URLs via string concatenation. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">from urllib.parse import urlparse
+
+def validate_url_scheme(url: str) -&gt; bool:
+    parsed = urlparse(url)
+    return parsed.scheme in ('http', 'https') and parsed.hostname is not None</code></pre>
+  <p><strong>Verify</strong>: Test with <code>file:///etc/passwd</code>, <code>gopher://internal:25/</code>, <code>dict://localhost:6379/</code> -- all should be rejected.</p>
+
+  <h3>2. Resolve DNS and validate the IP address</h3>
+  <p>After parsing the URL, resolve the hostname to an IP address and check that it is not in any private, loopback, or link-local range. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">import ipaddress, socket
+
+def is_safe_ip(ip_str: str) -&gt; bool:
+    ip = ipaddress.ip_address(ip_str)
+    return ip.is_global and not ip.is_reserved and not ip.is_loopback \
+           and not ip.is_link_local and not ip.is_private
+
+def resolve_and_validate(hostname: str) -&gt; str:
+    results = socket.getaddrinfo(hostname, None)
+    for family, _, _, _, sockaddr in results:
+        if is_safe_ip(sockaddr[0]):
+            return sockaddr[0]
+    raise ValueError(f"Hostname {hostname} resolves to blocked IP range")</code></pre>
+  <p><strong>Verify</strong>: Test with <code>localhost</code>, <code>169.254.169.254</code>, <code>10.0.0.1</code>, <code>[::1]</code> -- all should raise ValueError.</p>
+
+  <h3>3. Disable HTTP redirects and connect by resolved IP</h3>
+  <p>Make the request directly to the resolved IP with the original Host header. Disable automatic redirect following. [<a href="https://portswigger.net/web-security/ssrf">src2</a>]</p>
+  <pre><code class="language-python">import requests
+
+def safe_fetch(url: str, timeout: int = 10) -&gt; requests.Response:
+    parsed = urlparse(url)
+    if not validate_url_scheme(url):
+        raise ValueError(f"Blocked scheme: {parsed.scheme}")
+    safe_ip = resolve_and_validate(parsed.hostname)
+    return requests.get(url, timeout=timeout, allow_redirects=False)</code></pre>
+  <p><strong>Verify</strong>: Test with a URL that 302-redirects to <code>http://169.254.169.254/</code> -- should return the redirect without following.</p>
+
+  <h3>4. Enforce cloud metadata protections</h3>
+  <p>For AWS, enforce IMDSv2 which requires a PUT request to obtain a session token. Block the metadata IP at the network layer. [<a href="https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service/">src5</a>]</p>
+  <pre><code class="language-bash"># Require IMDSv2 on all EC2 instances
+aws ec2 modify-instance-metadata-options \
+  --instance-id i-1234567890abcdef0 \
+  --http-tokens required \
+  --http-put-response-hop-limit 1
+
+# Block metadata IP at instance level
+iptables -A OUTPUT -d 169.254.169.254 -j DROP</code></pre>
+  <p><strong>Verify</strong>: <code>curl -s http://169.254.169.254/latest/meta-data/</code> should fail or time out.</p>
+
+  <h3>5. Implement network-layer controls</h3>
+  <p>Apply firewall rules and network policies as defense in depth. [<a href="https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/">src4</a>]</p>
+  <pre><code class="language-yaml"># Kubernetes NetworkPolicy: deny egress to private ranges
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-internal-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: web-service
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 127.0.0.0/8]</code></pre>
+  <p><strong>Verify</strong>: From the pod, <code>curl http://169.254.169.254/</code> and <code>curl http://10.0.0.1/</code> should time out.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: URL Validation with DNS Pinning</h3>
+  <pre><code class="language-python"># Input:  User-supplied URL string
+# Output: HTTP response or ValueError if URL targets blocked IP
+
+import ipaddress, socket, requests
+from urllib.parse import urlparse
+
+BLOCKED_RANGES = [
+    ipaddress.ip_network('10.0.0.0/8'),
+    ipaddress.ip_network('172.16.0.0/12'),
+    ipaddress.ip_network('192.168.0.0/16'),
+    ipaddress.ip_network('127.0.0.0/8'),
+    ipaddress.ip_network('169.254.0.0/16'),
+    ipaddress.ip_network('::1/128'),
+    ipaddress.ip_network('fc00::/7'),
+    ipaddress.ip_network('fe80::/10'),
+]
+
+def is_ip_blocked(ip_str: str) -&gt; bool:
+    ip = ipaddress.ip_address(ip_str)
+    return any(ip in net for net in BLOCKED_RANGES)
+
+def ssrf_safe_fetch(url: str, timeout: int = 10):
+    parsed = urlparse(url)
+    if parsed.scheme not in ('http', 'https'):
+        raise ValueError(f"Blocked scheme: {parsed.scheme}")
+    for _, _, _, _, sockaddr in socket.getaddrinfo(parsed.hostname, parsed.port):
+        if is_ip_blocked(sockaddr[0]):
+            raise ValueError(f"Blocked IP: {sockaddr[0]}")
+    return requests.get(url, timeout=timeout, allow_redirects=False)</code></pre>
+
+  <h3>Node.js: SSRF-Safe HTTP Request</h3>
+  <pre><code class="language-javascript">// Input:  User-supplied URL string
+// Output: HTTP response or throws Error if URL targets blocked IP
+
+const { URL } = require('url');
+const dns = require('dns').promises;
+const net = require('net');
+
+function isPrivateIP(ip) {
+  const p = ip.split('.').map(Number);
+  if (p[0] === 10) return true;
+  if (p[0] === 172 &amp;&amp; p[1] &gt;= 16 &amp;&amp; p[1] &lt;= 31) return true;
+  if (p[0] === 192 &amp;&amp; p[1] === 168) return true;
+  if (p[0] === 127) return true;
+  if (p[0] === 169 &amp;&amp; p[1] === 254) return true;
+  if (p[0] === 0) return true;
+  if (net.isIPv6(ip)) return true;
+  return false;
+}
+
+async function ssrfSafeFetch(userUrl) {
+  const parsed = new URL(userUrl);
+  if (!['http:', 'https:'].includes(parsed.protocol))
+    throw new Error(`Blocked protocol: ${parsed.protocol}`);
+  const { address } = await dns.lookup(parsed.hostname);
+  if (isPrivateIP(address))
+    throw new Error(`Blocked IP: ${address}`);
+  return fetch(userUrl, { redirect: 'manual' });
+}</code></pre>
+
+  <h3>Go: URL Validation with IP Check</h3>
+  <pre><code class="language-go">// Input:  User-supplied URL string
+// Output: *http.Response or error if URL targets blocked IP
+
+package ssrf
+
+import (
+    "fmt"; "net"; "net/http"; "net/url"; "time"
+)
+
+var privateRanges = []string{
+    "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+    "127.0.0.0/8", "169.254.0.0/16", "::1/128",
+    "fc00::/7", "fe80::/10",
+}
+
+func isBlockedIP(ip net.IP) bool {
+    for _, cidr := range privateRanges {
+        _, network, _ := net.ParseCIDR(cidr)
+        if network.Contains(ip) { return true }
+    }
+    return false
+}
+
+func SafeFetch(rawURL string) (*http.Response, error) {
+    parsed, err := url.Parse(rawURL)
+    if err != nil { return nil, err }
+    if parsed.Scheme != "http" &amp;&amp; parsed.Scheme != "https" {
+        return nil, fmt.Errorf("blocked scheme: %s", parsed.Scheme)
+    }
+    ips, _ := net.LookupIP(parsed.Hostname())
+    for _, ip := range ips {
+        if isBlockedIP(ip) {
+            return nil, fmt.Errorf("blocked IP %s", ip)
+        }
+    }
+    client := &amp;http.Client{Timeout: 10 * time.Second,
+        CheckRedirect: func(req *http.Request, via []*http.Request) error {
+            return http.ErrUseLastResponse
+        }}
+    return client.Get(rawURL)
+}</code></pre>
+
+  <h3>Java/Spring: SSRF Protection with InetAddress</h3>
+  <pre><code class="language-java">// Input:  User-supplied URL string
+// Output: ResponseEntity or SecurityException if blocked
+
+import java.net.*;
+
+public class SsrfSafeFetcher {
+    public static boolean isBlockedIP(InetAddress addr) {
+        return addr.isLoopbackAddress()
+            || addr.isLinkLocalAddress()
+            || addr.isSiteLocalAddress()
+            || addr.isAnyLocalAddress()
+            || addr.isMulticastAddress();
+    }
+
+    public static void validateUrl(String userUrl) throws Exception {
+        URL parsed = new URL(userUrl);
+        if (!"http".equals(parsed.getProtocol())
+            &amp;&amp; !"https".equals(parsed.getProtocol()))
+            throw new SecurityException("Blocked scheme");
+        for (InetAddress addr : InetAddress.getAllByName(parsed.getHost()))
+            if (isBlockedIP(addr))
+                throw new SecurityException("Blocked IP: " + addr);
+    }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Blocklist-only approach</h3>
+  <pre><code class="language-python"># BAD -- blocklist filtering is trivially bypassed
+BLOCKED = ['127.0.0.1', 'localhost', '169.254.169.254']
+def fetch(url):
+    host = urlparse(url).hostname
+    if host in BLOCKED: raise ValueError("Blocked")
+    return requests.get(url)
+# Bypass: 0x7f000001, 017700000001, 2130706433, [::1]</code></pre>
+
+  <h3>Correct: Allowlist with DNS resolution check</h3>
+  <pre><code class="language-python"># GOOD -- resolve DNS first, then check IP against private ranges
+def fetch(url):
+    parsed = urlparse(url)
+    if parsed.scheme not in ('http', 'https'): raise ValueError("Blocked scheme")
+    for _, _, _, _, sa in socket.getaddrinfo(parsed.hostname, parsed.port):
+        if is_ip_blocked(sa[0]): raise ValueError(f"Blocked IP: {sa[0]}")
+    return requests.get(url, allow_redirects=False, timeout=10)</code></pre>
+
+  <h3>Wrong: Trusting redirects after initial validation</h3>
+  <pre><code class="language-python"># BAD -- allowed.com 302-redirects to http://169.254.169.254/
+def fetch(url):
+    validate_url(url)  # Passes -- allowed.com is on allowlist
+    return requests.get(url, allow_redirects=True)  # Follows redirect to metadata!</code></pre>
+
+  <h3>Correct: Disable redirects or re-validate each hop</h3>
+  <pre><code class="language-python"># GOOD -- disable redirects entirely
+def fetch(url):
+    validate_url(url)
+    resp = requests.get(url, allow_redirects=False, timeout=10)
+    if 300 &lt;= resp.status_code &lt; 400:
+        redirect_url = resp.headers.get('Location')
+        validate_url(redirect_url)  # Re-validate redirect target
+        return requests.get(redirect_url, allow_redirects=False, timeout=10)
+    return resp</code></pre>
+
+  <h3>Wrong: No DNS resolution check (vulnerable to DNS rebinding)</h3>
+  <pre><code class="language-python"># BAD -- hostname resolves to public IP during validation,
+# then attacker DNS rebinds to 169.254.169.254 on actual request
+def fetch(url):
+    host = urlparse(url).hostname
+    ip = socket.gethostbyname(host)  # 1st resolution: 1.2.3.4 (public)
+    if is_private(ip): raise ValueError("Blocked")
+    return requests.get(url)  # 2nd resolution: 169.254.169.254 (rebind!)</code></pre>
+
+  <h3>Correct: Pin DNS resolution and connect by IP</h3>
+  <pre><code class="language-python"># GOOD -- resolve once, validate, connect directly to resolved IP
+def fetch(url):
+    parsed = urlparse(url)
+    ip = socket.gethostbyname(parsed.hostname)
+    if is_ip_blocked(ip): raise ValueError(f"Blocked IP: {ip}")
+    safe_url = url.replace(parsed.hostname, ip)
+    return requests.get(safe_url, headers={'Host': parsed.hostname},
+                        allow_redirects=False, timeout=10)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>IPv4-mapped IPv6 bypass</strong>: Blocklists checking only IPv4 miss <code>::ffff:127.0.0.1</code> or <code>::ffff:169.254.169.254</code>. Fix: Normalize IPv6-mapped addresses to IPv4 before checking, or use <code>ipaddress.ip_address()</code> which handles both. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>URL parser inconsistencies</strong>: Different parsers interpret <code>http://evil.com#@allowed.com</code> differently. Fix: Use the same parsing library for validation and request execution. [<a href="https://portswigger.net/web-security/ssrf">src2</a>]</li>
+    <li><strong>Decimal/octal/hex IP encoding</strong>: <code>2130706433</code> (decimal for 127.0.0.1), <code>0177.0.0.1</code> (octal), <code>0x7f000001</code> (hex) all bypass string-based blocklists. Fix: Always resolve to IP, then check against numeric ranges. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>TOCTOU on DNS resolution</strong>: Time-of-check to time-of-use gap allows DNS rebinding. Fix: Resolve DNS once, validate the IP, then connect directly to the IP with a Host header. [<a href="https://ghostsecurity.com/blog/how-to-prevent-ssrf-attacks-in-2025">src7</a>]</li>
+    <li><strong>Cloud metadata on non-AWS</strong>: GCP metadata at <code>metadata.google.internal</code> (169.254.169.254), Azure IMDS at 169.254.169.254 both need blocking. Fix: Block the entire <code>169.254.0.0/16</code> range. [<a href="https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service/">src5</a>]</li>
+    <li><strong>Incomplete redirect handling</strong>: Following redirects silently can redirect from allowed domain to <code>http://169.254.169.254/</code>. Fix: Disable redirects (<code>allow_redirects=False</code>) or re-validate each destination. [<a href="https://portswigger.net/web-security/ssrf">src2</a>]</li>
+    <li><strong>Allowing file:// and gopher:// schemes</strong>: <code>file:///etc/passwd</code> reads local files; <code>gopher://</code> interacts with Redis, Memcached, SMTP. Fix: Strict allowlist of <code>http</code> and <code>https</code> only. [<a href="https://cwe.mitre.org/data/definitions/918.html">src3</a>]</li>
+    <li><strong>Trusting webhook URLs from third parties</strong>: Webhook registration endpoints often accept arbitrary URLs without validation. Fix: Apply SSRF-safe fetch to all outbound HTTP requests. [<a href="https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check if cloud metadata is accessible from instance
+curl -s -o /dev/null -w "%{http_code}" http://169.254.169.254/latest/meta-data/
+
+# Verify IMDSv2 enforcement on AWS EC2
+aws ec2 describe-instances --instance-ids i-1234567890abcdef0 \
+  --query 'Reservations[].Instances[].MetadataOptions'
+
+# Test SSRF protections with IP encoding bypasses
+curl -v http://your-app.com/fetch?url=http://2130706433/     # decimal 127.0.0.1
+curl -v http://your-app.com/fetch?url=http://0x7f000001/     # hex 127.0.0.1
+curl -v http://your-app.com/fetch?url=http://0177.0.0.1/     # octal 127.0.0.1
+
+# Find outbound HTTP requests in Python codebase
+grep -rn 'requests\.get\|requests\.post\|urlopen' --include="*.py" .
+
+# Find outbound HTTP requests in Node.js codebase
+grep -rn 'http\.get\|https\.get\|fetch(\|axios\.' --include="*.js" --include="*.ts" .
+
+# Check iptables rules blocking metadata IP
+iptables -L OUTPUT -n | grep 169.254</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Milestone</th><th scope="col">Date</th><th scope="col">Key Change</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OWASP Top 10 A10:2021</td><td>Sep 2021</td><td>SSRF added as own category</td></tr>
+      <tr><td>AWS IMDSv2</td><td>Nov 2019</td><td>Session-based metadata access (PUT + token)</td></tr>
+      <tr><td>AWS IMDSv2 default enforcement</td><td>2024</td><td>New EC2 instances default to IMDSv2-only</td></tr>
+      <tr><td>GCP metadata header requirement</td><td>2020</td><td>Metadata-Flavor: Google header required</td></tr>
+      <tr><td>Azure IMDS header requirement</td><td>2020</td><td>Metadata: true header required</td></tr>
+      <tr><td>CWE-918</td><td>Ongoing</td><td>MITRE weakness entry for SSRF classification</td></tr>
+      <tr><td>Capital One breach</td><td>Jul 2019</td><td>SSRF + IMDSv1 exploited for 100M+ customer records</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>App fetches user-supplied URLs (webhooks, image imports, link previews)</td><td>App only makes requests to hardcoded internal endpoints</td><td>Static configuration with no user input in URLs</td></tr>
+      <tr><td>Accepting webhook callback URLs from third parties</td><td>All outbound URLs are compile-time constants</td><td>No SSRF risk if no user influence on request targets</td></tr>
+      <tr><td>Running in cloud environments (AWS, GCP, Azure)</td><td>On-premise with no cloud metadata endpoints</td><td>Still apply private IP blocking but metadata protection less critical</td></tr>
+      <tr><td>PDF/image generation from user-supplied content with embedded URLs</td><td>Processing only structured data (JSON/XML) with no URL fields</td><td>Input validation for the structured format</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>DNS rebinding attacks can defeat application-layer validation if DNS resolution and HTTP request happen in separate system calls -- always pin the resolved IP and connect directly</li>
+    <li>IMDSv2 is not a complete fix: if the attacker can execute arbitrary HTTP requests (not just GET), they can still obtain metadata tokens via PUT</li>
+    <li>Network-layer controls (firewall rules, security groups) should be the primary defense; application-layer validation is secondary -- bugs in URL parsing are common</li>
+    <li>Some URL parsing libraries treat <code>http://127.0.0.1:80@evil.com/</code> differently -- authority component parsing varies between implementations</li>
+    <li>SSRF protections may break legitimate functionality (webhooks, RSS feeds, oEmbed) -- test thoroughly and provide an allowlist escape hatch for known-good domains</li>
+    <li>Server-side PDF/image generation libraries (wkhtmltopdf, Puppeteer, ImageMagick) are common SSRF vectors -- apply the same URL validation to their inputs</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/patterns/input-validation/2026" data-relationship="related_to">Input Validation Patterns</a>
+    <a href="/software/security/csrf-prevention/2026" data-relationship="often_confused_with">CSRF Prevention</a>
+    <a href="/software/security/sql-injection-prevention/2026" data-relationship="often_confused_with">SQL Injection Prevention</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

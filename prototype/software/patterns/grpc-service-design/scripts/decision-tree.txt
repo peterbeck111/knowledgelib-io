@@ -1,0 +1,32 @@
+START: What kind of API communication do you need?
+├── Browser clients calling your API directly?
+│   ├── YES → Use REST or GraphQL; gRPC requires gRPC-Web proxy
+│   └── NO ↓
+├── Internal microservice-to-microservice communication?
+│   ├── YES → gRPC is ideal. Continue below to pick streaming type.
+│   └── NO ↓
+├── Polyglot environment needing strict contracts?
+│   ├── YES → gRPC with shared proto repository
+│   └── NO → Consider REST with OpenAPI for simpler tooling
+│
+STREAMING TYPE SELECTION (for gRPC):
+├── Single request, single response (CRUD/query)?
+│   ├── YES → Unary RPC
+│   └── NO ↓
+├── Server pushes multiple results for one request?
+│   ├── YES → Server streaming (e.g., search results, event feed)
+│   └── NO ↓
+├── Client sends many items, server responds once?
+│   ├── YES → Client streaming (e.g., batch upload, telemetry)
+│   └── NO ↓
+└── Both sides send/receive independently?
+    └── YES → Bidirectional streaming (e.g., chat, live sync)
+
+LOAD BALANCING:
+├── Using a service mesh (Istio/Linkerd)?
+│   ├── YES → Mesh handles L7 gRPC load balancing automatically
+│   └── NO ↓
+├── Have a proxy (Envoy/nginx)?
+│   ├── YES → Configure proxy for HTTP/2 gRPC routing
+│   └── NO ↓
+└── DEFAULT → Use client-side round-robin via gRPC name resolver

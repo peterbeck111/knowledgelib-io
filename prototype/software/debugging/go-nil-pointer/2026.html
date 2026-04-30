@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Debug Nil Pointer Dereference in Go | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to debugging Go nil pointer dereference panics: 9 ranked causes, stack trace analysis, Delve debugger, interface nil gotcha, generic safe...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/go-nil-pointer/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug Nil Pointer Dereference in Go | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete Go nil pointer dereference debugging guide: 9 ranked causes, stack trace analysis, Delve debugger, interface nil gotcha, generic safe helpers, static analysis. 7 sources, verified 2026-02-20.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/go-nil-pointer/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-20">
+    <meta property="article:modified_time" content="2026-02-20">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug Nil Pointer Dereference in Go | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete Go nil pointer dereference debugging guide: 9 ranked causes, Delve, interface nil gotcha, generic helpers, static analysis.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.95">
+    <meta name="ai:last_verified" content="2026-02-20">
+    <meta name="ai:domain" content="software/debugging/go_nil_pointer">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug nil pointer dereference in Go?">
+    <meta name="ai:aliases"
+        content="Go nil pointer dereference; runtime error invalid memory address or nil pointer dereference; Go panic nil pointer; Go SIGSEGV nil dereference; golang nil pointer panic fix; Go interface nil check; nil map panic Go; uninitialized pointer Go">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/go-nil-pointer/2026.md">
+    <meta name="ai:token_estimate" content="3800">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="stable">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-20">
+    <meta name="ai:inputs_needed" content="panic_context">
+    <meta name="ai:constraints" content="Go-specific only — nil pointer dereference in Go is not the same as null pointer exceptions in Java/C# or segfaults in C/C++; Always read the stack trace first — Go prints the exact file:line and pointer value (0x0) on panic; Interface nil vs typed nil is a distinct trap — an interface holding a nil concrete value is NOT == nil; recover() catches the panic but does NOT fix the bug — program state is likely corrupt; Nil map writes panic but nil slice operations do not — always make() maps before writing">
+    <meta name="ai:skip_this_unit_if" content="C or C++ segmentation fault (SIGSEGV from C code) -> software/debugging/c-cpp-segfault/2026; Java NullPointerException (different language, different patterns) -> software/debugging/java-nullpointerexception/2026; Go goroutine leak (gradual resource exhaustion, not a crash) -> software/debugging/go-goroutine-leaks/2026; JavaScript 'Cannot read properties of undefined' -> software/debugging/js-cannot-read-property-undefined/2026">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Debug Nil Pointer Dereference in Go",
+    "headline": "How Do I Debug Nil Pointer Dereference in Go?",
+    "description": "Complete reference for debugging Go nil pointer dereference panics covering 9 ranked causes, stack trace analysis, Delve debugger usage, interface nil gotcha, generic safe dereference helpers, and static analysis tools.",
+    "keywords": ["Go", "nil pointer", "dereference", "panic", "debugging", "SIGSEGV", "Delve", "nilaway", "interface nil"],
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "Go 1.0+ (Delve: Go 1.21+, generics: Go 1.18+)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Go Language Specification — Run-time panics", "url": "https://go.dev/ref/spec#Run_time_panics" },
+      { "@type": "WebPage", "name": "YourBasic Go — nil pointer dereference", "url": "https://yourbasic.org/golang/gotcha-nil-pointer-dereference/" },
+      { "@type": "WebPage", "name": "CodeGenes — Go nil pointer debugging guide", "url": "https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/" },
+      { "@type": "WebPage", "name": "OneUptime — Avoid and Debug Nil Pointer Panics in Go", "url": "https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view" },
+      { "@type": "WebPage", "name": "Container Solutions — Runbook: nil pointer dereference", "url": "https://containersolutions.github.io/runbooks/posts/golang/invalid-memory-address-or-nil-pointer-dereference/" },
+      { "@type": "WebPage", "name": "DoltHub — Much Ado About Nil Things", "url": "https://www.dolthub.com/blog/2023-09-08-much-ado-about-nil-things/" },
+      { "@type": "WebPage", "name": "Sling Academy — Fixing Go nil pointer dereference", "url": "https://www.slingacademy.com/article/fixing-go-error-nil-pointer-dereference/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Debug Nil Pointer Dereference in Go",
+    "description": "Structured reference for debugging Go nil pointer dereference panics with ranked cause table, decision tree, code examples, and anti-patterns.",
+    "keywords": ["Go", "nil pointer", "debugging", "panic", "runtime error"],
+    "temporalCoverage": "2012/2026",
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "The Go Authors"},
+      {"@type": "Organization", "name": "YourBasic"},
+      {"@type": "Organization", "name": "DoltHub"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Debug Nil Pointer Dereference in Go" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug nil pointer dereference in Go?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A nil pointer dereference panic (runtime error: invalid memory address or nil pointer dereference) occurs when you access a field, method, or index through a pointer that is nil. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Go nil pointer dereference",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A nil pointer dereference panic (runtime error: invalid memory address or nil pointer dereference) occurs when you access a field, method, or index through a pointer that is nil. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "runtime error invalid memory address or nil pointer dereference",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A nil pointer dereference panic (runtime error: invalid memory address or nil pointer dereference) occurs when you access a field, method, or index through a pointer that is nil. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Go panic nil pointer",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A nil pointer dereference panic (runtime error: invalid memory address or nil pointer dereference) occurs when you access a field, method, or index through a pointer that is nil. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Go SIGSEGV nil dereference",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A nil pointer dereference panic (runtime error: invalid memory address or nil pointer dereference) occurs when you access a field, method, or index through a pointer that is nil. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "golang nil pointer panic fix",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A nil pointer dereference panic (runtime error: invalid memory address or nil pointer dereference) occurs when you access a field, method, or index through a pointer that is nil. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Debug Nil Pointer Dereference in Go?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug nil pointer dereference in Go?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/go-nil-pointer/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-20</span></span>
+        <span><strong>Freshness:</strong> stable</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: A nil pointer dereference panic (<code>runtime error: invalid memory address or nil pointer dereference</code>) occurs when you access a field, method, or index through a pointer that is <code>nil</code>. The fix is always one of: initialize the pointer, check for nil before access, or return an error instead of nil. Read the stack trace line number to find which variable is nil, then trace back to where it should have been assigned.</li>
+            <li><strong>Key tool/command</strong>: <code>dlv debug main.go</code> (Delve debugger) — set breakpoints, inspect pointer values, and step through code to find where a pointer becomes nil.</li>
+            <li><strong>Watch out for</strong>: An interface holding a nil concrete value is <em>not</em> <code>== nil</code>. This is the #1 subtle cause of nil panics that pass standard nil checks.</li>
+            <li><strong>Works with</strong>: All Go versions (Go 1.0+). Delve requires Go 1.21+. Static analyzers <code>go vet</code>, <code>staticcheck</code>, and <code>nilaway</code> work with Go 1.18+.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never ignore the return value of functions that return <code>(*T, error)</code> — the pointer may be nil when <code>err != nil</code>. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</li>
+            <li>Never dereference a pointer without confirming it is non-nil, especially after type assertions, map lookups, or function returns. [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</li>
+            <li>Never write to a nil map — this panics. A nil slice is safe to append to, but a nil map must be initialized with <code>make()</code> before writing. [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</li>
+            <li>Never assume an interface is nil just because the underlying value is nil — check the concrete type separately or return a plain <code>nil</code> from functions returning interfaces. [<a href="https://www.dolthub.com/blog/2023-09-08-much-ado-about-nil-things/">src6</a>]</li>
+            <li>Race conditions can set a pointer to nil between your nil check and dereference — use <code>sync.Mutex</code> or <code>sync.RWMutex</code> for shared pointer variables. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Uninitialized pointer variable</td>
+                        <td>~30%</td>
+                        <td><code>var p *MyStruct</code> then <code>p.Field</code></td>
+                        <td>Initialize: <code>p := &amp;MyStruct{}</code> or <code>p := new(MyStruct)</code> [<a href="https://yourbasic.org/golang/gotcha-nil-pointer-dereference/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Function returns nil pointer (error not checked)</td>
+                        <td>~25%</td>
+                        <td><code>result := getUser(id)</code> then <code>result.Name</code></td>
+                        <td>Check: <code>if result == nil { return err }</code> [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>, <a href="https://containersolutions.github.io/runbooks/posts/golang/invalid-memory-address-or-nil-pointer-dereference/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Nil map write</td>
+                        <td>~15%</td>
+                        <td><code>var m map[string]int</code> then <code>m["key"] = 1</code></td>
+                        <td>Initialize: <code>m := make(map[string]int)</code> [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Interface with nil concrete value</td>
+                        <td>~10%</td>
+                        <td><code>var p *MyError = nil; var err error = p; err != nil</code> is <code>true</code></td>
+                        <td>Return plain <code>nil</code>, not typed nil [<a href="https://www.dolthub.com/blog/2023-09-08-much-ado-about-nil-things/">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Uninitialized struct pointer field</td>
+                        <td>~8%</td>
+                        <td><code>type S struct { Inner *T }; s := S{}; s.Inner.Field</code></td>
+                        <td>Use constructor: <code>NewS()</code> that initializes all fields [<a href="https://www.slingacademy.com/article/fixing-go-error-nil-pointer-dereference/">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Nil method receiver</td>
+                        <td>~5%</td>
+                        <td>Calling method on nil pointer receiver</td>
+                        <td>Add nil guard: <code>if p == nil { return zero }</code> [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Nil function value</td>
+                        <td>~3%</td>
+                        <td><code>var fn func(); fn()</code></td>
+                        <td>Check: <code>if fn != nil { fn() }</code> [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Race condition sets pointer to nil</td>
+                        <td>~2%</td>
+                        <td>Intermittent panic under load</td>
+                        <td>Add <code>sync.Mutex</code> around pointer access [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Nil channel operations</td>
+                        <td>~2%</td>
+                        <td><code>var ch chan int; ch &lt;- 1</code> (blocks) or <code>close(ch)</code> (panics)</td>
+                        <td>Initialize: <code>ch := make(chan int)</code> [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — panic: runtime error: invalid memory address or nil pointer dereference
+├── Read stack trace → identify exact file:line
+│   └── Which variable is being dereferenced on that line?
+│
+├── Is it a struct pointer variable?
+│   ├── Declared with `var p *T`? → Initialize: `p = &amp;T{}` [src2]
+│   ├── Returned from a function? → Check error: `if err != nil` [src3, src5]
+│   └── Is it a struct field? → Initialize in constructor [src7]
+│
+├── Is it a map?
+│   ├── Writing to nil map? → `m = make(map[K]V)` [src1]
+│   └── Reading from nil map? → Safe (returns zero value), not the cause
+│
+├── Is it an interface?
+│   ├── Interface itself is nil? → Initialize or check before calling methods
+│   └── Non-nil but holds nil value? → Return plain `nil` [src6]
+│
+├── Is it a function value?
+│   └── `var fn func()`? → Check: `if fn != nil { fn() }` [src1]
+│
+├── Is it intermittent / under concurrent load?
+│   └── Race condition → sync.Mutex; `go run -race` [src3]
+│
+└── Still unclear?
+    ├── Add fmt.Printf before panic line [src3]
+    ├── Use Delve: `dlv debug`, breakpoint, inspect [src4]
+    └── Run `go vet ./...` and `staticcheck ./...` [src4]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Read the stack trace to find the panic location</h3>
+        <p>Every nil pointer panic prints a goroutine stack trace. The first line after <code>panic:</code> tells you the file and line number. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</p>
+        <pre><code>panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x1092a9d]
+
+goroutine 1 [running]:
+main.processUser(0x0)
+        /app/main.go:25 +0x1d      &lt;-- file main.go, line 25
+main.main()
+        /app/main.go:12 +0x45</code></pre>
+        <p><strong>Key</strong>: <code>addr=0x0</code> confirms nil dereference. <code>(0x0)</code> in function args shows the pointer was nil.</p>
+
+        <h3>2. Identify which pointer is nil on that line</h3>
+        <p>Look for field access (<code>p.Field</code>), method call (<code>p.Method()</code>), index operation, or dereference (<code>*p</code>). [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</p>
+        <pre><code class="language-go">func processUser(u *User) {
+    fmt.Println(u.Name)  // u is nil here
+}</code></pre>
+        <p><strong>Verify</strong>: Add <code>fmt.Printf("u = %v\n", u)</code> before the line — if it prints <code>&lt;nil&gt;</code>, you found it.</p>
+
+        <h3>3. Trace back to where the pointer should have been assigned</h3>
+        <p>Walk the call chain in the stack trace upward. Find where the nil pointer was created or returned. [<a href="https://containersolutions.github.io/runbooks/posts/golang/invalid-memory-address-or-nil-pointer-dereference/">src5</a>]</p>
+        <pre><code class="language-go">func main() {
+    user := findUser(999)  // Returns nil when not found
+    processUser(user)       // Passes nil to processUser
+}
+
+func findUser(id int) *User {
+    if id > 100 {
+        return nil  // ROOT CAUSE
+    }
+    return &amp;User{Name: "Alice"}
+}</code></pre>
+
+        <h3>4. Apply the appropriate fix pattern</h3>
+        <p>Choose based on the cause identified. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>, <a href="https://containersolutions.github.io/runbooks/posts/golang/invalid-memory-address-or-nil-pointer-dereference/">src5</a>]</p>
+        <pre><code class="language-go">// FIX A: Add nil check at call site
+user := findUser(999)
+if user == nil {
+    log.Println("user not found")
+    return
+}
+processUser(user)
+
+// FIX B: Return error instead of nil (preferred)
+func findUser(id int) (*User, error) {
+    if id > 100 {
+        return nil, fmt.Errorf("user %d not found", id)
+    }
+    return &amp;User{Name: "Alice"}, nil
+}</code></pre>
+        <p><strong>Verify</strong>: <code>go run main.go</code> — no panic. <code>go vet ./...</code> — no warnings.</p>
+
+        <h3>5. Run static analysis to find other nil dereference risks</h3>
+        <p>Catch similar issues across the codebase. [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</p>
+        <pre><code class="language-bash"># Built-in
+go vet ./...
+
+# Comprehensive linter
+staticcheck ./...
+
+# Uber's nil safety analyzer
+nilaway ./...
+
+# Race detector
+go test -race ./...</code></pre>
+
+        <h3>6. Use Delve for complex nil pointer debugging</h3>
+        <p>When the nil source is not obvious from code inspection. [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</p>
+        <pre><code class="language-bash"># Install and start
+go install github.com/go-delve/delve/cmd/dlv@latest
+dlv debug ./cmd/myapp
+
+# Set breakpoint at panic line
+(dlv) break main.go:25
+(dlv) continue
+(dlv) print u         # inspect the nil pointer
+(dlv) stack           # full call chain</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Go: nil-safe method receiver pattern</h3>
+        <pre><code class="language-go">// Input:  A struct with methods that may be called on nil receivers
+// Output: Methods that return zero values instead of panicking
+
+type Config struct {
+    Host string
+    Port int
+}
+
+func (c *Config) GetHost() string {
+    if c == nil {
+        return "localhost"
+    }
+    return c.Host
+}
+
+func (c *Config) GetPort() int {
+    if c == nil {
+        return 8080
+    }
+    return c.Port
+}
+
+func startServer(cfg *Config) {
+    host := cfg.GetHost() // Safe even if cfg is nil
+    port := cfg.GetPort()
+    fmt.Printf("Listening on %s:%d\n", host, port)
+}</code></pre>
+
+        <h3>Go: generic safe dereference helpers (Go 1.18+)</h3>
+        <pre><code class="language-go">// Input:  Any pointer that might be nil
+// Output: The value, or a safe default
+
+func Deref[T any](p *T) T {
+    if p == nil {
+        var zero T
+        return zero
+    }
+    return *p
+}
+
+func DerefOr[T any](p *T, fallback T) T {
+    if p == nil {
+        return fallback
+    }
+    return *p
+}
+
+// Usage:
+var name *string
+fmt.Println(Deref(name))              // "" (zero value)
+fmt.Println(DerefOr(name, "unknown")) // "unknown"</code></pre>
+
+        <h3>Go: constructor pattern preventing nil fields</h3>
+        <pre><code class="language-go">// Input:  Required dependencies for a service
+// Output: Fully initialized struct or error
+
+type UserService struct {
+    db     *sql.DB
+    cache  *redis.Client
+    logger *slog.Logger
+}
+
+func NewUserService(db *sql.DB, cache *redis.Client, logger *slog.Logger) (*UserService, error) {
+    if db == nil {
+        return nil, fmt.Errorf("NewUserService: db must not be nil")
+    }
+    if cache == nil {
+        return nil, fmt.Errorf("NewUserService: cache must not be nil")
+    }
+    if logger == nil {
+        logger = slog.Default()
+    }
+    return &amp;UserService{db: db, cache: cache, logger: logger}, nil
+}</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Ignoring error return and dereferencing pointer</h3>
+        <pre><code class="language-go">// BAD — if GetUser returns nil on error, this panics [src3]
+user, _ := svc.GetUser(ctx, id)
+fmt.Println(user.Name) // panic if user is nil</code></pre>
+
+        <h3>Correct: Always check error before using pointer</h3>
+        <pre><code class="language-go">// GOOD — handle error first [src3]
+user, err := svc.GetUser(ctx, id)
+if err != nil {
+    return fmt.Errorf("get user %d: %w", id, err)
+}
+fmt.Println(user.Name) // safe</code></pre>
+
+        <h3>Wrong: Returning typed nil pointer in interface return</h3>
+        <pre><code class="language-go">// BAD — caller's err != nil check will be TRUE even on success [src6]
+func validate(s string) error {
+    var err *ValidationError // typed nil
+    if s == "" {
+        err = &amp;ValidationError{Msg: "empty"}
+    }
+    return err // non-nil interface with nil *ValidationError!
+}
+// validate("hello") returns non-nil error!</code></pre>
+
+        <h3>Correct: Return plain nil for interface types</h3>
+        <pre><code class="language-go">// GOOD — return untyped nil explicitly [src6]
+func validate(s string) error {
+    if s == "" {
+        return &amp;ValidationError{Msg: "empty"}
+    }
+    return nil // plain nil — err == nil works correctly
+}</code></pre>
+
+        <h3>Wrong: Writing to uninitialized map</h3>
+        <pre><code class="language-go">// BAD — nil map write panics [src1]
+var counts map[string]int
+counts["hello"] = 1 // panic: assignment to entry in nil map</code></pre>
+
+        <h3>Correct: Initialize map before use</h3>
+        <pre><code class="language-go">// GOOD — always use make() for maps [src1]
+counts := make(map[string]int)
+counts["hello"] = 1 // safe</code></pre>
+
+        <h3>Wrong: No nil guard on method receiver</h3>
+        <pre><code class="language-go">// BAD — panics when Next is nil [src4]
+func (n *Node) String() string {
+    return fmt.Sprintf("%d -> %s", n.Value, n.Next.String())
+}</code></pre>
+
+        <h3>Correct: Nil guard on receiver</h3>
+        <pre><code class="language-go">// GOOD — handle nil receiver explicitly [src4]
+func (n *Node) String() string {
+    if n == nil {
+        return "&lt;nil&gt;"
+    }
+    return fmt.Sprintf("%d -> %s", n.Value, n.Next.String())
+}</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Interface nil confusion</strong>: An interface holding a nil pointer is NOT <code>== nil</code>. Always return plain <code>nil</code> from functions returning interfaces, not a typed nil variable. [<a href="https://www.dolthub.com/blog/2023-09-08-much-ado-about-nil-things/">src6</a>]</li>
+            <li><strong>Unchecked error returns</strong>: Functions returning <code>(*T, error)</code> can return nil for the pointer when err is non-nil. Always check error before using the pointer. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</li>
+            <li><strong>Nil map vs nil slice asymmetry</strong>: A nil slice is safe for <code>len()</code>, <code>range</code>, and <code>append()</code>. A nil map panics on write. Always <code>make()</code> maps before writing. [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</li>
+            <li><strong>Struct zero value has nil pointer fields</strong>: <code>MyStruct{}</code> initializes value fields to zero but pointer fields to nil. Use constructor functions. [<a href="https://www.slingacademy.com/article/fixing-go-error-nil-pointer-dereference/">src7</a>]</li>
+            <li><strong>Race conditions with shared pointers</strong>: A pointer checked for nil in one goroutine can be set to nil by another between check and dereference. Use <code>sync.Mutex</code>; run <code>go test -race</code>. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</li>
+            <li><strong>Type assertion on nil interface panics</strong>: <code>x.(ConcreteType)</code> panics if <code>x</code> is nil. Use the comma-ok form: <code>v, ok := x.(ConcreteType)</code>. [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Run with race detector
+go run -race main.go
+go test -race ./...
+
+# Static analysis
+go vet ./...
+staticcheck ./...
+nilaway ./...
+
+# Delve debugger
+go install github.com/go-delve/delve/cmd/dlv@latest
+dlv debug ./cmd/myapp
+# break main.go:25 → continue → print varName → stack
+
+# Build with full debug info
+go build -gcflags="all=-N -l" -o myapp ./cmd/myapp
+
+# Print all goroutine stacks (Linux/macOS)
+kill -SIGQUIT &lt;pid&gt;
+
+# Verbose test output
+go test -v -count=1 ./...</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Nil pointer panic behavior</td>
+                        <td>Go 1.0</td>
+                        <td>Fundamental language spec — stable [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>go vet</code> nil checks</td>
+                        <td>Go 1.1</td>
+                        <td>Basic nil dereference detection [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Race detector (<code>-race</code>)</td>
+                        <td>Go 1.1</td>
+                        <td>Detects concurrent nil pointer races [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Delve debugger</td>
+                        <td>Go 1.5+</td>
+                        <td>Full nil pointer inspection; latest requires Go 1.21+ [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Generic helpers (<code>Deref[T]</code>)</td>
+                        <td>Go 1.18</td>
+                        <td>Requires generics support [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>staticcheck</code> nil analysis</td>
+                        <td>Go 1.18+</td>
+                        <td>SA5011 checks for nil pointer dereference [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>nilaway</code> (Uber)</td>
+                        <td>Go 1.20+</td>
+                        <td>Cross-function nil flow analysis [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>GoLand interprocedural nil analysis</td>
+                        <td>2025</td>
+                        <td>IDE-based nil tracking across functions [<a href="https://oneuptime.com/blog/post/2026-01-23-go-nil-pointer-panics/view">src4</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Panic says "invalid memory address or nil pointer dereference"</td>
+                        <td>Panic says "index out of range"</td>
+                        <td>Bounds checking / <code>len()</code> guard</td>
+                    </tr>
+                    <tr>
+                        <td>Stack trace points to pointer field access</td>
+                        <td>Error is "assignment to entry in nil map"</td>
+                        <td><code>make(map[K]V)</code> initialization</td>
+                    </tr>
+                    <tr>
+                        <td>Intermittent crash under concurrent load</td>
+                        <td>Deterministic crash on startup</td>
+                        <td>Check initialization order</td>
+                    </tr>
+                    <tr>
+                        <td>Interface <code>!= nil</code> but method panics</td>
+                        <td>Interface is truly nil</td>
+                        <td>Standard nil check suffices</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>Recover does not fix nil dereference</strong>: While <code>defer</code>/<code>recover</code> can catch nil pointer panics, it masks the bug. The program state is likely corrupt. Only use recover at top-level request handlers as a safety net. [<a href="https://go.dev/ref/spec#Run_time_panics">src1</a>]</li>
+            <li><strong>Nil pointer panics are deterministic (unless concurrent)</strong>: If intermittent, suspect a race condition. Run <code>go test -race</code>. Non-concurrent nil panics always reproduce with the same inputs. [<a href="https://www.codegenes.net/blog/go-panic-runtime-error-invalid-memory-address-or-nil-pointer-dereference/">src3</a>]</li>
+            <li><strong>Different nil types are not equal in interfaces</strong>: <code>(*int)(nil)</code> and <code>(*string)(nil)</code> assigned to <code>interface{}</code> produce different non-nil values. [<a href="https://www.dolthub.com/blog/2023-09-08-much-ado-about-nil-things/">src6</a>]</li>
+            <li><strong><code>new()</code> returns a pointer to zeroed memory, not nil</strong>: <code>p := new(MyStruct)</code> gives <code>&amp;MyStruct{}</code>, not nil. But pointer fields within that struct are still nil. [<a href="https://yourbasic.org/golang/gotcha-nil-pointer-dereference/">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/go-race-conditions/2026" data-relationship="related_to">Go Race Condition Debugging</a>
+        <a href="/software/debugging/go-goroutine-leaks/2026" data-relationship="related_to">Go Goroutine Leak Detection</a>
+        <a href="/software/debugging/go-panic-recovery/2026" data-relationship="solves">Go Panic Recovery Patterns</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

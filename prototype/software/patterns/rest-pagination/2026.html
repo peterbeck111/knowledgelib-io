@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>REST API Pagination Patterns: Complete Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete reference for REST API pagination patterns: cursor, offset, keyset/seek, page number, and time-based.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/rest-pagination/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="REST API Pagination Patterns: Complete Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete reference for REST API pagination patterns: cursor, offset, keyset/seek, page number, and time-based. Decision tree, code examples in Node.js, Python/FastAPI, and Go, plus 4 anti-patterns. 8 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/rest-pagination/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="REST API Pagination Patterns: Complete Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete reference for REST API pagination patterns: cursor, offset, keyset/seek, page number, and time-based. Decision tree, code examples in Node.js, Python/FastAPI, and Go, plus 4 anti-patterns. 8 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/rest_pagination">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the REST API pagination patterns (cursor, offset, keyset)?">
+  <meta name="ai:aliases" content="REST API pagination; cursor pagination vs offset pagination; keyset pagination REST API; API pagination best practices; paginate REST endpoint; cursor-based pagination implementation; offset limit pagination; seek method pagination">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/rest-pagination/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="dataset_size, consistency_needs, client_type">
+  <meta name="ai:constraints" content="Always enforce max page size server-side; Offset degrades on tables >100K rows; Cursor tokens must be opaque; Keyset requires indexed unique sort key; Consistent pagination metadata required">
+  <meta name="ai:skip_this_unit_if" content="GraphQL relay-style connections needed -> software/patterns/graphql-schema-patterns/2026; Streaming/real-time data pagination -> Use event-driven streaming with backpressure">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "REST API Pagination Patterns: Complete Reference",
+    "headline": "REST API Pagination Patterns: Complete Reference",
+    "description": "Comprehensive reference for REST API pagination patterns including cursor-based, offset/limit, keyset/seek, page number, and time-based pagination. Covers decision tree, implementation in Node.js, Python/FastAPI, and Go, anti-patterns, and diagnostic commands.",
+    "keywords": ["REST API pagination", "cursor pagination", "offset pagination", "keyset pagination", "seek method", "API design patterns", "database pagination"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Any SQL database (PostgreSQL, MySQL, SQLite); Any REST framework (Express, FastAPI, Go net/http)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "How to Implement REST API Pagination: Offset, Cursor, Keyset",
+        "url": "https://www.stainless.com/sdk-api-best-practices/how-to-implement-rest-api-pagination-offset-cursor-keyset"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SQL Seek Method or Keyset Pagination",
+        "url": "https://vladmihalcea.com/sql-seek-keyset-pagination/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A Developer's Guide to API Pagination: Offset vs. Cursor-Based",
+        "url": "https://embedded.gusto.com/blog/api-pagination/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Understanding Cursor Pagination and Why It's So Fast",
+        "url": "https://www.milanjovanovic.tech/blog/understanding-cursor-pagination-and-why-its-so-fast-deep-dive"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pagination Best Practices in REST API Design",
+        "url": "https://www.speakeasy.com/api-design/pagination"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Comparing Cursor Pagination and Offset Pagination",
+        "url": "https://developer.zendesk.com/documentation/api-basics/pagination/comparing-cursor-pagination-and-offset-pagination/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A Practical Guide to Scalable Pagination: Offset, Keyset and Beyond",
+        "url": "https://blogs.halodoc.io/a-practical-guide-to-scalable-pagination/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Limit/Offset Pagination vs. Cursor Pagination in MySQL",
+        "url": "https://www.pingcap.com/article/limit-offset-pagination-vs-cursor-pagination-in-mysql/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "REST API Pagination Patterns: Complete Reference",
+    "description": "Structured reference for REST API pagination patterns including cursor, offset, keyset/seek, page number, and time-based approaches with implementation examples in Node.js, Python, and Go.",
+    "keywords": ["REST API pagination", "cursor pagination", "offset pagination", "keyset pagination", "API design"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Stainless"},
+      {"@type": "Organization", "name": "Vlad Mihalcea"},
+      {"@type": "Organization", "name": "Gusto Engineering"},
+      {"@type": "Organization", "name": "Speakeasy"},
+      {"@type": "Organization", "name": "Zendesk"},
+      {"@type": "Organization", "name": "Halodoc Engineering"},
+      {"@type": "Organization", "name": "PingCAP"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "REST API Pagination Patterns: Complete Reference" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the REST API pagination patterns (cursor, offset, keyset)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "REST API pagination",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cursor pagination vs offset pagination",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "keyset pagination REST API",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "API pagination best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "paginate REST endpoint",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>REST API Pagination Patterns: Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the REST API pagination patterns (cursor, offset, keyset)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/rest-pagination/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use cursor-based pagination for large or real-time datasets; use offset/limit for small, sortable datasets where page-jump is needed.</li>
+    <li><strong>Key tool/command</strong>: <code>WHERE (sort_key, id) &gt; (:last_sort_key, :last_id) ORDER BY sort_key, id LIMIT :page_size</code></li>
+    <li><strong>Watch out for</strong>: Offset pagination on large tables silently degrades -- at OFFSET 100,000 the database scans and discards 100K rows per request.</li>
+    <li><strong>Works with</strong>: Any REST framework (Express, FastAPI, Go net/http, Spring Boot) and any SQL database (PostgreSQL, MySQL, SQL Server, SQLite).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Always enforce a maximum page size server-side (e.g., max 100) -- never trust client-supplied limits</li>
+    <li>Offset pagination performance degrades linearly with offset size -- avoid on tables exceeding 100K rows</li>
+    <li>Cursor tokens must be opaque and tamper-resistant -- never expose raw database IDs as cursors</li>
+    <li>Keyset/seek pagination requires a stable, unique sort key (composite if needed) backed by a database index</li>
+    <li>All pagination responses must include consistent metadata (<code>has_more</code>, cursors, <code>total</code> if cached) so clients can navigate reliably</li>
+    <li>Never paginate without an explicit <code>ORDER BY</code> clause -- results will be non-deterministic across requests</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Performance at Scale</th><th scope="col">Consistency</th><th scope="col">Jump to Page</th><th scope="col">Implementation</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Offset/Limit</strong></td><td>Poor (O(offset+limit) scan)</td><td>Weak (page drift on inserts)</td><td>Yes</td><td><code>?offset=20&amp;limit=10</code></td><td>Small datasets (&lt;10K), admin UIs</td></tr>
+      <tr><td><strong>Cursor (opaque token)</strong></td><td>Excellent (O(limit) constant)</td><td>Strong (stable position)</td><td>No</td><td><code>?cursor=eyJpZCI6MTB9&amp;limit=10</code></td><td>Large datasets, real-time feeds, mobile infinite scroll</td></tr>
+      <tr><td><strong>Keyset/Seek</strong></td><td>Excellent (O(limit) constant)</td><td>Strong (stable position)</td><td>No</td><td><code>?after_id=42&amp;after_date=2026-01-15&amp;limit=10</code></td><td>Large sorted datasets, time-series, logs</td></tr>
+      <tr><td><strong>Page Number</strong></td><td>Poor (offset in disguise)</td><td>Weak (same as offset)</td><td>Yes</td><td><code>?page=3&amp;per_page=25</code></td><td>Simple UIs, small static datasets</td></tr>
+      <tr><td><strong>Time-Based</strong></td><td>Good (index on timestamp)</td><td>Moderate (clock skew risk)</td><td>No</td><td><code>?since=2026-01-01T00:00:00Z&amp;limit=50</code></td><td>Event streams, audit logs, sync APIs</td></tr>
+      <tr><td><strong>Hybrid (cursor + page count)</strong></td><td>Good (cursor + cached count)</td><td>Strong for data, eventual for count</td><td>Limited (first/last only)</td><td><code>?cursor=abc&amp;limit=10</code> + <code>total_count</code> header</td><td>APIs needing both efficiency and total counts</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Dataset size &gt; 1M rows?
+|   |-- YES --&gt; Use Cursor or Keyset pagination
+|   |   |-- Need to expose sort values in URL (transparent)?
+|   |   |   |-- YES --&gt; Keyset/Seek (after_id + after_sort_key)
+|   |   |   +-- NO --&gt; Cursor with opaque base64 token
+|   +-- NO |
+|-- Dataset size 10K-1M rows?
+|   |-- YES --&gt; Do clients need page-jump (go to page N)?
+|   |   |-- YES --&gt; Offset/Limit with cached total count
+|   |   +-- NO --&gt; Cursor pagination (simpler, more consistent)
+|   +-- NO |
+|-- Dataset &lt; 10K rows?
+|   |-- YES --&gt; Do clients need page numbers in UI?
+|   |   |-- YES --&gt; Page Number (?page=N&amp;per_page=M)
+|   |   +-- NO --&gt; Offset/Limit (simple, good enough)
++-- Is data time-series or event log?
+    |-- YES --&gt; Time-Based (?since=timestamp&amp;limit=N)
+    +-- NO --&gt; DEFAULT: Cursor pagination (safest general choice)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Choose your pagination pattern</h3>
+  <p>Evaluate your dataset size, consistency needs, and client requirements using the decision tree above. For most modern APIs serving mobile or SPA clients, cursor-based pagination is the recommended default. [<a href="https://www.stainless.com/sdk-api-best-practices/how-to-implement-rest-api-pagination-offset-cursor-keyset">src1</a>]</p>
+  <p><strong>Verify</strong>: Answer these three questions: (1) How many rows? (2) Do clients need page-jump? (3) Is data frequently inserted/deleted?</p>
+
+  <h3>2. Design the response envelope</h3>
+  <p>Every paginated endpoint should return a consistent response shape. Include the data array, pagination metadata, and navigation links. [<a href="https://www.speakeasy.com/api-design/pagination">src5</a>]</p>
+  <pre><code class="language-json">{
+  "data": [...],
+  "pagination": {
+    "has_more": true,
+    "next_cursor": "eyJpZCI6NDIsImNyZWF0ZWRfYXQiOiIyMDI2LTAxLTE1VDEwOjMwOjAwWiJ9",
+    "limit": 25
+  },
+  "links": {
+    "next": "/api/v1/items?cursor=eyJpZCI6NDJ9&amp;limit=25"
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Ensure <code>has_more</code> is <code>false</code> on the last page and cursors are <code>null</code> when no more pages exist.</p>
+
+  <h3>3. Create the database index</h3>
+  <p>Keyset and cursor pagination only perform well if the sort columns are indexed. Create a composite index matching your ORDER BY clause. [<a href="https://vladmihalcea.com/sql-seek-keyset-pagination/">src2</a>]</p>
+  <pre><code class="language-sql">-- For pagination sorted by created_at DESC, id DESC
+CREATE INDEX idx_items_pagination ON items (created_at DESC, id DESC);</code></pre>
+  <p><strong>Verify</strong>: <code>EXPLAIN ANALYZE</code> should show Index Scan, not Seq Scan.</p>
+
+  <h3>4. Implement cursor encoding/decoding</h3>
+  <p>Encode the last row's sort values into an opaque, base64-encoded cursor token. Decode on the server to build the WHERE clause. [<a href="https://www.milanjovanovic.tech/blog/understanding-cursor-pagination-and-why-its-so-fast-deep-dive">src4</a>]</p>
+  <pre><code class="language-javascript">function encodeCursor(row) {
+  return Buffer.from(JSON.stringify({
+    id: row.id, created_at: row.created_at
+  })).toString('base64url');
+}
+function decodeCursor(cursor) {
+  return JSON.parse(Buffer.from(cursor, 'base64url').toString());
+}</code></pre>
+  <p><strong>Verify</strong>: <code>decodeCursor(encodeCursor({ id: 42, created_at: '2026-01-15' }))</code> returns original values.</p>
+
+  <h3>5. Build the query with keyset filtering</h3>
+  <p>Use row-value comparison or compound WHERE clauses to seek to the correct position. [<a href="https://vladmihalcea.com/sql-seek-keyset-pagination/">src2</a>]</p>
+  <pre><code class="language-sql">-- PostgreSQL: row-value comparison
+SELECT id, title, created_at FROM items
+WHERE (created_at, id) &lt; (:last_created_at, :last_id)
+ORDER BY created_at DESC, id DESC
+LIMIT :page_size;</code></pre>
+  <p><strong>Verify</strong>: Run with <code>EXPLAIN</code> -- the plan should use the composite index from Step 3.</p>
+
+  <h3>6. Add server-side limit enforcement</h3>
+  <p>Never trust client-provided limits. Clamp to a maximum and provide a sensible default. [<a href="https://www.speakeasy.com/api-design/pagination">src5</a>]</p>
+  <pre><code class="language-javascript">const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 25;
+function sanitizeLimit(requested) {
+  const limit = parseInt(requested, 10) || DEFAULT_LIMIT;
+  return Math.min(Math.max(1, limit), MAX_LIMIT);
+}</code></pre>
+  <p><strong>Verify</strong>: <code>sanitizeLimit(500)</code> returns <code>100</code>, <code>sanitizeLimit(undefined)</code> returns <code>25</code>.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js/Express: All Three Pagination Styles</h3>
+  <pre><code class="language-javascript">// Input:  GET /api/items?mode=cursor&amp;cursor=abc&amp;limit=25
+// Output: { data: [...], pagination: { has_more, next_cursor, limit } }
+
+const express = require('express'); // ^4.18
+const MAX_LIMIT = 100, DEFAULT_LIMIT = 25;
+
+app.get('/api/items', async (req, res) =&gt; {
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit) || DEFAULT_LIMIT), MAX_LIMIT);
+  const mode = req.query.mode || 'cursor';
+  let query, params;
+
+  if (mode === 'offset') {
+    const offset = Math.max(0, parseInt(req.query.offset) || 0);
+    query = 'SELECT * FROM items ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2';
+    params = [limit + 1, offset];
+  } else if (mode === 'keyset') {
+    const afterId = parseInt(req.query.after_id);
+    const afterDate = req.query.after_date;
+    if (afterId &amp;&amp; afterDate) {
+      query = `SELECT * FROM items WHERE (created_at, id) &lt; ($1, $2)
+               ORDER BY created_at DESC, id DESC LIMIT $3`;
+      params = [afterDate, afterId, limit + 1];
+    } else {
+      query = 'SELECT * FROM items ORDER BY created_at DESC, id DESC LIMIT $1';
+      params = [limit + 1];
+    }
+  } else {
+    // Cursor -- opaque base64 token (recommended default)
+    let where = '';
+    params = [limit + 1];
+    if (req.query.cursor) {
+      const { id, created_at } = JSON.parse(
+        Buffer.from(req.query.cursor, 'base64url').toString()
+      );
+      where = 'WHERE (created_at, id) &lt; ($2, $3)';
+      params.push(created_at, id);
+    }
+    query = `SELECT * FROM items ${where} ORDER BY created_at DESC, id DESC LIMIT $1`;
+  }
+
+  const rows = await db.query(query, params);
+  const hasMore = rows.length &gt; limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  res.json({ data, pagination: { has_more: hasMore, limit } });
+});</code></pre>
+
+  <h3>Python/FastAPI: Cursor Pagination with SQLAlchemy</h3>
+  <pre><code class="language-python"># Input:  GET /items?cursor=eyJpZCI6NDJ9&amp;limit=25
+# Output: { "data": [...], "pagination": { "has_more": true, "next_cursor": "...", "limit": 25 } }
+
+import base64, json
+from fastapi import FastAPI, Query  # fastapi&gt;=0.109
+from sqlalchemy import select, and_  # sqlalchemy&gt;=2.0
+
+MAX_LIMIT = 100; DEFAULT_LIMIT = 25
+
+def encode_cursor(row) -&gt; str:
+    payload = json.dumps({"id": row.id, "created_at": row.created_at.isoformat()})
+    return base64.urlsafe_b64encode(payload.encode()).decode()
+
+def decode_cursor(cursor: str) -&gt; dict:
+    return json.loads(base64.urlsafe_b64decode(cursor.encode()).decode())
+
+@app.get("/items")
+async def list_items(cursor: str | None = Query(None), limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT)):
+    stmt = select(Item).order_by(Item.created_at.desc(), Item.id.desc())
+    if cursor:
+        decoded = decode_cursor(cursor)
+        stmt = stmt.where(and_(
+            Item.created_at &lt;= decoded["created_at"],
+            ~and_(Item.created_at == decoded["created_at"], Item.id &gt;= decoded["id"])
+        ))
+    stmt = stmt.limit(limit + 1)
+    rows = (await db.execute(stmt)).scalars().all()
+    has_more = len(rows) &gt; limit
+    data = rows[:limit] if has_more else rows
+    next_cursor = encode_cursor(data[-1]) if has_more and data else None
+    return {"data": [i.to_dict() for i in data], "pagination": {"has_more": has_more, "next_cursor": next_cursor, "limit": limit}}</code></pre>
+
+  <h3>Go: Keyset Pagination with database/sql</h3>
+  <pre><code class="language-go">// Input:  GET /items?after_id=42&amp;after_ts=2026-01-15T10:30:00Z&amp;limit=25
+// Output: JSON { "data": [...], "pagination": { "has_more": true, ... } }
+
+func listItems(db *sql.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+        if limit &lt;= 0 { limit = 25 }
+        if limit &gt; 100 { limit = 100 }
+        afterID, _ := strconv.Atoi(r.URL.Query().Get("after_id"))
+        afterTS := r.URL.Query().Get("after_ts")
+        var rows *sql.Rows; var err error
+        if afterID &gt; 0 &amp;&amp; afterTS != "" {
+            ts, _ := time.Parse(time.RFC3339, afterTS)
+            rows, err = db.Query(
+                `SELECT id, title, created_at FROM items
+                 WHERE (created_at, id) &lt; ($1, $2)
+                 ORDER BY created_at DESC, id DESC LIMIT $3`, ts, afterID, limit+1)
+        } else {
+            rows, err = db.Query(
+                `SELECT id, title, created_at FROM items
+                 ORDER BY created_at DESC, id DESC LIMIT $1`, limit+1)
+        }
+        if err != nil { http.Error(w, err.Error(), 500); return }
+        defer rows.Close()
+        // ... scan rows, detect has_more, return JSON
+    }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using OFFSET on large tables</h3>
+  <pre><code class="language-sql">-- BAD -- database scans and discards 1M rows, returns 25
+SELECT * FROM items ORDER BY created_at DESC LIMIT 25 OFFSET 1000000;
+-- At offset 1M: ~2-5 seconds (vs. 2ms for first page)</code></pre>
+
+  <h3>Correct: Use keyset/seek to jump directly</h3>
+  <pre><code class="language-sql">-- GOOD -- database seeks directly via index, reads only 25 rows
+SELECT * FROM items
+WHERE (created_at, id) &lt; ('2026-01-15T10:30:00Z', 42)
+ORDER BY created_at DESC, id DESC LIMIT 25;
+-- Constant ~2ms regardless of position</code></pre>
+
+  <h3>Wrong: Exposing raw database IDs as cursors</h3>
+  <pre><code class="language-javascript">// BAD -- leaks internal IDs, allows enumeration
+app.get('/api/items', (req, res) =&gt; {
+  const cursor = parseInt(req.query.cursor);
+  db.query('SELECT * FROM items WHERE id &lt; $1 ORDER BY id DESC LIMIT 25', [cursor]);
+});</code></pre>
+
+  <h3>Correct: Use opaque, encoded cursor tokens</h3>
+  <pre><code class="language-javascript">// GOOD -- opaque token hides internals
+app.get('/api/items', (req, res) =&gt; {
+  const { id, created_at } = JSON.parse(Buffer.from(req.query.cursor, 'base64url').toString());
+  db.query('SELECT * FROM items WHERE (created_at, id) &lt; ($1, $2) ORDER BY created_at DESC, id DESC LIMIT 25',
+    [created_at, id]);
+});</code></pre>
+
+  <h3>Wrong: No server-side limit enforcement</h3>
+  <pre><code class="language-javascript">// BAD -- client can request limit=999999
+app.get('/api/items', (req, res) =&gt; {
+  const limit = parseInt(req.query.limit); // unbounded!
+  db.query('SELECT * FROM items LIMIT $1', [limit]);
+});</code></pre>
+
+  <h3>Correct: Clamp limit to a safe maximum</h3>
+  <pre><code class="language-javascript">// GOOD -- enforce bounds server-side
+const MAX_LIMIT = 100;
+app.get('/api/items', (req, res) =&gt; {
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit) || 25), MAX_LIMIT);
+  db.query('SELECT * FROM items ORDER BY id DESC LIMIT $1', [limit]);
+});</code></pre>
+
+  <h3>Wrong: Computing COUNT(*) on every request</h3>
+  <pre><code class="language-javascript">// BAD -- full table scan on every request for total_count
+const [{ count }] = await db.query('SELECT COUNT(*) FROM items'); // slow on large tables</code></pre>
+
+  <h3>Correct: Cache total count or use has_more flag</h3>
+  <pre><code class="language-javascript">// GOOD -- fetch limit+1 rows to detect has_more; cache count separately
+const rows = await db.query('SELECT * FROM items ORDER BY id DESC LIMIT $1', [limit + 1]);
+const hasMore = rows.length &gt; limit;
+const total = await cache.getOrSet('items_count', () =&gt; db.query('SELECT COUNT(*)...'), 60);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Page drift with offset pagination</strong>: Rows inserted/deleted while paginating cause duplicates or missed records. Fix: Switch to cursor/keyset pagination for datasets with concurrent writes. [<a href="https://embedded.gusto.com/blog/api-pagination/">src3</a>]</li>
+    <li><strong>Missing ORDER BY clause</strong>: Without explicit ordering, results are non-deterministic across requests. Fix: Always add <code>ORDER BY</code> on indexed column(s). [<a href="https://www.speakeasy.com/api-design/pagination">src5</a>]</li>
+    <li><strong>No composite index for keyset</strong>: Using keyset WHERE clause without a matching composite index forces sequential scan. Fix: <code>CREATE INDEX idx ON items (created_at DESC, id DESC)</code>. [<a href="https://vladmihalcea.com/sql-seek-keyset-pagination/">src2</a>]</li>
+    <li><strong>Cursor invalidation on schema changes</strong>: Renaming columns used in cursor encoding breaks all outstanding cursors. Fix: Version your cursor format and support decoding old versions. [<a href="https://www.stainless.com/sdk-api-best-practices/how-to-implement-rest-api-pagination-offset-cursor-keyset">src1</a>]</li>
+    <li><strong>Off-by-one in has_more detection</strong>: Fetching exactly <code>limit</code> rows means you cannot tell if more exist. Fix: Always fetch <code>limit + 1</code> rows, return only <code>limit</code>. [<a href="https://www.milanjovanovic.tech/blog/understanding-cursor-pagination-and-why-its-so-fast-deep-dive">src4</a>]</li>
+    <li><strong>Inconsistent response shapes</strong>: Different endpoints using different envelope structures. Fix: Standardize a single pagination envelope across your entire API. [<a href="https://www.speakeasy.com/api-design/pagination">src5</a>]</li>
+    <li><strong>Not handling empty cursors</strong>: Clients send <code>cursor=</code> (empty string) which is truthy in JavaScript. Fix: Check <code>if (cursor &amp;&amp; cursor.length &gt; 0)</code>. [<a href="https://blogs.halodoc.io/a-practical-guide-to-scalable-pagination/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check if pagination query uses an index (PostgreSQL)
+EXPLAIN ANALYZE SELECT * FROM items
+WHERE (created_at, id) &lt; ('2026-01-15', 42)
+ORDER BY created_at DESC, id DESC LIMIT 25;
+
+# Compare offset vs keyset performance
+EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM items ORDER BY created_at DESC LIMIT 25 OFFSET 100000;
+EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM items
+WHERE (created_at, id) &lt; ('2025-06-01', 500000)
+ORDER BY created_at DESC, id DESC LIMIT 25;
+
+# Check index existence for pagination columns
+SELECT indexname, indexdef FROM pg_indexes
+WHERE tablename = 'items' AND indexdef LIKE '%created_at%';
+
+# Monitor slow paginated queries
+SELECT query, calls, mean_exec_time, rows
+FROM pg_stat_statements
+WHERE query LIKE '%OFFSET%' AND mean_exec_time &gt; 100
+ORDER BY mean_exec_time DESC LIMIT 10;</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dataset &gt; 100K rows and growing</td><td>Dataset is small and static (&lt;1K rows)</td><td>Return all results in a single response</td></tr>
+      <tr><td>Clients consume data sequentially (infinite scroll)</td><td>Clients need random page access (go to page 47)</td><td>Offset/Limit with cached total count</td></tr>
+      <tr><td>Data changes frequently (real-time feeds, logs)</td><td>Data is immutable with known total</td><td>Simple offset pagination</td></tr>
+      <tr><td>Building a public API for third parties</td><td>Internal admin dashboard with small datasets</td><td>Page number pagination for simplicity</td></tr>
+      <tr><td>Need consistent results during concurrent writes</td><td>GraphQL API</td><td>Relay cursor connections specification</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Cursor pagination eliminates page-jump capability -- if your UI requires "go to page N", you need offset/limit or a hybrid approach.</li>
+    <li>Base64 cursor tokens are not encrypted -- they are trivially decodable. Do not include sensitive data. Consider HMAC-signing for tamper resistance.</li>
+    <li>PostgreSQL row-value comparisons (<code>WHERE (a, b) &lt; (x, y)</code>) are well-optimized, but MySQL handles them poorly before version 8.0.33.</li>
+    <li>Time-based pagination (<code>?since=timestamp</code>) is vulnerable to clock skew in distributed systems. Always use server-generated timestamps.</li>
+    <li>When migrating from offset to cursor, maintain backward compatibility by supporting both parameters during a deprecation period.</li>
+    <li>The <code>LIMIT + 1</code> pattern for has_more detection means you always over-fetch by one row -- negligible for typical page sizes but be aware in query plans.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/api-rate-limiting/2026" data-relationship="related_to">API Rate Limiting</a>
+    <a href="/software/patterns/api-versioning/2026" data-relationship="related_to">API Versioning</a>
+    <a href="/software/patterns/graphql-schema-patterns/2026" data-relationship="alternative_to">GraphQL Schema Patterns</a>
+    <a href="/software/patterns/webhook-implementation/2026" data-relationship="often_confused_with">Webhook Implementation</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

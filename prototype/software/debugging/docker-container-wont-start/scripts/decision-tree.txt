@@ -1,0 +1,35 @@
+START — Container won't start or exits immediately
+├── What is the exit code? (docker inspect --format='{{.State.ExitCode}}')
+│   ├── Exit 0 → Container finished successfully
+│   │   └── Expected for one-shot tasks (migrations, scripts)
+│   │   └── If unexpected → CMD/ENTRYPOINT terminates immediately → keep process in foreground [src1]
+│   ├── Exit 1 → Application error
+│   │   ├── Check docker logs → find the error message [src2]
+│   │   ├── Missing env var? → Add -e VAR=value or check .env file
+│   │   ├── Missing file/config? → Check COPY/ADD in Dockerfile [src1]
+│   │   └── Dependency error? → Check package installation in build stage
+│   ├── Exit 126 → Permission denied
+│   │   └── chmod +x on entrypoint script; check USER directive [src5]
+│   ├── Exit 127 → Command not found
+│   │   ├── Typo in CMD/ENTRYPOINT? → Fix Dockerfile [src7]
+│   │   ├── Binary not installed? → Add to RUN apt-get/apk install [src7]
+│   │   ├── Wrong base image? → alpine vs debian (musl vs glibc) [src7]
+│   │   └── WORKDIR wrong? → Binary not in PATH [src7]
+│   ├── Exit 137 → OOM or killed
+│   │   ├── Check OOMKilled: docker inspect --format='{{.State.OOMKilled}}' [src8]
+│   │   ├── OOMKilled=true → Increase --memory or optimize app [src8]
+│   │   └── OOMKilled=false → Manual docker kill or orchestrator killed it [src8]
+│   ├── Exit 139 → Segfault
+│   │   ├── Architecture mismatch? → docker inspect --format='{{.Architecture}}' [src5]
+│   │   ├── musl vs glibc? → Use alpine-compatible binaries [src5]
+│   │   └── Corrupted binary? → Rebuild image from scratch [src5]
+│   └── No exit code / container keeps restarting
+│       └── Check restart policy: docker inspect --format='{{.HostConfig.RestartPolicy}}' [src4]
+├── Are there any logs?
+│   ├── YES → Read them: docker logs --tail 50 <container> [src2]
+│   └── NO → App crashes before producing output
+│       ├── Run interactively: docker run -it --entrypoint /bin/sh <image> [src6]
+│       └── Try running the command manually inside the container
+└── Is it a multi-stage build issue?
+    ├── Files missing from final stage → Check COPY --from= directives [src1]
+    └── Dependencies missing → Install runtime deps in final stage

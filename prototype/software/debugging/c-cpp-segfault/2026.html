@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Debug Segmentation Faults in C and C++ | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to debugging segmentation faults (SIGSEGV) in C/C++: GDB backtrace, Valgrind Memcheck, AddressSanitizer, core dump analysis, 9 ranked...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/c-cpp-segfault/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug Segmentation Faults in C and C++ | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete segfault debugging guide: GDB, Valgrind, AddressSanitizer, core dump analysis, 9 ranked causes, decision tree, code examples. 7 sources, verified 2026-02-20.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/c-cpp-segfault/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-20">
+    <meta property="article:modified_time" content="2026-02-20">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug Segmentation Faults in C and C++ | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete segfault debugging guide: GDB, Valgrind, AddressSanitizer, core dump analysis, 9 ranked causes with fixes.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.95">
+    <meta name="ai:last_verified" content="2026-02-20">
+    <meta name="ai:domain" content="software/debugging/c_cpp_segfault">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug segmentation faults in C and C++?">
+    <meta name="ai:aliases"
+        content="segmentation fault C; segfault C++; SIGSEGV debugging; core dumped segfault; null pointer dereference C; GDB segfault backtrace; Valgrind segfault; AddressSanitizer segfault; segmentation fault core dump analysis; C++ memory access violation">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/c-cpp-segfault/2026.md">
+    <meta name="ai:token_estimate" content="4200">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="stable">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-20">
+    <meta name="ai:inputs_needed" content="language,platform,build_system">
+    <meta name="ai:constraints" content="C and C++ only — GDB/Valgrind/ASan workflows do not apply to Rust, Go, Java, Python, or other managed/memory-safe languages; Debug symbols required (-g flag) — without them GDB backtraces show only hex addresses and ASan cannot report source file:line locations; Valgrind and ASan are mutually exclusive — never compile with -fsanitize=address and run under valgrind simultaneously; ASan requires source recompilation (-fsanitize=address) — cannot instrument an existing pre-built binary, unlike Valgrind; Core dump analysis requires the exact binary that produced the dump — mismatched binary gives wrong or missing symbol resolution">
+    <meta name="ai:skip_this_unit_if" content="Rust panic or crash in unsafe block → Rust memory safety guide (ownership model prevents segfaults except in unsafe, use Miri or cargo-careful); Go nil pointer dereference or goroutine panic → Go nil-pointer/panic debugging (use delve debugger, not GDB); Java/Python/managed-language exception → Language-specific debugger (managed languages don't produce SIGSEGV except in native extensions); Linux kernel panic, OOPS, or BUG → Kernel debugging guide (requires kgdb, crash utility, or kdump, not userspace tools)">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- TechArticle structured data -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"How to Debug Segmentation Faults in C and C++","headline":"How Do I Debug Segmentation Faults in C and C++?","description":"Complete reference for debugging segmentation faults (SIGSEGV) in C/C++ covering GDB backtrace analysis, Valgrind Memcheck, AddressSanitizer, core dump analysis, and 9 ranked causes with fixes.","keywords":["segmentation fault","segfault","SIGSEGV","GDB","Valgrind","AddressSanitizer","C debugging","C++ debugging","core dump","null pointer dereference","use-after-free","buffer overflow"],"dateModified":"2026-02-20","datePublished":"2026-02-20","proficiencyLevel":"Intermediate","dependencies":"GCC >= 4.8 or Clang >= 3.1, GDB, Valgrind","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"Debugging Segmentation Faults and Pointer Problems","url":"https://www.cprogramming.com/debugging/segfaults.html"},{"@type":"WebPage","name":"Segmentation Fault in C/C++ — GeeksforGeeks","url":"https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/"},{"@type":"WebPage","name":"AddressSanitizer and Debugger — Google Sanitizers Wiki","url":"https://github.com/google/sanitizers/wiki/AddressSanitizerAndDebugger"},{"@type":"WebPage","name":"Valgrind vs AddressSanitizer: Debugging Memory Errors","url":"https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/"},{"@type":"WebPage","name":"Segfault Debugging Notes — University of Pittsburgh","url":"https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html"},{"@type":"WebPage","name":"How to Use Address Sanitizer — Ohio Supercomputer Center","url":"https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer"},{"@type":"WebPage","name":"Segmentation Fault — Wikipedia","url":"https://en.wikipedia.org/wiki/Segmentation_fault"}]}</script>
+
+    <!-- Dataset structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "How to Debug Segmentation Faults in C and C++",
+        "description": "Structured reference for debugging segmentation faults in C/C++ with ranked cause table, decision tree, GDB/Valgrind/ASan workflows, and anti-patterns.",
+        "keywords": ["segmentation fault", "SIGSEGV", "C debugging", "C++ debugging", "GDB", "Valgrind", "AddressSanitizer"],
+        "temporalCoverage": "1990/2026",
+        "dateModified": "2026-02-20",
+        "datePublished": "2026-02-20",
+        "sourceOrganization": [
+            { "@type": "Organization", "name": "Google (Sanitizers)" },
+            { "@type": "Organization", "name": "GeeksforGeeks" },
+            { "@type": "Organization", "name": "Cprogramming.com" }
+        ],
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+        "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+    }
+    </script>
+
+    <!-- Breadcrumb structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+            { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+            { "@type": "ListItem", "position": 4, "name": "How to Debug Segmentation Faults in C and C++" }
+        ]
+    }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug segmentation faults in C and C++?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A segmentation fault (SIGSEGV, signal 11) means your program tried to access memory it does not own. Debug with a 3-tool hierarchy: GDB (backtrace the crash site) → Valgrind Memcheck (find the root memory error) → AddressSanitizer (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling pointer dereference, array out-of-bounds access, or use-after-free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "segmentation fault C",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A segmentation fault (SIGSEGV, signal 11) means your program tried to access memory it does not own. Debug with a 3-tool hierarchy: GDB (backtrace the crash site) → Valgrind Memcheck (find the root memory error) → AddressSanitizer (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling pointer dereference, array out-of-bounds access, or use-after-free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "segfault C++",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A segmentation fault (SIGSEGV, signal 11) means your program tried to access memory it does not own. Debug with a 3-tool hierarchy: GDB (backtrace the crash site) → Valgrind Memcheck (find the root memory error) → AddressSanitizer (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling pointer dereference, array out-of-bounds access, or use-after-free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SIGSEGV debugging",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A segmentation fault (SIGSEGV, signal 11) means your program tried to access memory it does not own. Debug with a 3-tool hierarchy: GDB (backtrace the crash site) → Valgrind Memcheck (find the root memory error) → AddressSanitizer (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling pointer dereference, array out-of-bounds access, or use-after-free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "core dumped segfault",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A segmentation fault (SIGSEGV, signal 11) means your program tried to access memory it does not own. Debug with a 3-tool hierarchy: GDB (backtrace the crash site) → Valgrind Memcheck (find the root memory error) → AddressSanitizer (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling pointer dereference, array out-of-bounds access, or use-after-free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "null pointer dereference C",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A segmentation fault (SIGSEGV, signal 11) means your program tried to access memory it does not own. Debug with a 3-tool hierarchy: GDB (backtrace the crash site) → Valgrind Memcheck (find the root memory error) → AddressSanitizer (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling pointer dereference, array out-of-bounds access, or use-after-free."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Debug Segmentation Faults in C and C++?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug segmentation faults in C and C++?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/c-cpp-segfault/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-20</span></span>
+        <span><strong>Freshness:</strong> stable</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: A segmentation fault (SIGSEGV, signal 11) means your program tried to access
+                memory it does not own. Debug with a 3-tool hierarchy: <strong>GDB</strong> (backtrace the crash site) →
+                <strong>Valgrind Memcheck</strong> (find the root memory error) → <strong>AddressSanitizer</strong>
+                (fastest, catches errors at compile-time instrumentation). ~80% of segfaults are caused by null/dangling
+                pointer dereference, array out-of-bounds access, or use-after-free.</li>
+            <li><strong>Key tool/command</strong>:
+                <code>gcc -g -fsanitize=address -fno-omit-frame-pointer program.c -o program &amp;&amp; ./program</code>
+            </li>
+            <li><strong>Watch out for</strong>: The segfault crash site is often NOT the root cause — the memory corruption
+                may have happened thousands of instructions earlier. Always use Valgrind or ASan to find the original error.
+            </li>
+            <li><strong>Works with</strong>: GCC &gt;= 4.8, Clang &gt;= 3.1, GDB &gt;= 7.0, Valgrind &gt;= 3.10. All
+                major Linux distros, macOS. Windows uses Access Violation (0xC0000005) instead of SIGSEGV.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>Always compile with <code>-g</code></strong> before debugging — without debug symbols, GDB and ASan
+                cannot show source file names or line numbers. [<a
+                    href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>, <a
+                    href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</li>
+            <li><strong>Never ignore compiler warnings</strong> — <code>-Wall -Wextra</code> catches many patterns that lead
+                to segfaults (uninitialized variables, format string mismatches, implicit function declarations). [<a
+                    href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</li>
+            <li><strong>Valgrind does not work with ASan</strong> — they are mutually exclusive. Compile with
+                <code>-fsanitize=address</code> OR run under <code>valgrind</code>, never both simultaneously. [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>]
+            </li>
+            <li><strong>ASan requires recompilation</strong> — unlike Valgrind, you cannot run an existing binary under ASan.
+                You must compile the source with <code>-fsanitize=address</code>. [<a
+                    href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</li>
+            <li><strong>Core dumps must be enabled</strong> — on most systems <code>ulimit -c</code> defaults to 0. Set
+                <code>ulimit -c unlimited</code> before running the crashing program. [<a
+                    href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</li>
+            <li><strong>Windows uses different tooling</strong> — SIGSEGV is Linux/macOS. On Windows, segfaults manifest as
+                "Access Violation" exceptions. Use Visual Studio debugger or WinDbg instead. [<a
+                    href="https://en.wikipedia.org/wiki/Segmentation_fault">src7</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>NULL pointer dereference</td>
+                        <td>~25%</td>
+                        <td>Crash at address <code>0x0</code>; <code>si_addr=(nil)</code></td>
+                        <td>Check pointer for NULL before dereference; initialize pointers [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Array/buffer out-of-bounds</td>
+                        <td>~20%</td>
+                        <td>Crash near valid heap/stack; Valgrind: "Invalid read/write of size N"</td>
+                        <td>Use bounds checking; replace <code>char[]</code> with <code>std::vector</code> [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Use-after-free (dangling pointer)</td>
+                        <td>~15%</td>
+                        <td>ASan: "heap-use-after-free"; Valgrind: "Invalid read/write"</td>
+                        <td>Set pointer to NULL after <code>free()</code>/<code>delete</code>; use smart pointers [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>, <a
+                                href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Uninitialized pointer (wild pointer)</td>
+                        <td>~12%</td>
+                        <td>Crash at random address; <code>si_addr</code> is garbage value</td>
+                        <td>Always initialize pointers to <code>NULL</code>/<code>nullptr</code> [<a
+                                href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Stack overflow (deep recursion)</td>
+                        <td>~10%</td>
+                        <td>Crash near stack boundary; GDB frame count is huge</td>
+                        <td>Add recursion base case; increase stack with <code>ulimit -s</code>; convert to iteration [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Double free</td>
+                        <td>~8%</td>
+                        <td><code>free(): double free detected</code>; ASan: "double-free"</td>
+                        <td>Set pointer to NULL after free; use smart pointers [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Writing to read-only memory</td>
+                        <td>~5%</td>
+                        <td>Crash on string literal address; <code>char *s = "hello"; s[0] = 'H';</code></td>
+                        <td>Use <code>const char*</code> for literals; use <code>char s[] = "hello"</code> for mutable [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>, <a
+                                href="https://en.wikipedia.org/wiki/Segmentation_fault">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Mismatched alloc/dealloc</td>
+                        <td>~3%</td>
+                        <td>ASan: "alloc-dealloc-mismatch"; <code>malloc</code> freed with <code>delete</code></td>
+                        <td>Match pairs: <code>malloc</code>/<code>free</code>, <code>new</code>/<code>delete</code>,
+                            <code>new[]</code>/<code>delete[]</code> [<a
+                                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Format string mismatch</td>
+                        <td>~2%</td>
+                        <td><code>printf("%d", string_ptr)</code> — crash or garbage output</td>
+                        <td>Use <code>-Wformat</code> flag; match format specifiers to argument types [<a
+                                href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — Program crashes with "Segmentation fault (core dumped)"
+├── Do you have the source code?
+│   ├── YES → Recompile: gcc -g -fsanitize=address -fno-omit-frame-pointer
+│   │   ├── ASan prints error report?
+│   │   │   ├── YES → Read report: file:line, access type, alloc/free stack
+│   │   │   │   ├── "heap-use-after-free" → Cause #3: dangling pointer
+│   │   │   │   ├── "heap-buffer-overflow" → Cause #2: array out-of-bounds
+│   │   │   │   ├── "stack-buffer-overflow" → Cause #2: local array overflow
+│   │   │   │   ├── "double-free" → Cause #6
+│   │   │   │   └── "SEGV on unknown address 0x000000000000" → Cause #1: NULL
+│   │   │   └── NO → Run under GDB (see step-by-step below)
+│   │   └── ASan unavailable (old compiler)?
+│   │       └── valgrind --tool=memcheck ./program
+│   └── NO (binary only) → Valgrind or core dump + GDB
+│
+├── Is there a core dump file?
+│   ├── YES → gdb ./program core → bt → frame N → info locals
+│   └── NO → ulimit -c unlimited → reproduce → analyze core
+│
+└── Crash is intermittent / hard to reproduce?
+    ├── Valgrind for sustained testing (2x slowdown, no recompile)
+    ├── ASan for always-on detection (2x slowdown, needs recompile)
+    └── Multithreaded? → gcc -fsanitize=thread</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Compile with debug symbols and warnings</h3>
+        <p>Always start by recompiling with maximum diagnostics. [<a
+                href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>, <a
+                href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</p>
+        <pre><code class="language-bash"># C
+gcc -g -Wall -Wextra -Werror -O0 program.c -o program
+
+# C++
+g++ -g -Wall -Wextra -Werror -O0 -std=c++17 program.cpp -o program</code></pre>
+        <p><strong>Verify</strong>: <code>file program</code> → should show "with debug_info, not stripped"</p>
+
+        <h3>2. Run under GDB to find the crash location</h3>
+        <p>GDB stops at the exact instruction that triggered SIGSEGV. [<a
+                href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>, <a
+                href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</p>
+        <pre><code class="language-bash">gdb ./program
+(gdb) run
+# ... program crashes ...
+(gdb) bt                     # Backtrace — full call stack
+(gdb) bt full                # Backtrace with local variables
+(gdb) frame 0                # Go to the crashing frame
+(gdb) info locals            # Show all local variables
+(gdb) print ptr              # Inspect a specific variable
+(gdb) list                   # Show source around crash point</code></pre>
+        <p><strong>Verify</strong>: <code>bt</code> output → the top frame shows the file and line of the crash.</p>
+
+        <h3>3. Enable core dumps for post-mortem debugging</h3>
+        <p>Analyze crashes after the fact when you cannot run interactively. [<a
+                href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</p>
+        <pre><code class="language-bash"># Enable core dumps
+ulimit -c unlimited
+
+# Optional: set core dump location (Linux)
+echo "/tmp/core.%e.%p" | sudo tee /proc/sys/kernel/core_pattern
+
+# Load core dump in GDB
+gdb ./program /tmp/core.program.12345
+(gdb) bt
+(gdb) bt full
+(gdb) frame 3
+(gdb) info locals</code></pre>
+        <p><strong>Verify</strong>: <code>ls -la /tmp/core.*</code> → core file exists and is non-empty.</p>
+
+        <h3>4. Use Valgrind Memcheck to find the root cause</h3>
+        <p>Valgrind finds memory errors that happen BEFORE the crash. No recompilation needed. [<a
+                href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>,
+            <a href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</p>
+        <pre><code class="language-bash">valgrind --tool=memcheck \
+         --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         --verbose \
+         ./program</code></pre>
+        <p><strong>Verify</strong>: Valgrind exit summary shows "ERROR SUMMARY: 0 errors" when all memory errors are fixed.
+        </p>
+
+        <h3>5. Use AddressSanitizer (fastest, most detailed)</h3>
+        <p>ASan is built into GCC (&gt;= 4.8) and Clang (&gt;= 3.1). ~2x slowdown vs Valgrind's ~20x. [<a
+                href="https://github.com/google/sanitizers/wiki/AddressSanitizerAndDebugger">src3</a>, <a
+                href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</p>
+        <pre><code class="language-bash"># Compile with ASan
+gcc -g -fsanitize=address -fno-omit-frame-pointer -O1 program.c -o program
+
+# Run — ASan prints detailed error report on crash
+./program
+
+# Combine with GDB for interactive debugging
+ASAN_OPTIONS=abort_on_error=1 gdb ./program
+(gdb) run
+(gdb) bt</code></pre>
+        <p><strong>Verify</strong>: Run with <code>ASAN_OPTIONS=detect_leaks=1</code> → ASan also reports memory leaks at
+            exit.</p>
+
+        <h3>6. Use UndefinedBehaviorSanitizer for subtle bugs</h3>
+        <p>Many segfaults are caused by undefined behavior that corrupts memory silently. [<a
+                href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</p>
+        <pre><code class="language-bash"># Compile with both ASan and UBSan
+gcc -g -fsanitize=address,undefined -fno-omit-frame-pointer program.c -o program</code></pre>
+        <p><strong>Verify</strong>: <code>./program</code> → UBSan prints runtime errors with
+            <code>file:line:col</code> precision.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>C: common segfault patterns and fixes</h3>
+        <pre><code class="language-c">// Input:  None (demonstration of segfault causes)
+// Output: Shows 4 common segfault patterns with correct alternatives
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+// Pattern 1: NULL pointer dereference
+void null_deref_bad(void) {
+    int *ptr = NULL;
+    *ptr = 42;  // SEGFAULT
+}
+void null_deref_good(void) {
+    int *ptr = malloc(sizeof(int));
+    if (ptr == NULL) { perror("malloc"); return; }
+    *ptr = 42;
+    free(ptr);
+}
+
+// Pattern 2: Use after free
+void uaf_bad(void) {
+    int *ptr = malloc(sizeof(int));
+    *ptr = 42;
+    free(ptr);
+    printf("%d\n", *ptr);  // SEGFAULT — use after free
+}
+void uaf_good(void) {
+    int *ptr = malloc(sizeof(int));
+    *ptr = 42;
+    printf("%d\n", *ptr);
+    free(ptr);
+    ptr = NULL;  // Prevent accidental reuse
+}
+
+// Pattern 3: Writing to string literal
+void literal_bad(void) {
+    char *s = "hello";
+    s[0] = 'H';  // SEGFAULT — read-only memory
+}
+void literal_good(void) {
+    char s[] = "hello";  // Mutable copy on stack
+    s[0] = 'H';          // Safe
+}</code></pre>
+
+        <h3>C++: modern segfault prevention with smart pointers</h3>
+        <pre><code class="language-cpp">// Input:  None (C++ safety patterns)
+// Output: Smart pointer usage to prevent segfaults
+
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+#include &lt;iostream&gt;
+
+// GOOD: unique_ptr — automatic cleanup, no double-free
+void unique_ptr_good() {
+    auto data = std::make_unique&lt;int[]&gt;(100);
+    data[0] = 42;
+    // Freed when scope exits, even on exception
+}
+
+// GOOD: shared_ptr — safe shared ownership
+void shared_ptr_good() {
+    auto data = std::make_shared&lt;std::vector&lt;int&gt;&gt;(100, 0);
+    auto alias = data;  // Reference count = 2
+}
+
+// GOOD: .at() for bounds-checked access
+void bounds_checked() {
+    std::vector&lt;int&gt; v = {1, 2, 3};
+    try {
+        int val = v.at(10);  // Throws std::out_of_range
+    } catch (const std::out_of_range&amp; e) {
+        std::cerr &lt;&lt; "Bounds error: " &lt;&lt; e.what() &lt;&lt; "\n";
+    }
+}</code></pre>
+
+        <h3>Bash: automated segfault debugging workflow</h3>
+        <pre><code class="language-bash">#!/bin/bash
+# Input:  Source file path (C or C++)
+# Output: ASan + Valgrind diagnostics
+
+SRC="$1"
+BIN="${SRC%.c*}.debug"
+
+if [[ -z "$SRC" ]]; then
+    echo "Usage: $0 &lt;source.c|source.cpp&gt;"; exit 1
+fi
+
+if [[ "$SRC" == *.cpp ]]; then CC="g++ -std=c++17"; else CC="gcc"; fi
+
+echo "=== Step 1: Compile with ASan + UBSan ==="
+$CC -g -fsanitize=address,undefined -fno-omit-frame-pointer \
+    -Wall -Wextra -O1 "$SRC" -o "$BIN"
+
+echo "=== Step 2: Run with AddressSanitizer ==="
+ASAN_OPTIONS=detect_leaks=1:abort_on_error=0 ./"$BIN"
+
+echo "=== Step 3: Run with Valgrind Memcheck ==="
+$CC -g -Wall -Wextra -O0 "$SRC" -o "${BIN}.valgrind"
+valgrind --tool=memcheck --leak-check=full \
+         --show-leak-kinds=all --track-origins=yes \
+         ./"${BIN}.valgrind"</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Dereferencing without NULL check</h3>
+        <pre><code class="language-c">// BAD — ptr could be NULL if function returns NULL [src1, src2]
+int *ptr = find_record(id);
+printf("Value: %d\n", *ptr);  // SEGFAULT if NULL</code></pre>
+
+        <h3>Correct: Always check before dereference</h3>
+        <pre><code class="language-c">// GOOD — defensive programming prevents crash [src1, src2]
+int *ptr = find_record(id);
+if (ptr != NULL) {
+    printf("Value: %d\n", *ptr);
+} else {
+    fprintf(stderr, "Record %d not found\n", id);
+}</code></pre>
+
+        <h3>Wrong: Using pointer after free</h3>
+        <pre><code class="language-c">// BAD — classic use-after-free [src2, src5]
+char *buf = malloc(256);
+snprintf(buf, 256, "data");
+free(buf);
+printf("Buffer: %s\n", buf);  // SEGFAULT or garbage</code></pre>
+
+        <h3>Correct: Null the pointer after free</h3>
+        <pre><code class="language-c">// GOOD — pointer safely nulled [src2, src5]
+char *buf = malloc(256);
+if (buf == NULL) { perror("malloc"); return; }
+snprintf(buf, 256, "data");
+printf("Buffer: %s\n", buf);
+free(buf);
+buf = NULL;</code></pre>
+
+        <h3>Wrong: Returning pointer to local variable</h3>
+        <pre><code class="language-c">// BAD — stack memory invalid after return [src1]
+int* get_data(void) {
+    int arr[10] = {1, 2, 3};
+    return arr;  // Returns address of local variable!
+}
+int *data = get_data();
+printf("%d\n", data[0]);  // SEGFAULT — stack frame gone</code></pre>
+
+        <h3>Correct: Heap-allocate for returned data</h3>
+        <pre><code class="language-c">// GOOD — heap allocation survives function return [src1]
+int* get_data(void) {
+    int *arr = malloc(10 * sizeof(int));
+    if (arr == NULL) return NULL;
+    arr[0] = 1; arr[1] = 2; arr[2] = 3;
+    return arr;  // Caller must free()
+}</code></pre>
+
+        <h3>Wrong: Modifying a string literal</h3>
+        <pre><code class="language-c">// BAD — string literals in read-only memory [src2, src7]
+char *greeting = "hello world";
+greeting[0] = 'H';  // SEGFAULT</code></pre>
+
+        <h3>Correct: Use a char array for mutable strings</h3>
+        <pre><code class="language-c">// GOOD — array copies literal to mutable stack memory [src2, src7]
+char greeting[] = "hello world";
+greeting[0] = 'H';  // Safe</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Crash site is not the root cause</strong>: A buffer overflow at line 50 may corrupt memory only
+                accessed at line 500. Valgrind/ASan shows the original corruption point. Fix: always run Valgrind/ASan first,
+                not just GDB. [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>,
+                <a href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</li>
+            <li><strong>Optimized code hides bugs</strong>: Compiling with <code>-O2</code>/<code>-O3</code> reorders code,
+                making GDB show wrong line numbers or "optimized out" variables. Fix: debug with <code>-O0</code> or
+                <code>-O1 -fno-omit-frame-pointer</code>. [<a
+                    href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>, <a
+                    href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</li>
+            <li><strong>Valgrind and ASan cannot be combined</strong>: Running an ASan binary under Valgrind produces false
+                positives and crashes. Fix: maintain two build targets. [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>]
+            </li>
+            <li><strong>Core dumps disabled by default</strong>: Most Linux distros set <code>ulimit -c 0</code>. Fix: add
+                <code>ulimit -c unlimited</code> to your shell profile. [<a
+                    href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</li>
+            <li><strong>Intermittent segfaults from uninitialized variables</strong>: A pointer with garbage value may point
+                to valid memory sometimes. Fix: compile with <code>-fsanitize=memory</code> (Clang MSan) or use Valgrind
+                <code>--track-origins=yes</code>. [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>,
+                <a href="https://people.cs.pitt.edu/~xianeizhang/notes/segfault.html">src5</a>]</li>
+            <li><strong><code>free(ptr)</code> on stack variable</strong>: Passing a stack address to <code>free()</code>
+                corrupts the heap. Fix: only <code>free()</code> what was returned by
+                <code>malloc()</code>/<code>calloc()</code>/<code>realloc()</code>. [<a
+                    href="https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/">src2</a>]</li>
+            <li><strong>Signed integer overflow causing index corruption</strong>: In C/C++, signed overflow is undefined
+                behavior. An overflowed index can become negative. Fix: use <code>-fsanitize=undefined</code>. [<a
+                    href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Compile with sanitizer support ===
+gcc -g -fsanitize=address -fno-omit-frame-pointer -O1 program.c -o program
+gcc -g -fsanitize=address,undefined -fno-omit-frame-pointer program.c -o program
+clang -g -fsanitize=address -fno-omit-frame-pointer -O1 program.c -o program
+
+# === Enable core dumps ===
+ulimit -c unlimited
+echo "/tmp/core.%e.%p" | sudo tee /proc/sys/kernel/core_pattern
+
+# === GDB commands ===
+gdb ./program                      # Start debugger
+gdb ./program core                 # Load core dump
+# run / bt / bt full / frame N / info locals / print var / x/16xb ptr
+
+# === Valgrind ===
+valgrind ./program
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./program
+
+# === Check binary for debug info ===
+file ./program
+readelf -S ./program | grep debug
+
+# === Check for core dumps (systemd) ===
+coredumpctl list
+coredumpctl gdb</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Tool</th>
+                        <th scope="col">Version</th>
+                        <th scope="col">Key Feature</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GDB</td>
+                        <td>&gt;= 7.0 (2009)</td>
+                        <td>Python scripting, reverse debugging</td>
+                        <td>Available on all Linux distros [<a
+                                href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Valgrind</td>
+                        <td>&gt;= 3.10 (2014)</td>
+                        <td>Full C++11 support</td>
+                        <td>~20x slowdown; no recompile needed [<a
+                                href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ASan (GCC)</td>
+                        <td>&gt;= 4.8 (2013)</td>
+                        <td>Basic ASan support</td>
+                        <td>Requires recompilation [<a
+                                href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ASan (Clang)</td>
+                        <td>&gt;= 3.1 (2012)</td>
+                        <td>Original ASan implementation</td>
+                        <td>Generally better ASan support than GCC [<a
+                                href="https://github.com/google/sanitizers/wiki/AddressSanitizerAndDebugger">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>UBSan (GCC)</td>
+                        <td>&gt;= 4.9 (2014)</td>
+                        <td>Undefined behavior detection</td>
+                        <td><code>-fsanitize=undefined</code> [<a
+                                href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>MSan (Clang)</td>
+                        <td>&gt;= 3.3 (2013)</td>
+                        <td>Uninitialized memory detection</td>
+                        <td>Clang only; not in GCC</td>
+                    </tr>
+                    <tr>
+                        <td>TSan</td>
+                        <td>&gt;= GCC 4.8 / Clang 3.2</td>
+                        <td>Data race detection</td>
+                        <td>For multithreaded segfaults</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Program crashes with "Segmentation fault"</td>
+                        <td>Crash message is "Aborted" (SIGABRT)</td>
+                        <td>Check for <code>assert()</code> failures or <code>abort()</code> calls</td>
+                    </tr>
+                    <tr>
+                        <td>GDB backtrace shows your code</td>
+                        <td>Crash inside system library (libc, libpthread)</td>
+                        <td>Check your arguments to library calls</td>
+                    </tr>
+                    <tr>
+                        <td>Need to debug production binary (no source)</td>
+                        <td>Have source and can recompile</td>
+                        <td>Use ASan — faster and more detailed than Valgrind</td>
+                    </tr>
+                    <tr>
+                        <td>Intermittent crash in multithreaded code</td>
+                        <td>Single-threaded memory bug</td>
+                        <td>Use ThreadSanitizer: <code>-fsanitize=thread</code></td>
+                    </tr>
+                    <tr>
+                        <td>Linux or macOS environment</td>
+                        <td>Windows environment</td>
+                        <td>Visual Studio debugger or WinDbg</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>ASan ~2x slowdown, Valgrind ~20x</strong>: ASan is compiled in and runs much faster, but requires
+                recompilation. Valgrind needs no recompilation but is significantly slower. [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>,
+                <a href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</li>
+            <li><strong>ASan shadow memory uses ~5x program memory</strong>: A program using 1GB heap needs ~5GB total under
+                ASan. [<a href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]
+            </li>
+            <li><strong>Valgrind does not support all CPU instructions</strong>: AVX-512 and newer SIMD may crash Valgrind.
+                Compile without <code>-march=native</code> for Valgrind testing. [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>]
+            </li>
+            <li><strong>Segfaults in optimized code may not reproduce in debug builds</strong>: Optimization that triggers
+                the bug may not happen at <code>-O0</code>. Use <code>-O1 -fno-omit-frame-pointer</code> as a compromise.
+                [<a href="https://www.cprogramming.com/debugging/segfaults.html">src1</a>, <a
+                    href="https://www.osc.edu/resources/getting_started/howto/howto_use_address_sanitizer">src6</a>]</li>
+            <li><strong>macOS uses lldb instead of gdb by default</strong>: On macOS Ventura+, GDB requires codesigning.
+                <code>lldb</code> is the default debugger and has similar commands (<code>bt</code>,
+                <code>frame select</code>, <code>v</code> for locals). [<a
+                    href="https://undo.io/resources/gdb-watchpoint/a-quick-introduction-to-using-valgrind-and-addresssanitizer/">src4</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/memory-leaks-c-cpp/2026" data-relationship="related_to">Memory Leaks in C/C++</a>
+        <a href="/software/debugging/gdb-commands-reference/2026" data-relationship="related_to">GDB Commands Reference</a>
+        <a href="/software/debugging/valgrind-memcheck/2026" data-relationship="related_to">Valgrind Memcheck Guide</a>
+        <a href="/software/debugging/c-cpp-undefined-behavior/2026" data-relationship="solves">C/C++ Undefined Behavior</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge
+        units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

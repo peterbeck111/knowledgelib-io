@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Message Queue &amp; Event-Driven Architecture Design | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for message queues and event-driven architecture: Kafka vs RabbitMQ vs SQS vs NATS comparison, decision tree,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/message-queue-event-driven/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Message Queue &amp; Event-Driven Architecture Design | knowledgelib.io">
+  <meta property="og:description" content="System design guide: Kafka vs RabbitMQ vs SQS vs NATS, decision tree, producer/consumer code, anti-patterns, pitfalls. 7 sources, verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/message-queue-event-driven/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Message Queue &amp; Event-Driven Architecture Design | knowledgelib.io">
+  <meta name="twitter:description" content="System design guide: Kafka vs RabbitMQ vs SQS vs NATS, decision tree, producer/consumer code, anti-patterns, pitfalls. 7 sources.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/message_queue_event_driven">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a message queue and event-driven architecture?">
+  <meta name="ai:aliases" content="message queue architecture design; event-driven architecture patterns; Kafka vs RabbitMQ vs SQS; message broker selection; pub/sub architecture design; async messaging system design; event streaming architecture; distributed messaging patterns; message queue comparison; event-driven microservices">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/message-queue-event-driven/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="stable">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="broker_choice,throughput_requirement,delivery_guarantee">
+  <meta name="ai:constraints" content="No broker delivers true end-to-end exactly-once across network boundaries; Message ordering guaranteed only within single partition/queue; Replication factor must never exceed available broker count; Always configure dead letter queues (DLQs); Enforce schema validation from day one">
+  <meta name="ai:skip_this_unit_if" content="Need task queue for background jobs (Celery/Sidekiq/BullMQ) -> task queue pattern; Building real-time websocket push to browsers -> WebSocket/SSE architecture; Synchronous request-response API design -> API gateway/service mesh design">
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Message Queue & Event-Driven Architecture Design",
+    "headline": "Message Queue & Event-Driven Architecture Design",
+    "description": "Complete system design guide for message queues and event-driven architecture: Kafka vs RabbitMQ vs SQS vs NATS comparison, component architecture, decision tree, producer/consumer code examples, anti-patterns, and common pitfalls.",
+    "keywords": ["message queue", "event-driven architecture", "Kafka", "RabbitMQ", "SQS", "NATS", "pub/sub", "system design", "distributed messaging", "stream processing"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Apache Kafka 3.7+, RabbitMQ 4.0+, AWS SQS/SNS, NATS 2.10+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Kafka Design Overview",
+        "url": "https://docs.confluent.io/kafka/design/index.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "RabbitMQ Best Practice",
+        "url": "https://www.cloudamqp.com/blog/part1-rabbitmq-best-practice.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Building event-driven architectures with Amazon SNS FIFO",
+        "url": "https://aws.amazon.com/blogs/compute/building-event-driven-architectures-with-amazon-sns-fifo/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Compare NATS with other messaging systems",
+        "url": "https://docs.nats.io/nats-concepts/overview/compare-nats"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Designing Data-Intensive Applications",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The Top 10 Anti-Patterns to Avoid in Event-Driven Architectures",
+        "url": "https://www.aklivity.io/post/the-top-10-anti-patterns-to-avoid-inside-event-driven-architectures"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Messaging anti-patterns in event-driven architecture",
+        "url": "https://www.ben-morris.com/event-driven-architecture-and-message-design-anti-patterns-and-pitfalls/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Message Queue & Event-Driven Architecture Design",
+    "description": "System design reference for message queue and event-driven architecture: broker comparison (Kafka, RabbitMQ, SQS, NATS), component architecture, decision tree, code examples, anti-patterns, and pitfalls.",
+    "keywords": ["message queue", "event-driven architecture", "Kafka", "RabbitMQ", "SQS", "NATS", "system design"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Apache Software Foundation / Confluent"},
+      {"@type": "Organization", "name": "CloudAMQP"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "NATS.io"},
+      {"@type": "Organization", "name": "O'Reilly Media"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Message Queue & Event-Driven Architecture Design" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a message queue and event-driven architecture?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "message queue architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "event-driven architecture patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kafka vs RabbitMQ vs SQS",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "message broker selection",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "pub/sub architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>Message Queue &amp; Event-Driven Architecture Design</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a message queue and event-driven architecture?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/message-queue-event-driven/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> stable</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Choose Kafka for high-throughput event streaming with replay, RabbitMQ for complex routing with traditional queuing, AWS SQS/SNS for serverless fan-out with zero ops, or NATS for ultra-low-latency lightweight messaging.</li>
+    <li><strong>Key pattern</strong>: Publish events to topics/exchanges; consumers pull asynchronously with independent consumer groups &mdash; decouple producers from consumers in both time and space.</li>
+    <li><strong>Watch out for</strong>: Treating message brokers as databases &mdash; they are transit infrastructure, not long-term storage (except Kafka with log compaction).</li>
+    <li><strong>Works with</strong>: Any language/platform; all major brokers have clients for Python, Java, Go, Node.js, .NET, and Rust.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>No broker delivers true end-to-end exactly-once across network boundaries &mdash; Kafka's exactly-once is transactional within its ecosystem only</li>
+    <li>Message ordering is guaranteed only within a single partition (Kafka) or single queue (RabbitMQ/SQS FIFO) &mdash; cross-partition ordering requires application-level logic</li>
+    <li>Replication factor must never exceed available broker count &mdash; higher replication improves durability but linearly increases write latency</li>
+    <li>Always configure dead letter queues (DLQs) &mdash; without them, poison messages block entire partitions or queues indefinitely</li>
+    <li>Enforce schema validation (Avro/Protobuf/JSON Schema) from day one &mdash; retrofitting schemas in production is extremely costly</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Message Broker</td><td>Core message transit and buffering</td><td>Kafka, RabbitMQ, NATS, Pulsar</td><td>Horizontal partitioning (Kafka), clustering (RabbitMQ), superclusters (NATS)</td></tr>
+      <tr><td>Event Router</td><td>Content-based routing and filtering</td><td>AWS EventBridge, RabbitMQ exchanges, Kafka Streams</td><td>Filter rules at router level to reduce downstream load</td></tr>
+      <tr><td>Schema Registry</td><td>Enforce message contracts</td><td>Confluent Schema Registry, AWS Glue, Apicurio</td><td>Central service, replicated</td></tr>
+      <tr><td>Producer</td><td>Publish events/messages</td><td>Kafka Producer API, amqplib, AWS SDK, NATS client</td><td>Batch writes, async sends, connection pooling</td></tr>
+      <tr><td>Consumer Group</td><td>Parallel consumption with offset tracking</td><td>Kafka Consumer Groups, RabbitMQ competing consumers</td><td>Add consumers up to partition/queue count</td></tr>
+      <tr><td>Dead Letter Queue</td><td>Capture failed messages</td><td>Kafka DLQ topic, RabbitMQ DLX, SQS DLQ</td><td>Monitor and reprocess; alert on growth</td></tr>
+      <tr><td>Stream Processor</td><td>Transform, aggregate, join event streams</td><td>Kafka Streams, Flink, Spark Streaming</td><td>Horizontal scaling by partition count</td></tr>
+      <tr><td>Fan-out Layer</td><td>Broadcast one event to multiple consumers</td><td>SNS, RabbitMQ fanout exchange, Kafka multi-consumer-group</td><td>One topic, N independent subscriber groups</td></tr>
+      <tr><td>Idempotency Store</td><td>Deduplicate at-least-once deliveries</td><td>Redis, PostgreSQL, DynamoDB</td><td>Keyed by message ID + consumer ID</td></tr>
+      <tr><td>Observability</td><td>Monitor lag, throughput, error rates</td><td>Prometheus + Grafana, Datadog, CloudWatch</td><td>Alert on consumer lag &gt; threshold</td></tr>
+      <tr><td>CDC Pipeline</td><td>Capture database changes as events</td><td>Debezium, AWS DMS, Maxwell</td><td>One connector per source table/database</td></tr>
+      <tr><td>API Gateway</td><td>Ingest external events into broker</td><td>Kong, AWS API Gateway, Envoy</td><td>Rate limit + authenticate before enqueue</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
++-- Need message replay / event sourcing / audit log?
+|   +-- YES --&gt; Kafka (log-based, configurable retention, compaction)
+|   +-- NO |
++-- Need complex routing (topic, headers, priority queues)?
+|   +-- YES --&gt; RabbitMQ (exchanges: direct, topic, fanout, headers)
+|   +-- NO |
++-- Want zero operational overhead (fully managed)?
+|   +-- YES --&gt; AWS SQS/SNS (or Google Pub/Sub, Azure Service Bus)
+|   +-- NO |
++-- Need sub-millisecond latency with minimal footprint?
+|   +-- YES --&gt; NATS (with JetStream for persistence)
+|   +-- NO |
++-- Need exactly-once within streaming pipeline?
+|   +-- YES --&gt; Kafka with transactions (enable.idempotence + transactional.id)
+|   +-- NO |
++-- Throughput &gt; 500K msg/s?
+|   +-- YES --&gt; Kafka or NATS JetStream
+|   +-- NO --&gt; RabbitMQ or SQS (sufficient for most applications)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define message contracts and schemas</h3>
+  <p>Establish schemas before writing any producer or consumer code. Use Avro or Protobuf for binary efficiency, or JSON Schema for human readability. Register schemas in a schema registry to enforce backward/forward compatibility. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</p>
+  <pre><code class="language-json">{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["event_type", "event_id", "timestamp", "payload"],
+  "properties": {
+    "event_type": { "type": "string" },
+    "event_id": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "version": { "type": "integer", "minimum": 1 },
+    "payload": { "type": "object" }
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Register schema and attempt to produce a message with a missing required field &mdash; the registry should reject it.</p>
+
+  <h3>2. Design topic/queue topology</h3>
+  <p>Map business domains to topics (Kafka) or exchanges+queues (RabbitMQ). Use one topic per event type. Avoid god-topics that mix unrelated events. [<a href="https://dataintensive.net/">src5</a>]</p>
+  <pre><code class="language-bash"># Kafka topic naming convention: {domain}.{entity}.{event}
+orders.order.created
+orders.order.cancelled
+payments.payment.completed
+inventory.stock.updated</code></pre>
+  <p><strong>Verify</strong>: List topics/queues and confirm each maps to exactly one business event type.</p>
+
+  <h3>3. Configure partitioning for parallelism</h3>
+  <p>Partition count determines maximum consumer parallelism. Start with <code>max(expected_consumers, expected_throughput / per_partition_throughput)</code>. For Kafka, a single partition handles ~10 MB/s writes. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</p>
+  <pre><code class="language-bash"># Kafka: create topic with 12 partitions, replication factor 3
+kafka-topics.sh --create \
+  --topic orders.order.created \
+  --partitions 12 \
+  --replication-factor 3 \
+  --bootstrap-server localhost:9092</code></pre>
+  <p><strong>Verify</strong>: <code>kafka-topics.sh --describe --topic orders.order.created</code> &rarr; shows 12 partitions, 3 replicas each.</p>
+
+  <h3>4. Implement producers with idempotency</h3>
+  <p>Enable idempotent production to avoid duplicates on retries. Batch messages for throughput, but bound batch size and linger time for latency. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</p>
+  <pre><code class="language-python"># Kafka producer with idempotency (Python, confluent-kafka 2.6+)
+from confluent_kafka import Producer
+import json, uuid
+
+producer = Producer({
+    'bootstrap.servers': 'kafka-broker:9092',
+    'enable.idempotence': True,
+    'acks': 'all',
+    'linger.ms': 10,
+    'batch.size': 65536,
+    'compression.type': 'lz4',
+})
+
+def publish_order_event(order):
+    event = {
+        'event_type': 'order.created',
+        'event_id': str(uuid.uuid4()),
+        'timestamp': '2026-02-23T10:00:00Z',
+        'version': 1,
+        'payload': order,
+    }
+    producer.produce(
+        topic='orders.order.created',
+        key=str(order['order_id']),
+        value=json.dumps(event).encode(),
+        callback=lambda err, msg: print(f'Error: {err}') if err else None,
+    )
+    producer.flush()</code></pre>
+  <p><strong>Verify</strong>: Produce 100 messages, consume all &mdash; count should be exactly 100, no duplicates.</p>
+
+  <h3>5. Implement consumers with offset management</h3>
+  <p>Use consumer groups for parallel processing. Commit offsets only after successful processing. Implement idempotent handlers for effectively-once semantics. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</p>
+  <pre><code class="language-python"># Kafka consumer with manual offset commit (Python, confluent-kafka 2.6+)
+from confluent_kafka import Consumer
+import json
+
+consumer = Consumer({
+    'bootstrap.servers': 'kafka-broker:9092',
+    'group.id': 'order-processor',
+    'auto.offset.reset': 'earliest',
+    'enable.auto.commit': False,
+    'max.poll.interval.ms': 300000,
+})
+consumer.subscribe(['orders.order.created'])
+
+processed_ids = set()  # Use Redis/DB in production
+
+try:
+    while True:
+        msg = consumer.poll(timeout=1.0)
+        if msg is None:
+            continue
+        if msg.error():
+            print(f'Consumer error: {msg.error()}')
+            continue
+        event = json.loads(msg.value().decode())
+        event_id = event['event_id']
+        if event_id not in processed_ids:
+            process_order(event['payload'])
+            processed_ids.add(event_id)
+        consumer.commit(message=msg)
+finally:
+    consumer.close()</code></pre>
+  <p><strong>Verify</strong>: Stop consumer mid-batch, restart &mdash; it should reprocess from last committed offset.</p>
+
+  <h3>6. Set up dead letter queues and monitoring</h3>
+  <p>Configure DLQs to capture messages that fail processing after N retries. Monitor consumer lag, DLQ depth, and error rates. [<a href="https://www.cloudamqp.com/blog/part1-rabbitmq-best-practice.html">src2</a>] [<a href="https://aws.amazon.com/blogs/compute/building-event-driven-architectures-with-amazon-sns-fifo/">src3</a>]</p>
+  <pre><code class="language-python"># DLQ pattern: retry N times, then route to dead letter topic
+MAX_RETRIES = 3
+
+def process_with_dlq(msg, consumer, dlq_producer):
+    retries = int(msg.headers().get('retry_count', 0)) if msg.headers() else 0
+    try:
+        event = json.loads(msg.value().decode())
+        process_order(event['payload'])
+        consumer.commit(message=msg)
+    except Exception as e:
+        if retries &gt;= MAX_RETRIES:
+            dlq_producer.produce(
+                topic='orders.order.created.dlq',
+                key=msg.key(), value=msg.value(),
+                headers={'error': str(e), 'original_topic': msg.topic()},
+            )
+            consumer.commit(message=msg)
+        else:
+            dlq_producer.produce(
+                topic=msg.topic(), key=msg.key(), value=msg.value(),
+                headers={'retry_count': str(retries + 1)},
+            )
+            consumer.commit(message=msg)</code></pre>
+  <p><strong>Verify</strong>: Send a message that always fails &mdash; after 3 retries it should appear in the <code>.dlq</code> topic.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python (confluent-kafka): Kafka Producer/Consumer</h3>
+  <pre><code class="language-python"># Input:  Kafka broker at localhost:9092, topic 'events'
+# Output: Produces and consumes JSON events with idempotency
+
+from confluent_kafka import Producer, Consumer
+import json, uuid
+
+# Producer
+p = Producer({'bootstrap.servers': 'localhost:9092', 'enable.idempotence': True, 'acks': 'all'})
+p.produce('events', key='user-1', value=json.dumps({'id': str(uuid.uuid4()), 'action': 'signup'}).encode())
+p.flush()
+
+# Consumer
+c = Consumer({'bootstrap.servers': 'localhost:9092', 'group.id': 'svc', 'auto.offset.reset': 'earliest', 'enable.auto.commit': False})
+c.subscribe(['events'])
+msg = c.poll(5.0)
+if msg and not msg.error():
+    print(json.loads(msg.value()))
+    c.commit(message=msg)
+c.close()</code></pre>
+
+  <h3>Node.js (amqplib): RabbitMQ Publish/Subscribe</h3>
+  <pre><code class="language-javascript">// Input:  RabbitMQ at amqp://localhost, exchange 'events', queue 'order-processor'
+// Output: Publishes event to fanout exchange, consumes from bound queue
+
+const amqp = require('amqplib');  // amqplib@0.10.4
+
+async function main() {
+  const conn = await amqp.connect('amqp://localhost');
+  const ch = await conn.createChannel();
+  await ch.assertExchange('events', 'fanout', { durable: true });
+  ch.publish('events', '', Buffer.from(JSON.stringify({ type: 'order.created', id: '123' })),
+    { persistent: true, contentType: 'application/json' });
+  const q = await ch.assertQueue('order-processor', { durable: true });
+  await ch.bindQueue(q.queue, 'events', '');
+  await ch.prefetch(10);
+  ch.consume(q.queue, (msg) =&gt; {
+    if (msg) { console.log(JSON.parse(msg.content.toString())); ch.ack(msg); }
+  });
+}
+main().catch(console.error);</code></pre>
+
+  <h3>Python (boto3): AWS SQS Send/Receive</h3>
+  <pre><code class="language-python"># Input:  AWS SQS queue URL, AWS credentials configured
+# Output: Sends and receives a message with deduplication
+
+import boto3, json, uuid  # boto3&gt;=1.35.0
+
+sqs = boto3.client('sqs', region_name='us-east-1')
+queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789/orders'
+
+# Send (FIFO queue)
+sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps({'order_id': '456', 'action': 'created'}),
+    MessageGroupId='orders', MessageDeduplicationId=str(uuid.uuid4()))
+
+# Receive + Delete
+resp = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10, WaitTimeSeconds=20)
+for msg in resp.get('Messages', []):
+    print(json.loads(msg['Body']))
+    sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=msg['ReceiptHandle'])</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using message broker as a database</h3>
+  <pre><code class="language-python"># BAD -- scanning entire Kafka topic to find one record -- O(n) per lookup
+def get_user_profile(user_id):
+    consumer = Consumer({'bootstrap.servers': 'localhost:9092', 'group.id': f'lookup-{user_id}'})
+    consumer.subscribe(['user.profiles'])
+    for msg in consumer:
+        if msg.key() == user_id:
+            return json.loads(msg.value())</code></pre>
+
+  <h3>Correct: Materialize state into a database, use broker for transit</h3>
+  <pre><code class="language-python"># GOOD -- consume events into a database, query the database for reads
+def handle_user_event(event):
+    db.execute("INSERT INTO users (id, name, email) VALUES (%s, %s, %s) "
+               "ON CONFLICT (id) DO UPDATE SET name=%s, email=%s",
+               (event['user_id'], event['name'], event['email'],
+                event['name'], event['email']))
+
+def get_user_profile(user_id):
+    return db.execute("SELECT * FROM users WHERE id = %s", (user_id,))</code></pre>
+
+  <h3>Wrong: Publishing commands disguised as events</h3>
+  <pre><code class="language-python"># BAD -- event name is imperative (a command), creating tight coupling
+producer.produce('orders', value=json.dumps({
+    'event_type': 'SendEmailToCustomer',  # This is a command, not an event
+    'email': 'user@example.com',
+    'template': 'order_confirmation',
+}))</code></pre>
+
+  <h3>Correct: Publish facts about what happened</h3>
+  <pre><code class="language-python"># GOOD -- event describes what happened; consumers react independently
+producer.produce('orders', value=json.dumps({
+    'event_type': 'order.confirmed',      # Past tense = event (a fact)
+    'order_id': 'ORD-789',
+    'customer_id': 'CUST-123',
+    'total': 149.99,
+    'confirmed_at': '2026-02-23T10:30:00Z',
+}))</code></pre>
+
+  <h3>Wrong: No schema validation</h3>
+  <pre><code class="language-javascript">// BAD -- no contract between producer and consumer
+channel.publish('events', '', Buffer.from(JSON.stringify({
+  typ: 'order',           // Typo -- no validation catches this
+  data: { amt: '19.99' }, // String instead of number -- discovered in production
+})));</code></pre>
+
+  <h3>Correct: Enforce schemas with a registry</h3>
+  <pre><code class="language-javascript">// GOOD -- schema registry validates every message
+const { SchemaRegistry } = require('@kafkajs/confluent-schema-registry');
+const registry = new SchemaRegistry({ host: 'http://schema-registry:8081' });
+
+const schemaId = await registry.getLatestSchemaId('order-value');
+const encoded = await registry.encode(schemaId, {
+  event_type: 'order.created',
+  event_id: '550e8400-e29b-41d4-a716-446655440000',
+  timestamp: '2026-02-23T10:00:00Z',
+  version: 1,
+  payload: { order_id: 'ORD-789', total: 149.99 },
+});
+await producer.send({ topic: 'orders', messages: [{ value: encoded }] });</code></pre>
+
+  <h3>Wrong: Auto-committing offsets before processing</h3>
+  <pre><code class="language-python"># BAD -- auto-commit advances offset before processing finishes
+consumer = Consumer({
+    'bootstrap.servers': 'localhost:9092',
+    'group.id': 'svc',
+    'enable.auto.commit': True,     # Dangerous: commits before processing
+    'auto.commit.interval.ms': 1000,
+})</code></pre>
+
+  <h3>Correct: Manual commit after successful processing</h3>
+  <pre><code class="language-python"># GOOD -- commit only after business logic completes successfully
+consumer = Consumer({
+    'bootstrap.servers': 'localhost:9092',
+    'group.id': 'svc',
+    'enable.auto.commit': False,    # Manual commit only
+})
+# ... poll, process, then:
+consumer.commit(message=msg)        # Commit after processing succeeds</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Consumer lag spiral</strong>: Consumers fall behind due to slow processing, causing increasing memory pressure. Fix: monitor <code>consumer_lag</code> metric per partition, scale consumers to match partition count. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</li>
+    <li><strong>Poison message blocking</strong>: A single malformed message crashes the consumer repeatedly, blocking the entire partition. Fix: wrap processing in try/catch, route failures to DLQ after N retries. [<a href="https://www.cloudamqp.com/blog/part1-rabbitmq-best-practice.html">src2</a>]</li>
+    <li><strong>Thundering herd on rebalance</strong>: All consumers restart simultaneously, triggering cascading rebalances. Fix: use <code>cooperative-sticky</code> assignor, stagger pod restarts with <code>maxUnavailable: 1</code>. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</li>
+    <li><strong>Unbounded retry loops</strong>: Failed messages re-enqueued infinitely without backoff, amplifying load during outages. Fix: exponential backoff <code>delay = min(base * 2^attempt, max_delay)</code>, cap retries, then DLQ. [<a href="https://www.aklivity.io/post/the-top-10-anti-patterns-to-avoid-inside-event-driven-architectures">src6</a>]</li>
+    <li><strong>Event explosion from CRUD mapping</strong>: Publishing separate events for every DB column change creates excessive volume. Fix: publish coarse-grained domain events (<code>order.completed</code>) not CRUD operations. [<a href="https://www.ben-morris.com/event-driven-architecture-and-message-design-anti-patterns-and-pitfalls/">src7</a>]</li>
+    <li><strong>Missing idempotency in consumers</strong>: At-least-once delivery means duplicate processing without idempotent handlers. Fix: store processed <code>event_id</code> in an idempotency store and check before processing. [<a href="https://dataintensive.net/">src5</a>]</li>
+    <li><strong>Single-partition bottleneck</strong>: Putting all messages on one partition for global ordering hits throughput limits. Fix: partition by entity ID (order_id, user_id) for per-entity ordering. [<a href="https://docs.confluent.io/kafka/design/index.html">src1</a>]</li>
+    <li><strong>Ignoring backpressure</strong>: Producers overwhelm a broker that cannot keep up. Fix: set <code>max.block.ms</code> (Kafka) or publisher confirms (RabbitMQ) so producers block or fail fast. [<a href="https://www.cloudamqp.com/blog/part1-rabbitmq-best-practice.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Kafka consumer group lag
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
+  --describe --group order-processor
+
+# Check Kafka topic partitions and replicas
+kafka-topics.sh --bootstrap-server localhost:9092 \
+  --describe --topic orders.order.created
+
+# Check RabbitMQ queue depth and consumer count
+rabbitmqctl list_queues name messages consumers
+
+# Check RabbitMQ cluster status
+rabbitmqctl cluster_status
+
+# Check AWS SQS queue attributes
+aws sqs get-queue-attributes --queue-url $QUEUE_URL \
+  --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
+
+# Monitor NATS JetStream stream info
+nats stream info ORDERS
+
+# Check NATS consumer pending count
+nats consumer info ORDERS order-processor</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Kafka 3.7+ (2024)</td><td>Current</td><td>KRaft only &mdash; ZooKeeper removed</td><td>Migrate from ZooKeeper to KRaft before upgrading</td></tr>
+      <tr><td>Kafka 3.3-3.6</td><td>Stable</td><td>KRaft GA, ZooKeeper deprecated</td><td>Start KRaft migration; both modes supported</td></tr>
+      <tr><td>Kafka 2.x</td><td>Legacy</td><td>&mdash;</td><td>Upgrade to 3.x for KRaft, tiered storage</td></tr>
+      <tr><td>RabbitMQ 4.0+ (2024)</td><td>Current</td><td>Classic queues deprecated</td><td>Migrate all classic queues to quorum queues</td></tr>
+      <tr><td>RabbitMQ 3.12-3.13</td><td>LTS</td><td>Quorum queues default</td><td>&mdash;</td></tr>
+      <tr><td>NATS 2.10+ (2024)</td><td>Current</td><td>JetStream R2 API changes</td><td>Update client libraries to latest</td></tr>
+      <tr><td>SQS/SNS</td><td>Managed</td><td>N/A</td><td>AWS manages versioning; FIFO queues added 2016</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Services need temporal decoupling (producer and consumer run at different times/speeds)</td><td>Request needs synchronous response within 100ms</td><td>REST/gRPC with circuit breaker</td></tr>
+      <tr><td>One event triggers actions in multiple independent services (fan-out)</td><td>Only two services communicate and both are always available</td><td>Direct service-to-service call (simpler)</td></tr>
+      <tr><td>Need audit log / event replay / event sourcing</td><td>Data is ephemeral and loss is acceptable</td><td>In-memory pub/sub (Redis Pub/Sub, EventEmitter)</td></tr>
+      <tr><td>Throughput exceeds what synchronous calls can handle (&gt;10K req/s)</td><td>Low message volume (&lt;100 msg/day) with simple routing</td><td>Cron job + database polling</td></tr>
+      <tr><td>Need to buffer during downstream outages</td><td>All consumers must process in real-time with no buffering</td><td>WebSocket / SSE for real-time push</td></tr>
+      <tr><td>Regulatory requirement for message durability and ordering</td><td>Prototyping or MVP where operational overhead must be zero</td><td>Firebase, Supabase Realtime, or managed webhooks</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Kafka KRaft mode is now required for Kafka 3.7+ &mdash; ZooKeeper support has been fully removed; all new deployments must use KRaft</li>
+    <li>RabbitMQ 4.0 deprecated classic queues &mdash; quorum queues are now the default; classic mirrored queues will be removed in a future release</li>
+    <li>AWS SQS standard queues provide at-least-once delivery with best-effort ordering &mdash; use FIFO queues for strict ordering, but throughput is capped at 3,000 msg/s per queue (with batching) vs unlimited for standard</li>
+    <li>NATS JetStream persistence is production-ready but the ecosystem (tooling, client libraries, monitoring) is less mature than Kafka's &mdash; evaluate library support for your language before committing</li>
+    <li>Message broker selection is a long-term architectural decision &mdash; migrating between brokers is a major project involving producer/consumer rewrites, operational tooling changes, and data migration planning</li>
+    <li>Cloud-managed offerings (Amazon MSK, CloudAMQP, Confluent Cloud) reduce operational burden but introduce vendor lock-in and can be 3-10x more expensive than self-managed at scale</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

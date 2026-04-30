@@ -1,0 +1,30 @@
+// Input:  User search query string
+// Output: Ranked results with highlighted snippets
+
+POST /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [{
+        "multi_match": {
+          "query": "wireless noise cancelling",
+          "fields": ["title^3", "description^1", "category^0.5"],
+          "type": "best_fields",
+          "fuzziness": "AUTO"
+        }
+      }],
+      "filter": [
+        { "range": { "price": { "lte": 300 } } },
+        { "term": { "in_stock": true } }
+      ]
+    }
+  },
+  "highlight": {
+    "fields": {
+      "title": { "number_of_fragments": 1 },
+      "description": { "fragment_size": 120, "number_of_fragments": 3 }
+    }
+  },
+  "size": 10,
+  "from": 0
+}

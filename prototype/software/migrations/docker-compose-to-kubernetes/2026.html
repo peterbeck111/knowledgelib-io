@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Migrate from Docker Compose to Kubernetes | knowledgelib.io</title>
+  <meta name="description" content="Complete Docker Compose to Kubernetes migration guide with Kompose conversion, Helm/Kustomize packaging, Gateway API, 15 resource mappings, 8 production...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/migrations/docker-compose-to-kubernetes/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Migrate from Docker Compose to Kubernetes | knowledgelib.io">
+  <meta property="og:description" content="Complete Docker Compose to Kubernetes migration guide with Kompose conversion, Helm/Kustomize packaging, Gateway API, 15 resource mappings, and 8 production pitfalls. 8 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/migrations/docker-compose-to-kubernetes/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-17">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Migrate from Docker Compose to Kubernetes | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Docker Compose to Kubernetes migration guide with Kompose conversion, Helm/Kustomize packaging, Gateway API, and 8 production pitfalls.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/migrations/docker_compose_to_kubernetes">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I migrate from Docker Compose to Kubernetes?">
+  <meta name="ai:aliases" content="Docker Compose to Kubernetes migration; convert docker-compose.yml to Kubernetes; kompose convert docker compose; docker compose to k8s; migrate compose to Helm chart; Docker Compose to Kubernetes manifests; docker-compose to deployment yaml; docker compose to k8s with Kustomize">
+  <meta name="ai:raw" content="/api/v1/units/software/migrations/docker-compose-to-kubernetes/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="monthly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="2.0">
+  <meta name="ai:first_published" content="2026-02-17">
+  <meta name="ai:inputs_needed" content="service_count,target_environment,packaging_preference">
+  <meta name="ai:constraints" content="Kompose skips build: directives — pre-build and push images; K8s 1.25 removed PodSecurityPolicy — use PSA labels; Never deploy without resource requests/limits; K8s Secrets are base64 not encrypted — use external secret manager; Gateway API v1.4 recommended over legacy Ingress; depends_on has no K8s equivalent — use init containers">
+  <meta name="ai:skip_this_unit_if" content="Only need Docker Compose for local dev → Docker Compose is sufficient; Want PaaS instead of K8s → Evaluate Railway/Fly.io/Render directly; Migrating Docker Swarm not Compose → software/migrations/docker-swarm-to-kubernetes/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Migrate from Docker Compose to Kubernetes",
+    "headline": "How to Migrate from Docker Compose to Kubernetes",
+    "description": "Complete migration guide from Docker Compose to Kubernetes using Kompose, Helm, Kustomize, and Move2Kube. Covers resource mappings, Gateway API, NetworkPolicies, sidecar containers, and production hardening.",
+    "keywords": ["Docker Compose", "Kubernetes", "Kompose", "Helm", "Kustomize", "Move2Kube", "container orchestration", "Gateway API"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Docker Compose v2/v3, Kubernetes 1.25-1.35, Kompose 1.34-1.38, Helm 3.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Translate a Docker Compose File to Kubernetes Resources",
+        "url": "https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kompose — Go from Docker Compose to Kubernetes",
+        "url": "https://kompose.io/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Docker Compose to Kubernetes: Step-by-Step Migration",
+        "url": "https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Helm: The Package Manager for Kubernetes",
+        "url": "https://helm.sh/docs/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Migrating from Docker Compose to Kubernetes — Konveyor Move2Kube",
+        "url": "https://move2kube.konveyor.io/tutorials/migrating-from-docker-compose-to-kubernetes"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Gateway API v1.4: New Features",
+        "url": "https://kubernetes.io/blog/2025/11/06/gateway-api-v1-4/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Migrate from Docker Compose to Kubernetes",
+    "description": "Structured migration guide with 15 resource mappings, 7 conversion steps, production patterns, Gateway API, and Kompose/Helm/Kustomize/Move2Kube tooling comparison.",
+    "keywords": ["Docker Compose", "Kubernetes", "migration", "Kompose", "Helm", "Kustomize"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes.io"},
+      {"@type": "Organization", "name": "Kompose Project"},
+      {"@type": "Organization", "name": "Helm"},
+      {"@type": "Organization", "name": "CNCF Konveyor"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Migrations", "item": "https://knowledgelib.io/software/migrations/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Migrate from Docker Compose to Kubernetes" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I migrate from Docker Compose to Kubernetes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use kompose convert (v1.34+) to auto-generate Kubernetes manifests from docker-compose.yml, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion with manual tuning for production readiness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker Compose to Kubernetes migration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use kompose convert (v1.34+) to auto-generate Kubernetes manifests from docker-compose.yml, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion with manual tuning for production readiness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "convert docker-compose.yml to Kubernetes",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use kompose convert (v1.34+) to auto-generate Kubernetes manifests from docker-compose.yml, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion with manual tuning for production readiness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "kompose convert docker compose",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use kompose convert (v1.34+) to auto-generate Kubernetes manifests from docker-compose.yml, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion with manual tuning for production readiness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "docker compose to k8s",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use kompose convert (v1.34+) to auto-generate Kubernetes manifests from docker-compose.yml, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion with manual tuning for production readiness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "migrate compose to Helm chart",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use kompose convert (v1.34+) to auto-generate Kubernetes manifests from docker-compose.yml, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion with manual tuning for production readiness."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>How to Migrate from Docker Compose to Kubernetes</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I migrate from Docker Compose to Kubernetes?</h2>
+
+  <aside class="unit-meta" data-card-id="software/migrations/docker-compose-to-kubernetes/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> monthly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use <code>kompose convert</code> (v1.34+) to auto-generate Kubernetes manifests, then refine with health checks, resource limits, secrets, and NetworkPolicies — expect 70-80% auto-conversion.</li>
+    <li><strong>Key tool/command</strong>: <code>kompose convert -f docker-compose.yml</code></li>
+    <li><strong>Watch out for</strong>: Kompose skips <code>build:</code> directives — images must be pre-built and pushed to a registry. No readiness probes or resource limits are generated.</li>
+    <li><strong>Works with</strong>: Docker Compose v2/v3, Kubernetes 1.25-1.35, Kompose 1.34-1.38, Helm 3.x, Kustomize, Move2Kube 0.3.15+.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Kompose skips <code>build:</code> directives — all images must be pre-built and pushed to a container registry before conversion [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>, <a href="https://kompose.io/">src2</a>]</li>
+    <li>Kubernetes 1.25+ removed PodSecurityPolicy — use Pod Security Admission (PSA) namespace labels instead [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</li>
+    <li>Never deploy without <code>resources.requests</code> and <code>resources.limits</code> — a single pod without limits can consume all node resources [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</li>
+    <li>Kubernetes Secrets are base64-encoded, not encrypted at rest by default — enable encryption at rest or use an external secret manager (Vault, Sealed Secrets, AWS Secrets Manager) [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</li>
+    <li>Gateway API (v1.4+) is the recommended ingress path for new deployments — legacy Ingress still works but receives fewer enhancements [<a href="https://kubernetes.io/blog/2025/11/06/gateway-api-v1-4/">src8</a>]</li>
+    <li>Docker Compose <code>depends_on</code> has no Kubernetes equivalent — use init containers, readiness probes, or application-level connection retry logic [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Docker Compose</th><th scope="col">Kubernetes Equivalent</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>services:</code></td>
+        <td>Deployment + Service</td>
+        <td>Each compose service becomes one Deployment + one Service [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>]</td>
+      </tr>
+      <tr>
+        <td><code>image:</code></td>
+        <td><code>containers[].image</code></td>
+        <td>Direct mapping in pod spec [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>]</td>
+      </tr>
+      <tr>
+        <td><code>build:</code></td>
+        <td>(skipped by Kompose)</td>
+        <td>Pre-build and push to registry (Docker Hub, ECR, GCR, GHCR) [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</td>
+      </tr>
+      <tr>
+        <td><code>ports:</code></td>
+        <td>Service (ClusterIP/LoadBalancer)</td>
+        <td>Or use Gateway API HTTPRoute [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>, <a href="https://kubernetes.io/blog/2025/11/06/gateway-api-v1-4/">src8</a>]</td>
+      </tr>
+      <tr>
+        <td><code>volumes:</code> (named)</td>
+        <td>PersistentVolumeClaim</td>
+        <td>Kompose creates PVCs automatically [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>, <a href="https://kompose.io/">src2</a>]</td>
+      </tr>
+      <tr>
+        <td><code>volumes:</code> (bind mount)</td>
+        <td>ConfigMap or hostPath</td>
+        <td>ConfigMap for config files; avoid hostPath in production [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</td>
+      </tr>
+      <tr>
+        <td><code>environment:</code></td>
+        <td><code>env:</code> or ConfigMap</td>
+        <td>Sensitive values must use K8s Secret [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</td>
+      </tr>
+      <tr>
+        <td><code>env_file:</code></td>
+        <td>ConfigMap from file</td>
+        <td><code>kubectl create configmap --from-env-file=.env</code> [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>]</td>
+      </tr>
+      <tr>
+        <td><code>depends_on:</code></td>
+        <td>(no equivalent)</td>
+        <td>Use init containers or readiness probes [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</td>
+      </tr>
+      <tr>
+        <td><code>restart: always</code></td>
+        <td><code>restartPolicy: Always</code></td>
+        <td>Default in Deployments [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</td>
+      </tr>
+      <tr>
+        <td><code>networks:</code></td>
+        <td>K8s networking (flat) + NetworkPolicy</td>
+        <td>All pods reachable by service name; use NetworkPolicy to restrict [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</td>
+      </tr>
+      <tr>
+        <td><code>deploy.replicas:</code></td>
+        <td><code>spec.replicas:</code></td>
+        <td>Direct mapping; add HPA for auto-scaling [<a href="https://kompose.io/">src2</a>]</td>
+      </tr>
+      <tr>
+        <td><code>deploy.resources:</code></td>
+        <td><code>resources.requests/limits</code></td>
+        <td>CPU and memory [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</td>
+      </tr>
+      <tr>
+        <td><code>healthcheck:</code></td>
+        <td>liveness/readiness/startupProbe</td>
+        <td>Add manually — Kompose may not convert [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</td>
+      </tr>
+      <tr>
+        <td><code>secrets:</code></td>
+        <td>Secret</td>
+        <td><code>kubectl create secret generic</code> or Sealed Secrets for GitOps [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Is this for local development only?
+│   ├── YES → Keep Docker Compose (K8s is overkill) [src3]
+│   └── NO → Continue ↓
+├── How many services?
+│   ├── 1-3 → Kompose convert [src1, src2]
+│   ├── 4-10 → Kompose + Helm charts or Kustomize [src4]
+│   └── 10+ → Full Helm chart architecture with subcharts, or Move2Kube [src4, src5]
+├── Do you need auto-scaling?
+│   ├── YES → Kubernetes HPA [src7]
+│   └── NO → Fixed replicas
+├── Where will K8s run?
+│   ├── Local → Minikube, kind, or k3d [src1]
+│   ├── Cloud → EKS, GKE, or AKS [src3]
+│   └── Self-hosted → kubeadm or k3s
+├── Environment-specific configs?
+│   ├── YES (simple overlays) → Kustomize [src3]
+│   ├── YES (complex templating) → Helm values.yaml per env [src4]
+│   └── NO → Plain manifests
+├── Need advanced source analysis?
+│   ├── YES → Move2Kube (plan → transform) [src5]
+│   └── NO → Kompose is sufficient
+└── DEFAULT → kompose convert → refine → Helm/Kustomize → deploy</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Install Kompose and convert</h3>
+  <pre><code class="language-bash"># Install Kompose (v1.38 as of Feb 2026)
+# macOS:
+brew install kompose
+# Linux:
+curl -L https://github.com/kubernetes/kompose/releases/latest/download/kompose-linux-amd64 -o kompose
+chmod +x kompose && sudo mv kompose /usr/local/bin/
+
+# Convert
+kompose convert -f docker-compose.yml
+# Output: deployment.yaml, service.yaml, pvc.yaml per service
+
+# Alternative: convert directly to Helm chart
+kompose convert -f docker-compose.yml --chart</code></pre>
+  <p><strong>Verify</strong>: <code>ls *.yaml</code> — one Deployment + Service per compose service. [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>, <a href="https://kompose.io/">src2</a>]</p>
+
+  <h3>2. Push images to registry</h3>
+  <p>Kompose skips <code>build:</code> directives — all images must be in a registry. [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</p>
+  <pre><code class="language-bash"># Build and push each service image
+docker build -t myregistry/web:1.0 ./web && docker push myregistry/web:1.0
+docker build -t myregistry/api:1.0 ./api && docker push myregistry/api:1.0
+
+# Update generated YAML image references
+sed -i 's|web:latest|myregistry/web:1.0|g' web-deployment.yaml
+sed -i 's|api:latest|myregistry/api:1.0|g' api-deployment.yaml</code></pre>
+
+  <h3>3. Add health checks and resource limits</h3>
+  <p>Kompose output lacks production essentials — add manually. [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>, <a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</p>
+  <pre><code class="language-yaml"># Add to each container spec in deployment.yaml
+containers:
+  - name: web
+    image: myregistry/web:1.0
+    ports:
+      - containerPort: 8080
+    startupProbe:
+      httpGet:
+        path: /health
+        port: 8080
+      failureThreshold: 30
+      periodSeconds: 2
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"</code></pre>
+
+  <h3>4. Convert env vars to Secrets/ConfigMaps</h3>
+  <pre><code class="language-bash"># Non-sensitive → ConfigMap
+kubectl create configmap app-config \
+  --from-literal=NODE_ENV=production \
+  --from-literal=LOG_LEVEL=info
+
+# Sensitive → Secret
+kubectl create secret generic app-secrets \
+  --from-literal=DATABASE_URL='postgres://user:pass@db:5432/myapp' \
+  --from-literal=API_KEY='sk-xxx'
+
+# For GitOps: use Sealed Secrets to safely commit encrypted secrets
+kubeseal --format yaml &lt; secret.yaml &gt; sealed-secret.yaml</code></pre>
+  <pre><code class="language-yaml"># Reference in Deployment
+envFrom:
+  - configMapRef:
+      name: app-config
+  - secretRef:
+      name: app-secrets</code></pre>
+
+  <h3>5. Set up Gateway API or Ingress</h3>
+  <p>Gateway API is the recommended approach for new clusters (K8s 1.31+). [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>, <a href="https://kubernetes.io/blog/2025/11/06/gateway-api-v1-4/">src8</a>]</p>
+  <pre><code class="language-yaml"># Option A: Gateway API (recommended for new deployments)
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app-route
+spec:
+  parentRefs:
+    - name: my-gateway
+  hostnames: ["myapp.com"]
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: web
+          port: 8080</code></pre>
+  <pre><code class="language-yaml"># Option B: Legacy Ingress (still widely supported)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [myapp.com]
+      secretName: myapp-tls
+  rules:
+    - host: myapp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 8080</code></pre>
+
+  <h3>6. Add NetworkPolicies</h3>
+  <p>Compose <code>networks:</code> isolation does not carry over — by default all K8s pods can communicate. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</p>
+  <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-allow-web-only
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: web
+      ports:
+        - port: 3000</code></pre>
+
+  <h3>7. Package as Helm chart or Kustomize</h3>
+  <pre><code class="language-bash"># Option A: Helm chart
+helm create myapp
+# Replace templates/ with refined manifests
+# Parameterize values in values.yaml
+helm install myapp ./myapp -f values-production.yaml
+helm upgrade myapp ./myapp -f values-production.yaml
+
+# Option B: Kustomize overlays (built into kubectl)
+kubectl apply -k overlays/production/</code></pre>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Programmatic Kompose conversion with validation</h3>
+  <p>Full script: <a href="scripts/python-programmatic-kompose-conversion-with-valida.py">python-programmatic-kompose-conversion-with-valida.py</a> (33 lines)</p>
+  <pre><code class="language-python"># Input:  docker-compose.yml path
+# Output: Validated Kubernetes manifests
+
+import subprocess
+import yaml
+from pathlib import Path
+
+def convert_and_validate(compose_file: str, output_dir: str = "./k8s") -> list[str]:
+    """Convert docker-compose.yml to K8s manifests and validate."""
+    Path(output_dir).mkdir(exist_ok=True)
+
+    result = subprocess.run(
+        ["kompose", "convert", "-f", compose_file, "--out", output_dir],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Kompose failed: {result.stderr}")
+
+    manifests = list(Path(output_dir).glob("*.yaml"))
+    issues = []
+    for f in manifests:
+        doc = yaml.safe_load(f.read_text())
+        kind = doc.get("kind", "Unknown")
+        if kind == "Deployment":
+            containers = doc["spec"]["template"]["spec"]["containers"]
+            for c in containers:
+                if "livenessProbe" not in c:
+                    issues.append(f"{f.name}: {c['name']} missing livenessProbe")
+                if "resources" not in c:
+                    issues.append(f"{f.name}: {c['name']} missing resource limits")
+    if issues:
+        print("Production readiness issues:")
+        for i in issues:
+            print(f"  - {i}")
+    return [str(f) for f in manifests]</code></pre>
+
+  <h3>Bash: End-to-end migration script</h3>
+  <p>Full script: <a href="scripts/bash-end-to-end-migration-script.sh">bash-end-to-end-migration-script.sh</a> (27 lines)</p>
+  <pre><code class="language-bash">#!/bin/bash
+# Input:  docker-compose.yml
+# Output: Deployed Kubernetes application
+
+set -euo pipefail
+COMPOSE_FILE="${1:-docker-compose.yml}"
+NAMESPACE="${2:-default}"
+OUTPUT_DIR="./k8s-manifests"
+
+echo "=== Docker Compose to Kubernetes Migration ==="
+mkdir -p "$OUTPUT_DIR"
+kompose convert -f "$COMPOSE_FILE" --out "$OUTPUT_DIR"
+
+for f in "$OUTPUT_DIR"/*.yaml; do
+  kubectl apply --dry-run=client -f "$f" 2>&amp;1 | grep -v "configured" || true
+done
+
+kubectl apply -f "$OUTPUT_DIR/" -n "$NAMESPACE"
+
+for deployment in $(kubectl get deployments -n "$NAMESPACE" -o name); do
+  echo "Waiting for $deployment..."
+  kubectl rollout status "$deployment" -n "$NAMESPACE" --timeout=120s
+done
+
+echo "=== Migration complete ==="
+kubectl get all -n "$NAMESPACE"</code></pre>
+
+  <h3>Alternative: Move2Kube for complex migrations</h3>
+  <p>For larger projects with multiple Dockerfiles and source code, Move2Kube (CNCF Konveyor) provides a more comprehensive migration path. [<a href="https://move2kube.konveyor.io/tutorials/migrating-from-docker-compose-to-kubernetes">src5</a>]</p>
+  <pre><code class="language-bash"># Install Move2Kube (v0.3.15+)
+curl -L https://github.com/konveyor/move2kube/releases/latest/download/move2kube-linux-amd64 -o move2kube
+chmod +x move2kube && sudo mv move2kube /usr/local/bin/
+
+# Step 1: Plan — analyzes Compose + Dockerfiles + source
+move2kube plan -s ./my-compose-project
+
+# Step 2: Transform — interactive Q&amp;A, generates K8s manifests + Helm + CI/CD
+move2kube transform -s ./my-compose-project
+# Output: deploy/yamls/, deploy/cicd/, deploy/scripts/</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: hostPath volumes in production</h3>
+  <pre><code class="language-yaml"># BAD — hostPath ties pods to specific nodes and breaks scaling
+volumes:
+  - name: data
+    hostPath:
+      path: /data/myapp</code></pre>
+  <h3>Correct: PersistentVolumeClaims</h3>
+  <pre><code class="language-yaml"># GOOD — PVCs are portable and work with cloud storage [src1]
+volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: myapp-data</code></pre>
+
+  <h3>Wrong: Secrets in ConfigMaps or env vars in plain text</h3>
+  <pre><code class="language-yaml"># BAD — secrets visible in kubectl describe
+env:
+  - name: DATABASE_PASSWORD
+    value: "my-secret-password"</code></pre>
+  <h3>Correct: Kubernetes Secrets or external secret managers</h3>
+  <pre><code class="language-yaml"># GOOD — secrets stored securely [src3]
+env:
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-secrets
+        key: password</code></pre>
+
+  <h3>Wrong: Relying on depends_on for service ordering</h3>
+  <pre><code class="language-yaml"># BAD — Kubernetes has no depends_on
+# Compose: depends_on: [db, redis]
+# This causes startup crashes when dependencies aren't ready</code></pre>
+  <h3>Correct: Init containers and readiness probes</h3>
+  <pre><code class="language-yaml"># GOOD — init container waits for DB before app starts [src6]
+initContainers:
+  - name: wait-for-db
+    image: busybox:1.36
+    command: ['sh', '-c', 'until nc -z db-service 5432; do sleep 2; done']</code></pre>
+
+  <h3>Wrong: Deploying without resource limits</h3>
+  <pre><code class="language-yaml"># BAD — pod can consume all node resources and trigger OOM kills
+containers:
+  - name: api
+    image: myregistry/api:1.0
+    # No resources block = unlimited</code></pre>
+  <h3>Correct: Always set resource requests and limits</h3>
+  <pre><code class="language-yaml"># GOOD — bounded resource usage, enables HPA [src3]
+containers:
+  - name: api
+    image: myregistry/api:1.0
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Kompose skips <code>build:</code> directives</strong>: Images must be pre-built and in a registry. Fix: build, tag, push before conversion. [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</li>
+    <li><strong>No readiness probes generated</strong>: Services receive traffic before ready. Fix: add <code>readinessProbe</code>, <code>livenessProbe</code>, and <code>startupProbe</code> to every container. [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>, <a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</li>
+    <li><strong><code>depends_on</code> not converted</strong>: K8s doesn't guarantee startup order. Fix: init containers or connection retry logic. [<a href="https://medium.com/@loovatech/application-migration-from-docker-compose-to-kubernetes-da683c2f6ffe">src6</a>]</li>
+    <li><strong>Bind mounts don't work in K8s</strong>: Local paths don't exist on cluster nodes. Fix: ConfigMaps for config, PVCs for data, Secrets for credentials. [<a href="https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/">src1</a>]</li>
+    <li><strong>Default resource limits too permissive</strong>: Without limits, one pod can starve the node. Fix: always set <code>resources.requests</code> and <code>resources.limits</code>. [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</li>
+    <li><strong>Missing NetworkPolicies</strong>: Compose <code>networks:</code> doesn't create K8s NetworkPolicies. Fix: implement NetworkPolicies to restrict pod-to-pod traffic. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</li>
+    <li><strong>PodSecurityPolicy removed in K8s 1.25</strong>: Outdated guides reference PSP. Fix: use Pod Security Admission (PSA) namespace labels. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</li>
+    <li><strong>Secrets not encrypted at rest</strong>: K8s Secrets are only base64-encoded by default. Fix: enable etcd encryption at rest, or use Sealed Secrets / external secret managers. [<a href="https://www.vcluster.com/blog/docker-compose-to-kubernetes-step-by-step-migration">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Validate compose file before conversion
+docker compose config -f docker-compose.yml
+
+# Convert and see what Kompose generates (stdout preview)
+kompose convert -f docker-compose.yml --stdout
+
+# Dry-run deployment (validates manifests without applying)
+kubectl apply --dry-run=client -f k8s-manifests/
+
+# Check pod status after deployment
+kubectl get pods -o wide
+kubectl describe pod &lt;pod-name&gt;
+kubectl logs &lt;pod-name&gt; --previous  # logs from crashed container
+
+# Verify services and endpoints
+kubectl get svc
+kubectl get endpoints
+
+# Test service connectivity
+kubectl run test --rm -it --image=busybox:1.36 -- wget -qO- http://web-service:8080/health
+
+# Check Gateway API routes
+kubectl get httproutes
+kubectl describe httproute app-route
+
+# Verify NetworkPolicies
+kubectl get networkpolicies
+kubectl describe networkpolicy api-allow-web-only
+
+# Check resource usage vs limits
+kubectl top pods
+kubectl top nodes</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Tool</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Kompose</td>
+        <td>1.38 (Jan 2026)</td>
+        <td>Current</td>
+        <td>Compose Spec v3 full support, Helm chart output, ARM64 [<a href="https://kompose.io/">src2</a>]</td>
+      </tr>
+      <tr>
+        <td>Kubernetes</td>
+        <td>1.35 (Dec 2025)</td>
+        <td>Current</td>
+        <td>Timbernetes release, continued Gateway API improvements [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</td>
+      </tr>
+      <tr>
+        <td>Kubernetes</td>
+        <td>1.33 (Apr 2025)</td>
+        <td>Supported</td>
+        <td>Sidecar containers GA, native init container restartPolicy:Always [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">src7</a>]</td>
+      </tr>
+      <tr>
+        <td>Helm</td>
+        <td>3.16+</td>
+        <td>Current</td>
+        <td>OCI registry support, improved schema validation [<a href="https://helm.sh/docs/">src4</a>]</td>
+      </tr>
+      <tr>
+        <td>Docker Compose</td>
+        <td>v2 (Go)</td>
+        <td>Current</td>
+        <td><code>docker compose</code> (space) replaces <code>docker-compose</code> (hyphen)</td>
+      </tr>
+      <tr>
+        <td>Move2Kube</td>
+        <td>0.3.15 (Mar 2025)</td>
+        <td>Current</td>
+        <td>Enhanced Compose parsing, Helm + Kustomize output [<a href="https://move2kube.konveyor.io/tutorials/migrating-from-docker-compose-to-kubernetes">src5</a>]</td>
+      </tr>
+      <tr>
+        <td>Gateway API</td>
+        <td>v1.4 (Nov 2025)</td>
+        <td>Current</td>
+        <td>External auth filter, BackendTLSPolicy stable [<a href="https://kubernetes.io/blog/2025/11/06/gateway-api-v1-4/">src8</a>]</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Migrate When</th><th scope="col">Don't Migrate When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Production workloads need scaling</td>
+        <td>Local development only</td>
+        <td>Keep Docker Compose</td>
+      </tr>
+      <tr>
+        <td>Multiple environments (staging, prod)</td>
+        <td>Team &lt; 3 engineers, single-server</td>
+        <td>Docker Compose + systemd</td>
+      </tr>
+      <tr>
+        <td>Need rolling updates, self-healing</td>
+        <td>Budget doesn't cover K8s ops</td>
+        <td>Railway, Fly.io, or Render</td>
+      </tr>
+      <tr>
+        <td>Cloud-managed K8s available (EKS/GKE/AKS)</td>
+        <td>Single stateless container</td>
+        <td>Cloud Run, App Runner, Fargate</td>
+      </tr>
+      <tr>
+        <td>Need service mesh or mTLS</td>
+        <td>No compliance/multi-tenancy needs</td>
+        <td>Docker Compose + Traefik</td>
+      </tr>
+      <tr>
+        <td>GitOps workflow required</td>
+        <td>Prototype or proof-of-concept</td>
+        <td>Docker Compose</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Docker Compose is still best for local dev — many teams use hybrid (Compose locally + K8s in production). Tools like Tilt and Skaffold bridge the gap.</li>
+    <li>Kompose is a starting point, not production-ready output. Always review and refine — especially probes, resource limits, secrets, and NetworkPolicies.</li>
+    <li>Budget 2-4 weeks for team K8s training before production migration. Consider starting with a managed service (EKS, GKE, AKS) to reduce ops burden.</li>
+    <li>Storage classes vary by cloud provider — PVC behavior and default StorageClasses differ between EKS (gp3), GKE (pd-standard), and AKS (managed-premium).</li>
+    <li>Kubernetes 1.33+ graduated sidecar containers to stable — use <code>restartPolicy: Always</code> on init containers for proper sidecar lifecycle management.</li>
+    <li>Move2Kube (CNCF Konveyor) is a more comprehensive alternative to Kompose for projects with complex source analysis needs — it generates Helm charts, CI/CD pipelines, and Kustomize overlays in one pass.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/heroku-to-aws/2026" data-relationship="related_to">Heroku to AWS Migration</a>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices</a>
+    <a href="/software/migrations/jenkins-to-github-actions/2026" data-relationship="solves">Jenkins to GitHub Actions</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Migrations<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

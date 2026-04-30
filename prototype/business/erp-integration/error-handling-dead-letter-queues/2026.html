@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Error Handling and Dead Letter Queues for ERP | knowledgelib.io</title>
+  <meta name="description" content="How to implement error handling and dead letter queues for ERP integrations — exponential backoff, circuit breakers, DLQ architecture across AWS SQS,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/error-handling-dead-letter-queues/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Error Handling and Dead Letter Queues for ERP | knowledgelib.io">
+  <meta property="og:description" content="How to implement error handling and dead letter queues for ERP integrations — exponential backoff, circuit breakers, DLQ architecture across AWS SQS, Azure Service Bus, Kafka, RabbitMQ. 7 sources, all cited. Verified 2026-03-02.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/error-handling-dead-letter-queues/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-02">
+  <meta property="article:modified_time" content="2026-03-02">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Error Handling and Dead Letter Queues for ERP | knowledgelib.io">
+  <meta name="twitter:description" content="How to implement error handling and dead letter queues for ERP integrations — exponential backoff, circuit breakers, DLQ architecture across AWS SQS, Azure Service Bus, Kafka, RabbitMQ. 7 sources, all cited. Verified 2026-03-02.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-03-02">
+  <meta name="ai:domain" content="business/erp-integration/error-handling-dead-letter-queues">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you implement error handling and dead letter queues for ERP integrations - retry strategies?">
+  <meta name="ai:aliases" content="ERP integration DLQ patterns and retry strategies; How to handle failed ERP API messages with dead letter queues; Exponential backoff and circuit breaker for ERP integrations; Retry and dead letter queue architecture for enterprise middleware">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/error-handling-dead-letter-queues/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-02">
+  <meta name="ai:systems" content="AWS SQS (Current GA); Azure Service Bus (Current GA); Apache Kafka (Current GA); RabbitMQ (Current GA); MuleSoft Anypoint (Current GA)">
+  <meta name="ai:inputs_needed" content="message_broker,error_tolerance,integration_pattern">
+  <meta name="ai:constraints" content="DLQ retention varies by platform: AWS SQS max 14 days, Azure Service Bus unlimited (Premium); Idempotency keys required for any retry strategy; Circuit breaker state must be shared across all worker instances; Exponential backoff max delay should be capped at 30-60s for user-facing flows">
+  <meta name="ai:skip_this_unit_if" content="User needs vendor-specific API rate limits -> business/erp-integration/{vendor}-rest-api/2026; User needs authentication flows -> business/erp-integration/{vendor}-authentication/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Error Handling and Dead Letter Queues for ERP Integrations: Retry Strategies",
+    "headline": "Error Handling and Dead Letter Queues for ERP Integrations: Retry Strategies",
+    "description": "Comprehensive guide to implementing error handling, dead letter queues, exponential backoff, and circuit breakers for ERP integrations across AWS SQS, Azure Service Bus, Apache Kafka, and RabbitMQ.",
+    "keywords": ["dead letter queue", "DLQ", "ERP integration", "retry strategies", "exponential backoff", "circuit breaker", "error handling", "message broker"],
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "proficiencyLevel": "Expert",
+    "dependencies": "AWS SQS, Azure Service Bus, Apache Kafka, RabbitMQ, or iPaaS middleware",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Dead Letter Queue (DLQ): Architecture, Examples, and Best Practices (2026 Guide)",
+        "url": "https://sreschool.com/blog/dead-letter-queue-dlq/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Integration Patterns IV: Retries and Dead-Letter Queues",
+        "url": "https://littlehorse.io/blog/retries-and-dlq"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Mastering Exponential Backoff in Distributed Systems",
+        "url": "https://betterstack.com/community/guides/monitoring/exponential-backoff/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Circuit Breaker Pattern — AWS Prescriptive Guidance",
+        "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/circuit-breaker.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Service Bus Dead-Letter Queues — Azure Service Bus",
+        "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Resilience Design Patterns: Retry, Fallback, Timeout, Circuit Breaker",
+        "url": "https://www.codecentric.de/en/knowledge-hub/blog/resilience-design-patterns-retry-fallback-timeout-circuit-breaker"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Using Dead-Letter Queues in Amazon SQS",
+        "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Error Handling and Dead Letter Queues for ERP Integrations: Retry Strategies",
+    "description": "Cross-platform guide to DLQ architecture, retry strategies with exponential backoff, circuit breakers, and error classification for ERP integrations.",
+    "keywords": ["dead letter queue", "DLQ", "ERP integration", "retry strategies", "exponential backoff", "circuit breaker"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Apache Software Foundation"},
+      {"@type": "Organization", "name": "SRE School"},
+      {"@type": "Organization", "name": "Better Stack"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Error Handling and Dead Letter Queues" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you implement error handling and dead letter queues for ERP integrations - retry strategies?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement a three-layer resilience stack: exponential backoff with jitter for transient errors, circuit breakers for prolonged outages, and dead letter queues for poison messages that exhaust all retries. Every ERP integration needs all three."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ERP integration DLQ patterns and retry strategies",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement a three-layer resilience stack: exponential backoff with jitter for transient errors, circuit breakers for prolonged outages, and dead letter queues for poison messages that exhaust all retries. Every ERP integration needs all three."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to handle failed ERP API messages with dead letter queues",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement a three-layer resilience stack: exponential backoff with jitter for transient errors, circuit breakers for prolonged outages, and dead letter queues for poison messages that exhaust all retries. Every ERP integration needs all three."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Exponential backoff and circuit breaker for ERP integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement a three-layer resilience stack: exponential backoff with jitter for transient errors, circuit breakers for prolonged outages, and dead letter queues for poison messages that exhaust all retries. Every ERP integration needs all three."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Retry and dead letter queue architecture for enterprise middleware",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Implement a three-layer resilience stack: exponential backoff with jitter for transient errors, circuit breakers for prolonged outages, and dead letter queues for poison messages that exhaust all retries. Every ERP integration needs all three."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Error Handling and Dead Letter Queues for ERP Integrations: Retry Strategies</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you implement error handling and dead letter queues for ERP integrations - retry strategies?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/error-handling-dead-letter-queues/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-Platform (AWS SQS, Azure Service Bus, Kafka, RabbitMQ)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-02</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Implement a three-layer resilience stack: exponential backoff with jitter for transient errors, circuit breakers for prolonged outages, and dead letter queues for poison messages that exhaust all retries. Every ERP integration needs all three.</li>
+    <li><strong>Key limit</strong>: DLQ retention varies by platform — AWS SQS max 14 days, Azure Service Bus unlimited on Premium tier, Kafka depends on topic retention config. Plan your reprocessing SLA around these limits.</li>
+    <li><strong>Watch out for</strong>: Retrying without idempotency keys causes duplicate records in the target ERP. Every retry-eligible operation must be idempotent — use unique transaction IDs, not auto-increment.</li>
+    <li><strong>Best for</strong>: Any ERP integration with zero-loss or at-least-once delivery requirements — order-to-cash, AP automation, inventory sync, and payroll feeds.</li>
+    <li><strong>Authentication</strong>: N/A (pattern-level card). See system-specific cards for authentication details per ERP vendor.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers cross-platform error handling patterns applicable to all major ERP integrations, regardless of the specific ERP system (Salesforce, SAP, Oracle, NetSuite, Dynamics 365, Workday) or middleware platform. The patterns are implemented at the integration middleware layer — the message broker or iPaaS platform that sits between systems.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">DLQ Support</th><th scope="col">Retry Support</th><th scope="col">Circuit Breaker</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS/SNS</td><td>Message broker</td><td>Native (redrive policy)</td><td>maxReceiveCount (1-1000)</td><td>Manual (Step Functions / custom)</td></tr>
+      <tr><td>Azure Service Bus</td><td>Message broker</td><td>Native (subqueue per entity)</td><td>MaxDeliveryCount (default 10)</td><td>Manual (custom implementation)</td></tr>
+      <tr><td>Apache Kafka</td><td>Event streaming</td><td>Via error topic convention</td><td>Consumer-side retry logic</td><td>Manual (custom implementation)</td></tr>
+      <tr><td>RabbitMQ</td><td>Message broker</td><td>Native (dead-letter exchange)</td><td>x-delivery-limit header</td><td>Manual (custom implementation)</td></tr>
+      <tr><td>MuleSoft Anypoint</td><td>iPaaS</td><td>Built-in DLQ connector</td><td>Configurable retry policies</td><td>Built-in circuit breaker scope</td></tr>
+      <tr><td>Boomi</td><td>iPaaS</td><td>Error handling shapes</td><td>Configurable retry</td><td>Custom via process routes</td></tr>
+      <tr><td>Workato</td><td>iPaaS</td><td>Error monitoring recipes</td><td>Auto-retry with configurable count</td><td>Custom via error handlers</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Type</th><th scope="col">Best For</th><th scope="col">Complexity</th><th scope="col">Latency Impact</th><th scope="col">Data Loss Risk</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Immediate retry</td><td>Retry</td><td>Transient network blips</td><td>Low</td><td>Minimal (ms)</td><td>Medium (no backoff)</td></tr>
+      <tr><td>Exponential backoff</td><td>Retry</td><td>Rate limits, temporary overload</td><td>Medium</td><td>Increasing (1s-60s)</td><td>Low</td></tr>
+      <tr><td>Exponential backoff + jitter</td><td>Retry</td><td>High-concurrency retries</td><td>Medium</td><td>Increasing (randomized)</td><td>Low</td></tr>
+      <tr><td>Circuit breaker</td><td>Protection</td><td>Prolonged service outages</td><td>Medium</td><td>Fast-fail when open</td><td>None (preserves messages)</td></tr>
+      <tr><td>Dead letter queue</td><td>Error isolation</td><td>Poison messages, schema errors</td><td>Medium</td><td>None (async)</td><td>Very low</td></tr>
+      <tr><td>Saga with compensation</td><td>Transaction</td><td>Multi-system writes</td><td>High</td><td>Variable</td><td>Very low</td></tr>
+      <tr><td>Outbox pattern</td><td>Delivery guarantee</td><td>Exactly-once publish</td><td>High</td><td>Minimal</td><td>Near zero</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Platform DLQ Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Max Retention</th><th scope="col">Max Message Size</th><th scope="col">Max DLQ Depth</th><th scope="col">Reprocessing Method</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS</td><td>14 days</td><td>256 KB (2 GB with S3)</td><td>Unlimited</td><td>Redrive to source queue</td></tr>
+      <tr><td>Azure Service Bus (Standard)</td><td>Unlimited</td><td>256 KB</td><td>5 GB per entity</td><td>Receive + resubmit</td></tr>
+      <tr><td>Azure Service Bus (Premium)</td><td>Unlimited</td><td>100 MB</td><td>80 GB per entity</td><td>Receive + resubmit</td></tr>
+      <tr><td>Apache Kafka (error topic)</td><td>Topic retention config</td><td>1 MB default (configurable)</td><td>Partition-based</td><td>Consumer from error topic</td></tr>
+      <tr><td>RabbitMQ</td><td>TTL-based (configurable)</td><td>128 MB default</td><td>Memory/disk-based</td><td>Consume from DLX queue</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Retry Budget Guidelines</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Integration Type</th><th scope="col">Max Retries</th><th scope="col">Initial Delay</th><th scope="col">Max Delay</th><th scope="col">Backoff Factor</th><th scope="col">Jitter</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Real-time API (user-facing)</td><td>3-5</td><td>500ms</td><td>30s</td><td>2x</td><td>Full jitter</td></tr>
+      <tr><td>Batch/bulk processing</td><td>5-10</td><td>1s</td><td>5min</td><td>2x</td><td>Equal jitter</td></tr>
+      <tr><td>Event-driven (CDC, webhooks)</td><td>5-8</td><td>1s</td><td>2min</td><td>2x</td><td>Full jitter</td></tr>
+      <tr><td>File-based import (FBDI, EIB)</td><td>3</td><td>30s</td><td>10min</td><td>3x</td><td>None</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Circuit Breaker Thresholds</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Real-time Integration</th><th scope="col">Batch Integration</th><th scope="col">Event-driven</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Failure threshold</td><td>5 failures in 60s</td><td>3 failures in 5min</td><td>5 failures in 60s</td></tr>
+      <tr><td>Open state duration</td><td>30s</td><td>5min</td><td>60s</td></tr>
+      <tr><td>Half-open probe count</td><td>1</td><td>1-3</td><td>1</td></tr>
+      <tr><td>Success threshold to close</td><td>2 consecutive</td><td>3 consecutive</td><td>2 consecutive</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>N/A — this is a pattern-level card. Authentication is handled at the ERP API layer. See system-specific cards for auth flows per ERP vendor.</p>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Idempotency is mandatory</strong>: Every retryable operation must include an idempotency key (UUID, composite business key, or hash). Without it, retries create duplicate records in the target ERP. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>DLQ messages have no automatic cleanup</strong>: AWS SQS, Azure Service Bus, Kafka error topics — none auto-purge DLQ messages. You must implement explicit retention policies or manual/automated reprocessing workflows. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src5</a>]</li>
+    <li><strong>Circuit breaker state must be shared</strong>: If your integration runs on multiple worker instances, circuit breaker state must be stored in a shared data store (Redis, DynamoDB, database) — local in-memory state causes split-brain behavior. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/circuit-breaker.html">src4</a>]</li>
+    <li><strong>Retry amplification risk</strong>: Retrying at multiple layers (application + middleware + infrastructure) causes exponential retry amplification. Pick ONE retry layer and disable retries at other layers. [<a href="https://www.codecentric.de/en/knowledge-hub/blog/resilience-design-patterns-retry-fallback-timeout-circuit-breaker">src6</a>]</li>
+    <li><strong>DLQ depth = integration health</strong>: A growing DLQ backlog indicates a systemic issue, not a transient failure. Alert on DLQ depth &gt; 100 messages and investigate root cause before replaying. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>Poison messages must be identified early</strong>: Messages that will never succeed (schema validation failures, missing required fields, invalid data types) should be routed to DLQ immediately without retries. Only transient errors deserve retries. [<a href="https://littlehorse.io/blog/retries-and-dlq">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — ERP integration message fails processing
+├── What type of error?
+│   ├── Transient (429 rate limit, 503 unavailable, network timeout)
+│   │   ├── Is circuit breaker OPEN?
+│   │   │   ├── YES → Fast-fail, queue for retry after circuit reset
+│   │   │   └── NO ↓
+│   │   ├── Retry count &lt; max retries?
+│   │   │   ├── YES → Retry with exponential backoff + jitter
+│   │   │   │   ├── delay = min(initialDelay * 2^attempt, maxDelay)
+│   │   │   │   └── actualDelay = random(0, delay) [full jitter]
+│   │   │   └── NO → Move to Dead Letter Queue with full context
+│   │   └── Did retry succeed?
+│   │       ├── YES → Mark success, reset failure counter
+│   │       └── NO → Increment failure counter, check circuit breaker
+│   ├── Non-transient / Poison (400, 422, schema mismatch)
+│   │   └── Route IMMEDIATELY to DLQ — retries will never succeed
+│   ├── Partial success (bulk: some records succeed, some fail)
+│   │   ├── Extract failed records from response
+│   │   └── Route failed-record message through retry pipeline
+│   └── Authentication error (401, 403)
+│       ├── Token expired? → Refresh token, retry once
+│       └── Permissions changed? → Alert + DLQ (do not retry)
+├── DLQ message processing
+│   ├── Automated triage: classify, group, auto-resolve known patterns
+│   └── Manual review: fix data, replay, or purge
+└── Monitoring
+    ├── DLQ depth: alert at &gt; 100, page at &gt; 1000
+    ├── DLQ ingestion rate: alert if &gt; 1% of total throughput
+    └── Circuit breaker state changes: log every transition</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Error Type</th><th scope="col">Retryable?</th><th scope="col">Strategy</th><th scope="col">Max Retries</th><th scope="col">DLQ Action</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HTTP 429 (Rate Limit)</td><td>Yes</td><td>Backoff, respect Retry-After</td><td>5-10</td><td>Reprocess after cooldown</td></tr>
+      <tr><td>HTTP 500 (Server Error)</td><td>Yes</td><td>Exponential backoff + jitter</td><td>5</td><td>Investigate server-side</td></tr>
+      <tr><td>HTTP 502/503/504 (Gateway)</td><td>Yes</td><td>Exponential backoff</td><td>5</td><td>Reprocess after recovery</td></tr>
+      <tr><td>HTTP 400 (Bad Request)</td><td>No</td><td>Immediate DLQ</td><td>0</td><td>Fix payload, resubmit</td></tr>
+      <tr><td>HTTP 401 (Unauthorized)</td><td>Once</td><td>Refresh token, retry once</td><td>1</td><td>Rotate credentials</td></tr>
+      <tr><td>HTTP 403 (Forbidden)</td><td>No</td><td>Immediate DLQ</td><td>0</td><td>Fix permissions</td></tr>
+      <tr><td>HTTP 404 (Not Found)</td><td>No</td><td>Immediate DLQ</td><td>0</td><td>Fix resource reference</td></tr>
+      <tr><td>HTTP 409 (Conflict)</td><td>Conditional</td><td>Retry with conflict resolution</td><td>3</td><td>Manual merge</td></tr>
+      <tr><td>HTTP 422 (Validation)</td><td>No</td><td>Immediate DLQ</td><td>0</td><td>Fix data, resubmit</td></tr>
+      <tr><td>Connection timeout</td><td>Yes</td><td>Exponential backoff</td><td>5</td><td>Check network/firewall</td></tr>
+      <tr><td>SSL/TLS failure</td><td>No</td><td>Immediate DLQ</td><td>0</td><td>Fix certificates</td></tr>
+      <tr><td>Schema mismatch</td><td>No</td><td>Immediate DLQ</td><td>0</td><td>Update schema, resubmit</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Classify errors into retryable vs non-retryable</h3>
+  <p>Before implementing retry logic, establish a clear error classification. Retrying non-retryable errors wastes resources and delays DLQ processing. [<a href="https://littlehorse.io/blog/retries-and-dlq">src2</a>]</p>
+  <pre><code class="language-python">RETRYABLE_ERRORS = {429, 500, 502, 503, 504}
+NON_RETRYABLE_ERRORS = {400, 401, 403, 404, 405, 409, 422}
+
+def classify_error(status_code, error_body):
+    if status_code in RETRYABLE_ERRORS:
+        return "transient"
+    if status_code == 401:
+        return "auth_expired"  # Retry once after token refresh
+    if status_code in NON_RETRYABLE_ERRORS:
+        return "poison"  # Route to DLQ immediately
+    if status_code &gt;= 500:
+        return "transient"
+    return "poison"</code></pre>
+  <p><strong>Verify</strong>: Run classifier against last 30 days of integration logs &rarr; expected: &lt;5% misclassification rate.</p>
+
+  <h3>2. Implement exponential backoff with jitter</h3>
+  <p>The backoff formula prevents retry storms. Full jitter distributes retries evenly across the delay window. [<a href="https://betterstack.com/community/guides/monitoring/exponential-backoff/">src3</a>]</p>
+  <pre><code class="language-python">import random
+
+def exponential_backoff_with_jitter(attempt, initial_delay=1.0,
+                                     max_delay=60.0, factor=2.0):
+    exponential_delay = initial_delay * (factor ** attempt)
+    capped_delay = min(exponential_delay, max_delay)
+    return random.uniform(0, capped_delay)  # Full jitter</code></pre>
+  <p><strong>Verify</strong>: <code>exponential_backoff_with_jitter(0)</code> returns 0-1.0; <code>exponential_backoff_with_jitter(5)</code> returns 0-32.0.</p>
+
+  <h3>3. Implement the circuit breaker</h3>
+  <p>Prevents hammering an ERP API that is already down — avoids wasting API quota and prevents cascading failures. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/circuit-breaker.html">src4</a>]</p>
+  <pre><code class="language-python">class CircuitBreaker:
+    CLOSED, OPEN, HALF_OPEN = "closed", "open", "half_open"
+
+    def __init__(self, failure_threshold=5, reset_timeout=30,
+                 success_threshold=2):
+        self.failure_threshold = failure_threshold
+        self.reset_timeout = reset_timeout
+        self.success_threshold = success_threshold
+        self.state = self.CLOSED
+        self.failure_count = 0
+        self.success_count = 0
+        self.last_failure_time = None
+
+    def can_execute(self):
+        if self.state == self.CLOSED: return True
+        if self.state == self.OPEN:
+            if time.time() - self.last_failure_time &gt;= self.reset_timeout:
+                self.state = self.HALF_OPEN
+                return True
+            return False
+        return True  # half_open</code></pre>
+  <p><strong>Verify</strong>: Trigger 5 failures &rarr; <code>can_execute()</code> returns <code>False</code>. Wait reset_timeout &rarr; returns <code>True</code> (half-open).</p>
+
+  <h3>4. Build the retry-with-DLQ pipeline</h3>
+  <p>Combine error classification, backoff, and circuit breaker into a unified pipeline. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>, <a href="https://littlehorse.io/blog/retries-and-dlq">src2</a>]</p>
+  <pre><code class="language-python">class ERPRetryPipeline:
+    def process_message(self, message):
+        idempotency_key = message.get("idempotency_key") or str(uuid.uuid4())
+        for attempt in range(self.max_retries + 1):
+            if not self.cb.can_execute():
+                return self._send_to_dlq(message, attempt,
+                    "circuit_breaker_open", "ERP unavailable")
+            try:
+                response = self.erp.send(message)
+                self.cb.record_success()
+                return {"status": "success", "attempt": attempt}
+            except ERPAPIError as e:
+                error_type = classify_error(e.status_code, e.body)
+                if error_type == "poison":
+                    return self._send_to_dlq(message, attempt,
+                        f"http_{e.status_code}", str(e.body))
+                self.cb.record_failure()
+                if attempt &lt; self.max_retries:
+                    delay = exponential_backoff_with_jitter(attempt)
+                    time.sleep(delay)
+        return self._send_to_dlq(message, self.max_retries,
+            "max_retries_exceeded", "All retries exhausted")</code></pre>
+  <p><strong>Verify</strong>: Mock ERP returns 503 three times then 200 &rarr; pipeline returns <code>{"status": "success", "attempt": 3}</code>.</p>
+
+  <h3>5. Configure platform-specific DLQ</h3>
+  <p>Set up the dead letter queue on your chosen message broker. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src5</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src7</a>]</p>
+  <pre><code class="language-bash"># AWS SQS: Create DLQ and configure redrive policy
+aws sqs create-queue --queue-name erp-integration-dlq \
+  --attributes '{"MessageRetentionPeriod":"1209600"}'  # 14 days
+
+# Azure Service Bus: DLQ is automatic (subqueue per entity)
+az servicebus queue update --name erp-integration \
+  --namespace-name mybus --resource-group myrg \
+  --max-delivery-count 5</code></pre>
+  <p><strong>Verify</strong>: <code>aws sqs get-queue-attributes</code> shows DLQ ARN and maxReceiveCount of 5.</p>
+
+  <h3>6. Set up DLQ monitoring and alerting</h3>
+  <p>DLQ without monitoring is a silent data loss risk. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</p>
+  <pre><code class="language-python">from prometheus_client import Counter, Gauge, Histogram
+
+dlq_messages_total = Counter('erp_dlq_messages_total',
+    'Total messages routed to DLQ', ['integration_id', 'error_type'])
+dlq_depth = Gauge('erp_dlq_depth',
+    'Current DLQ message count', ['queue_name'])
+circuit_breaker_state = Gauge('erp_circuit_breaker_state',
+    'Circuit breaker state (0=closed, 1=open, 2=half_open)',
+    ['service_name'])</code></pre>
+  <p><strong>Verify</strong>: Query <code>/metrics</code> endpoint &rarr; all metric families visible. Trigger DLQ message &rarr; counter increments.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Retry handler with DLQ for Salesforce Bulk API</h3>
+  <pre><code class="language-python"># Input:  Records to upsert via Salesforce Bulk API 2.0
+# Output: Success/failure counts, DLQ message IDs for failed batches
+
+import requests, time, random, json, uuid
+from datetime import datetime, timezone
+
+class SalesforceBulkRetryHandler:
+    def __init__(self, instance_url, access_token, dlq_client,
+                 max_retries=5, initial_delay=1.0, max_delay=60.0):
+        self.base_url = f"{instance_url}/services/data/v62.0"
+        self.headers = {"Authorization": f"Bearer {access_token}",
+                        "Content-Type": "application/json"}
+        self.dlq = dlq_client
+        self.max_retries = max_retries
+
+    def upsert_with_retry(self, object_name, external_id_field, records):
+        idem_key = str(uuid.uuid4())
+        for attempt in range(self.max_retries + 1):
+            try:
+                job = requests.post(f"{self.base_url}/jobs/ingest",
+                    headers=self.headers,
+                    json={"object": object_name,
+                          "externalIdFieldName": external_id_field,
+                          "operation": "upsert", "contentType": "CSV"})
+                if job.status_code == 429:
+                    retry_after = int(job.headers.get("Retry-After", 0))
+                    time.sleep(max(self._backoff(attempt), retry_after))
+                    continue
+                if job.status_code &gt;= 500:
+                    time.sleep(self._backoff(attempt)); continue
+                if job.status_code &gt;= 400:
+                    return self._dead_letter(records, idem_key, attempt,
+                        f"HTTP {job.status_code}", job.text)
+                return {"status": "success", "job_id": job.json()["id"]}
+            except requests.exceptions.ConnectionError:
+                if attempt &lt; self.max_retries:
+                    time.sleep(self._backoff(attempt))
+        return self._dead_letter(records, idem_key, self.max_retries,
+            "max_retries", "All retries exhausted")
+
+    def _backoff(self, attempt):
+        return random.uniform(0, min(1.0 * (2 ** attempt), 60.0))</code></pre>
+
+  <h3>JavaScript/Node.js: Generic ERP retry middleware with circuit breaker</h3>
+  <pre><code class="language-javascript">// Input:  ERP API call function + message payload
+// Output: Success response or DLQ envelope
+
+async function retryWithDLQ(apiCall, message, {
+  maxRetries = 5, initialDelay = 1000, maxDelay = 60000,
+  factor = 2, circuitBreaker, dlqSend
+} = {}) {
+  const idempotencyKey = message.idempotencyKey || crypto.randomUUID();
+  for (let attempt = 0; attempt &lt;= maxRetries; attempt++) {
+    if (!circuitBreaker.canExecute()) {
+      return dlqSend({ originalMessage: message,
+        errorCode: 'circuit_breaker_open', attempts: attempt,
+        idempotencyKey, deadLetteredAt: new Date().toISOString() });
+    }
+    try {
+      const result = await apiCall(message, idempotencyKey);
+      circuitBreaker.recordSuccess();
+      return { status: 'success', attempt, result };
+    } catch (err) {
+      if ([400, 403, 404, 422].includes(err.statusCode)) {
+        return dlqSend({ originalMessage: message,
+          errorCode: `http_${err.statusCode}`, attempts: attempt + 1,
+          idempotencyKey, deadLetteredAt: new Date().toISOString() });
+      }
+      circuitBreaker.recordFailure();
+      if (attempt &lt; maxRetries) {
+        const delay = Math.random() * Math.min(
+          initialDelay * Math.pow(factor, attempt), maxDelay);
+        await new Promise(r =&gt; setTimeout(r, delay));
+      }
+    }
+  }
+  return dlqSend({ originalMessage: message,
+    errorCode: 'max_retries_exceeded', attempts: maxRetries + 1,
+    idempotencyKey, deadLetteredAt: new Date().toISOString() });
+}</code></pre>
+
+  <h3>cURL: DLQ monitoring and replay</h3>
+  <pre><code class="language-bash"># Check DLQ depth (AWS SQS)
+aws sqs get-queue-attributes \
+  --queue-url https://sqs.us-east-1.amazonaws.com/123456789/erp-dlq \
+  --attribute-names ApproximateNumberOfMessages
+
+# Replay DLQ messages back to source queue
+aws sqs start-message-move-task \
+  --source-arn arn:aws:sqs:us-east-1:123456789:erp-dlq \
+  --destination-arn arn:aws:sqs:us-east-1:123456789:erp-integration
+
+# Check DLQ count (Azure Service Bus)
+az servicebus queue show --name erp-integration \
+  --namespace-name mybus --resource-group myrg \
+  --query 'countDetails.deadLetterMessageCount'</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>DLQ Envelope Schema Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Required</th><th scope="col">Description</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>original_message</td><td>Object</td><td>Yes</td><td>Complete original message payload</td><td>Must preserve all fields — partial messages break replay</td></tr>
+      <tr><td>error_code</td><td>String</td><td>Yes</td><td>Machine-readable error code</td><td>Standardize across all integrations</td></tr>
+      <tr><td>error_detail</td><td>String</td><td>Yes</td><td>Human-readable error description</td><td>Truncate to 4KB max</td></tr>
+      <tr><td>attempt_count</td><td>Integer</td><td>Yes</td><td>Number of attempts before dead-lettering</td><td>Starts at 1, not 0</td></tr>
+      <tr><td>idempotency_key</td><td>String</td><td>Yes</td><td>Unique key for replay deduplication</td><td>UUID or composite business key</td></tr>
+      <tr><td>dead_lettered_at</td><td>ISO 8601</td><td>Yes</td><td>When message was dead-lettered</td><td>Always UTC</td></tr>
+      <tr><td>source_queue</td><td>String</td><td>Yes</td><td>Origin queue/topic name</td><td>Required for routing replays</td></tr>
+      <tr><td>integration_id</td><td>String</td><td>Yes</td><td>Integration flow identifier</td><td>Maps to monitoring dashboards</td></tr>
+      <tr><td>correlation_id</td><td>String</td><td>Recommended</td><td>End-to-end trace ID</td><td>Enables cross-system debugging</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Timestamp formats vary by ERP: Salesforce uses ISO 8601 UTC, SAP uses YYYYMMDD + HHMMSS in separate fields, NetSuite depends on user timezone. Always normalize to UTC ISO 8601 in DLQ envelopes. [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li>Partial success responses differ: Salesforce Bulk API returns per-record CSV, SAP returns BAPI messages, Oracle FBDI returns error report file. Parse all formats before determining which records to DLQ. [<a href="https://littlehorse.io/blog/retries-and-dlq">src2</a>]</li>
+    <li>Message size limits: AWS SQS max 256KB. If DLQ envelope exceeds this, store payload in S3 and include only the reference. Azure Service Bus Premium supports up to 100MB. [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src5</a>, <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HTTP 429</td><td>Rate limit exceeded</td><td>Too many API calls in window</td><td>Exponential backoff, respect Retry-After header</td></tr>
+      <tr><td>HTTP 503</td><td>Service unavailable</td><td>ERP maintenance or overload</td><td>Exponential backoff, check ERP status page</td></tr>
+      <tr><td>ETIMEDOUT</td><td>Connection timeout</td><td>Network issue or slow response</td><td>Increase timeout, check firewall rules</td></tr>
+      <tr><td>ECONNREFUSED</td><td>Connection refused</td><td>Service down or port blocked</td><td>Open circuit breaker, alert operations</td></tr>
+      <tr><td>MaxDeliveryCountExceeded</td><td>DLQ threshold reached</td><td>Message failed N times</td><td>Review error, fix root cause, replay</td></tr>
+      <tr><td>UNABLE_TO_LOCK_ROW</td><td>Record lock conflict</td><td>Concurrent update to same record</td><td>Retry with jitter, implement locking</td></tr>
+      <tr><td>INVALID_SESSION_ID</td><td>Token expired/invalid</td><td>OAuth token expired</td><td>Refresh token, retry once</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Retry amplification across layers</strong>: Application retries 5x, middleware retries 3x, infrastructure retries 2x = 30 actual API calls. Fix: <code>Disable retries at all layers except one.</code> [<a href="https://www.codecentric.de/en/knowledge-hub/blog/resilience-design-patterns-retry-fallback-timeout-circuit-breaker">src6</a>]</li>
+    <li><strong>DLQ messages accumulate silently</strong>: Teams set up DLQ but no monitoring. Thousands of unprocessed messages represent lost orders. Fix: <code>Alert on DLQ depth &gt; 100 within 24 hours of go-live.</code> [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>Circuit breaker split-brain</strong>: Each instance has its own circuit breaker state. Fix: <code>Store circuit breaker state in Redis or DynamoDB.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/circuit-breaker.html">src4</a>]</li>
+    <li><strong>Replay without idempotency causes duplicates</strong>: 200 of 500 replayed messages had actually succeeded before timeout — now duplicated. Fix: <code>Every operation must use an idempotency key. Use upsert, not insert.</code> [<a href="https://littlehorse.io/blog/retries-and-dlq">src2</a>]</li>
+    <li><strong>Poison message loops</strong>: Schema error routes to DLQ, automated replay pushes it back, fails again. Fix: <code>Track replay_count in DLQ envelope. Quarantine messages with replay_count &gt; 3.</code> [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+    <li><strong>Rate limit backoff ignored during batch replay</strong>: 1,000 DLQ messages replayed simultaneously hit rate limits again. Fix: <code>Rate-limit DLQ replay to 10-20% of normal throughput.</code> [<a href="https://betterstack.com/community/guides/monitoring/exponential-backoff/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Retrying all errors indiscriminately</h3>
+  <pre><code class="language-python"># BAD — retries non-retryable errors, wasting time and API quota
+def send_to_erp(message, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            return erp_api.post(message)
+        except Exception as e:
+            time.sleep(2 ** attempt)  # Retries 400, 403, 422 too
+    raise Exception("All retries failed")</code></pre>
+
+  <h3>Correct: Classify errors before retrying</h3>
+  <pre><code class="language-python"># GOOD — only retries transient errors, DLQs poison messages
+def send_to_erp(message, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            return erp_api.post(message)
+        except ERPError as e:
+            if e.status_code in (400, 403, 404, 422):
+                dlq.send(message, error=str(e))  # Don't retry
+                return None
+            if attempt &lt; max_retries - 1:
+                time.sleep(exponential_backoff_with_jitter(attempt))
+    dlq.send(message, error="Retries exhausted")</code></pre>
+
+  <h3>Wrong: Fixed-interval retry (no backoff)</h3>
+  <pre><code class="language-python"># BAD — hammers ERP API at constant rate during outage
+for attempt in range(5):
+    try:
+        response = erp_api.post(message); break
+    except Exception:
+        time.sleep(5)  # Same 5s delay every time</code></pre>
+
+  <h3>Correct: Exponential backoff with jitter</h3>
+  <pre><code class="language-python"># GOOD — spreads retry load, respects rate limits
+for attempt in range(5):
+    try:
+        response = erp_api.post(message); break
+    except TransientError:
+        delay = min(1.0 * (2 ** attempt), 60.0)
+        time.sleep(random.uniform(0, delay))  # Full jitter</code></pre>
+
+  <h3>Wrong: DLQ without envelope metadata</h3>
+  <pre><code class="language-python"># BAD — raw message in DLQ, no context for debugging
+dlq.send(original_message)
+# Later: "Why is this in the DLQ? When did it fail?"</code></pre>
+
+  <h3>Correct: DLQ with rich diagnostic envelope</h3>
+  <pre><code class="language-python"># GOOD — complete context for debugging and safe replay
+dlq.send({
+    "original_message": original_message,
+    "error_code": "http_429",
+    "error_detail": "Rate limit exceeded on Salesforce Bulk API",
+    "attempt_count": 6,
+    "idempotency_key": "order-12345-upsert-v2",
+    "dead_lettered_at": "2026-03-01T14:30:00Z",
+    "source_queue": "salesforce-bulk-ingest",
+    "correlation_id": "trace-abc-123"
+})</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>No DLQ retention policy</strong>: Messages accumulate forever. After 6 months, 50,000 stale messages — replaying them creates chaos. Fix: <code>Set TTL (14 days transient, 90 days data issues). Auto-archive to cold storage.</code> [<a href="https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues">src5</a>]</li>
+    <li><strong>Retrying at multiple layers</strong>: Application + middleware + infrastructure retries = exponential amplification. Fix: <code>Choose one retry layer (application for ERP). Disable retries elsewhere.</code> [<a href="https://www.codecentric.de/en/knowledge-hub/blog/resilience-design-patterns-retry-fallback-timeout-circuit-breaker">src6</a>]</li>
+    <li><strong>Missing idempotency on replay</strong>: Replaying DLQ without idempotency keys creates duplicates. Fix: <code>Include idempotency_key in every message. Use upsert, not insert.</code> [<a href="https://littlehorse.io/blog/retries-and-dlq">src2</a>]</li>
+    <li><strong>Circuit breaker too sensitive</strong>: Opens on a single 503, stopping all traffic. Fix: <code>Require 5+ failures in 60s. Use percentage-based thresholds for high volume.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/circuit-breaker.html">src4</a>]</li>
+    <li><strong>Circuit breaker too lenient</strong>: 50 failures needed to open = 50 wasted API calls. Fix: <code>Tune based on normal error rate. For &lt;1% natural error rate, 5 failures in 60s is appropriate.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/circuit-breaker.html">src4</a>]</li>
+    <li><strong>DLQ replay storms</strong>: All DLQ messages replayed at once overwhelms API. Fix: <code>Rate-limit replays to 10-20% of normal throughput.</code> [<a href="https://betterstack.com/community/guides/monitoring/exponential-backoff/">src3</a>]</li>
+    <li><strong>Ignoring partial success in bulk operations</strong>: Treating entire batch as failed creates duplicates. Fix: <code>Parse per-record results. Only retry failed records.</code> [<a href="https://sreschool.com/blog/dead-letter-queue-dlq/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check DLQ depth (AWS SQS)
+aws sqs get-queue-attributes --queue-url $DLQ_URL \
+  --attribute-names ApproximateNumberOfMessages
+
+# Check DLQ depth (Azure Service Bus)
+az servicebus queue show --name erp-integration \
+  --namespace-name $NAMESPACE --resource-group $RG \
+  --query 'countDetails.deadLetterMessageCount'
+
+# Check circuit breaker state (Redis)
+redis-cli GET "circuit_breaker:salesforce_api:state"
+
+# Monitor retry rate (Prometheus)
+# rate(erp_retry_attempts_total[5m]) / rate(erp_messages_processed_total[5m])
+
+# Replay DLQ messages (AWS SQS)
+aws sqs start-message-move-task \
+  --source-arn $DLQ_ARN \
+  --destination-arn $SOURCE_QUEUE_ARN \
+  --max-number-of-messages-per-second 10</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern/Platform</th><th scope="col">Version</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS SQS DLQ Redrive</td><td>GA</td><td>2023-07</td><td>Current</td><td>Native message-move-task for DLQ replay</td></tr>
+      <tr><td>Azure Service Bus DLQ</td><td>GA</td><td>2025-05</td><td>Current</td><td>Enhanced dead-letter reason headers</td></tr>
+      <tr><td>Apache Kafka Error Topics</td><td>Convention</td><td>Ongoing</td><td>Current</td><td>No native DLQ — error topic pattern</td></tr>
+      <tr><td>RabbitMQ Dead Letter Exchange</td><td>GA (3.x+)</td><td>2024-09</td><td>Current</td><td>x-delivery-limit in 3.12+ (quorum queues)</td></tr>
+      <tr><td>MuleSoft Error Handling</td><td>4.x</td><td>2025-01</td><td>Current</td><td>Enhanced DLQ connector with retry policies</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Zero-loss requirement (financial transactions, orders)</td><td>Fire-and-forget analytics events</td><td>Simple logging + batch reconciliation</td></tr>
+      <tr><td>ERP API has rate limits or intermittent outages</td><td>Target has 99.99% availability SLA</td><td>Direct API call with try/catch</td></tr>
+      <tr><td>Multi-system integration (multiple failure points)</td><td>Single-system CRUD operations</td><td>Database transaction with rollback</td></tr>
+      <tr><td>Asynchronous processing (message queues, events)</td><td>Synchronous user-facing API calls</td><td>HTTP retry middleware (Polly, resilience4j)</td></tr>
+      <tr><td>Batch operations with partial failures</td><td>All-or-nothing transactional requirements</td><td>Saga pattern with compensation</td></tr>
+      <tr><td>Long-running integration jobs (&gt;30s per operation)</td><td>Sub-second API calls</td><td>Inline retry with timeout</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">AWS SQS</th><th scope="col">Azure Service Bus</th><th scope="col">Apache Kafka</th><th scope="col">RabbitMQ</th><th scope="col">MuleSoft</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Native DLQ</td><td>Yes (redrive policy)</td><td>Yes (subqueue)</td><td>No (error topic)</td><td>Yes (DLX)</td><td>Yes (connector)</td></tr>
+      <tr><td>Max retention</td><td>14 days</td><td>Unlimited (Premium)</td><td>Topic config</td><td>TTL-based</td><td>Platform storage</td></tr>
+      <tr><td>DLQ replay</td><td>Native (move-task)</td><td>Manual</td><td>Consumer from error topic</td><td>Manual</td><td>UI-based</td></tr>
+      <tr><td>Max delivery count</td><td>1-1000</td><td>1-2000 (default 10)</td><td>Consumer-side</td><td>x-delivery-limit</td><td>Configurable</td></tr>
+      <tr><td>Circuit breaker</td><td>Manual</td><td>Manual</td><td>Manual</td><td>Manual</td><td>Built-in</td></tr>
+      <tr><td>Message ordering</td><td>FIFO (optional)</td><td>Sessions (optional)</td><td>Partition ordering</td><td>Per-queue</td><td>Flow ordering</td></tr>
+      <tr><td>Dead-letter reason</td><td>Application-set</td><td>System headers + custom</td><td>Application-set</td><td>Application-set</td><td>Error type metadata</td></tr>
+      <tr><td>Max message size</td><td>256KB (2GB w/ S3)</td><td>256KB / 100MB</td><td>1MB default</td><td>128MB default</td><td>Platform limit</td></tr>
+      <tr><td>Cost model</td><td>Per-message</td><td>Per-operation + storage</td><td>Self-hosted infra</td><td>Self-hosted infra</td><td>License-based</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>DLQ is not error handling — it is error isolation</strong>: A DLQ stores messages that have already failed all retry attempts. It does not fix errors. You still need triage, alerting, and review processes.</li>
+    <li><strong>Idempotency is not optional</strong>: Any retry strategy without idempotency keys will create duplicate records in the target ERP. This is the single most common and expensive mistake.</li>
+    <li><strong>Platform DLQ features vary significantly</strong>: AWS SQS, Azure Service Bus, and RabbitMQ have native DLQ support with different capabilities. Kafka requires custom error-topic implementation.</li>
+    <li><strong>Circuit breaker thresholds need tuning</strong>: Default thresholds rarely match production traffic patterns. Start conservative (5 failures in 60s) and adjust based on observed error rates.</li>
+    <li><strong>Retry strategies must account for rate limits</strong>: ERP APIs like Salesforce (100K calls/24h) and SAP have hard quotas. Retries consume from the same quota.</li>
+    <li><strong>Information currency</strong>: Message broker DLQ features evolve rapidly. AWS, Azure, and RabbitMQ added significant DLQ improvements in 2024-2025. Verify against current documentation.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-rest-api/2026" data-relationship="related_to">Salesforce REST API Capabilities</a>
+    <a href="/business/erp-integration/sap-s4hana-odata-api/2026" data-relationship="related_to">SAP S/4HANA OData API Capabilities</a>
+    <a href="/business/erp-integration/ap-automation-playbook/2026" data-relationship="solves">AP Automation Integration Playbook</a>
+    <a href="/business/erp-integration/order-to-cash-playbook/2026" data-relationship="solves">Order-to-Cash Integration Playbook</a>
+    <a href="/business/erp-integration/saga-pattern-distributed-transactions/2026" data-relationship="alternative_to">Saga Pattern for Distributed ERP Transactions</a>
+    <a href="/business/erp-integration/idempotency-patterns/2026" data-relationship="often_confused_with">Idempotency Patterns for ERP Integrations</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about.html">About</a> &middot; <a href="/methodology.html">Methodology</a> &middot; <a href="/api.html">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api.html">API</a> or <a href="/api.html#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology.html">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+# Input:  Nginx server block
+# Output: A+ SSL Labs rating with TLS 1.3 + 1.2 AEAD ciphers
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name example.com;
+
+    # Certificates (Let's Encrypt / certbot)
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    # Protocols — TLS 1.2 + 1.3 only
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Ciphers — AEAD only, no CBC (Mozilla Intermediate)
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+
+    # Let client choose cipher (mobile devices prefer ChaCha20)
+    ssl_prefer_server_ciphers off;
+
+    # ECDH curves
+    ssl_ecdh_curve X25519:prime256v1:secp384r1;
+
+    # Session settings
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    resolver 1.1.1.1 1.0.0.1 valid=300s;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+}
+
+# HTTP redirect
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+    return 301 https://$host$request_uri;
+}

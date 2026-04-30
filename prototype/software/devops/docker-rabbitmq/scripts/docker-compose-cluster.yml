@@ -1,0 +1,88 @@
+# docker-compose-cluster.yml -- 3-node RabbitMQ cluster
+# Source: knowledgelib.io -- AI Knowledge Library (verified 2026-02-27)
+#
+# Usage:
+#   docker compose -f docker-compose-cluster.yml up -d
+#   docker compose -f docker-compose-cluster.yml exec rabbitmq1 rabbitmqctl cluster_status
+#
+# All nodes share the same Erlang cookie for authentication.
+# Node 2 and 3 auto-join node 1 via the cluster_formation commands.
+
+services:
+  rabbitmq1:
+    image: rabbitmq:4.0-management-alpine
+    hostname: rabbitmq1
+    container_name: rabbitmq1
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "change-this-to-a-secure-secret"
+      RABBITMQ_NODENAME: rabbit@rabbitmq1
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: secretpass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq1_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - rabbitmq_cluster
+
+  rabbitmq2:
+    image: rabbitmq:4.0-management-alpine
+    hostname: rabbitmq2
+    container_name: rabbitmq2
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "change-this-to-a-secure-secret"
+      RABBITMQ_NODENAME: rabbit@rabbitmq2
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: secretpass
+    volumes:
+      - rabbitmq2_data:/var/lib/rabbitmq
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - rabbitmq_cluster
+
+  rabbitmq3:
+    image: rabbitmq:4.0-management-alpine
+    hostname: rabbitmq3
+    container_name: rabbitmq3
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "change-this-to-a-secure-secret"
+      RABBITMQ_NODENAME: rabbit@rabbitmq3
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: secretpass
+    volumes:
+      - rabbitmq3_data:/var/lib/rabbitmq
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - rabbitmq_cluster
+
+volumes:
+  rabbitmq1_data:
+  rabbitmq2_data:
+  rabbitmq3_data:
+
+networks:
+  rabbitmq_cluster:
+    driver: bridge

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Middleware Pipeline Pattern | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to the middleware pipeline pattern: how next() callback chains work across Express, Koa, Django, FastAPI, ASP.NET Core, Go net/http, and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/middleware-pipeline/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Middleware Pipeline Pattern | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to the middleware pipeline pattern: how next() callback chains work across Express, Koa, Django, FastAPI, ASP.NET Core, Go net/http, and Gin. 9-framework comparison table, 3 code examples, 3 anti-patterns. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/middleware-pipeline/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Middleware Pipeline Pattern | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to the middleware pipeline pattern: how next() callback chains work across Express, Koa, Django, FastAPI, ASP.NET Core, Go net/http, and Gin. 9-framework comparison table, 3 code examples, 3 anti-patterns. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/middleware_pipeline">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How does the middleware pipeline pattern work?">
+  <meta name="ai:aliases" content="middleware pattern; request pipeline pattern; middleware chain; chain of responsibility HTTP; next() callback pattern; middleware composition; HTTP request pipeline; middleware stack">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/middleware-pipeline/2026.md">
+  <meta name="ai:token_estimate" content="3400">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="framework,concern">
+  <meta name="ai:constraints" content="Middleware execution order is registration order; Every middleware MUST call next() or request hangs; Error-handling middleware must be registered separately; Never mutate shared state across concurrent requests; Short-circuiting middleware must appear before protected handlers">
+  <meta name="ai:skip_this_unit_if" content="Looking for event-driven pub/sub or message broker patterns -> software/system-design/message-queue-event-driven/2026; Need API gateway with routing and load balancing -> software/system-design/api-gateway/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Middleware Pipeline Pattern",
+    "headline": "Middleware Pipeline Pattern",
+    "description": "Complete guide to the middleware pipeline pattern: composable chain of handlers that transform HTTP request/response using the next() callback pattern. Covers Express, Koa, Django, FastAPI, ASP.NET Core, Go net/http, and Gin with code examples, anti-patterns, and decision tree.",
+    "keywords": ["middleware pattern", "request pipeline", "next callback", "chain of responsibility", "Express middleware", "ASGI middleware", "Go middleware", "ASP.NET middleware", "middleware composition"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Express.js 4.x+, Koa 2.x+, Django 3.x+, FastAPI 0.68+, ASP.NET Core 6+, Go 1.18+, Gin 1.7+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Using Express middleware",
+        "url": "https://expressjs.com/en/guide/using-middleware.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "ASP.NET Core Middleware",
+        "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Making and Using HTTP Middleware in Go",
+        "url": "https://www.alexedwards.net/blog/making-and-using-middleware"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Advanced Middleware - FastAPI",
+        "url": "https://fastapi.tiangolo.com/advanced/middleware/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Understanding the Middleware Pattern in Express.js",
+        "url": "https://dzone.com/articles/understanding-middleware-pattern-in-expressjs"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Middleware Patterns in Go",
+        "url": "https://drstearns.github.io/tutorials/gomiddleware/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Deep Dive: How is the ASP.NET Core Middleware Pipeline Built?",
+        "url": "https://www.stevejgordon.co.uk/how-is-the-asp-net-core-middleware-pipeline-built"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Middleware Pipeline Pattern",
+    "description": "Structured knowledge unit covering the middleware pipeline pattern across 9 web frameworks. Includes comparison table, decision tree, code examples in JavaScript, Python, and Go, anti-patterns, and common pitfalls.",
+    "keywords": ["middleware pattern", "request pipeline", "next callback", "chain of responsibility", "Express middleware", "ASGI middleware", "Go middleware"],
+    "temporalCoverage": "2010/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Express.js"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "FastAPI"},
+      {"@type": "Organization", "name": "DZone"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Middleware Pipeline Pattern" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does the middleware pipeline pattern work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "middleware pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "request pipeline pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "middleware chain",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "chain of responsibility HTTP",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "next() callback pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Middleware Pipeline Pattern</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How does the middleware pipeline pattern work?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/middleware-pipeline/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: The middleware pipeline is a chain of composable handlers that each process an HTTP request/response, optionally transforming them before calling the next handler in the sequence.</li>
+    <li><strong>Key tool/command</strong>: <code>next()</code> callback pattern -- each middleware calls <code>next()</code> to pass control to the next handler, or short-circuits by sending a response directly.</li>
+    <li><strong>Watch out for</strong>: Middleware order matters -- registering auth middleware after your route handler means the route is unprotected.</li>
+    <li><strong>Works with</strong>: Every major web framework (Express, Koa, Django, FastAPI, ASP.NET Core, Go net/http, Gin, Fiber, Fastify).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Middleware execution order is registration order -- reordering middleware changes behavior silently</li>
+    <li>Every middleware MUST call <code>next()</code> (or equivalent) or the request will hang or time out</li>
+    <li>Error-handling middleware must be registered separately from regular middleware in frameworks that distinguish them (Express uses 4-arg signature)</li>
+    <li>Never mutate shared state across concurrent requests -- use request-scoped context objects instead</li>
+    <li>Short-circuiting middleware (auth, rate-limit) must appear before the handlers they protect</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Framework</th><th scope="col">Middleware Signature</th><th scope="col">Execution Order</th><th scope="col">Error Handling</th><th scope="col">Context Passing</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Express</strong> (Node.js)</td><td><code>(req, res, next) =&gt; {}</code></td><td>Registration order</td><td>4-arg <code>(err, req, res, next)</code></td><td><code>req.customProp</code> mutation</td></tr>
+      <tr><td><strong>Koa</strong> (Node.js)</td><td><code>async (ctx, next) =&gt; {}</code></td><td>Onion model (downstream then upstream)</td><td><code>try/catch</code> around <code>await next()</code></td><td><code>ctx.state</code> object</td></tr>
+      <tr><td><strong>Fastify</strong> (Node.js)</td><td><code>(req, reply, done) =&gt; {}</code> or hooks</td><td>Hook lifecycle order</td><td><code>onError</code> hook</td><td><code>req.customProp</code> via decorators</td></tr>
+      <tr><td><strong>Django</strong> (Python)</td><td><code>class</code> with <code>__call__(self, request)</code></td><td><code>MIDDLEWARE</code> list order</td><td><code>process_exception()</code> method</td><td><code>request.META</code> / custom attrs</td></tr>
+      <tr><td><strong>FastAPI</strong> (Python)</td><td><code>@app.middleware("http")</code> or ASGI class</td><td>Registration order</td><td><code>try/except</code> in middleware</td><td><code>request.state</code></td></tr>
+      <tr><td><strong>ASP.NET Core</strong> (C#)</td><td><code>RequestDelegate</code> via <code>Use()</code> / <code>Run()</code></td><td><code>Configure()</code> pipeline order</td><td><code>UseExceptionHandler()</code></td><td><code>HttpContext.Items</code> dict</td></tr>
+      <tr><td><strong>Go net/http</strong></td><td><code>func(http.Handler) http.Handler</code></td><td>Wrapping order (outermost first)</td><td><code>recover()</code> in defer</td><td><code>context.WithValue()</code></td></tr>
+      <tr><td><strong>Gin</strong> (Go)</td><td><code>func(c *gin.Context)</code></td><td><code>Use()</code> registration order</td><td><code>c.AbortWithError()</code></td><td><code>c.Set()</code> / <code>c.Get()</code></td></tr>
+      <tr><td><strong>Fiber</strong> (Go)</td><td><code>func(c *fiber.Ctx) error</code></td><td><code>Use()</code> registration order</td><td>Error return + <code>ErrorHandler</code></td><td><code>c.Locals()</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Need cross-cutting concerns (logging, auth, CORS, rate-limit)?
+|   |-- YES --&gt; Use middleware pipeline (this pattern)
+|   +-- NO --&gt; Standard route handlers are sufficient
+|
+|-- Using Node.js?
+|   |-- Need async/await with backpressure? --&gt; Koa (onion model)
+|   |-- Need maximum performance? --&gt; Fastify (hook lifecycle)
+|   +-- General purpose? --&gt; Express (classic next() chain)
+|
+|-- Using Python?
+|   |-- Async with type hints? --&gt; FastAPI ASGI middleware
+|   +-- Traditional sync? --&gt; Django middleware classes
+|
+|-- Using Go?
+|   |-- Standard library only? --&gt; net/http Handler wrapping
+|   +-- Need routing + middleware? --&gt; Gin or Fiber
+|
+|-- Using C#?
+|   +-- ASP.NET Core --&gt; RequestDelegate pipeline with Use/Map/Run
+|
++-- DEFAULT --&gt; Implement the handler-wrapper pattern:
+     func middleware(next Handler) Handler</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define the middleware signature</h3>
+  <p>Choose the appropriate signature for your framework. The core idea is always the same: accept a handler (or <code>next</code> function), do work before/after calling it. [<a href="https://expressjs.com/en/guide/using-middleware.html">src1</a>]</p>
+  <pre><code class="language-javascript">// Express: (req, res, next) =&gt; void
+const myMiddleware = (req, res, next) =&gt; {
+  console.log(`${req.method} ${req.url}`);
+  next(); // pass to next middleware
+};</code></pre>
+  <p><strong>Verify</strong>: Add <code>console.log('middleware hit')</code> and confirm it prints on every request.</p>
+
+  <h3>2. Register middleware in the correct order</h3>
+  <p>Order determines behavior. Auth must come before protected routes. Logging typically comes first. [<a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/">src2</a>]</p>
+  <pre><code class="language-javascript">const express = require('express');
+const app = express();
+
+app.use(requestLogger);       // 1. Logging (runs first)
+app.use(cors());               // 2. CORS headers
+app.use(express.json());       // 3. Body parsing
+app.use(authMiddleware);       // 4. Authentication
+app.use('/api', apiRouter);    // 5. Routes (protected)
+app.use(errorHandler);         // 6. Error handler (last, 4 args)</code></pre>
+  <p><strong>Verify</strong>: Send an unauthenticated request -- it should be rejected at step 4.</p>
+
+  <h3>3. Implement short-circuiting for guard middleware</h3>
+  <p>Guard middleware (auth, rate-limit) should NOT call <code>next()</code> when the check fails. [<a href="https://expressjs.com/en/guide/using-middleware.html">src1</a>]</p>
+  <pre><code class="language-javascript">const authMiddleware = (req, res, next) =&gt; {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  try {
+    req.user = verifyToken(token);
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "Authorization: Bearer invalid" /api/protected</code> returns 403.</p>
+
+  <h3>4. Handle errors in the pipeline</h3>
+  <p>Each framework has its own error propagation model. Express uses a special 4-argument middleware. [<a href="https://dzone.com/articles/understanding-middleware-pattern-in-expressjs">src5</a>]</p>
+  <pre><code class="language-javascript">// Express error-handling middleware (MUST have 4 parameters)
+const errorHandler = (err, req, res, next) =&gt; {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error'
+  });
+};
+app.use(errorHandler);</code></pre>
+  <p><strong>Verify</strong>: Throw an error in a route handler and confirm the error middleware catches it.</p>
+
+  <h3>5. Pass data between middleware via request context</h3>
+  <p>Never use module-level variables for per-request data. Use the request-scoped context object. [<a href="https://www.alexedwards.net/blog/making-and-using-middleware">src3</a>]</p>
+  <pre><code class="language-javascript">app.use((req, res, next) =&gt; {
+  req.requestId = crypto.randomUUID();
+  req.startTime = Date.now();
+  next();
+});
+
+app.get('/api/data', (req, res) =&gt; {
+  res.json({ requestId: req.requestId });
+});</code></pre>
+  <p><strong>Verify</strong>: Two concurrent requests should have different <code>requestId</code> values.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js/Express: Complete Middleware Pipeline</h3>
+  <pre><code class="language-javascript">// Input:  HTTP request
+// Output: HTTP response processed through logging, auth, and timing middleware
+
+const express = require('express');
+const app = express();
+
+// Timing middleware
+app.use((req, res, next) =&gt; {
+  const start = Date.now();
+  res.on('finish', () =&gt; {
+    console.log(`${req.method} ${req.path} ${res.statusCode} ${Date.now() - start}ms`);
+  });
+  next();
+});
+
+// Auth middleware
+app.use('/api', (req, res, next) =&gt; {
+  const key = req.headers['x-api-key'];
+  if (key !== process.env.API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+});
+
+app.get('/api/data', (req, res) =&gt; {
+  res.json({ message: 'protected data' });
+});
+
+// Error handler (always last, always 4 args)
+app.use((err, req, res, next) =&gt; {
+  res.status(500).json({ error: err.message });
+});</code></pre>
+
+  <h3>Python/FastAPI: ASGI Middleware</h3>
+  <pre><code class="language-python"># Input:  ASGI HTTP request
+# Output: Response with timing header and request ID
+
+import time, uuid
+from fastapi import FastAPI, Request
+from starlette.middleware.base import BaseHTTPMiddleware
+
+app = FastAPI()
+
+class TimingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start = time.perf_counter()
+        request.state.request_id = str(uuid.uuid4())
+        response = await call_next(request)
+        duration = time.perf_counter() - start
+        response.headers["X-Process-Time"] = f"{duration:.4f}"
+        response.headers["X-Request-ID"] = request.state.request_id
+        return response
+
+app.add_middleware(TimingMiddleware)</code></pre>
+
+  <h3>Go: Custom Middleware Chain (net/http)</h3>
+  <pre><code class="language-go">// Input:  http.Handler (the next handler in the chain)
+// Output: http.Handler (wrapped handler with added behavior)
+
+package main
+
+import (
+    "context"; "log"; "net/http"; "time"
+)
+
+type ctxKey string
+
+func withLogging(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        next.ServeHTTP(w, r)
+        log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
+    })
+}
+
+func withAuth(apiKey string) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            if r.Header.Get("X-API-Key") != apiKey {
+                http.Error(w, "Unauthorized", http.StatusUnauthorized)
+                return
+            }
+            ctx := context.WithValue(r.Context(), ctxKey("user"), "authenticated")
+            next.ServeHTTP(w, r.WithContext(ctx))
+        })
+    }
+}
+
+func Chain(h http.Handler, mw ...func(http.Handler) http.Handler) http.Handler {
+    for i := len(mw) - 1; i &gt;= 0; i-- { h = mw[i](h) }
+    return h
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Auth middleware registered after the route</h3>
+  <pre><code class="language-javascript">// BAD -- auth middleware registered AFTER the route
+app.get('/admin/users', getUsers);     // unprotected!
+app.use(authMiddleware);                // too late</code></pre>
+
+  <h3>Correct: Guard middleware before protected routes</h3>
+  <pre><code class="language-javascript">// GOOD -- auth registered BEFORE the routes it protects
+app.use('/admin', authMiddleware);      // runs first
+app.get('/admin/users', getUsers);      // protected</code></pre>
+
+  <h3>Wrong: God middleware with mixed concerns</h3>
+  <pre><code class="language-javascript">// BAD -- one middleware handles auth, logging, CORS, rate-limit
+app.use((req, res, next) =&gt; {
+  logRequest(req);
+  if (!checkAuth(req)) return res.status(401).end();
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (isRateLimited(req.ip)) return res.status(429).end();
+  validateBody(req.body);
+  next();
+});</code></pre>
+
+  <h3>Correct: Single-responsibility middleware</h3>
+  <pre><code class="language-javascript">// GOOD -- each middleware does one thing
+app.use(requestLogger);
+app.use(cors({ origin: ALLOWED_ORIGINS }));
+app.use(rateLimiter({ windowMs: 60000, max: 100 }));
+app.use(authenticate);
+app.use(validateRequest);</code></pre>
+
+  <h3>Wrong: Mutating shared module-level state</h3>
+  <pre><code class="language-javascript">// BAD -- shared mutable state across all requests
+let currentUser = null;  // module-level -- race condition!
+app.use((req, res, next) =&gt; {
+  currentUser = decodeToken(req.headers.authorization);
+  next();
+});</code></pre>
+
+  <h3>Correct: Request-scoped context</h3>
+  <pre><code class="language-javascript">// GOOD -- data attached to the request object (per-request scope)
+app.use((req, res, next) =&gt; {
+  req.user = decodeToken(req.headers.authorization);
+  next();
+});</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Forgetting to call <code>next()</code></strong>: Request hangs until client timeout. Every non-terminal middleware must call <code>next()</code>. Fix: lint rule or middleware wrapper that warns on missing <code>next()</code> call. [<a href="https://expressjs.com/en/guide/using-middleware.html">src1</a>]</li>
+    <li><strong>Calling <code>next()</code> after sending a response</strong>: Causes "headers already sent" errors in Express or double-write panics in Go. Fix: always <code>return</code> after <code>res.send()</code> / <code>res.json()</code>. [<a href="https://dzone.com/articles/understanding-middleware-pattern-in-expressjs">src5</a>]</li>
+    <li><strong>Error swallowed silently</strong>: If middleware catches an error but does not re-throw or pass to error handler, failures are invisible. Fix: always call <code>next(err)</code> (Express) or re-raise (Python). [<a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/">src2</a>]</li>
+    <li><strong>Async middleware without <code>await next()</code></strong>: In Koa and FastAPI, forgetting <code>await</code> on <code>next()</code> / <code>call_next()</code> means post-processing runs before downstream completes. Fix: always <code>await next()</code> in async middleware. [<a href="https://fastapi.tiangolo.com/advanced/middleware/">src4</a>]</li>
+    <li><strong>Applying middleware globally when only some routes need it</strong>: Performance waste and potential security issues. Fix: use path-scoped middleware -- <code>app.use('/api', middleware)</code>. [<a href="https://expressjs.com/en/guide/using-middleware.html">src1</a>]</li>
+    <li><strong>Koa onion model confusion</strong>: In Koa, code after <code>await next()</code> runs in reverse order (upstream). Fix: understand that Koa middleware wraps like nested function calls. [<a href="https://dzone.com/articles/understanding-middleware-pattern-in-expressjs">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Adding cross-cutting concerns (logging, auth, CORS, rate-limiting) to HTTP handlers</td><td>Processing asynchronous event streams</td><td>Message queue / pub-sub pattern</td></tr>
+      <tr><td>Need to compose reusable request/response transformations</td><td>Single handler with no shared concerns</td><td>Direct route handler</td></tr>
+      <tr><td>Building plugin systems where third parties extend request processing</td><td>Heavy data transformation pipelines (ETL)</td><td>Pipe-and-filter or streaming architecture</td></tr>
+      <tr><td>Need clean separation of concerns in web application request processing</td><td>Simple scripts or CLIs with no request/response model</td><td>Function composition or decorator pattern</td></tr>
+      <tr><td>Framework provides built-in middleware support</td><td>Performance-critical hot path where function call overhead matters</td><td>Inlined handler logic</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>The middleware pipeline pattern is inherently synchronous in concept (one request flows through a chain), but many frameworks support async middleware. Be aware of the async model of your specific framework.</li>
+    <li>Koa's "onion model" is fundamentally different from Express's linear chain. Code after <code>await next()</code> in Koa runs after downstream handlers complete, creating a symmetrical wrap.</li>
+    <li>In Go, middleware wrapping reverses the apparent registration order: <code>Chain(handler, A, B)</code> means A executes first (outermost), then B, then handler.</li>
+    <li>ASP.NET Core builds the pipeline in reverse at startup (innermost delegate first), but middleware executes in registration order at runtime.</li>
+    <li>Performance overhead per middleware is typically negligible (microseconds), but deeply nested pipelines (>20 middleware) in hot paths should be profiled.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/dependency-injection/2026" data-relationship="related_to">Dependency Injection Patterns</a>
+    <a href="/software/patterns/error-handling-strategies/2026" data-relationship="related_to">Error Handling Strategies</a>
+    <a href="/software/patterns/api-rate-limiting/2026" data-relationship="related_to">API Rate Limiting Patterns</a>
+    <a href="/software/system-design/api-gateway/2026" data-relationship="solves">API Gateway Design</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

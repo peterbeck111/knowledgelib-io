@@ -1,0 +1,32 @@
+# Input:  Multi-region ALB endpoints
+# Output: Latency-routed DNS with automatic failover
+
+resource "aws_route53_health_check" "us_east" {
+  fqdn              = "alb-us-east.example.com"
+  port               = 443
+  type               = "HTTPS"
+  resource_path      = "/health"
+  failure_threshold  = 3
+  request_interval   = 10
+  regions            = ["us-east-1", "eu-west-1", "ap-southeast-1"]
+
+  tags = { Name = "us-east-health-check" }
+}
+
+resource "aws_route53_record" "api_us_east" {
+  zone_id         = aws_route53_zone.main.zone_id
+  name            = "api.example.com"
+  type            = "A"
+  set_identifier  = "us-east-1"
+  ttl             = 60
+
+  latency_routing_policy {
+    region = "us-east-1"
+  }
+
+  records          = ["203.0.113.10"]
+  health_check_id  = aws_route53_health_check.us_east.id
+}
+
+# Repeat for eu-west-1, ap-south-1, etc.
+# Use variables and for_each for DRY configuration

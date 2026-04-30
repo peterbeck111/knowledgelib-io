@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Salesforce + D365 Finance & Operations Integration | knowledgelib.io</title>
+  <meta name="description" content="How to integrate Salesforce CRM with Microsoft Dynamics 365 Finance and Operations: Account/Customer sync, Opportunity-to-Order, OData endpoints,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/salesforce-dynamics-365-playbook/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Salesforce + D365 Finance & Operations Integration | knowledgelib.io">
+  <meta property="og:description" content="How to integrate Salesforce CRM with Microsoft Dynamics 365 Finance and Operations: Account/Customer sync, Opportunity-to-Order, OData endpoints, authentication, data mapping, and anti-patterns. Dual Write does NOT support Salesforce. 8 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/salesforce-dynamics-365-playbook/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Salesforce + D365 Finance & Operations Integration | knowledgelib.io">
+  <meta name="twitter:description" content="How to integrate Salesforce CRM with Microsoft Dynamics 365 Finance and Operations: Account/Customer sync, Opportunity-to-Order, OData endpoints, authentication, data mapping, and anti-patterns. Dual Write does NOT support Salesforce. 8 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.84">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/salesforce-dynamics-365-playbook">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you integrate Salesforce CRM with Microsoft Dynamics 365 Finance and Operations?">
+  <meta name="ai:aliases" content="Salesforce Dynamics 365 F&amp;O integration playbook; How to sync Salesforce accounts and orders to D365 Finance; Salesforce to Dynamics 365 opportunity-to-order integration; Dual-write vs custom Salesforce D365 integration">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/salesforce-dynamics-365-playbook/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-07">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Salesforce (API v62.0); Microsoft Dynamics 365 Finance &amp; Operations (10.0.40+)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction,middleware">
+  <meta name="ai:constraints" content="Dual Write does NOT support Salesforce -- only D365 CE to D365 F&amp;O; D365 F&amp;O OData: 6,000 requests per 5-min window per user; Salesforce daily API: 100K + per-license; D365 F&amp;O data entities must be OData-enabled; Salesforce governor limits: 100 SOQL, 150 DML per transaction">
+  <meta name="ai:skip_this_unit_if" content="User only needs Salesforce API (no D365) -> salesforce-rest-api-capabilities/2026; User only needs D365 F&amp;O API (no Salesforce) -> dynamics-365-web-api-capabilities/2026; User needs D365 CE to D365 F&amp;O (Microsoft-only) -> dynamics-365-dual-write-capabilities/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Salesforce + D365 Finance & Operations Integration Playbook",
+    "headline": "Salesforce + D365 Finance & Operations Integration: Account/Order Sync, OData, Middleware",
+    "description": "End-to-end integration playbook for Salesforce CRM and Microsoft Dynamics 365 Finance and Operations. Covers Account/Customer sync, Opportunity-to-Order, price list sync, invoice pushback, authentication, data mapping, error handling, and anti-patterns including Dual Write limitations.",
+    "keywords": ["Salesforce", "Dynamics 365", "D365 F&O", "ERP integration", "OData", "Dataverse", "Account sync", "Opportunity to Order", "API rate limits"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, D365 F&O 10.0.40+, Azure AD/Entra ID",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Integration between finance and operations apps and third-party services",
+        "url": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Service protection API limits - Finance & Operations",
+        "url": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dual-write overview - Finance & Operations",
+        "url": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/dual-write/dual-write-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Salesforce Developer Limits and Allocations Quick Reference",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Salesforce + D365 Finance & Operations Integration Playbook",
+    "description": "Integration playbook with API surfaces, rate limits, field mappings, and process flows for Salesforce CRM to D365 F&O ERP integration",
+    "keywords": ["Salesforce", "Dynamics 365", "D365 F&O", "ERP integration", "OData", "API"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Salesforce + D365 F&O Integration Playbook" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you integrate Salesforce CRM with Microsoft Dynamics 365 Finance and Operations?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Build a custom middleware integration (Azure Logic Apps, MuleSoft, or Boomi) between Salesforce REST API and D365 F&O OData endpoints. Dual Write does NOT support Salesforce -- it only connects D365 CE (Sales) to D365 F&O. There is no Microsoft-built out-of-the-box Salesforce-to-D365-F&O connector."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce Dynamics 365 F&O integration playbook",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Build a custom middleware integration (Azure Logic Apps, MuleSoft, or Boomi) between Salesforce REST API and D365 F&O OData endpoints. Dual Write does NOT support Salesforce -- it only connects D365 CE (Sales) to D365 F&O. There is no Microsoft-built out-of-the-box Salesforce-to-D365-F&O connector."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to sync Salesforce accounts and orders to D365 Finance",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Build a custom middleware integration (Azure Logic Apps, MuleSoft, or Boomi) between Salesforce REST API and D365 F&O OData endpoints. Dual Write does NOT support Salesforce -- it only connects D365 CE (Sales) to D365 F&O. There is no Microsoft-built out-of-the-box Salesforce-to-D365-F&O connector."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce to Dynamics 365 opportunity-to-order integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Build a custom middleware integration (Azure Logic Apps, MuleSoft, or Boomi) between Salesforce REST API and D365 F&O OData endpoints. Dual Write does NOT support Salesforce -- it only connects D365 CE (Sales) to D365 F&O. There is no Microsoft-built out-of-the-box Salesforce-to-D365-F&O connector."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Dual-write vs custom Salesforce D365 integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Build a custom middleware integration (Azure Logic Apps, MuleSoft, or Boomi) between Salesforce REST API and D365 F&O OData endpoints. Dual Write does NOT support Salesforce -- it only connects D365 CE (Sales) to D365 F&O. There is no Microsoft-built out-of-the-box Salesforce-to-D365-F&O connector."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Salesforce + D365 Finance &amp; Operations Integration: Account/Order Sync, OData, Middleware</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you integrate Salesforce CRM with Microsoft Dynamics 365 Finance and Operations?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/salesforce-dynamics-365-playbook/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Salesforce (API v62.0) + D365 F&amp;O (10.0.40+)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.84 out of 1">0.84</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> 2026-03-07</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Build a custom middleware integration (Azure Logic Apps, MuleSoft, or Boomi) between Salesforce REST API and D365 F&amp;O OData endpoints. Dual Write does NOT support Salesforce -- it only connects D365 CE (Sales) to D365 F&amp;O. There is no Microsoft-built out-of-the-box Salesforce-to-D365-F&amp;O connector.</li>
+    <li><strong>Key limit</strong>: D365 F&amp;O enforces resource-based throttling (HTTP 429 with Retry-After header) and caps at 6,000 OData requests per 5-minute window per user. Salesforce adds 100,000 + per-license API calls per 24h.</li>
+    <li><strong>Watch out for</strong>: Dual Write confusion -- it is the #1 misunderstood component. It connects Dataverse/D365 Sales to D365 F&amp;O only. Using it for Salesforce integration requires an extra Salesforce-to-Dataverse layer, doubling latency and failure points.</li>
+    <li><strong>Best for</strong>: Organizations running Salesforce as CRM and D365 F&amp;O as ERP that need account/customer sync, opportunity-to-order handoff, price list reads, and invoice pushback.</li>
+    <li><strong>Authentication</strong>: Salesforce uses OAuth 2.0 (JWT bearer for server-to-server); D365 F&amp;O uses Azure AD/Entra ID OAuth 2.0 client credentials flow via registered app in Azure portal.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This playbook covers the end-to-end integration between Salesforce (CRM, source of truth for leads, opportunities, accounts, and customer-facing data) and Microsoft Dynamics 365 Finance &amp; Operations (ERP, source of truth for financial master data, pricing, inventory, sales orders, and invoices). It applies to D365 F&amp;O version 10.0.38+ (cloud only). For organizations using D365 Business Central instead of F&amp;O, the integration surface differs significantly.</p>
+  <p>The architecture requires a middleware layer. Unlike the Microsoft-to-Microsoft stack (where Dual Write provides native near-real-time sync between D365 CE and D365 F&amp;O), Salesforce-to-D365-F&amp;O has no native connector. You must build the bridge using Azure Integration Services, MuleSoft, Boomi, or custom OData clients.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce (API v62.0)</td><td>CRM -- source of truth for accounts, contacts, opportunities</td><td>REST API, Bulk API 2.0, Platform Events, CDC</td><td>Outbound (account/order push) + Inbound (pricing/invoice pull)</td></tr>
+      <tr><td>D365 F&amp;O (10.0.40+)</td><td>ERP -- financial master, pricing, inventory, fulfillment</td><td>OData v4, Custom Services, Batch Data API (DMF), Business Events</td><td>Inbound (customer/order creation) + Outbound (pricing/invoice/inventory)</td></tr>
+      <tr><td>Middleware (Azure / MuleSoft / Boomi)</td><td>Integration orchestrator</td><td>Connectors for both systems</td><td>Bidirectional routing, transformation, error handling</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+
+  <h3>Salesforce Side</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Request</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>REST API</td><td>HTTPS/JSON</td><td>Individual record CRUD, &lt;2K records</td><td>2,000 per SOQL query</td><td>100K+ calls/24h</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Bulk API 2.0</td><td>HTTPS/CSV</td><td>ETL, data migration, &gt;2K records</td><td>150M per file</td><td>15,000 batches/24h</td><td>No</td><td>Yes</td></tr>
+      <tr><td>SOAP API</td><td>HTTPS/XML</td><td>Metadata operations, legacy</td><td>2,000 records</td><td>Shared with REST limit</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Composite API</td><td>HTTPS/JSON</td><td>Multi-object ops in one call</td><td>25 subrequests</td><td>Counts as 1 API call</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Platform Events</td><td>CometD/gRPC</td><td>Real-time event notifications</td><td>N/A</td><td>200K-1M events/24h</td><td>Yes</td><td>N/A</td></tr>
+      <tr><td>Change Data Capture</td><td>CometD</td><td>Track field-level changes</td><td>N/A</td><td>72h replay window</td><td>Yes</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+  [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]
+
+  <h3>D365 Finance &amp; Operations Side</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Request</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OData v4</td><td>HTTPS/JSON</td><td>Standard CRUD on data entities</td><td>Configurable via $top</td><td>6,000 req/5min per user</td><td>Yes</td><td>Via $batch</td></tr>
+      <tr><td>Custom Services</td><td>HTTPS/JSON or SOAP</td><td>Custom business logic endpoints</td><td>Varies</td><td>Same throttling as OData</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Batch Data API (DMF)</td><td>HTTPS/JSON</td><td>Large-volume async import/export</td><td>Millions (package-based)</td><td>Exempt from OData throttling</td><td>No (async)</td><td>Yes</td></tr>
+      <tr><td>Business Events</td><td>Azure Service Bus / Event Grid</td><td>Real-time event notifications</td><td>N/A</td><td>Per-event processing</td><td>Yes</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+  [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>, <a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src2</a>]
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Salesforce Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max records per SOQL query</td><td>2,000</td><td>REST/SOAP API</td><td>Use queryMore/nextRecordsUrl for pagination</td></tr>
+      <tr><td>Max request body size</td><td>50 MB</td><td>REST API</td><td></td></tr>
+      <tr><td>Max composite subrequests</td><td>25</td><td>Composite API</td><td>All-or-nothing by default</td></tr>
+      <tr><td>Max batch file size</td><td>150 MB</td><td>Bulk API 2.0</td><td>Split larger files</td></tr>
+      <tr><td>Max records per batch</td><td>10,000</td><td>Bulk API 2.0</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Salesforce Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Total API calls</td><td>100,000 base</td><td>24h rolling</td><td>Enterprise: +1,000/license; Unlimited: +5,000/license; Developer: 15,000 total</td></tr>
+      <tr><td>Concurrent API requests</td><td>25</td><td>Per org</td><td>Developer/Trial: 5</td></tr>
+      <tr><td>Bulk API batches</td><td>15,000</td><td>24h rolling</td><td>Shared across editions</td></tr>
+      <tr><td>Streaming API events</td><td>200,000-1,000,000</td><td>24h</td><td>Enterprise: 200K; Unlimited: 1M</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Salesforce Governor Limits (Per Transaction)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Per-Transaction Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SOQL queries</td><td>100</td><td>Includes queries from triggers</td></tr>
+      <tr><td>DML statements</td><td>150</td><td>Each insert/update/delete counts as 1</td></tr>
+      <tr><td>Callouts (HTTP)</td><td>100</td><td>External HTTP requests within transaction</td></tr>
+      <tr><td>CPU time</td><td>10,000 ms (sync) / 60,000 ms (async)</td><td>Exceeded = transaction abort</td></tr>
+      <tr><td>Heap size</td><td>6 MB (sync) / 12 MB (async)</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>D365 F&amp;O Service Protection Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Number of requests</td><td>6,000</td><td>5-minute sliding window</td><td>Per user, per application ID, per web server</td></tr>
+      <tr><td>Combined execution time</td><td>1,200 seconds (20 min)</td><td>5-minute sliding window</td><td>Per user, per web server</td></tr>
+      <tr><td>Concurrent requests</td><td>52</td><td>Per user</td><td>Per web server instance</td></tr>
+      <tr><td>Resource-based throttling</td><td>Dynamic</td><td>CPU/memory-based</td><td>429 response when server resources exceed threshold</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Important</strong>: D365 F&amp;O exempts DMF/DIXF, Recurring Integrations, Data Integrator, and Virtual Tables from OData throttling. For high-volume batch loads, use the Batch Data API instead of OData. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src2</a>]</p>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+
+  <h3>Salesforce Authentication</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.0 JWT Bearer</td><td>Server-to-server (recommended)</td><td>Session timeout (2h default)</td><td>New JWT per request</td><td>Requires connected app with digital certificate</td></tr>
+      <tr><td>OAuth 2.0 Client Credentials</td><td>Server-to-server (simpler)</td><td>2h</td><td>No (new token per request)</td><td>Spring '23+; no user context</td></tr>
+      <tr><td>OAuth 2.0 Web Server Flow</td><td>User-context operations</td><td>Access: 2h; Refresh: until revoked</td><td>Yes</td><td>Requires callback URL</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>D365 F&amp;O Authentication</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Azure AD/Entra ID Client Credentials</td><td>Server-to-server (recommended)</td><td>Default 1h (configurable)</td><td>Yes</td><td>Register app in Azure portal; assign D365 F&amp;O environment URL as audience</td></tr>
+      <tr><td>Azure AD Authorization Code</td><td>User-context interactive flows</td><td>Access: 1h; Refresh: 90 days</td><td>Yes</td><td>Requires redirect URI</td></tr>
+      <tr><td>S2S via Entra Managed Identity</td><td>Azure-hosted integrations</td><td>Auto-managed</td><td>Automatic</td><td>Only for Azure-hosted workloads</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li><strong>D365 F&amp;O OAuth audience URI must match exactly</strong>: The resource/audience must be <code>https://your-environment.operations.dynamics.com</code> (no trailing slash). A mismatch returns HTTP 401 with no useful error message. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Salesforce JWT bearer flow requires pre-authorized user</strong>: The integration user must be pre-authorized in the Connected App settings. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</li>
+    <li><strong>D365 F&amp;O token caching is critical</strong>: Cache tokens for their full lifetime (~1h). Requesting a new token per API call wastes quota and can trigger Entra ID throttling. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Dual Write does NOT support Salesforce</strong>: It exclusively connects D365 Customer Engagement (Sales, Marketing, Service) to D365 F&amp;O. Any architecture that assumes Dual Write connects Salesforce to D365 F&amp;O is fundamentally wrong. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/dual-write/dual-write-overview">src3</a>]</li>
+    <li><strong>D365 F&amp;O OData is synchronous</strong>: Each call triggers all validation, workflows, and posting logic immediately. Use Batch Data API (DMF) for volumes &gt;2,000 records. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>D365 F&amp;O data entities must be explicitly enabled for OData</strong>: Check <code>Data management &gt; Data entities &gt; Is public = Yes</code> and <code>Is OData accessible = Yes</code>. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Salesforce External IDs essential for upserts</strong>: Without External ID fields, you cannot do upserts. Create them before building the integration. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</li>
+    <li><strong>D365 F&amp;O number sequences can cause conflicts</strong>: Configure dedicated number sequence ranges for integration-created records. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Resource-based throttling is non-negotiable</strong>: D365 F&amp;O throttles if aggregate server CPU/memory is high, regardless of per-user limits. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src2</a>]</li>
+    <li><strong>Salesforce field-level security blocks API access silently</strong>: Missing field-level access causes fields to be omitted from API responses with no error. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Salesforce &lt;-&gt; D365 F&amp;O Integration
+|
++-- What's the primary process?
+|   +-- Account/Customer sync
+|   |   +-- Volume &lt; 1,000/day? --&gt; OData real-time upserts
+|   |   +-- Volume &gt; 1,000/day? --&gt; Batch Data API (DMF) on schedule
+|   |   +-- ALWAYS assign External ID fields on both sides FIRST
+|   +-- Opportunity-to-Order
+|   |   +-- Event-driven: SF Platform Event on Close --&gt; Middleware --&gt; D365 OData
+|   |   +-- Real-time (sub-minute): recommended for order accuracy
+|   +-- Price List / Product sync (D365 --&gt; Salesforce)
+|   |   +-- Scheduled batch: D365 OData query --&gt; SF Bulk API 2.0 upsert
+|   +-- Invoice pushback (D365 --&gt; Salesforce)
+|       +-- D365 Business Event on invoice posting --&gt; middleware --&gt; SF REST upsert
+|
++-- Which middleware?
+|   +-- Azure-native --&gt; Logic Apps + Service Bus + Event Grid
+|   +-- Salesforce-native --&gt; MuleSoft (pre-built D365 connector)
+|   +-- Multi-cloud --&gt; Boomi, Workato, Celigo
+|
++-- Error tolerance?
+    +-- Zero-loss (financial) --&gt; Dead letter queue + idempotent retries
+    +-- Best-effort (reporting) --&gt; Retry 3x with backoff, log and skip</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Step</th><th scope="col">Source</th><th scope="col">Trigger</th><th scope="col">Target</th><th scope="col">Data Objects</th><th scope="col">Failure Handling</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1. Account/Customer sync</td><td>Salesforce</td><td>Account created/updated</td><td>D365 F&amp;O</td><td>CustCustomerV3</td><td>Retry 3x, then DLQ</td></tr>
+      <tr><td>2. Contact sync</td><td>Salesforce</td><td>Contact created/updated</td><td>D365 F&amp;O</td><td>smmContactPersonV2</td><td>Retry 3x, skip on dup</td></tr>
+      <tr><td>3. Opportunity-to-Order</td><td>Salesforce</td><td>Stage = Closed Won</td><td>D365 F&amp;O</td><td>SalesOrderHeaderV2 + Lines</td><td>Retry 3x, then manual</td></tr>
+      <tr><td>4. Product/Price sync</td><td>D365 F&amp;O</td><td>Scheduled / Business Event</td><td>Salesforce</td><td>Product2 + PricebookEntry</td><td>Full refresh upsert</td></tr>
+      <tr><td>5. Inventory check</td><td>D365 F&amp;O</td><td>On-demand callout</td><td>Salesforce</td><td>Custom object</td><td>Real-time OData read</td></tr>
+      <tr><td>6. Invoice pushback</td><td>D365 F&amp;O</td><td>Invoice posted</td><td>Salesforce</td><td>Custom Invoice__c</td><td>Retry 3x, then recon batch</td></tr>
+      <tr><td>7. Payment status sync</td><td>D365 F&amp;O</td><td>Scheduled (hourly)</td><td>Salesforce</td><td>Custom field on Account</td><td>Upsert via External ID</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Register applications and configure authentication</h3>
+  <p>Set up OAuth credentials on both sides before building any data flows. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</p>
+  <pre><code class="language-bash"># Test Salesforce JWT auth
+curl -X POST https://login.salesforce.com/services/oauth2/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  -d "assertion=${SALESFORCE_JWT_TOKEN}"
+
+# Test D365 F&amp;O auth
+curl -X POST "https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token" \
+  -d "client_id=${CLIENT_ID}" \
+  -d "client_secret=${CLIENT_SECRET}" \
+  -d "scope=https://${D365_ENVIRONMENT}.operations.dynamics.com/.default" \
+  -d "grant_type=client_credentials"</code></pre>
+  <p><strong>Verify</strong>: Both calls return <code>{"access_token": "..."}</code>.</p>
+
+  <h3>2. Create External ID fields and data entity mappings</h3>
+  <p>Create External ID fields on both systems to enable idempotent upserts. [<a href="https://www.rapidionline.com/blog/7-steps-salesforce-dynamics-integration">src6</a>]</p>
+  <pre><code class="language-bash"># Salesforce: verify External ID field exists
+curl -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${INSTANCE_URL}/services/data/v62.0/sobjects/Account/describe" \
+  | jq '.fields[] | select(.name == "D365_Customer_Number__c")'
+
+# D365 F&amp;O: verify entity is OData-accessible
+curl -H "Authorization: Bearer ${D365_TOKEN}" \
+  "https://${D365_ENV}.operations.dynamics.com/data/CustomersV3?\$top=1"</code></pre>
+  <p><strong>Verify</strong>: Salesforce returns field metadata with <code>"externalId": true</code>. D365 returns a JSON array with at least one customer record.</p>
+
+  <h3>3. Build Account/Customer bidirectional sync</h3>
+  <p>Salesforce Account is the sales-facing master; D365 F&amp;O Customer is the financial master. [<a href="https://erpsoftwareblog.com/2026/02/how-to-integrate-salesforce-and-dynamics-365-finance-with-no-code/">src5</a>, <a href="https://www.rapidionline.com/blog/7-steps-salesforce-dynamics-integration">src6</a>]</p>
+  <p><strong>Verify</strong>: Create a test account in Salesforce sandbox and verify it appears in D365 F&amp;O within expected latency.</p>
+
+  <h3>4. Implement Opportunity-to-Order handoff</h3>
+  <p>Salesforce opportunity closure triggers D365 F&amp;O sales order creation. [<a href="https://erpsoftwareblog.com/2026/02/how-to-integrate-salesforce-and-dynamics-365-finance-with-no-code/">src5</a>, <a href="https://www.rapidionline.com/salesforce-microsoft-dynamics-365-finance-integration">src7</a>]</p>
+  <p><strong>Verify</strong>: Close an Opportunity in Salesforce sandbox. Confirm the Sales Order appears in D365 F&amp;O with matching line items.</p>
+
+  <h3>5. Configure Price List and Product sync (D365 --> Salesforce)</h3>
+  <p>Products and pricing are mastered in D365 F&amp;O and pushed to Salesforce for sales team visibility. [<a href="https://www.rapidionline.com/blog/7-steps-salesforce-dynamics-integration">src6</a>, <a href="https://www.rapidionline.com/salesforce-microsoft-dynamics-365-finance-integration">src7</a>]</p>
+  <pre><code class="language-bash"># D365: query released products
+curl -H "Authorization: Bearer ${D365_TOKEN}" \
+  "https://${D365_ENV}.operations.dynamics.com/data/ReleasedProductsV2?\$select=ItemNumber,ProductName&amp;\$top=1000"
+
+# Salesforce: upsert product via External ID
+curl -X PATCH -H "Authorization: Bearer ${SF_TOKEN}" \
+  -H "Content-Type: application/json" \
+  "${INSTANCE_URL}/services/data/v62.0/sobjects/Product2/D365_Item_Number__c/ITEM001" \
+  -d '{"Name": "Widget A", "ProductCode": "ITEM001", "IsActive": true}'</code></pre>
+  <p><strong>Verify</strong>: Compare product count in D365 F&amp;O vs Salesforce after sync.</p>
+
+  <h3>6. Build Invoice pushback (D365 --> Salesforce)</h3>
+  <p>Push invoice data from D365 back to Salesforce so sales reps see payment status. [<a href="https://erpsoftwareblog.com/2026/02/how-to-integrate-salesforce-and-dynamics-365-finance-with-no-code/">src5</a>, <a href="https://www.rapidionline.com/salesforce-microsoft-dynamics-365-finance-integration">src7</a>]</p>
+  <p><strong>Verify</strong>: Post a test invoice in D365 F&amp;O. Confirm the Invoice__c record appears on the corresponding Account in Salesforce.</p>
+
+  <h3>7. Implement error handling and retry logic</h3>
+  <p>Production integrations must handle D365 F&amp;O 429 throttling and Salesforce API limits gracefully. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src2</a>]</p>
+  <pre><code class="language-javascript">// Node.js: D365 F&amp;O OData call with retry on 429
+const axios = require('axios'); // v1.6+
+
+async function d365ODataRequest(method, url, data, token, maxRetries = 5) {
+  for (let attempt = 0; attempt &lt; maxRetries; attempt++) {
+    try {
+      const response = await axios({ method, url, data,
+        headers: { 'Authorization': `Bearer ${token}`,
+                   'Content-Type': 'application/json',
+                   'OData-MaxVersion': '4.0', 'OData-Version': '4.0' },
+        timeout: 30000 });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        const retryAfter = parseInt(error.response.headers['retry-after'] || '30');
+        const backoff = retryAfter * 1000 * Math.pow(1.5, attempt);
+        await new Promise(resolve =&gt; setTimeout(resolve, backoff));
+        continue;
+      }
+      if (error.response?.status &gt;= 500 &amp;&amp; attempt &lt; maxRetries - 1) {
+        await new Promise(resolve =&gt; setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error(`Max retries exceeded for ${url}`);
+}</code></pre>
+  <p><strong>Verify</strong>: Simulate rapid OData requests. Confirm retry logic pauses and resumes successfully.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Bidirectional Account/Customer Sync</h3>
+  <pre><code class="language-python"># Input:  Salesforce Account ID or D365 Customer Number
+# Output: Synced record on the target system
+
+import requests  # v2.31+
+
+class SfD365Sync:
+    def __init__(self, sf_token, sf_instance, d365_token, d365_env):
+        self.sf_headers = {"Authorization": f"Bearer {sf_token}",
+                           "Content-Type": "application/json"}
+        self.sf_base = f"{sf_instance}/services/data/v62.0"
+        self.d365_headers = {"Authorization": f"Bearer {d365_token}",
+                             "Content-Type": "application/json",
+                             "OData-MaxVersion": "4.0", "OData-Version": "4.0"}
+        self.d365_base = f"https://{d365_env}.operations.dynamics.com/data"
+
+    def sf_account_to_d365(self, account_id):
+        acct = requests.get(
+            f"{self.sf_base}/sobjects/Account/{account_id}",
+            headers=self.sf_headers).json()
+        d365_customer = {
+            "CustomerAccount": acct.get("D365_Customer_Number__c") or "",
+            "OrganizationName": acct["Name"][:100],
+            "CustomerGroupId": "10",
+            "dataAreaId": "usmf",
+            "SalesCurrencyCode": acct.get("CurrencyIsoCode", "USD")}
+        if d365_customer["CustomerAccount"]:
+            key = f"CustomerAccount='{d365_customer['CustomerAccount']}',dataAreaId='usmf'"
+            return requests.patch(f"{self.d365_base}/CustomersV3({key})",
+                json=d365_customer, headers=self.d365_headers).json()
+        else:
+            resp = requests.post(f"{self.d365_base}/CustomersV3",
+                json=d365_customer, headers=self.d365_headers).json()
+            requests.patch(f"{self.sf_base}/sobjects/Account/{account_id}",
+                json={"D365_Customer_Number__c": resp["CustomerAccount"]},
+                headers=self.sf_headers)
+            return resp</code></pre>
+
+  <h3>cURL: Quick API Tests</h3>
+  <pre><code class="language-bash"># Check Salesforce API limits remaining
+curl -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${INSTANCE_URL}/services/data/v62.0/limits" \
+  | jq '{DailyApiRequests, ConcurrentPerOrgDBConnections}'
+
+# Check D365 F&amp;O OData connectivity
+curl -H "Authorization: Bearer ${D365_TOKEN}" \
+  "https://${D365_ENV}.operations.dynamics.com/data/CustomersV3?\$top=1&amp;\$select=CustomerAccount,OrganizationName"
+
+# Salesforce: upsert Account via External ID
+curl -X PATCH -H "Authorization: Bearer ${SF_TOKEN}" \
+  -H "Content-Type: application/json" \
+  "${INSTANCE_URL}/services/data/v62.0/sobjects/Account/D365_Customer_Number__c/CUST-0001" \
+  -d '{"Name": "Acme Corp", "BillingCity": "New York"}'</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Field Mapping Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Source (Salesforce)</th><th scope="col">Target (D365 F&amp;O)</th><th scope="col">Type</th><th scope="col">Transform</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Account.Name</td><td>CustomersV3.OrganizationName</td><td>String</td><td>Truncate to 100 chars</td><td>D365 max 100 vs SF max 255</td></tr>
+      <tr><td>Account.BillingStreet</td><td>CustomersV3.AddressStreet</td><td>String</td><td>Direct</td><td>D365 splits Street + StreetNumber; SF is single field</td></tr>
+      <tr><td>Account.BillingCountry</td><td>CustomersV3.AddressCountryRegionId</td><td>String</td><td>Map name to ISO 3166-1</td><td>D365 expects ISO code; SF may store full name</td></tr>
+      <tr><td>Opportunity.Amount</td><td>SalesOrderHeadersV2.SalesOrderAmount</td><td>Currency</td><td>Currency conversion if needed</td><td>Exchange rate timing: define which system's rate is authoritative</td></tr>
+      <tr><td>OpportunityLineItem.Quantity</td><td>SalesOrderLines.SalesQuantity</td><td>Decimal</td><td>Direct</td><td>SF allows 8 decimals; D365 default is 2</td></tr>
+      <tr><td>OpportunityLineItem.UnitPrice</td><td>SalesOrderLines.SalesPrice</td><td>Currency</td><td>Direct</td><td>Tax-inclusive vs tax-exclusive depends on D365 tax group</td></tr>
+      <tr><td>Product2.ProductCode</td><td>SalesOrderLines.ItemNumber</td><td>String</td><td>Direct</td><td>Must match exactly; case-sensitive in D365</td></tr>
+      <tr><td>Account.Id (18-char)</td><td>Custom field on CustTable</td><td>String</td><td>Direct</td><td>Always use 18-char Salesforce ID (case-insensitive)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li><strong>DateTime timezone handling</strong>: Salesforce stores all DateTimes in UTC. D365 F&amp;O OData API also returns UTC. But watch for date-only fields -- Salesforce Date has no time; D365 DateTimeOffset always has time. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</li>
+    <li><strong>Currency decimal precision</strong>: Salesforce typically stores 2 decimal places. D365 F&amp;O supports up to 6 on amounts and 10 on unit prices. Map precision explicitly or rounding errors accumulate. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>dataAreaId (legal entity)</strong>: Every D365 F&amp;O record requires a dataAreaId. Salesforce has no equivalent. Your middleware must inject the correct legal entity based on business rules. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Address composite fields</strong>: Salesforce uses separate fields (Street, City, State, PostalCode, Country). D365 F&amp;O uses a logistics postal address entity with country-region ISO codes. Requires lookup mapping. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Source</th><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>D365 F&amp;O</td><td>429</td><td>Too Many Requests</td><td>OData throttling</td><td>Honor Retry-After header; exponential backoff. For persistent 429s, switch to DMF</td></tr>
+      <tr><td>D365 F&amp;O</td><td>400</td><td>Bad Request</td><td>Invalid payload, missing required fields</td><td>Parse InnerError.message; common: missing dataAreaId</td></tr>
+      <tr><td>D365 F&amp;O</td><td>404</td><td>Not Found</td><td>Entity not OData-enabled</td><td>Verify entity is public + OData-accessible in Data Management</td></tr>
+      <tr><td>D365 F&amp;O</td><td>401</td><td>Unauthorized</td><td>Token expired or wrong audience URI</td><td>Verify token audience matches environment URL (no trailing slash)</td></tr>
+      <tr><td>Salesforce</td><td>INVALID_FIELD</td><td>Field doesn't exist</td><td>Wrong API version or missing FLS</td><td>Check field-level security; verify API version</td></tr>
+      <tr><td>Salesforce</td><td>DUPLICATE_VALUE</td><td>External ID exists</td><td>Duplicate record on upsert</td><td>Investigate: retry (safe) or legitimate duplicate?</td></tr>
+      <tr><td>Salesforce</td><td>REQUEST_LIMIT_EXCEEDED</td><td>24h API limit reached</td><td>Too many API calls</td><td>Reduce polling; switch to events; request limit increase</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>D365 number sequence exhaustion</strong>: Auto-generated numbers run out if range is too small. Fix: <code>Configure dedicated number sequence range with sufficient capacity (10M+ range).</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Salesforce Platform Event replay failure</strong>: Events have 72h retention. If middleware is down longer, events are lost. Fix: <code>Implement daily reconciliation batch to detect and fix drift.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</li>
+    <li><strong>Multi-company routing errors</strong>: Wrong dataAreaId sends data to wrong legal entity -- accounting error not caught until month-end. Fix: <code>Validate dataAreaId mapping in middleware with lookup table. Reject records with unmapped business units.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>OAuth token expiration during batches</strong>: Batches running &gt;1h hit D365 token expiration. Fix: <code>Check token expiry before each call; refresh proactively when &lt;5 minutes remain.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Salesforce field-level security silent data loss</strong>: Missing field access causes omitted fields (no error). Fix: <code>Dedicated integration user with explicit read/write access. Audit with /describe endpoint.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using Dual Write as a Salesforce-to-D365-F&amp;O bridge</h3>
+  <pre><code>// WRONG -- Dual Write only connects D365 CE (Sales/Marketing/Service) to D365 F&amp;O
+// Architecture: Salesforce --&gt; Dual Write --&gt; D365 F&amp;O  &lt;-- DOES NOT WORK
+// Salesforce --&gt; Dataverse --&gt; Dual Write --&gt; D365 F&amp;O  &lt;-- Adds unnecessary hop</code></pre>
+
+  <h3>Correct: Direct middleware integration</h3>
+  <pre><code>// CORRECT -- Salesforce REST API --&gt; Middleware --&gt; D365 F&amp;O OData
+// Single integration layer, direct API-to-API mapping
+// Salesforce Platform Event --&gt; Azure Logic App --&gt; D365 OData POST
+// D365 Business Event --&gt; Azure Service Bus --&gt; Logic App --&gt; SF REST PATCH</code></pre>
+
+  <h3>Wrong: Polling Salesforce for changes on a timer</h3>
+  <pre><code class="language-python"># WRONG -- Polling every 5 min = 288 calls/day PER object
+# 10 objects = 2,880 API calls/day just for polling
+def poll_salesforce_accounts():
+    accounts = sf_query("SELECT Id FROM Account WHERE LastModifiedDate &gt; :last_run")
+    for acct in accounts:
+        sync_to_d365(acct)</code></pre>
+
+  <h3>Correct: Event-driven with Platform Events or CDC</h3>
+  <pre><code class="language-python"># CORRECT -- Subscribe to Salesforce Change Data Capture
+# Zero API calls wasted; instant notification on change
+async def listen_for_changes():
+    async with SalesforceStreamingClient(...) as client:
+        await client.subscribe("/data/AccountChangeEvent")
+        async for message in client:
+            sync_to_d365(message["data"]["payload"])</code></pre>
+
+  <h3>Wrong: Sending records one-by-one to D365 for bulk loads</h3>
+  <pre><code class="language-python"># WRONG -- 10,000 individual OData calls
+for product in all_products:  # 10K products
+    d365_odata_post("/data/ReleasedProductsV2", product)
+    # Burns through 6,000/5min limit in under 3 minutes</code></pre>
+
+  <h3>Correct: Use Batch Data API (DMF) for bulk loads</h3>
+  <pre><code class="language-python"># CORRECT -- Package data into DMF import (exempt from OData throttling)
+csv_content = convert_to_csv(records)
+response = requests.post(dmf_import_url,
+    json={"packageUrl": upload_to_blob(csv_content),
+          "definitionGroupId": "SFProductSync",
+          "execute": True, "legalEntityId": "usmf"})</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Assuming Dual Write works for Salesforce</strong>: The #1 architectural mistake. It only connects D365 CE to D365 F&amp;O. Fix: <code>Use direct API integration via middleware.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/dual-write/dual-write-overview">src3</a>]</li>
+    <li><strong>Ignoring dataAreaId (legal entity)</strong>: Every D365 F&amp;O OData call requires a legal entity. Fix: <code>Build mapping table: Salesforce Business Unit --> D365 dataAreaId. Validate before every write.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Not handling D365 validation errors</strong>: D365 F&amp;O runs full business validation on OData inserts. Fix: <code>Parse error response body JSON; extract InnerError.message; log with source record ID; route to manual review queue.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>]</li>
+    <li><strong>Building without External ID fields</strong>: Upserts require External IDs. Fix: <code>Define External ID strategy BEFORE writing code. Minimum: Account.D365_Customer_Number__c and D365 CustTable Salesforce ID field.</code> [<a href="https://www.rapidionline.com/blog/7-steps-salesforce-dynamics-integration">src6</a>]</li>
+    <li><strong>Overestimating D365 F&amp;O OData throughput</strong>: OData is synchronous; each POST can take 500ms-2s. At 6,000/5min, effective throughput is lower than expected. Fix: <code>For &gt;500 records/batch, use DMF. Keep OData for individual record operations only.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/integration-overview">src1</a>, <a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src2</a>]</li>
+    <li><strong>Not testing with production data volumes</strong>: D365 sandbox may have fewer web servers; Salesforce sandbox has lower API limits. Fix: <code>Load-test against full-copy sandbox with production volumes. Monitor for 429 responses.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># === Salesforce Diagnostics ===
+
+# Check remaining API limits
+curl -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${INSTANCE_URL}/services/data/v62.0/limits" \
+  | jq '{DailyApiRequests, ConcurrentPerOrgDBConnections}'
+
+# Verify integration user field permissions
+curl -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${INSTANCE_URL}/services/data/v62.0/sobjects/Account/describe" \
+  | jq '[.fields[] | select(.name | test("D365|Billing")) | {name, updateable}]'
+
+# === D365 F&amp;O Diagnostics ===
+
+# Test OData connectivity
+curl -H "Authorization: Bearer ${D365_TOKEN}" \
+  "https://${D365_ENV}.operations.dynamics.com/data/CustomersV3?\$top=1&amp;\$count=true"
+
+# Check Azure Service Bus dead-letter queue depth
+az servicebus queue show --resource-group ${RG} --namespace-name ${SB_NS} \
+  --name ${QUEUE_NAME} --query "countDetails.deadLetterMessageCount"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+
+  <h3>Salesforce API Versions</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Version</th><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>v62.0</td><td>Spring '26 (Feb 2026)</td><td>Current</td><td>Latest GA</td></tr>
+      <tr><td>v61.0</td><td>Winter '26 (Oct 2025)</td><td>Supported</td><td>Minor CDC improvements</td></tr>
+      <tr><td>v60.0</td><td>Spring '24 (Feb 2024)</td><td>Supported</td><td>Deprecated legacy SOAP partner endpoints</td></tr>
+      <tr><td>v58.0</td><td>Spring '23 (Feb 2023)</td><td>Supported</td><td>Added Client Credentials OAuth flow</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>D365 F&amp;O Versions</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>10.0.41</td><td>2026 Wave 1 (Apr 2026)</td><td>Upcoming</td><td>Enhanced Business Events framework</td></tr>
+      <tr><td>10.0.40</td><td>2025 Wave 2 (Oct 2025)</td><td>Current</td><td>Virtual entity improvements</td></tr>
+      <tr><td>10.0.36</td><td>2024 Wave 2</td><td>Supported</td><td>User-based API limits disabled permanently</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce is your CRM and D365 F&amp;O is your ERP</td><td>Both CRM and ERP are Microsoft (D365 CE + D365 F&amp;O)</td><td>D365 Dual Write</td></tr>
+      <tr><td>You need bidirectional Account/Customer, Opportunity-to-Order, or Invoice pushback</td><td>You only need read-only D365 data in Salesforce</td><td>Salesforce Connect External Objects (OData adapter)</td></tr>
+      <tr><td>Daily volume is &lt;100K records</td><td>Daily volume &gt;1M records near-real-time</td><td>Custom ETL with D365 DMF + SF Bulk API 2.0</td></tr>
+      <tr><td>You have middleware budget</td><td>Zero budget and zero dev resources</td><td>Pre-built connector (Rapidi, Celigo)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce (API v62.0)</th><th scope="col">D365 F&amp;O (10.0.40+)</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Style</td><td>REST + SOAP + Bulk</td><td>OData v4 + Custom Services + DMF</td><td>Both REST-based; OData more structured</td></tr>
+      <tr><td>Rate Limits</td><td>100K+ calls/24h rolling</td><td>6,000/5min per user per web server</td><td>D365 per-window not per-day</td></tr>
+      <tr><td>Bulk Import</td><td>Bulk API 2.0 (150MB, async)</td><td>DMF (package-based, async, exempt from throttling)</td><td>Both async; D365 DMF more complex but no rate limit</td></tr>
+      <tr><td>Event-Driven</td><td>Platform Events + CDC (72h replay)</td><td>Business Events + Data Events (Azure transport)</td><td>SF more mature; D365 requires Azure</td></tr>
+      <tr><td>Auth Model</td><td>OAuth 2.0 (JWT, Client Credentials)</td><td>Azure AD/Entra ID OAuth 2.0</td><td>SF self-contained; D365 depends on Azure AD</td></tr>
+      <tr><td>Data Model</td><td>Objects + Fields (flat, flexible)</td><td>Data Entities + Tables (normalized, rigid)</td><td>SF more flexible; D365 more structured</td></tr>
+      <tr><td>Metadata API</td><td>Describe calls (per object)</td><td>$metadata (full OData EDMX, 100MB+)</td><td>Parse D365 metadata selectively</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>No native Microsoft connector for Salesforce-to-D365-F&amp;O. All integrations require custom middleware or third-party connectors.</li>
+    <li>D365 F&amp;O resource-based throttling is dynamic -- activates when server CPU/memory is high, regardless of per-user limits. Plan around month-end peaks.</li>
+    <li>Salesforce API limits vary by edition. Developer edition: only 15,000 total calls/24h. Always verify in Setup &gt; Company Information &gt; API Usage.</li>
+    <li>D365 F&amp;O data entities are not universally available. Custom tables require custom entity development (Visual Studio + LCS deployment).</li>
+    <li>Exchange rate timing matters for multi-currency. Define which system's rate is authoritative.</li>
+    <li>Rate limits and service protection thresholds are subject to change with each release. Always verify against current documentation.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-rest-api-capabilities/2026" data-relationship="related_to">Salesforce REST API Capabilities</a>
+    <a href="/business/erp-integration/dynamics-365-web-api-capabilities/2026" data-relationship="related_to">D365 Web API Capabilities</a>
+    <a href="/business/erp-integration/dynamics-365-dataverse-api-capabilities/2026" data-relationship="related_to">D365 Dataverse API Capabilities</a>
+    <a href="/business/erp-integration/dynamics-365-dual-write-capabilities/2026" data-relationship="alternative_to">D365 Dual Write (Microsoft-only)</a>
+    <a href="/business/erp-integration/dynamics-365-dmf-import-export/2026" data-relationship="related_to">D365 DMF Import/Export</a>
+    <a href="/business/erp-integration/salesforce-oauth-authentication/2026" data-relationship="related_to">Salesforce OAuth Authentication</a>
+    <a href="/business/erp-integration/order-to-cash-integration/2026" data-relationship="solves">Order-to-Cash Integration Pattern</a>
+    <a href="/business/erp-integration/dynamics-365-virtual-entities/2026" data-relationship="often_confused_with">D365 Virtual Entities</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

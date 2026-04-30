@@ -1,0 +1,64 @@
+# docker-compose.yml — 2 data nodes + 1 arbiter
+# Use case: High availability with reduced storage costs
+services:
+  mongo1:
+    image: mongo:7.0
+    container_name: mongo1
+    hostname: mongo1
+    command: ["--replSet", "rs0", "--keyFile", "/etc/mongo-keyfile", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo1-data:/data/db
+      - ./keyfile:/etc/mongo-keyfile:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+    networks: [mongo-cluster]
+
+  mongo2:
+    image: mongo:7.0
+    container_name: mongo2
+    hostname: mongo2
+    command: ["--replSet", "rs0", "--keyFile", "/etc/mongo-keyfile", "--bind_ip_all"]
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo2-data:/data/db
+      - ./keyfile:/etc/mongo-keyfile:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+    networks: [mongo-cluster]
+
+  arbiter:
+    image: mongo:7.0
+    container_name: mongo-arbiter
+    hostname: arbiter
+    command: ["--replSet", "rs0", "--keyFile", "/etc/mongo-keyfile", "--bind_ip_all"]
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./keyfile:/etc/mongo-keyfile:ro
+      # No data volume -- arbiter does not store data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+    networks: [mongo-cluster]
+
+networks:
+  mongo-cluster:
+    driver: bridge
+
+volumes:
+  mongo1-data:
+  mongo2-data:
+# rs.initiate config for arbiter setup:
+# rs.initiate({
+#   _id: "rs0",
+#   members: [
+#     { _id: 0, host: "mongo1:27017", priority: 2 },
+#     { _id: 1, host: "mongo2:27017", priority: 1 },
+#     { _id: 2, host: "arbiter:27017", arbiterOnly: true }
+#   ]
+# });

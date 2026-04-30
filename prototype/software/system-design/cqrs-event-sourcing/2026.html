@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>CQRS and Event Sourcing: Implementation Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete implementation guide for CQRS and Event Sourcing: 12-component architecture table, decision tree, step-by-step guide, code examples in Python...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/cqrs-event-sourcing/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="CQRS and Event Sourcing: Implementation Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete implementation guide for CQRS and Event Sourcing: 12-component architecture table, decision tree, step-by-step guide, code examples in Python and Node.js, 5 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/cqrs-event-sourcing/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CQRS and Event Sourcing: Implementation Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete implementation guide for CQRS and Event Sourcing: 12-component architecture table, decision tree, step-by-step guide, code examples in Python and Node.js, 5 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.91">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/cqrs_event_sourcing">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement CQRS and Event Sourcing?">
+  <meta name="ai:aliases" content="CQRS event sourcing implementation guide; command query responsibility segregation pattern; event sourcing with separate read write models; CQRS architecture design; implement event store with projections; separate read and write side architecture; event-driven CQRS microservices; how to build an event sourced system">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/cqrs-event-sourcing/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scope,scale,language">
+  <meta name="ai:constraints" content="Never use CQRS as top-level architecture for entire system; Event schemas are immutable API contracts; Event stores must be append-only; Projections must be rebuildable from scratch; Requires operational maturity (monitoring, tracing, DLQ)">
+  <meta name="ai:skip_this_unit_if" content="Simple CRUD app with fewer than 5 entities and no audit requirements → Standard three-tier architecture; Need event-driven communication but not event sourcing → Event-driven architecture with message broker; Want to decompose a monolith → software/migrations/monolith-to-microservices/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "CQRS and Event Sourcing: Implementation Guide",
+    "headline": "CQRS and Event Sourcing: Implementation Guide",
+    "description": "Complete implementation guide for CQRS (Command Query Responsibility Segregation) and Event Sourcing patterns. Covers architecture components, decision trees for CQRS-only vs. CQRS+ES, step-by-step implementation with event store, projections, and snapshotting. Includes Python and Node.js code examples.",
+    "keywords": ["CQRS", "Event Sourcing", "Command Query Responsibility Segregation", "system design", "event store", "projections", "domain-driven design", "microservices", "EventStoreDB", "Axon Framework"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "EventStoreDB 24.x, PostgreSQL 12+, Apache Kafka 3.x, Axon Framework 4.x, Marten 7.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "bliki: CQRS",
+        "url": "https://www.martinfowler.com/bliki/CQRS.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CQRS Documents",
+        "url": "https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CQRS Pattern - Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Event Sourcing Pattern - Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pattern: Event Sourcing - microservices.io",
+        "url": "https://microservices.io/patterns/data/event-sourcing.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "EventStoreDB Documentation",
+        "url": "https://developers.eventstore.com/getting-started"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Event Sourcing, CQRS, Stream Processing and Apache Kafka",
+        "url": "https://www.confluent.io/blog/event-sourcing-cqrs-stream-processing-apache-kafka-whats-connection/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "CQRS and Event Sourcing: Implementation Guide",
+    "description": "Structured knowledge unit covering CQRS and Event Sourcing implementation: 12-component architecture table, decision tree, 7 implementation steps, code examples in Python and Node.js, 5 anti-patterns, 8 common pitfalls. Compiled from 7 authoritative sources.",
+    "keywords": ["CQRS", "Event Sourcing", "system design", "event store", "projections", "domain-driven design"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Martin Fowler"},
+      {"@type": "Organization", "name": "Greg Young"},
+      {"@type": "Organization", "name": "Microsoft Azure Architecture Center"},
+      {"@type": "Organization", "name": "Chris Richardson / microservices.io"},
+      {"@type": "Organization", "name": "Event Store Ltd"},
+      {"@type": "Organization", "name": "Confluent"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "CQRS and Event Sourcing: Implementation Guide" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement CQRS and Event Sourcing?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CQRS event sourcing implementation guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "command query responsibility segregation pattern",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "event sourcing with separate read write models",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CQRS architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "implement event store with projections",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>CQRS and Event Sourcing: Implementation Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement CQRS and Event Sourcing?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/cqrs-event-sourcing/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: CQRS separates read and write models for independent optimization; Event Sourcing stores state as an append-only sequence of domain events, enabling complete audit trails and temporal queries.</li>
+    <li><strong>Key tool/command</strong>: <code>EventStoreDB</code> (purpose-built event store), or <code>Apache Kafka</code> with log compaction disabled for event sourcing on existing infrastructure.</li>
+    <li><strong>Watch out for</strong>: Applying CQRS/ES globally instead of selectively to bounded contexts that actually benefit from it — most systems do not need this complexity.</li>
+    <li><strong>Works with</strong>: Any language/framework; dedicated support in Axon Framework (Java), Marten (C#/.NET), EventStoreDB (polyglot), Kafka Streams, and custom implementations.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never use CQRS as a top-level architecture for the entire system — apply it selectively to bounded contexts that benefit from separate read/write models [<a href="https://www.martinfowler.com/bliki/CQRS.html">src1</a>]</li>
+    <li>Event schemas are your API contract — never modify published event schemas; only add new event types or version existing ones [<a href="https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf">src2</a>]</li>
+    <li>Event stores must be append-only — never update or delete events in production; use compensating events instead [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing">src4</a>]</li>
+    <li>Projections must be rebuildable from scratch — never store data in read models that cannot be reconstructed from the event stream [<a href="https://developers.eventstore.com/getting-started">src6</a>]</li>
+    <li>Do not use CQRS without operational maturity (monitoring, tracing, dead-letter queues) — eventual consistency bugs are invisible without observability [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Command API</td><td>Accepts write requests, validates business rules</td><td>REST/gRPC endpoint, message queue consumer</td><td>Horizontal scaling behind load balancer</td></tr>
+      <tr><td>Command Handler</td><td>Processes commands, loads aggregate, emits events</td><td>Application service layer</td><td>Stateless; scale by adding instances</td></tr>
+      <tr><td>Aggregate</td><td>Enforces business invariants, produces domain events</td><td>Domain model (DDD aggregate root)</td><td>One aggregate instance per ID (single-writer)</td></tr>
+      <tr><td>Event Store</td><td>Append-only persistence of domain events</td><td>EventStoreDB, PostgreSQL + outbox, Kafka, DynamoDB</td><td>Partition by aggregate ID / stream</td></tr>
+      <tr><td>Event Bus</td><td>Distributes events to subscribers</td><td>Kafka, RabbitMQ, Amazon SNS/SQS, Azure Service Bus</td><td>Partition by event type or aggregate ID</td></tr>
+      <tr><td>Projection Engine</td><td>Transforms events into read-optimized views</td><td>Kafka Streams, custom subscribers, Axon projections</td><td>One consumer group per projection</td></tr>
+      <tr><td>Read Model Store</td><td>Serves denormalized query data</td><td>PostgreSQL, Redis, Elasticsearch, MongoDB</td><td>Read replicas, caching, sharding</td></tr>
+      <tr><td>Query API</td><td>Serves read requests from materialized views</td><td>REST/GraphQL endpoint</td><td>Horizontal scaling + CDN/cache</td></tr>
+      <tr><td>Snapshot Store</td><td>Caches aggregate state at intervals to speed rebuilds</td><td>Same DB as event store or separate cache</td><td>Snapshot every N events (100-500)</td></tr>
+      <tr><td>Saga / Process Manager</td><td>Coordinates multi-aggregate workflows</td><td>Stateful orchestrator consuming events</td><td>Partition by saga ID</td></tr>
+      <tr><td>Dead Letter Queue</td><td>Captures failed event processing for retry</td><td>Kafka DLQ, SQS DLQ, RabbitMQ dead-letter exchange</td><td>Monitor size; alert on growth</td></tr>
+      <tr><td>Schema Registry</td><td>Manages event schema evolution and compatibility</td><td>Confluent Schema Registry, AWS Glue, custom</td><td>Central service; version all schemas</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Do you need different read and write models?
+│   ├── NO → Standard CRUD is simpler; skip CQRS entirely
+│   └── YES ↓
+├── Do you need a complete audit trail / temporal queries?
+│   ├── NO → Use CQRS only (separate read/write models, shared or separate DB)
+│   └── YES ↓
+├── CQRS + Event Sourcing
+│   ├── Expected load &lt; 1K concurrent users?
+│   │   ├── YES → Single-node EventStoreDB or PostgreSQL event table
+│   │   │         Synchronous projections acceptable
+│   │   └── NO ↓
+│   ├── Expected load 1K-100K concurrent users?
+│   │   ├── YES → EventStoreDB cluster or Kafka + dedicated projection service
+│   │   │         Async projections with consumer groups
+│   │   └── NO ↓
+│   └── Expected load &gt; 100K concurrent users?
+│       └── YES → Kafka event backbone + partitioned read stores
+│                 (Elasticsearch, Redis, Cassandra)
+│                 Multiple projection services + snapshotting
+└── Framework available for your language?
+    ├── Java/Kotlin → Axon Framework (batteries-included)
+    ├── C#/.NET → Marten or EventStoreDB .NET client
+    ├── Python/JS/Go → Custom implementation with EventStoreDB or Kafka
+    └── Any → EventStoreDB gRPC client (polyglot)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define bounded context and aggregates</h3>
+  <p>Identify the domain boundary where CQRS/ES adds value. Map aggregates (consistency boundaries) using Domain-Driven Design. Each aggregate will have its own event stream. [<a href="https://www.martinfowler.com/bliki/CQRS.html">src1</a>]</p>
+  <pre><code>Example bounded context: Order Management
+├── Aggregate: Order (OrderId)
+│   Events: OrderCreated, ItemAdded, ItemRemoved, OrderConfirmed, OrderShipped
+├── Aggregate: Inventory (ProductId)
+│   Events: StockReserved, StockReleased, StockDepleted
+└── Process Manager: OrderFulfillment
+    Listens: OrderConfirmed → reserves stock → emits OrderReadyToShip</code></pre>
+  <p><strong>Verify</strong>: Each aggregate has a clear consistency boundary. No two aggregates share the same invariant rules.</p>
+
+  <h3>2. Design event schemas</h3>
+  <p>Define immutable event types with all data needed to reconstruct state. Use past-tense naming. Include metadata (event ID, timestamp, aggregate ID, version). [<a href="https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf">src2</a>]</p>
+  <pre><code class="language-json">{
+    "event_type": "OrderCreated",
+    "event_id": "uuid-v4",
+    "aggregate_id": "order-123",
+    "aggregate_type": "Order",
+    "version": 1,
+    "timestamp": "2026-02-23T10:00:00Z",
+    "data": {
+        "customer_id": "cust-456",
+        "items": [{"product_id": "prod-789", "quantity": 2, "price": 29.99}],
+        "total": 59.98
+    },
+    "metadata": {
+        "correlation_id": "req-abc",
+        "causation_id": null,
+        "user_id": "user-001"
+    }
+}</code></pre>
+  <p><strong>Verify</strong>: Every event contains enough data to rebuild aggregate state without external lookups.</p>
+
+  <h3>3. Implement the event store</h3>
+  <p>Choose your storage backend. The event store must support append-only writes, optimistic concurrency control (expected version), and reading all events for a given aggregate. [<a href="https://developers.eventstore.com/getting-started">src6</a>]</p>
+  <pre><code class="language-sql">-- PostgreSQL event store table
+CREATE TABLE events (
+    event_id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    aggregate_id   UUID NOT NULL,
+    aggregate_type VARCHAR(100) NOT NULL,
+    event_type     VARCHAR(100) NOT NULL,
+    version        INTEGER NOT NULL,
+    data           JSONB NOT NULL,
+    metadata       JSONB DEFAULT '{}',
+    created_at     TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (aggregate_id, version)  -- optimistic concurrency
+);
+
+CREATE INDEX idx_events_aggregate ON events (aggregate_id, version);
+CREATE INDEX idx_events_type ON events (event_type, created_at);</code></pre>
+  <p><strong>Verify</strong>: <code>INSERT</code> with duplicate <code>(aggregate_id, version)</code> raises a unique constraint violation (concurrency conflict).</p>
+
+  <h3>4. Build the command side (write model)</h3>
+  <p>Implement command handlers that load an aggregate from events, apply business rules, and append new events. Use optimistic concurrency to prevent conflicting writes. [<a href="https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf">src2</a>]</p>
+  <pre><code class="language-python">def handle_confirm_order(command):
+    # 1. Load events from store
+    events = event_store.load(command.order_id)
+    # 2. Rebuild aggregate state
+    order = Order()
+    for event in events:
+        order.apply(event)
+    # 3. Execute business logic
+    new_events = order.confirm()  # raises if invalid state
+    # 4. Persist new events (with expected version)
+    event_store.append(
+        aggregate_id=command.order_id,
+        events=new_events,
+        expected_version=order.version
+    )
+    # 5. Publish events to bus
+    event_bus.publish(new_events)</code></pre>
+  <p><strong>Verify</strong>: Sending the same command twice with the same expected version raises a concurrency error on the second attempt.</p>
+
+  <h3>5. Build projections (read model)</h3>
+  <p>Create event handlers that subscribe to events and update denormalized read models optimized for specific queries. Each projection is independent and rebuildable. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs">src3</a>]</p>
+  <pre><code class="language-javascript">// Projection: Order Summary
+async function handleEvent(event) {
+    switch (event.event_type) {
+        case 'OrderCreated':
+            await db.query(
+                `INSERT INTO order_summary (order_id, customer_id, status, total, created_at)
+                 VALUES ($1, $2, 'pending', $3, $4)`,
+                [event.aggregate_id, event.data.customer_id,
+                 event.data.total, event.timestamp]
+            );
+            break;
+        case 'OrderConfirmed':
+            await db.query(
+                `UPDATE order_summary SET status = 'confirmed', confirmed_at = $2
+                 WHERE order_id = $1`,
+                [event.aggregate_id, event.timestamp]
+            );
+            break;
+    }
+}</code></pre>
+  <p><strong>Verify</strong>: After publishing events, query the read model and confirm the projected data matches expected state.</p>
+
+  <h3>6. Handle eventual consistency in the UI</h3>
+  <p>The read model lags behind the write model. Implement strategies: return the command result with the new version, poll until the projection catches up, or use client-side optimistic updates. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs">src3</a>]</p>
+  <pre><code>Strategies for eventual consistency:
+1. Return write version → client polls read model until version &gt;= write version
+2. Causal consistency token → pass correlation ID, read model waits for that event
+3. Optimistic UI → update client state immediately, reconcile when projection arrives
+4. Read-your-writes → route reads to write model for N seconds after a command</code></pre>
+  <p><strong>Verify</strong>: After a write, the UI shows updated data within the acceptable latency window (typically &lt; 500ms for interactive UIs).</p>
+
+  <h3>7. Add snapshotting for large aggregates</h3>
+  <p>When aggregates accumulate hundreds of events, replaying from the beginning becomes slow. Snapshot aggregate state periodically and load from the latest snapshot plus subsequent events. [<a href="https://developers.eventstore.com/getting-started">src6</a>]</p>
+  <pre><code class="language-python">def load_aggregate(aggregate_id):
+    snapshot = snapshot_store.get_latest(aggregate_id)
+    if snapshot:
+        aggregate = deserialize(snapshot.state)
+        events = event_store.load(aggregate_id,
+                                  from_version=snapshot.version + 1)
+    else:
+        aggregate = Order()
+        events = event_store.load(aggregate_id)
+    for event in events:
+        aggregate.apply(event)
+    return aggregate</code></pre>
+  <p><strong>Verify</strong>: Load time for an aggregate with 10,000 events + snapshotting should be &lt; 50ms.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Simple Event Store with Optimistic Concurrency</h3>
+  <pre><code class="language-python">// Input:  Domain events as dictionaries with aggregate_id and version
+// Output: Persisted events with concurrency protection
+
+import json
+import uuid
+from datetime import datetime, timezone
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+class EventStore:
+    """Append-only event store with optimistic concurrency control."""
+
+    def __init__(self, dsn: str):
+        self.conn = psycopg2.connect(dsn)
+
+    def append(self, aggregate_id: str, events: list[dict],
+               expected_version: int) -> None:
+        """Append events. Raises on version conflict."""
+        with self.conn.cursor() as cur:
+            for i, event in enumerate(events):
+                version = expected_version + i + 1
+                cur.execute(
+                    """INSERT INTO events
+                       (event_id, aggregate_id, aggregate_type,
+                        event_type, version, data, metadata)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                    (str(uuid.uuid4()), aggregate_id,
+                     event["aggregate_type"], event["event_type"],
+                     version, json.dumps(event["data"]),
+                     json.dumps(event.get("metadata", {})))
+                )
+        self.conn.commit()
+
+    def load(self, aggregate_id: str,
+             from_version: int = 0) -> list[dict]:
+        """Load events for an aggregate, optionally from a version."""
+        with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """SELECT * FROM events
+                   WHERE aggregate_id = %s AND version > %s
+                   ORDER BY version""",
+                (aggregate_id, from_version)
+            )
+            return cur.fetchall()</code></pre>
+
+  <h3>Node.js: Read Model Projection with Event Subscription</h3>
+  <pre><code class="language-javascript">// Input:  Events from an event store (EventStoreDB or Kafka)
+// Output: Denormalized read model in PostgreSQL
+
+const { Pool } = require('pg');  // pg@8.x
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const projectionHandlers = {
+  async OrderCreated(event) {
+    const { customer_id, items, total } = event.data;
+    await pool.query(
+      `INSERT INTO order_summary
+       (order_id, customer_id, status, item_count, total, created_at, updated_at)
+       VALUES ($1, $2, 'pending', $3, $4, $5, $5)
+       ON CONFLICT (order_id) DO NOTHING`,
+      [event.aggregate_id, customer_id, items.length, total, event.timestamp]
+    );
+  },
+
+  async OrderConfirmed(event) {
+    await pool.query(
+      `UPDATE order_summary
+       SET status = 'confirmed', updated_at = $2
+       WHERE order_id = $1`,
+      [event.aggregate_id, event.timestamp]
+    );
+  },
+
+  async OrderShipped(event) {
+    const { tracking_number, carrier } = event.data;
+    await pool.query(
+      `UPDATE order_summary
+       SET status = 'shipped', tracking_number = $2,
+           carrier = $3, updated_at = $4
+       WHERE order_id = $1`,
+      [event.aggregate_id, tracking_number, carrier, event.timestamp]
+    );
+  }
+};
+
+// Projection runner with checkpoint tracking
+async function runProjection(eventStore, projectionName) {
+  const checkpoint = await loadCheckpoint(projectionName);
+  let position = checkpoint;
+  const stream = eventStore.subscribeToAll({ fromPosition: position });
+  for await (const resolvedEvent of stream) {
+    const event = resolvedEvent.event;
+    const handler = projectionHandlers[event.event_type];
+    if (handler) {
+      try {
+        await handler(event);
+        await saveCheckpoint(projectionName, resolvedEvent.position);
+      } catch (err) {
+        console.error(`Projection error:`, err);
+        await sendToDeadLetter(projectionName, resolvedEvent, err);
+      }
+    }
+  }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Mutable events in the store</h3>
+  <pre><code class="language-python"># BAD — modifying events after they are stored destroys the audit trail
+def fix_order_total(order_id, correct_total):
+    event = event_store.load_latest(order_id, "OrderCreated")
+    event["data"]["total"] = correct_total  # MUTATING a stored event
+    event_store.update(event)               # UPDATING instead of appending</code></pre>
+
+  <h3>Correct: Use compensating events</h3>
+  <pre><code class="language-python"># GOOD — append a correction event; the original event remains immutable
+def fix_order_total(order_id, correct_total, reason):
+    event_store.append(order_id, [{
+        "aggregate_type": "Order",
+        "event_type": "OrderTotalCorrected",
+        "data": {
+            "previous_total": order.total,
+            "corrected_total": correct_total,
+            "reason": reason
+        }
+    }], expected_version=order.version)</code></pre>
+
+  <h3>Wrong: One giant read model serving all queries</h3>
+  <pre><code class="language-sql">-- BAD — single normalized read model defeats the purpose of CQRS
+SELECT o.id, o.status, c.name, c.email,
+       SUM(oi.price * oi.quantity) as total,
+       s.tracking_number, s.carrier
+FROM orders o
+JOIN customers c ON o.customer_id = c.id
+JOIN order_items oi ON o.id = oi.order_id
+LEFT JOIN shipments s ON o.id = s.order_id
+WHERE o.status = 'shipped'
+GROUP BY o.id, o.status, c.name, c.email, s.tracking_number, s.carrier;</code></pre>
+
+  <h3>Correct: Purpose-built denormalized projections</h3>
+  <pre><code class="language-sql">-- GOOD — each projection is a flat, denormalized table for one use case
+CREATE TABLE shipped_orders_view (
+    order_id UUID PRIMARY KEY,
+    customer_name TEXT,
+    customer_email TEXT,
+    item_count INTEGER,
+    total DECIMAL(10,2),
+    tracking_number TEXT,
+    carrier TEXT,
+    shipped_at TIMESTAMPTZ
+);
+-- Single-row lookup, no JOINs
+SELECT * FROM shipped_orders_view WHERE order_id = $1;</code></pre>
+
+  <h3>Wrong: Exposing domain events to external services</h3>
+  <pre><code class="language-python"># BAD — internal domain events leak aggregate internals to consumers
+event_bus.publish_to_external("order-events-topic", domain_event)
+# External consumers now depend on internal event schemas</code></pre>
+
+  <h3>Correct: Translate domain events to integration events</h3>
+  <pre><code class="language-python"># GOOD — publish stable integration events for external consumers
+def on_order_confirmed(domain_event):
+    integration_event = {
+        "type": "OrderConfirmedV1",
+        "order_id": domain_event.data["order_id"],
+        "total": domain_event.data["total"],
+        "confirmed_at": domain_event.timestamp
+    }
+    integration_bus.publish("public.orders", integration_event)</code></pre>
+
+  <h3>Wrong: Validating commands against the read model</h3>
+  <pre><code class="language-python"># BAD — read model may be stale; business rules must use the write model
+async def handle_confirm_order(command):
+    order_summary = await read_db.query(
+        "SELECT status FROM order_summary WHERE order_id = $1",
+        command.order_id
+    )
+    if order_summary.status == "pending":  # STALE data!
+        event_store.append(...)</code></pre>
+
+  <h3>Correct: Load aggregate from events for validation</h3>
+  <pre><code class="language-python"># GOOD — always load from the event store for write-side decisions
+async def handle_confirm_order(command):
+    events = event_store.load(command.order_id)
+    order = Order()
+    for event in events:
+        order.apply(event)
+    new_events = order.confirm()  # raises if not in valid state
+    event_store.append(command.order_id, new_events, order.version)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Eventual consistency surprises</strong>: Users submit a command, then immediately query the read model and see stale data. Fix: implement <code>read-your-writes consistency via polling with version check or causal consistency tokens</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs">src3</a>]</li>
+    <li><strong>Event schema evolution breaks projections</strong>: Adding/removing fields in events without versioning causes deserialization failures. Fix: <code>use a schema registry (Confluent Schema Registry, Avro, Protobuf) with backward-compatible changes only</code>. [<a href="https://www.confluent.io/blog/event-sourcing-cqrs-stream-processing-apache-kafka-whats-connection/">src7</a>]</li>
+    <li><strong>Unbounded event streams per aggregate</strong>: Aggregates with millions of events become impossibly slow to rebuild. Fix: <code>snapshot every 100-500 events, or redesign aggregate boundaries</code>. [<a href="https://developers.eventstore.com/getting-started">src6</a>]</li>
+    <li><strong>Projection replay takes hours</strong>: Rebuilding a projection from scratch is slow with millions of events. Fix: <code>parallel projection with partitioned consumers and checkpoint-based resumption</code>. [<a href="https://www.confluent.io/blog/event-sourcing-cqrs-stream-processing-apache-kafka-whats-connection/">src7</a>]</li>
+    <li><strong>Missing idempotency in projections</strong>: Network retries cause duplicate event delivery, leading to double-counted data. Fix: <code>track last processed event ID per projection and skip duplicates</code>. [<a href="https://microservices.io/patterns/data/event-sourcing.html">src5</a>]</li>
+    <li><strong>Treating CQRS as all-or-nothing</strong>: Applying CQRS + ES to the entire application instead of specific bounded contexts. Fix: <code>start with one complex domain, keep the rest as simple CRUD</code>. [<a href="https://www.martinfowler.com/bliki/CQRS.html">src1</a>]</li>
+    <li><strong>No dead letter queue for failed projections</strong>: A single bad event halts the entire projection pipeline. Fix: <code>route failed events to a DLQ, alert on queue depth, continue processing</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing">src4</a>]</li>
+    <li><strong>Synchronous projections in the command path</strong>: Updating projections inside the command handler creates tight coupling. Fix: <code>project asynchronously via event subscriptions; accept eventual consistency</code>. [<a href="https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check EventStoreDB health (Docker)
+curl -s http://localhost:2113/health/live | jq .
+
+# Count events per aggregate in PostgreSQL event store
+psql -c "SELECT aggregate_id, COUNT(*) as event_count, MAX(version) as latest_version FROM events GROUP BY aggregate_id ORDER BY event_count DESC LIMIT 20;"
+
+# Check projection lag
+psql -c "SELECT e.max_id AS latest_event, p.position AS projected_to, (e.max_id - p.position) AS lag FROM (SELECT MAX(event_id) as max_id FROM events) e, projection_checkpoints p WHERE p.name = 'order_summary';"
+
+# Monitor dead letter queue depth
+psql -c "SELECT projection, COUNT(*) as failed_count, MIN(created_at) as oldest_failure FROM dead_letter_queue GROUP BY projection;"
+
+# Check EventStoreDB stream stats
+curl -s http://localhost:2113/streams/\$stats-0 -H "Accept: application/json" | jq .</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern / Tool</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CQRS (pattern)</td><td>Stable since 2010</td><td>None</td><td>Coined by Greg Young, based on CQS (Bertrand Meyer)</td></tr>
+      <tr><td>Event Sourcing (pattern)</td><td>Stable since 2005</td><td>None</td><td>Popularized by Greg Young and Martin Fowler</td></tr>
+      <tr><td>EventStoreDB 24.x</td><td>Current</td><td>gRPC API is primary (HTTP deprecated)</td><td>Docker: eventstore/eventstore:24.10</td></tr>
+      <tr><td>EventStoreDB 23.x</td><td>Maintained</td><td>---</td><td>Last version with full HTTP API</td></tr>
+      <tr><td>Axon Framework 4.x</td><td>Current (LTS)</td><td>Axon Server required for clustering</td><td>Java 17+ required since 4.8</td></tr>
+      <tr><td>Marten 7.x</td><td>Current</td><td>PostgreSQL 12+ required</td><td>.NET 8+ required</td></tr>
+      <tr><td>Kafka (as event store)</td><td>Usable with caveats</td><td>Not a true event store</td><td>Use log compaction OFF for event streams</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Read and write workloads have vastly different scaling requirements</td><td>Simple CRUD with balanced read/write load</td><td>Standard three-tier architecture</td></tr>
+      <tr><td>You need a complete, immutable audit trail of all state changes</td><td>Audit requirements satisfied by database change logs</td><td>CDC (Change Data Capture) with Debezium</td></tr>
+      <tr><td>Domain has complex business rules that benefit from DDD aggregates</td><td>Domain is anemic with simple property updates</td><td>Active Record or Repository pattern</td></tr>
+      <tr><td>Multiple read models needed for different query patterns</td><td>Single query pattern serves all use cases</td><td>Standard database views or materialized views</td></tr>
+      <tr><td>You need temporal queries ("what was the state at time T?")</td><td>Only current state matters</td><td>Standard database with updated_at timestamps</td></tr>
+      <tr><td>High-throughput write workload benefiting from append-only storage</td><td>Write volume is moderate and relational ACID is sufficient</td><td>PostgreSQL with proper indexing</td></tr>
+      <tr><td>Microservices need to react to domain events across boundaries</td><td>Monolithic application with shared database</td><td>Database triggers or application events</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>CQRS and Event Sourcing are independent patterns that complement each other but do not require each other. You can use CQRS with a traditional database, or event sourcing without CQRS (though this is rare). [<a href="https://www.martinfowler.com/bliki/CQRS.html">src1</a>]</li>
+    <li>Martin Fowler explicitly warns: "the majority of cases I've run into have not been so good, with CQRS seen as a significant force for getting a software system into serious difficulties." Only apply where complexity is justified. [<a href="https://www.martinfowler.com/bliki/CQRS.html">src1</a>]</li>
+    <li>Eventual consistency between write and read models is inherent. There will always be a window (typically milliseconds to seconds) where the read model is behind. Design your UX around this reality. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs">src3</a>]</li>
+    <li>Event versioning and schema evolution become critical at scale. Plan for upcasting (transforming old event formats to new ones during replay) from day one. [<a href="https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf">src2</a>]</li>
+    <li>GDPR and data deletion requirements conflict with immutable event stores. Solutions include crypto-shredding (encrypting PII with per-user keys, then deleting the key) or event store compaction with redaction. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/domain-driven-design/2026" data-relationship="depends_on">Domain-Driven Design Fundamentals</a>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+    <a href="/software/system-design/event-driven-architecture/2026" data-relationship="related_to">Event-Driven Architecture Patterns</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

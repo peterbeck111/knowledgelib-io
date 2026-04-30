@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Serverless Application Architecture | knowledgelib.io</title>
+  <meta name="description" content="Complete serverless architecture design guide: component architecture table comparing Lambda, Workers, Cloud Functions, and Azure Functions across 12...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/serverless-architecture/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Serverless Application Architecture | knowledgelib.io">
+  <meta property="og:description" content="Complete serverless architecture design guide: component architecture table comparing Lambda, Workers, Cloud Functions, and Azure Functions across 12 dimensions. Decision tree, 6 step-by-step implementation guides, 3 code examples, 6 anti-patterns, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/serverless-architecture/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Serverless Application Architecture | knowledgelib.io">
+  <meta name="twitter:description" content="Complete serverless architecture design guide: component architecture table comparing Lambda, Workers, Cloud Functions, and Azure Functions across 12 dimensions. Decision tree, 6 step-by-step implementation guides, 3 code examples, 6 anti-patterns, 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/serverless_architecture">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a serverless application architecture?">
+  <meta name="ai:aliases" content="serverless design patterns; FaaS architecture best practices; Lambda vs Cloud Functions vs Workers; when to use serverless">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/serverless-architecture/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="cloud_provider,workload_type,latency_requirement">
+  <meta name="ai:constraints" content="Cold starts add 100ms-10s latency; Execution time limits vary by provider (Lambda 15min, CF Workers 30s, GCF 60min, Azure 10min default); Payload size limits vary; Stateless by design; VPC-attached functions incur additional cold start">
+  <meta name="ai:skip_this_unit_if" content="Need long-running jobs >15min -> Container orchestration; Need GPU compute -> Dedicated GPU instances; Need WebSocket connections -> Durable Objects or containers">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Serverless Application Architecture",
+    "headline": "How do I design a serverless application architecture?",
+    "description": "Complete serverless architecture design guide covering component architecture across AWS Lambda, Cloudflare Workers, Google Cloud Functions, and Azure Functions. Includes decision tree for serverless vs containers, step-by-step implementation, code examples, anti-patterns, and common pitfalls.",
+    "keywords": ["serverless", "FaaS", "AWS Lambda", "Cloudflare Workers", "Google Cloud Functions", "Azure Functions", "system design", "cloud architecture", "event-driven"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Cloud provider account (AWS, GCP, Azure, or Cloudflare)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Designing Lambda applications",
+        "url": "https://docs.aws.amazon.com/lambda/latest/dg/concepts-application-design.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cloudflare Workers Documentation",
+        "url": "https://developers.cloudflare.com/workers/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Serverless Architectures with AWS Lambda",
+        "url": "https://d1.awsstatic.com/whitepapers/serverless-architectures-with-aws-lambda.pdf"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Operating Lambda: Anti-patterns in event-driven architectures",
+        "url": "https://aws.amazon.com/blogs/compute/operating-lambda-anti-patterns-in-event-driven-architectures-part-3/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Serverless computing vs. containers",
+        "url": "https://www.cloudflare.com/learning/serverless/serverless-vs-containers/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "AWS Lambda vs Azure Functions vs Google Cloud Functions: Serverless Comparison 2026",
+        "url": "https://reintech.io/blog/aws-lambda-vs-azure-functions-vs-google-cloud-functions-serverless-comparison-2026"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Preventing Serverless Vendor Lock-in with Design Patterns",
+        "url": "https://www.infoq.com/news/2022/09/design-patterns-serverless/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Serverless Application Architecture",
+    "description": "Structured knowledge unit on serverless architecture design patterns, comparing AWS Lambda, Cloudflare Workers, Google Cloud Functions, and Azure Functions with decision trees, code examples, and anti-patterns.",
+    "keywords": ["serverless", "FaaS", "AWS Lambda", "Cloudflare Workers", "cloud architecture", "system design"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Cloudflare"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Microsoft Azure"},
+      {"@type": "Organization", "name": "InfoQ"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Serverless Application Architecture" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a serverless application architecture?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design serverless apps as small, stateless, event-driven functions behind an API gateway, with managed services for state (databases, queues, object storage) and orchestration (Step Functions, Durable Functions) for complex workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "serverless design patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design serverless apps as small, stateless, event-driven functions behind an API gateway, with managed services for state (databases, queues, object storage) and orchestration (Step Functions, Durable Functions) for complex workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FaaS architecture best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design serverless apps as small, stateless, event-driven functions behind an API gateway, with managed services for state (databases, queues, object storage) and orchestration (Step Functions, Durable Functions) for complex workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Lambda vs Cloud Functions vs Workers",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design serverless apps as small, stateless, event-driven functions behind an API gateway, with managed services for state (databases, queues, object storage) and orchestration (Step Functions, Durable Functions) for complex workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "when to use serverless",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design serverless apps as small, stateless, event-driven functions behind an API gateway, with managed services for state (databases, queues, object storage) and orchestration (Step Functions, Durable Functions) for complex workflows."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Serverless Application Architecture</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a serverless application architecture?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/serverless-architecture/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Design serverless apps as small, stateless, event-driven functions behind an API gateway, with managed services for state (databases, queues, object storage) and orchestration (Step Functions, Durable Functions) for complex workflows.</li>
+    <li><strong>Key tool/command</strong>: <code>serverless deploy</code> (Serverless Framework) or provider-native CLIs (<code>aws lambda</code>, <code>wrangler deploy</code>, <code>gcloud functions deploy</code>)</li>
+    <li><strong>Watch out for</strong>: Monolithic Lambda functions that bundle all routes into one handler -- split by domain boundary instead.</li>
+    <li><strong>Works with</strong>: AWS Lambda (Node.js, Python, Java, Go, .NET, Ruby), Cloudflare Workers (JS/TS/Wasm), Google Cloud Functions (Node.js, Python, Go, Java, .NET, PHP, Ruby), Azure Functions (C#, JS, Python, Java, PowerShell, TypeScript).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Cold starts add 100ms-10s latency on first invocation depending on runtime and memory; provision concurrency or use SnapStart/edge runtimes for latency-sensitive paths</li>
+    <li>Execution time limits vary by provider: Lambda 15min, Cloud Functions 60min (2nd gen), Azure 10min default (unlimited on Premium), Workers 30s (standard) or 15min (Cron Triggers)</li>
+    <li>Payload size limits: Lambda 6MB sync / 256KB async, Workers 100MB, Cloud Functions 10MB HTTP</li>
+    <li>Stateless by design: never store session state in function memory between invocations; use external stores (DynamoDB, KV, Redis)</li>
+    <li>VPC-attached functions may incur additional cold start overhead; use VPC only when private resource access is required</li>
+    <li>As of August 2025, AWS bills for the Lambda INIT phase -- heavy initialization code now directly increases cost</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Gateway</td><td>Route HTTP requests to functions</td><td>AWS API Gateway, Cloudflare Workers routing, Azure API Management, Google Cloud Endpoints</td><td>Auto-scales per request; throttle via rate limits</td></tr>
+      <tr><td>Compute (FaaS)</td><td>Execute business logic</td><td>AWS Lambda, Cloudflare Workers, Google Cloud Functions, Azure Functions, Vercel Functions</td><td>Auto-scales to concurrency limit (Lambda: 1000 default, requestable to 10K+)</td></tr>
+      <tr><td>Event Bus</td><td>Decouple producers from consumers</td><td>Amazon EventBridge, Google Pub/Sub, Azure Event Grid, Cloudflare Queues</td><td>Partition-based; scales with event throughput</td></tr>
+      <tr><td>Message Queue</td><td>Buffer async workloads</td><td>Amazon SQS, Google Cloud Tasks, Azure Service Bus, Cloudflare Queues</td><td>Scales with queue depth; configure batch size per consumer</td></tr>
+      <tr><td>Orchestration</td><td>Coordinate multi-step workflows</td><td>AWS Step Functions, Azure Durable Functions, Google Workflows, Temporal (self-hosted)</td><td>Per-execution pricing; use for saga patterns and retries</td></tr>
+      <tr><td>Object Storage</td><td>Store files, static assets</td><td>Amazon S3, Google Cloud Storage, Azure Blob, Cloudflare R2</td><td>Unlimited; event triggers on upload (S3 notifications, GCS Pub/Sub)</td></tr>
+      <tr><td>Database</td><td>Persistent structured data</td><td>DynamoDB, Firestore, Azure Cosmos DB, PlanetScale, Supabase, Cloudflare D1</td><td>Auto-scales on-demand (DynamoDB), connection pooling critical for SQL</td></tr>
+      <tr><td>Cache / KV</td><td>Low-latency key-value lookups</td><td>ElastiCache, Cloudflare KV, Upstash Redis, Momento, Azure Cache for Redis</td><td>Edge-distributed (KV, Momento) or regional (ElastiCache)</td></tr>
+      <tr><td>CDN / Edge</td><td>Serve static content, edge compute</td><td>CloudFront, Cloudflare CDN, Azure CDN, Cloud CDN</td><td>Global PoPs; cache invalidation via TTL or purge API</td></tr>
+      <tr><td>Auth</td><td>Identity and access control</td><td>Amazon Cognito, Auth0, Firebase Auth, Azure AD B2C, Clerk</td><td>Token-based (JWT); validate at gateway or function level</td></tr>
+      <tr><td>Observability</td><td>Logs, metrics, traces</td><td>CloudWatch, Datadog, Cloudflare Logpush, Google Cloud Logging, OpenTelemetry</td><td>Structured logging; distributed tracing with X-Ray or Jaeger</td></tr>
+      <tr><td>CI/CD</td><td>Deployment pipeline</td><td>GitHub Actions, AWS SAM, Serverless Framework, SST, Pulumi, Terraform</td><td>Infrastructure-as-code; blue/green or canary deployments</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Need &lt;50ms global latency (edge compute)?
+│   ├── YES → Cloudflare Workers or Lambda@Edge / CloudFront Functions
+│   └── NO ↓
+├── Workload is event-driven (S3 upload, DB change, queue message)?
+│   ├── YES → AWS Lambda + EventBridge, or GCP Cloud Functions + Pub/Sub
+│   └── NO ↓
+├── Need HTTP API with variable traffic (0 to 10K+ RPS)?
+│   ├── YES → API Gateway + Lambda, or Cloudflare Workers (simpler routing)
+│   └── NO ↓
+├── Multi-step workflow with retries and compensation?
+│   ├── YES → AWS Step Functions or Azure Durable Functions
+│   └── NO ↓
+├── Long-running job (&gt;15 minutes)?
+│   ├── YES → Use containers (Cloud Run, ECS Fargate, AKS) instead
+│   └── NO ↓
+├── Execution requires GPU?
+│   ├── YES → Use dedicated instances or managed ML services
+│   └── NO ↓
+├── Need full OS/runtime control?
+│   ├── YES → Use containers
+│   └── NO ↓
+└── DEFAULT → Standard serverless (Lambda, Cloud Functions, or Azure Functions)
+    ├── &lt;1K concurrent → Single-region, default concurrency
+    ├── 1K-100K concurrent → Multi-region, provisioned concurrency
+    └── &gt;100K concurrent → Edge compute + regional fallback</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define function boundaries by domain</h3>
+  <p>Split functions along business domain boundaries, not by HTTP method. Each function should own one bounded context (e.g., "orders", "payments", "notifications"). Avoid the monolithic Lambda anti-pattern where one function handles all routes. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/concepts-application-design.html">src1</a>]</p>
+  <pre><code>project/
+├── functions/
+│   ├── orders/
+│   │   ├── create.js
+│   │   ├── get.js
+│   │   └── list.js
+│   ├── payments/
+│   │   ├── process.js
+│   │   └── webhook.js
+│   └── notifications/
+│       ├── send-email.js
+│       └── send-push.js
+├── shared/
+│   ├── db.js
+│   └── auth.js
+└── serverless.yml</code></pre>
+  <p><strong>Verify</strong>: Each function file imports only the dependencies it needs -> deployment package size &lt; 5MB per function.</p>
+
+  <h3>2. Configure the API gateway and routing</h3>
+  <p>Map HTTP routes to individual functions. Use path-based routing with the API gateway or edge router. [<a href="https://developers.cloudflare.com/workers/">src2</a>]</p>
+  <pre><code class="language-yaml"># serverless.yml (Serverless Framework)
+service: my-serverless-app
+provider:
+  name: aws
+  runtime: nodejs20.x
+  memorySize: 512
+  timeout: 29
+
+functions:
+  createOrder:
+    handler: functions/orders/create.handler
+    events:
+      - httpApi:
+          path: /orders
+          method: POST
+  getOrder:
+    handler: functions/orders/get.handler
+    events:
+      - httpApi:
+          path: /orders/{id}
+          method: GET</code></pre>
+  <p><strong>Verify</strong>: <code>curl -X POST https://your-api.execute-api.region.amazonaws.com/orders</code> -> returns <code>201 Created</code></p>
+
+  <h3>3. Implement stateless function handlers</h3>
+  <p>Write each function as a pure request-response handler. Move initialization code (DB connections, SDK clients) outside the handler for reuse across warm invocations. [<a href="https://d1.awsstatic.com/whitepapers/serverless-architectures-with-aws-lambda.pdf">src3</a>]</p>
+  <pre><code class="language-javascript">// functions/orders/create.js
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { PutCommand, DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
+
+const client = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(client);
+
+exports.handler = async (event) =&gt; {
+  const body = JSON.parse(event.body);
+  const orderId = crypto.randomUUID();
+
+  await docClient.send(new PutCommand({
+    TableName: process.env.ORDERS_TABLE,
+    Item: { id: orderId, ...body, createdAt: new Date().toISOString() }
+  }));
+
+  return { statusCode: 201, body: JSON.stringify({ id: orderId }) };
+};</code></pre>
+  <p><strong>Verify</strong>: <code>aws lambda invoke --function-name createOrder --payload '{"body":"{\"item\":\"test\"}"}' out.json</code> -> <code>{"statusCode": 201, ...}</code></p>
+
+  <h3>4. Add async event processing</h3>
+  <p>Decouple synchronous request paths from heavy processing. Use queues or event buses to trigger background functions. [<a href="https://aws.amazon.com/blogs/compute/operating-lambda-anti-patterns-in-event-driven-architectures-part-3/">src4</a>]</p>
+  <pre><code class="language-javascript">// Publish event after DynamoDB write
+const { EventBridgeClient, PutEventsCommand } = require("@aws-sdk/client-eventbridge");
+const eb = new EventBridgeClient({});
+
+await eb.send(new PutEventsCommand({
+  Entries: [{
+    Source: "orders.service",
+    DetailType: "OrderCreated",
+    Detail: JSON.stringify({ orderId, ...body }),
+    EventBusName: process.env.EVENT_BUS
+  }]
+}));</code></pre>
+  <p><strong>Verify</strong>: <code>aws events describe-rule --name OrderCreatedRule</code> -> rule exists and is enabled</p>
+
+  <h3>5. Set up orchestration for multi-step workflows</h3>
+  <p>Use Step Functions or Durable Functions for workflows that span multiple services and need retry logic, compensation, or parallel branches. [<a href="https://d1.awsstatic.com/whitepapers/serverless-architectures-with-aws-lambda.pdf">src3</a>]</p>
+  <pre><code class="language-json">{
+  "Comment": "Order processing workflow",
+  "StartAt": "ValidateOrder",
+  "States": {
+    "ValidateOrder": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:validateOrder",
+      "Next": "ProcessPayment",
+      "Retry": [{ "ErrorEquals": ["States.TaskFailed"], "MaxAttempts": 2 }]
+    },
+    "ProcessPayment": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:processPayment",
+      "Next": "SendConfirmation",
+      "Catch": [{ "ErrorEquals": ["PaymentFailed"], "Next": "CancelOrder" }]
+    },
+    "SendConfirmation": { "Type": "Task", "Resource": "...", "End": true },
+    "CancelOrder": { "Type": "Task", "Resource": "...", "End": true }
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: <code>aws stepfunctions start-execution --state-machine-arn arn:aws:states:REGION:ACCOUNT:stateMachine:OrderProcessing</code> -> execution succeeds</p>
+
+  <h3>6. Configure observability and structured logging</h3>
+  <p>Add structured JSON logging, distributed tracing, and custom metrics. Use environment variables for log level control. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/concepts-application-design.html">src1</a>]</p>
+  <pre><code class="language-javascript">// shared/logger.js
+const log = (level, message, data = {}) =&gt; {
+  console.log(JSON.stringify({
+    level, message,
+    timestamp: new Date().toISOString(),
+    requestId: data.requestId || "unknown",
+    ...data
+  }));
+};
+
+module.exports = {
+  info: (msg, data) =&gt; log("INFO", msg, data),
+  error: (msg, data) =&gt; log("ERROR", msg, data),
+  warn: (msg, data) =&gt; log("WARN", msg, data),
+};</code></pre>
+  <p><strong>Verify</strong>: Check CloudWatch Logs -> log entries appear as structured JSON with <code>requestId</code> field</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>JavaScript: AWS Lambda HTTP Handler</h3>
+  <pre><code class="language-javascript">// Input:  API Gateway v2 HTTP event
+// Output: JSON response with status code
+
+exports.handler = async (event) =&gt; {
+  try {
+    const { httpMethod, pathParameters, body } = event;
+    const id = pathParameters?.id;
+    const result = await processRequest(httpMethod, id, body);
+    return { statusCode: 200, body: JSON.stringify(result) };
+  } catch (err) {
+    console.error(JSON.stringify({ error: err.message, stack: err.stack }));
+    return { statusCode: err.statusCode || 500, body: JSON.stringify({ error: err.message }) };
+  }
+};</code></pre>
+
+  <h3>JavaScript: Cloudflare Worker with Router</h3>
+  <pre><code class="language-javascript">// Input:  HTTP Request at edge (330+ global locations)
+// Output: JSON response with near-zero cold start
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    if (path === "/api/orders" &amp;&amp; request.method === "POST") {
+      const body = await request.json();
+      const id = crypto.randomUUID();
+      await env.ORDERS_KV.put(id, JSON.stringify({ id, ...body }));
+      return Response.json({ id }, { status: 201 });
+    }
+
+    if (path.startsWith("/api/orders/") &amp;&amp; request.method === "GET") {
+      const id = path.split("/").pop();
+      const data = await env.ORDERS_KV.get(id, "json");
+      if (!data) return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json(data);
+    }
+
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+};</code></pre>
+
+  <h3>Python: Google Cloud Function</h3>
+  <pre><code class="language-python"># Input:  HTTP request via Cloud Functions 2nd gen
+# Output: JSON response
+
+import functions_framework
+import json
+from google.cloud import firestore
+
+db = firestore.Client()  # Initialized outside handler for reuse
+
+@functions_framework.http
+def handle_order(request):
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        doc_ref = db.collection("orders").document()
+        doc_ref.set({**data, "created_at": firestore.SERVER_TIMESTAMP})
+        return json.dumps({"id": doc_ref.id}), 201
+    return json.dumps({"error": "Method not allowed"}), 405</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Monolithic Lambda with all routes in one function</h3>
+  <pre><code class="language-javascript">// BAD -- single function handles everything, bloated package, broad IAM permissions
+exports.handler = async (event) =&gt; {
+  if (event.path === "/orders" &amp;&amp; event.method === "POST") { /* ... */ }
+  if (event.path === "/orders" &amp;&amp; event.method === "GET") { /* ... */ }
+  if (event.path === "/payments" &amp;&amp; event.method === "POST") { /* ... */ }
+  if (event.path === "/users" &amp;&amp; event.method === "GET") { /* ... */ }
+  // 50 more routes...
+};</code></pre>
+
+  <h3>Correct: One function per domain action</h3>
+  <pre><code class="language-javascript">// GOOD -- each function has minimal dependencies and least-privilege IAM
+// functions/orders/create.js -- only needs dynamodb:PutItem on orders table
+exports.handler = async (event) =&gt; {
+  const body = JSON.parse(event.body);
+  await docClient.send(new PutCommand({ TableName: "orders", Item: body }));
+  return { statusCode: 201, body: JSON.stringify({ id: body.id }) };
+};</code></pre>
+
+  <h3>Wrong: Storing state in function memory</h3>
+  <pre><code class="language-javascript">// BAD -- state lost on cold start or new instance
+let requestCount = 0;
+let cachedUser = null;
+
+exports.handler = async (event) =&gt; {
+  requestCount++;  // Unreliable -- resets on cold start
+  if (!cachedUser) cachedUser = await fetchUser(event.userId);
+  return { statusCode: 200, body: JSON.stringify({ count: requestCount }) };
+};</code></pre>
+
+  <h3>Correct: External state management</h3>
+  <pre><code class="language-javascript">// GOOD -- state in DynamoDB, cache in ElastiCache/KV
+exports.handler = async (event) =&gt; {
+  const result = await docClient.send(new UpdateCommand({
+    TableName: "counters", Key: { id: "requests" },
+    UpdateExpression: "ADD #c :inc",
+    ExpressionAttributeNames: { "#c": "count" },
+    ExpressionAttributeValues: { ":inc": 1 },
+    ReturnValues: "UPDATED_NEW"
+  }));
+  return { statusCode: 200, body: JSON.stringify({ count: result.Attributes.count }) };
+};</code></pre>
+
+  <h3>Wrong: Synchronous chain of function calls</h3>
+  <pre><code class="language-javascript">// BAD -- function A directly invokes function B, which invokes C
+// Creates tight coupling, cascading failures, and double billing
+exports.handler = async (event) =&gt; {
+  const orderResult = await lambda.invoke({ FunctionName: "processOrder", Payload: event.body }).promise();
+  const paymentResult = await lambda.invoke({ FunctionName: "processPayment", Payload: orderResult.Payload }).promise();
+  const emailResult = await lambda.invoke({ FunctionName: "sendEmail", Payload: paymentResult.Payload }).promise();
+  return emailResult;
+};</code></pre>
+
+  <h3>Correct: Event-driven decoupling or orchestration</h3>
+  <pre><code class="language-javascript">// GOOD -- publish event, let downstream consumers react independently
+exports.handler = async (event) =&gt; {
+  const order = await createOrder(event.body);
+  await eventBridge.send(new PutEventsCommand({
+    Entries: [{ Source: "orders", DetailType: "OrderCreated", Detail: JSON.stringify(order) }]
+  }));
+  return { statusCode: 202, body: JSON.stringify({ id: order.id, status: "processing" }) };
+};
+// Payment and email functions subscribe to "OrderCreated" events independently</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Cold start latency in Java/C# runtimes</strong>: JVM and .NET CLR initialization adds 1-10s on cold start. Fix: Use Lambda SnapStart for Java, Native AOT for .NET, or switch to Node.js/Python for latency-sensitive paths. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/concepts-application-design.html">src1</a>]</li>
+    <li><strong>Uncontrolled concurrency causing downstream overload</strong>: Lambda can scale to thousands of concurrent instances, overwhelming databases with connection limits. Fix: Use <code>ReservedConcurrency</code> or connection pooling (RDS Proxy, PgBouncer). [<a href="https://d1.awsstatic.com/whitepapers/serverless-architectures-with-aws-lambda.pdf">src3</a>]</li>
+    <li><strong>Over-provisioning memory</strong>: Lambda allocates CPU proportionally to memory. 10GB functions cost 20x more than 512MB per ms. Fix: Use AWS Lambda Power Tuning to find the cost-optimal memory setting. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/concepts-application-design.html">src1</a>]</li>
+    <li><strong>Vendor lock-in through deep SDK coupling</strong>: Building directly against provider-specific APIs makes migration expensive. Fix: Use a repository pattern or ports-and-adapters architecture to abstract storage. [<a href="https://www.infoq.com/news/2022/09/design-patterns-serverless/">src7</a>]</li>
+    <li><strong>Missing timeout and retry configuration</strong>: Default Lambda timeout is 3 seconds; default retry is 2 for async invocations. Fix: Set explicit <code>timeout</code> (slightly less than API Gateway's 29s max) and configure DLQ for failed async events. [<a href="https://aws.amazon.com/blogs/compute/operating-lambda-anti-patterns-in-event-driven-architectures-part-3/">src4</a>]</li>
+    <li><strong>Ignoring INIT phase costs (post-August 2025)</strong>: AWS now bills for Lambda initialization time. Heavy imports directly increase cost. Fix: Lazy-load heavy dependencies, use Lambda Layers, minimize top-level imports. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/concepts-application-design.html">src1</a>]</li>
+    <li><strong>Not structuring logs for observability</strong>: <code>console.log("error happened")</code> is useless at scale. Fix: Use structured JSON logging with request ID, function name, and correlation IDs for distributed tracing. [<a href="https://d1.awsstatic.com/whitepapers/serverless-architectures-with-aws-lambda.pdf">src3</a>]</li>
+    <li><strong>Treating serverless as cheaper VMs</strong>: Serverless requires fundamentally different design -- event-driven, stateless, fine-grained. Lifting and shifting a monolith creates worse outcomes. Fix: Redesign around events and bounded contexts before migrating. [<a href="https://aws.amazon.com/blogs/compute/operating-lambda-anti-patterns-in-event-driven-architectures-part-3/">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Lambda function configuration
+aws lambda get-function-configuration --function-name myFunction
+
+# View recent invocation logs (last 5 minutes)
+aws logs filter-log-events --log-group-name /aws/lambda/myFunction --start-time $(date -d '5 minutes ago' +%s000)
+
+# Check concurrent executions
+aws lambda get-account-settings | jq '.AccountLimit.ConcurrentExecutions'
+
+# Test Cloudflare Worker locally
+npx wrangler dev src/index.js
+
+# Deploy Cloudflare Worker
+npx wrangler deploy
+
+# Check Google Cloud Function logs
+gcloud functions logs read myFunction --limit 50
+
+# Validate Serverless Framework configuration
+npx serverless print</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Current Generation</th><th scope="col">Previous</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS Lambda</td><td>Runtime API v2 (2024+)</td><td>v1</td><td>SnapStart GA, INIT billing (Aug 2025), 10GB memory, 6 vCPUs</td></tr>
+      <tr><td>Cloudflare Workers</td><td>V8 Isolates (2024+)</td><td>Service Workers API</td><td>Durable Objects, Queues, D1, Python support (beta)</td></tr>
+      <tr><td>Google Cloud Functions</td><td>2nd gen (CloudRun-based, 2023+)</td><td>1st gen</td><td>60min timeout, Eventarc triggers, concurrency per instance</td></tr>
+      <tr><td>Azure Functions</td><td>v4 (2023+)</td><td>v3 (EOL 2026-03-14)</td><td>Flex Consumption plan, .NET 8 isolated model</td></tr>
+      <tr><td>Vercel Functions</td><td>Edge Runtime (2023+)</td><td>Serverless Functions</td><td>Edge middleware, streaming responses, ISR</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Traffic is spiky or unpredictable (0 to 10K+ RPS)</td><td>Traffic is steady and predictable (always-on)</td><td>Containers on reserved instances (cheaper)</td></tr>
+      <tr><td>Individual requests complete in &lt;15 minutes</td><td>Jobs run for hours (ML training, video transcoding)</td><td>ECS Fargate, Cloud Run jobs, or dedicated compute</td></tr>
+      <tr><td>You want zero infrastructure management</td><td>You need fine-grained OS/runtime control</td><td>Containers (Docker on ECS/GKE/AKS)</td></tr>
+      <tr><td>Event-driven processing (S3 uploads, DB changes, webhooks)</td><td>Requires persistent connections (WebSockets, gRPC streaming)</td><td>Containers or Cloudflare Durable Objects</td></tr>
+      <tr><td>Startup/small team with limited DevOps capacity</td><td>Strict latency SLA (&lt;10ms p99) with cold start intolerance</td><td>Pre-warmed containers or dedicated instances</td></tr>
+      <tr><td>Cost optimization for low-traffic APIs (pay per invocation)</td><td>High-throughput, CPU-bound processing at scale</td><td>Reserved EC2/GCE instances (cost-effective at scale)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>AWS Lambda INIT phase billing (August 2025) changed the cost model significantly for functions with heavy initialization -- benchmark before and after</li>
+    <li>Cloudflare Workers run on V8 isolates (not containers), which means no native binary execution, no file system access, and a different security model than Lambda</li>
+    <li>Google Cloud Functions 2nd gen runs on Cloud Run under the hood, inheriting Cloud Run's concurrency model (multiple requests per instance) unlike Lambda's 1:1 model</li>
+    <li>Azure Functions v3 reaches end-of-life on March 14, 2026 -- migrate to v4 immediately</li>
+    <li>Serverless Framework, SST, and Pulumi abstract provider differences but add their own complexity and potential lock-in</li>
+    <li>Cold start benchmarks vary significantly by region, runtime, memory allocation, and VPC configuration -- always benchmark in your specific deployment environment</li>
+    <li>Multi-cloud serverless is possible in theory but costly in practice; pick one primary provider and use abstraction layers only where migration risk is real</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/microservices-architecture/2026" data-relationship="related_to">Microservices Architecture Patterns</a>
+    <a href="/software/system-design/event-driven-architecture/2026" data-relationship="related_to">Event-Driven Architecture</a>
+    <a href="/software/system-design/api-gateway-patterns/2026" data-relationship="solves">API Gateway Design Patterns</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

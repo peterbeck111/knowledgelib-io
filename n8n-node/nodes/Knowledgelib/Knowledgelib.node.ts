@@ -14,7 +14,7 @@ export class Knowledgelib implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
-		description: 'Query pre-verified, cited knowledge units from knowledgelib.io',
+		description: 'Query pre-verified, cited knowledge units from knowledgelib.io. Flow: 1) Search first with Query Knowledge, 2) Use what you find, 3) If no match, use Suggest Question so it gets created.',
 		defaults: {
 			name: 'Knowledgelib',
 		},
@@ -51,6 +51,18 @@ export class Knowledgelib implements INodeType {
 						description: 'List all available knowledge domains and unit counts',
 						action: 'List all domains',
 					},
+					{
+						name: 'Suggest Question',
+						value: 'suggestQuestion',
+						description: 'ALWAYS use when Query returns no results. Submits a topic request so it gets created. Popular suggestions are prioritized.',
+						action: 'Suggest a knowledge topic',
+					},
+					{
+						name: 'Report Issue',
+						value: 'reportIssue',
+						description: 'Flag incorrect, outdated, or broken content on a knowledge unit',
+						action: 'Report a content issue',
+					},
 				],
 				default: 'query',
 			},
@@ -82,6 +94,40 @@ export class Knowledgelib implements INodeType {
 				displayOptions: { show: { operation: ['query'] } },
 				description:
 					'Filter by domain (e.g., "consumer_electronics", "computing", "home", "fitness")',
+			},
+			{
+				displayName: 'Region Filter',
+				name: 'region',
+				type: 'string',
+				default: '',
+				displayOptions: { show: { operation: ['query'] } },
+				description:
+					'Filter by region (e.g., "US", "EU", "global"). Units with region "global" always match.',
+			},
+			{
+				displayName: 'Jurisdiction Filter',
+				name: 'jurisdiction',
+				type: 'string',
+				default: '',
+				displayOptions: { show: { operation: ['query'] } },
+				description:
+					'Filter by jurisdiction (e.g., "US", "EU", "UK", "global"). Relevant for energy, legal, compliance content.',
+			},
+			{
+				displayName: 'Entity Type Filter',
+				name: 'entityType',
+				type: 'options',
+				options: [
+					{ name: 'All Types', value: '' },
+					{ name: 'Product Comparison', value: 'product_comparison' },
+					{ name: 'Software Reference', value: 'software_reference' },
+					{ name: 'Fact', value: 'fact' },
+					{ name: 'Concept', value: 'concept' },
+					{ name: 'Rule', value: 'rule' },
+				],
+				default: '',
+				displayOptions: { show: { operation: ['query'] } },
+				description: 'Filter by entity type',
 			},
 			{
 				displayName: 'Fetch Full Content',
@@ -118,6 +164,92 @@ export class Knowledgelib implements INodeType {
 				description:
 					'Response format: raw markdown or structured JSON with parsed frontmatter',
 			},
+			// --- Suggest Question operation ---
+			{
+				displayName: 'Question',
+				name: 'suggestQuestion',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: { show: { operation: ['suggestQuestion'] } },
+				description: 'The question to suggest (10-500 characters)',
+				placeholder: 'What are the best robot vacuums under $500 in 2026?',
+			},
+			{
+				displayName: 'Context',
+				name: 'suggestContext',
+				type: 'string',
+				default: '',
+				displayOptions: { show: { operation: ['suggestQuestion'] } },
+				description: 'Optional context about why this question matters',
+			},
+			{
+				displayName: 'Domain Hint',
+				name: 'suggestDomain',
+				type: 'string',
+				default: '',
+				displayOptions: { show: { operation: ['suggestQuestion'] } },
+				description: 'Optional domain hint (e.g., "home", "consumer_electronics", "software")',
+			},
+			// --- Report Issue operation ---
+			{
+				displayName: 'Card ID',
+				name: 'issueCardId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: { show: { operation: ['reportIssue'] } },
+				description: 'The knowledge unit ID (e.g., "consumer-electronics/audio/wireless-earbuds-under-150/2026")',
+				placeholder: 'consumer-electronics/audio/wireless-earbuds-under-150/2026',
+			},
+			{
+				displayName: 'Issue Type',
+				name: 'issueType',
+				type: 'options',
+				options: [
+					{ name: 'Outdated', value: 'outdated', description: 'Information is no longer current' },
+					{ name: 'Incorrect', value: 'incorrect', description: 'Factual error in the content' },
+					{ name: 'Broken Link', value: 'broken_link', description: 'Source URL or affiliate link is dead' },
+					{ name: 'Missing Info', value: 'missing_info', description: 'Important information is absent' },
+					{ name: 'Other', value: 'other', description: 'Other issue' },
+				],
+				default: 'outdated',
+				required: true,
+				displayOptions: { show: { operation: ['reportIssue'] } },
+				description: 'Type of issue being reported',
+			},
+			{
+				displayName: 'Description',
+				name: 'issueDescription',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: { show: { operation: ['reportIssue'] } },
+				description: 'Describe the issue (10-2000 characters). Be specific about what is wrong.',
+				placeholder: 'The recommended model XYZ has been discontinued as of January 2026',
+			},
+			{
+				displayName: 'Severity',
+				name: 'issueSeverity',
+				type: 'options',
+				options: [
+					{ name: 'Low', value: 'low', description: 'Minor issue, cosmetic or non-blocking' },
+					{ name: 'Medium', value: 'medium', description: 'Incorrect detail that could mislead' },
+					{ name: 'High', value: 'high', description: 'Significantly wrong recommendation' },
+					{ name: 'Critical', value: 'critical', description: 'Dangerous or harmful advice' },
+				],
+				default: 'medium',
+				displayOptions: { show: { operation: ['reportIssue'] } },
+				description: 'Severity of the issue',
+			},
+			{
+				displayName: 'Section',
+				name: 'issueSection',
+				type: 'string',
+				default: '',
+				displayOptions: { show: { operation: ['reportIssue'] } },
+				description: 'Which section of the unit has the issue (e.g., "Quick Reference", "Decision Logic")',
+			},
 		],
 		usableAsTool: true,
 	};
@@ -140,7 +272,9 @@ export class Knowledgelib implements INodeType {
 			// Credentials not configured — use public defaults
 		}
 
-		const headers: Record<string, string> = {};
+		const headers: Record<string, string> = {
+			'User-Agent': 'knowledgelib-n8n/0.2.0',
+		};
 		if (apiKey) {
 			headers['Authorization'] = `Bearer ${apiKey}`;
 		}
@@ -151,6 +285,9 @@ export class Knowledgelib implements INodeType {
 					const query = this.getNodeParameter('query', i) as string;
 					const limit = this.getNodeParameter('limit', i) as number;
 					const domain = this.getNodeParameter('domain', i) as string;
+					const region = this.getNodeParameter('region', i) as string;
+					const jurisdiction = this.getNodeParameter('jurisdiction', i) as string;
+					const entityType = this.getNodeParameter('entityType', i) as string;
 					const fetchFull = this.getNodeParameter(
 						'fetchFullContent',
 						i,
@@ -161,6 +298,9 @@ export class Knowledgelib implements INodeType {
 						limit,
 					};
 					if (domain) qs.domain = domain;
+					if (region) qs.region = region;
+					if (jurisdiction) qs.jurisdiction = jurisdiction;
+					if (entityType) qs.entity_type = entityType;
 
 					const response = await this.helpers.httpRequest({
 						method: 'GET',
@@ -233,6 +373,56 @@ export class Knowledgelib implements INodeType {
 							domains: response.domains,
 						},
 					});
+				} else if (operation === 'suggestQuestion') {
+					const question = this.getNodeParameter('suggestQuestion', i) as string;
+					const suggestContext = this.getNodeParameter('suggestContext', i) as string;
+					const suggestDomain = this.getNodeParameter('suggestDomain', i) as string;
+
+					const body: Record<string, string> = { question };
+					if (suggestContext) body.context = suggestContext;
+					if (suggestDomain) body.domain = suggestDomain;
+
+					const response = await this.helpers.httpRequest({
+						method: 'POST',
+						url: `${apiUrl}/api/v1/suggest`,
+						headers: {
+							...headers,
+							'Content-Type': 'application/json',
+							Accept: 'application/json',
+						},
+						body,
+						json: true,
+					});
+
+					returnData.push({ json: response });
+				} else if (operation === 'reportIssue') {
+					const cardId = this.getNodeParameter('issueCardId', i) as string;
+					const issueType = this.getNodeParameter('issueType', i) as string;
+					const description = this.getNodeParameter('issueDescription', i) as string;
+					const severity = this.getNodeParameter('issueSeverity', i) as string;
+					const section = this.getNodeParameter('issueSection', i) as string;
+
+					const body: Record<string, string> = {
+						card_id: cardId,
+						type: issueType,
+						description,
+						severity,
+					};
+					if (section) body.section = section;
+
+					const response = await this.helpers.httpRequest({
+						method: 'POST',
+						url: `${apiUrl}/api/v1/feedback`,
+						headers: {
+							...headers,
+							'Content-Type': 'application/json',
+							Accept: 'application/json',
+						},
+						body,
+						json: true,
+					});
+
+					returnData.push({ json: response });
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {

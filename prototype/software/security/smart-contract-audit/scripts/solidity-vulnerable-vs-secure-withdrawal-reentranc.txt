@@ -1,0 +1,33 @@
+// ============================================
+// VULNERABLE: State update AFTER external call
+// ============================================
+// SWC-107: Reentrancy vulnerability
+contract VulnerableVault {
+    mapping(address => uint256) public balances;
+
+    function withdraw() external {
+        uint256 amount = balances[msg.sender];
+        // BAD: external call before state update
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        // Attacker re-enters before this line executes
+        balances[msg.sender] = 0;
+    }
+}
+
+// ============================================
+// SECURE: Checks-Effects-Interactions + Guard
+// ============================================
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SecureVault is ReentrancyGuard {
+    mapping(address => uint256) public balances;
+
+    function withdraw() external nonReentrant {
+        uint256 amount = balances[msg.sender];       // CHECK
+        require(amount > 0, "No balance");
+        balances[msg.sender] = 0;                     // EFFECT (state update FIRST)
+        (bool success, ) = msg.sender.call{value: amount}(""); // INTERACTION (call LAST)
+        require(success, "Transfer failed");
+    }
+}

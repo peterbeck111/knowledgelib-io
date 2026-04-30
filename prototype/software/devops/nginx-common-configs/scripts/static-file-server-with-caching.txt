@@ -1,0 +1,38 @@
+# Input:  Requests for static assets
+# Output: Files served with aggressive caching headers
+
+server {
+    listen 80;
+    server_name static.example.com;
+    root /var/www/static;
+    index index.html;
+
+    server_tokens off;
+
+    # HTML files — short cache, revalidate
+    location ~* \.html$ {
+        expires 1h;
+        add_header Cache-Control "public, must-revalidate";
+    }
+
+    # CSS/JS with hashed filenames — long cache
+    location ~* \.(css|js)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Images and fonts — long cache
+    location ~* \.(png|jpg|jpeg|gif|ico|svg|woff2|woff|ttf)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Deny access to dotfiles
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    # Custom 404
+    error_page 404 /404.html;
+}

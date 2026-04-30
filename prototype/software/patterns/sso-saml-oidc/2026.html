@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SSO with SAML 2.0 and OpenID Connect | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to implementing Single Sign-On with SAML 2.0 and OpenID Connect. Protocol comparison (14-row decision matrix), implementation for both...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sso-saml-oidc/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SSO with SAML 2.0 and OpenID Connect | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to implementing Single Sign-On with SAML 2.0 and OpenID Connect. Protocol comparison, code examples in 4 languages, anti-patterns, and diagnostic commands. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sso-saml-oidc/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SSO with SAML 2.0 and OpenID Connect | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to implementing Single Sign-On with SAML 2.0 and OpenID Connect. Protocol comparison, code examples in 4 languages, anti-patterns, and diagnostic commands. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/SSO with SAML and OpenID Connect">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement SSO with SAML and OpenID Connect?">
+  <meta name="ai:aliases" content="SAML 2.0 SSO implementation guide; OpenID Connect SSO setup; SAML vs OIDC comparison; Single Sign-On SAML service provider; OIDC relying party implementation; Enterprise SSO federation protocol; SAML assertion validation; OpenID Connect Discovery integration">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sso-saml-oidc/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="protocol, role, identity_provider">
+  <meta name="ai:constraints" content="Always validate SAML assertion XML signatures server-side; OIDC nonce must be validated on every authentication response; Always validate issuer and audience claims in both SAML and OIDC; SAML assertions must be consumed within NotBefore/NotOnOrAfter window; Never store tokens in localStorage; Enable XXE and XSW attack defenses in SAML XML parsers">
+  <meta name="ai:skip_this_unit_if" content="Need OAuth 2.0 API authorization without user identity -> software/patterns/oauth2-client-credentials/2026; Building a custom identity provider from scratch -> software/system-design/identity-provider-architecture/2026; Only need social login without enterprise SSO -> software/patterns/oauth2-authorization-code-pkce/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SSO with SAML 2.0 and OpenID Connect",
+    "headline": "SSO with SAML 2.0 and OpenID Connect",
+    "description": "Complete guide to implementing Single Sign-On with SAML 2.0 and OpenID Connect, including protocol comparison, decision tree, step-by-step implementation for SAML SP and OIDC RP, code examples in Node.js, Python, TypeScript, and Go, anti-patterns, common pitfalls, and diagnostic commands.",
+    "keywords": ["SAML", "OpenID Connect", "OIDC", "SSO", "Single Sign-On", "SAML 2.0", "identity federation", "authentication", "passport-saml", "openid-client"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "SAML 2.0, OpenID Connect 1.0, OAuth 2.0, Node.js 18+, Python 3.8+, Go 1.21+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "SAML V2.0 Technical Overview",
+        "url": "https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OpenID Connect Discovery 1.0",
+        "url": "https://openid.net/specs/openid-connect-discovery-1_0.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 and OpenID Connect Overview — Okta",
+        "url": "https://developer.okta.com/docs/concepts/oauth-openid/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAML Configuration — Auth0",
+        "url": "https://auth0.com/docs/authenticate/protocols/saml/saml-configuration"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OpenID Connect on the Microsoft Identity Platform",
+        "url": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc"
+      },
+      {
+        "@type": "WebPage",
+        "name": "passport-saml — SAML 2.0 Authentication for Passport",
+        "url": "https://github.com/node-saml/passport-saml"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAML vs OpenID Connect (OIDC) — Auth0",
+        "url": "https://auth0.com/intro-to-iam/saml-vs-openid-connect-oidc"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SSO with SAML 2.0 and OpenID Connect",
+    "description": "Structured knowledge unit comparing SAML 2.0 and OpenID Connect for Single Sign-On implementation, with protocol comparison matrix, decision tree, code examples, anti-patterns, and diagnostic commands.",
+    "keywords": ["SAML", "OpenID Connect", "OIDC", "SSO", "Single Sign-On", "authentication", "identity federation"],
+    "temporalCoverage": "2005/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OASIS"},
+      {"@type": "Organization", "name": "OpenID Foundation"},
+      {"@type": "Organization", "name": "Okta"},
+      {"@type": "Organization", "name": "Auth0"},
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SSO with SAML 2.0 and OpenID Connect" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement SSO with SAML and OpenID Connect?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SAML 2.0 SSO implementation guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OpenID Connect SSO setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SAML vs OIDC comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Single Sign-On SAML service provider",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OIDC relying party implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SSO with SAML 2.0 and OpenID Connect</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement SSO with SAML and OpenID Connect?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sso-saml-oidc/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use OpenID Connect for new greenfield apps and consumer-facing SSO; use SAML 2.0 for enterprise integrations with legacy IdPs that only support SAML.</li>
+    <li><strong>Key tool/command</strong>: <code>/.well-known/openid-configuration</code> (OIDC Discovery) or SAML metadata XML at IdP/SP metadata URLs.</li>
+    <li><strong>Watch out for</strong>: Not validating XML signatures on SAML assertions server-side — the #1 vulnerability in SAML implementations.</li>
+    <li><strong>Works with</strong>: Any language/framework. SAML 2.0 (2005+, XML-based), OIDC 1.0 (2014+, JSON/JWT-based). All major IdPs (Okta, Azure AD, Google, Keycloak, AWS IAM Identity Center).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Always validate SAML assertion XML signatures server-side using the IdP's public certificate — never accept unsigned assertions or validate only on the client</li>
+    <li>OIDC <code>nonce</code> must be generated per-request and validated in the ID token to prevent replay attacks</li>
+    <li>Validate <code>iss</code> (issuer) and <code>aud</code> (audience) claims in both SAML assertions and OIDC ID tokens — mismatched values indicate token substitution attacks</li>
+    <li>SAML assertions must be consumed within the <code>NotBefore</code> / <code>NotOnOrAfter</code> time window (allow 2-3 minutes clock skew maximum)</li>
+    <li>Never store tokens or assertions in <code>localStorage</code> — use <code>httpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code> cookies or server-side session stores</li>
+    <li>Enable XML External Entity (XXE) protection and defenses against XML Signature Wrapping (XSW) attacks in all SAML XML parsers</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core comparison table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">SAML 2.0</th><th scope="col">OpenID Connect</th><th scope="col">When to Choose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Data format</strong></td><td>XML assertions</td><td>JSON/JWT tokens</td><td>OIDC for simpler parsing</td></tr>
+      <tr><td><strong>Transport</strong></td><td>HTTP Redirect, POST, Artifact</td><td>HTTPS + JSON (OAuth 2.0 flows)</td><td>OIDC for REST APIs</td></tr>
+      <tr><td><strong>Discovery</strong></td><td>Metadata XML document</td><td><code>/.well-known/openid-configuration</code></td><td>OIDC for auto-config</td></tr>
+      <tr><td><strong>Token type</strong></td><td>XML assertion (signed, optionally encrypted)</td><td>ID token (JWT, signed) + access token</td><td>OIDC for stateless validation</td></tr>
+      <tr><td><strong>Identity info</strong></td><td>Attribute statements in assertion</td><td><code>userinfo</code> endpoint + ID token claims</td><td>Equivalent — both carry user attributes</td></tr>
+      <tr><td><strong>Session logout</strong></td><td>SLO (Single Logout) protocol</td><td><code>end_session_endpoint</code> (RP-Initiated Logout)</td><td>SAML SLO is more complex but more reliable</td></tr>
+      <tr><td><strong>SP/RP setup</strong></td><td>Exchange metadata XML, configure certificates</td><td>Register <code>client_id</code> + <code>redirect_uri</code>, use Discovery</td><td>OIDC is faster to integrate</td></tr>
+      <tr><td><strong>Security model</strong></td><td>XML Signature + optional XML Encryption</td><td>JWT signature (RS256/ES256) + TLS</td><td>Both strong; OIDC has smaller attack surface</td></tr>
+      <tr><td><strong>Enterprise adoption</strong></td><td>Dominant (90%+ enterprise IdPs support it)</td><td>Growing rapidly, most new IdPs default to it</td><td>SAML if IdP only speaks SAML</td></tr>
+      <tr><td><strong>Mobile / SPA</strong></td><td>Poor (XML parsing in browser is heavy)</td><td>Excellent (native JSON, PKCE flow)</td><td>Always OIDC for mobile/SPA</td></tr>
+      <tr><td><strong>Spec complexity</strong></td><td>High (~70 pages core + bindings + profiles)</td><td>Moderate (~30 pages, built on OAuth 2.0)</td><td>OIDC if team is new to federation</td></tr>
+      <tr><td><strong>Typical IdPs</strong></td><td>AD FS, Shibboleth, PingFederate, Okta</td><td>Okta, Azure AD, Google, Auth0, Keycloak</td><td>Check your IdP's preferred protocol</td></tr>
+      <tr><td><strong>Maturity</strong></td><td>20+ years (2005)</td><td>12+ years (2014)</td><td>Both production-ready</td></tr>
+      <tr><td><strong>Key rotation</strong></td><td>Manual certificate rotation</td><td>JWKS endpoint with automatic key rotation</td><td>OIDC for zero-downtime key rotation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Greenfield application (no existing SSO)?
+│   ├── YES → Use OpenID Connect (simpler, modern, better tooling)
+│   └── NO ↓
+├── IdP only supports SAML (e.g., legacy AD FS, Shibboleth)?
+│   ├── YES → Implement SAML 2.0 SP (see Step-by-Step: SAML SP)
+│   └── NO ↓
+├── Mobile app or Single Page Application (SPA)?
+│   ├── YES → Use OIDC with Authorization Code + PKCE
+│   └── NO ↓
+├── Enterprise customer requiring SAML?
+│   ├── YES → Implement SAML 2.0 SP alongside OIDC
+│   └── NO ↓
+├── Need to support both protocols (multi-tenant SaaS)?
+│   ├── YES → Use an identity broker (Keycloak, Auth0) that bridges SAML ↔ OIDC
+│   └── NO ↓
+├── Regulatory compliance requiring specific protocol?
+│   ├── YES → Check compliance requirements (many US gov specs prefer SAML)
+│   └── NO ↓
+└── DEFAULT → Use OpenID Connect</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>SAML 2.0: Implement a Service Provider (SP)</h3>
+
+  <h4>1. Obtain IdP metadata</h4>
+  <p>Request the SAML metadata XML from your Identity Provider. This contains the IdP's entity ID, SSO endpoint URLs, and signing certificate. [<a href="https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html">src1</a>]</p>
+  <pre><code class="language-bash"># Download IdP metadata (example: Okta)
+curl -o idp-metadata.xml \
+  "https://your-org.okta.com/app/YOUR_APP_ID/sso/saml/metadata"
+
+# Verify the metadata contains required elements
+xmllint --xpath "//*[local-name()='SingleSignOnService']/@Location" idp-metadata.xml</code></pre>
+  <p><strong>Verify</strong>: The metadata XML should contain <code>&lt;SingleSignOnService&gt;</code> with a <code>Location</code> URL and an <code>&lt;X509Certificate&gt;</code> element.</p>
+
+  <h4>2. Generate SP certificate and metadata</h4>
+  <p>Create your SP's signing/encryption certificate and generate SP metadata XML to share with the IdP. [<a href="https://auth0.com/docs/authenticate/protocols/saml/saml-configuration">src4</a>]</p>
+  <pre><code class="language-bash"># Generate SP certificate (valid 2 years)
+openssl req -x509 -newkey rsa:2048 -keyout sp-key.pem -out sp-cert.pem \
+  -days 730 -nodes -subj "/CN=your-app.example.com"</code></pre>
+  <p><strong>Verify</strong>: <code>openssl x509 -in sp-cert.pem -text -noout</code> shows your CN and validity dates.</p>
+
+  <h4>3. Configure SAML SP in your application</h4>
+  <p>Install the SAML library and configure it with the IdP metadata and SP credentials. [<a href="https://github.com/node-saml/passport-saml">src6</a>]</p>
+  <pre><code class="language-javascript">// Node.js with @node-saml/passport-saml v5.x
+const passport = require('passport');
+const { Strategy: SamlStrategy } = require('@node-saml/passport-saml');
+const fs = require('fs');
+
+passport.use(new SamlStrategy(
+  {
+    callbackUrl: 'https://your-app.example.com/auth/saml/callback',
+    entryPoint: 'https://your-org.okta.com/app/YOUR_APP_ID/sso/saml',
+    issuer: 'https://your-app.example.com',
+    cert: fs.readFileSync('./idp-cert.pem', 'utf-8'),
+    decryptionPvk: fs.readFileSync('./sp-key.pem', 'utf-8'),
+    signatureAlgorithm: 'sha256',
+    wantAssertionsSigned: true,
+    wantAuthnResponseSigned: true,
+    maxAssertionAgeMs: 300000,
+  },
+  (profile, done) =&gt; {
+    return done(null, {
+      id: profile.nameID,
+      email: profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
+      name: profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
+    });
+  }
+));</code></pre>
+  <p><strong>Verify</strong>: Start the app and navigate to <code>/auth/saml/login</code> — you should be redirected to the IdP login page.</p>
+
+  <h4>4. Handle the SAML callback and create session</h4>
+  <p>Process the SAML response, validate the assertion, and establish a local session. [<a href="https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html">src1</a>]</p>
+  <pre><code class="language-javascript">const express = require('express');
+const session = require('express-session');
+const app = express();
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: true, httpOnly: true, sameSite: 'lax', maxAge: 3600000 }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/auth/saml/login', passport.authenticate('saml'));
+
+app.post('/auth/saml/callback',
+  passport.authenticate('saml', { failureRedirect: '/login/failed' }),
+  (req, res) =&gt; { res.redirect('/dashboard'); }
+);
+
+passport.serializeUser((user, done) =&gt; done(null, user));
+passport.deserializeUser((user, done) =&gt; done(null, user));</code></pre>
+  <p><strong>Verify</strong>: Complete a login flow — check that <code>req.user</code> is populated with IdP attributes after redirect.</p>
+
+  <h3>OpenID Connect: Implement a Relying Party (RP)</h3>
+
+  <h4>5. Discover OIDC provider configuration</h4>
+  <p>Fetch the OIDC Discovery document to auto-configure endpoints. Register your app to obtain <code>client_id</code> and <code>client_secret</code>. [<a href="https://openid.net/specs/openid-connect-discovery-1_0.html">src2</a>]</p>
+  <pre><code class="language-bash"># Discover OIDC provider configuration
+curl -s "https://your-org.okta.com/.well-known/openid-configuration" | jq '.'</code></pre>
+  <p><strong>Verify</strong>: Response contains <code>issuer</code>, <code>authorization_endpoint</code>, <code>token_endpoint</code>, <code>jwks_uri</code>, and <code>userinfo_endpoint</code>.</p>
+
+  <h4>6. Implement OIDC Authorization Code flow with PKCE</h4>
+  <p>Use the Authorization Code flow with PKCE for both server-side and SPA applications. [<a href="https://developer.okta.com/docs/concepts/oauth-openid/">src3</a>] [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc">src5</a>]</p>
+  <pre><code class="language-javascript">// Node.js with openid-client v6.x
+const { Issuer, generators } = require('openid-client');
+
+async function setupOidcClient() {
+  const issuer = await Issuer.discover('https://your-org.okta.com');
+  const client = new issuer.Client({
+    client_id: process.env.OIDC_CLIENT_ID,
+    client_secret: process.env.OIDC_CLIENT_SECRET,
+    redirect_uris: ['https://your-app.example.com/auth/oidc/callback'],
+    response_types: ['code'],
+  });
+  return client;
+}
+
+async function getAuthUrl(client) {
+  const codeVerifier = generators.codeVerifier();
+  const codeChallenge = generators.codeChallenge(codeVerifier);
+  const nonce = generators.nonce();
+  const state = generators.state();
+  const url = client.authorizationUrl({
+    scope: 'openid profile email',
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+    nonce: nonce,
+    state: state,
+  });
+  return { url, codeVerifier, nonce, state };
+}</code></pre>
+  <p><strong>Verify</strong>: Opening the authorization URL redirects to the IdP login page with correct parameters.</p>
+
+  <h4>7. Handle the OIDC callback and validate tokens</h4>
+  <p>Exchange the authorization code for tokens and validate the ID token claims. [<a href="https://developer.okta.com/docs/concepts/oauth-openid/">src3</a>]</p>
+  <pre><code class="language-javascript">app.get('/auth/oidc/callback', async (req, res) =&gt; {
+  const params = client.callbackParams(req);
+  const tokenSet = await client.callback(
+    'https://your-app.example.com/auth/oidc/callback',
+    params,
+    {
+      code_verifier: req.session.codeVerifier,
+      nonce: req.session.nonce,
+      state: req.session.state,
+    }
+  );
+  const claims = tokenSet.claims();
+  const userinfo = await client.userinfo(tokenSet.access_token);
+  req.session.user = {
+    id: claims.sub,
+    email: claims.email || userinfo.email,
+    name: claims.name || userinfo.name,
+  };
+  delete req.session.codeVerifier;
+  delete req.session.nonce;
+  delete req.session.state;
+  res.redirect('/dashboard');
+});</code></pre>
+  <p><strong>Verify</strong>: After login, <code>req.session.user</code> contains the authenticated user's <code>sub</code>, <code>email</code>, and <code>name</code> claims.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: SAML SP with python3-saml</h3>
+  <pre><code class="language-python"># pip install python3-saml==1.16.0
+# Input:  SAML response from IdP (POST to /saml/acs)
+# Output: Authenticated user attributes
+
+from onelogin.saml2.auth import OneLogin_Saml2_Auth
+
+def prepare_saml_request(request):
+    return {
+        'https': 'on',
+        'http_host': request.host,
+        'script_name': request.path,
+        'get_data': request.args.copy(),
+        'post_data': request.form.copy(),
+    }
+
+def saml_callback(request):
+    auth = OneLogin_Saml2_Auth(prepare_saml_request(request), custom_base_path='./saml/')
+    auth.process_response()
+    errors = auth.get_errors()
+    if errors:
+        raise ValueError(f"SAML error: {', '.join(errors)}: {auth.get_last_error_reason()}")
+    if not auth.is_authenticated():
+        raise ValueError("SAML authentication failed")
+    return {
+        'name_id': auth.get_nameid(),
+        'session_index': auth.get_session_index(),
+        'attributes': auth.get_attributes(),
+    }</code></pre>
+
+  <h3>TypeScript: OIDC RP with oidc-client-ts (Browser SPA)</h3>
+  <pre><code class="language-typescript">// npm install oidc-client-ts@3
+// Input:  OIDC provider configuration
+// Output: Authenticated user with ID token claims
+
+import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
+
+const userManager = new UserManager({
+  authority: 'https://your-org.okta.com',
+  client_id: 'YOUR_CLIENT_ID',
+  redirect_uri: 'https://your-app.example.com/auth/callback',
+  response_type: 'code',
+  scope: 'openid profile email',
+  automaticSilentRenew: true,
+  userStore: new WebStorageStateStore({ store: sessionStorage }),
+});
+
+async function login(): Promise&lt;void&gt; {
+  await userManager.signinRedirect();
+}
+
+async function handleCallback(): Promise&lt;void&gt; {
+  const user = await userManager.signinRe&shy;directCallback();
+  console.log('Authenticated:', user.profile.sub, user.profile.email);
+}</code></pre>
+
+  <h3>Go: OIDC Token Validation</h3>
+  <pre><code class="language-go">// go get github.com/coreos/go-oidc/v3@v3.11.0
+// Input:  Raw ID token string from OIDC callback
+// Output: Validated token claims
+
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/coreos/go-oidc/v3/oidc"
+    "golang.org/x/oauth2"
+)
+
+func newOIDCVerifier(ctx context.Context, issuerURL, clientID string) (*oidc.IDTokenVerifier, *oauth2.Config, error) {
+    provider, err := oidc.NewProvider(ctx, issuerURL)
+    if err != nil {
+        return nil, nil, fmt.Errorf("failed to discover OIDC provider: %w", err)
+    }
+    verifier := provider.Verifier(&amp;oidc.Config{ClientID: clientID})
+    config := &amp;oauth2.Config{
+        ClientID:     clientID,
+        ClientSecret: "YOUR_CLIENT_SECRET",
+        Endpoint:     provider.Endpoint(),
+        RedirectURL:  "https://your-app.example.com/auth/callback",
+        Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+    }
+    return verifier, config, nil
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Trusting SAML assertions without signature validation</h3>
+  <pre><code class="language-javascript">// BAD — accepting assertion without verifying XML signature
+passport.use(new SamlStrategy({
+  callbackUrl: 'https://app.example.com/callback',
+  entryPoint: 'https://idp.example.com/sso',
+  issuer: 'app-entity-id',
+  // MISSING: cert, wantAssertionsSigned, wantAuthnResponseSigned
+}, (profile, done) =&gt; done(null, profile)));</code></pre>
+
+  <h3>Correct: Always validate signatures and require signed assertions</h3>
+  <pre><code class="language-javascript">// GOOD — full signature validation configured
+passport.use(new SamlStrategy({
+  callbackUrl: 'https://app.example.com/callback',
+  entryPoint: 'https://idp.example.com/sso',
+  issuer: 'app-entity-id',
+  cert: fs.readFileSync('./idp-cert.pem', 'utf-8'),
+  wantAssertionsSigned: true,
+  wantAuthnResponseSigned: true,
+  signatureAlgorithm: 'sha256',
+  maxAssertionAgeMs: 300000,
+}, (profile, done) =&gt; done(null, profile)));</code></pre>
+
+  <h3>Wrong: Skipping nonce validation in OIDC</h3>
+  <pre><code class="language-javascript">// BAD — not generating or validating nonce (allows replay attacks)
+const url = client.authorizationUrl({
+  scope: 'openid profile email',
+  // MISSING: nonce parameter
+});
+const tokenSet = await client.callback(redirectUri, params, {
+  // MISSING: nonce check
+});</code></pre>
+
+  <h3>Correct: Always generate and validate nonce</h3>
+  <pre><code class="language-javascript">// GOOD — nonce generated per-request and validated
+const nonce = generators.nonce();
+req.session.nonce = nonce;
+const url = client.authorizationUrl({
+  scope: 'openid profile email',
+  nonce: nonce,
+  state: generators.state(),
+  code_challenge: generators.codeChallenge(codeVerifier),
+  code_challenge_method: 'S256',
+});
+const tokenSet = await client.callback(redirectUri, params, {
+  nonce: req.session.nonce,
+  state: req.session.state,
+  code_verifier: req.session.codeVerifier,
+});</code></pre>
+
+  <h3>Wrong: Storing tokens in localStorage</h3>
+  <pre><code class="language-typescript">// BAD — XSS can steal tokens from localStorage
+const userManager = new UserManager({
+  authority: 'https://idp.example.com',
+  client_id: 'app',
+  redirect_uri: 'https://app.example.com/callback',
+  userStore: new WebStorageStateStore({ store: localStorage }),  // VULNERABLE
+});</code></pre>
+
+  <h3>Correct: Use sessionStorage or server-side sessions</h3>
+  <pre><code class="language-typescript">// GOOD — sessionStorage is tab-scoped and cleared on close
+const userManager = new UserManager({
+  authority: 'https://idp.example.com',
+  client_id: 'app',
+  redirect_uri: 'https://app.example.com/callback',
+  userStore: new WebStorageStateStore({ store: sessionStorage }),
+});</code></pre>
+
+  <h3>Wrong: Not validating audience claim</h3>
+  <pre><code class="language-python"># BAD — accepting ID token without checking audience
+import jwt
+token = jwt.decode(id_token, key, algorithms=['RS256'])
+user = token['sub']  # Token from another app would be accepted</code></pre>
+
+  <h3>Correct: Always validate issuer and audience</h3>
+  <pre><code class="language-python"># GOOD — explicit issuer and audience validation
+import jwt
+token = jwt.decode(
+    id_token, key, algorithms=['RS256'],
+    issuer='https://your-org.okta.com',
+    audience='YOUR_CLIENT_ID',
+    options={'require': ['exp', 'iss', 'aud', 'sub', 'nonce']},
+)
+user = token['sub']</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Clock skew between SP and IdP</strong>: SAML assertions rejected because server clocks differ by more than the allowed tolerance. Fix: configure <code>maxClockSkew: 180</code> (3 minutes) and use NTP on all servers. [<a href="https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html">src1</a>]</li>
+    <li><strong>Certificate rotation breaking SSO</strong>: IdP rotates its signing certificate but SP still has the old one pinned. Fix: subscribe to IdP metadata updates and support multiple certificates during rotation windows. [<a href="https://developer.okta.com/docs/concepts/oauth-openid/">src3</a>]</li>
+    <li><strong>Missing RelayState forwarding</strong>: Users lose their deep-link destination after SSO login. Fix: pass the original URL as <code>RelayState</code> in the SAML AuthnRequest and redirect to it after authentication. [<a href="https://auth0.com/docs/authenticate/protocols/saml/saml-configuration">src4</a>]</li>
+    <li><strong>OIDC state parameter mismatch</strong>: CSRF attacks succeed because <code>state</code> is not validated. Fix: generate a cryptographically random <code>state</code> per request, store in session, validate in callback. [<a href="https://openid.net/specs/openid-connect-discovery-1_0.html">src2</a>]</li>
+    <li><strong>XML Signature Wrapping (XSW) attacks</strong>: Attacker manipulates SAML XML to inject a forged assertion. Fix: use well-maintained SAML libraries (python3-saml, passport-saml v5+) that defend against all 8 known XSW variants. [<a href="https://auth0.com/intro-to-iam/saml-vs-openid-connect-oidc">src7</a>]</li>
+    <li><strong>Single Logout (SLO) not implemented</strong>: Users remain logged into IdP after SP logout. Fix: implement SAML SLO or OIDC RP-Initiated Logout, and expire local sessions independently. [<a href="https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html">src1</a>]</li>
+    <li><strong>Token stored beyond session lifetime</strong>: Tokens persist after session expiry. Fix: tie token lifetime to session lifetime and implement <code>automaticSilentRenew</code> for OIDC. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc">src5</a>]</li>
+    <li><strong>Not checking amr (Authentication Methods References)</strong>: SP accepts any auth method when MFA is required. Fix: check <code>amr</code> in OIDC ID tokens or <code>AuthnContext</code> in SAML assertions. [<a href="https://developer.okta.com/docs/concepts/oauth-openid/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Decode a SAML response (base64-encoded POST body)
+echo "$SAML_RESPONSE" | base64 -d | xmllint --format -
+
+# Validate XML signature in a SAML assertion
+xmlsec1 --verify --pubkey-cert-pem idp-cert.pem saml-response.xml
+
+# Fetch OIDC Discovery document
+curl -s "https://your-org.okta.com/.well-known/openid-configuration" | jq .
+
+# Fetch OIDC provider's signing keys (JWKS)
+curl -s "https://your-org.okta.com/oauth2/default/v1/keys" | jq '.keys[] | {kid, kty, alg}'
+
+# Decode a JWT ID token (without verification — for debugging only)
+echo "$ID_TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq .
+
+# Check SAML metadata endpoints
+curl -s "https://your-org.okta.com/app/YOUR_APP_ID/sso/saml/metadata" | xmllint --format -
+
+# Verify certificate expiry dates
+openssl x509 -in idp-cert.pem -noout -dates
+openssl x509 -in sp-cert.pem -noout -dates</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Specification</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Date</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SAML</td><td>2.0</td><td>Current (stable)</td><td>Full spec: assertions, bindings, profiles, metadata</td><td>2005-03</td></tr>
+      <tr><td>SAML</td><td>1.1</td><td>Deprecated</td><td>Limited bindings, no SLO</td><td>2003-09</td></tr>
+      <tr><td>OpenID Connect</td><td>1.0</td><td>Current (stable)</td><td>Core, Discovery, Dynamic Registration, Session Management</td><td>2014-02</td></tr>
+      <tr><td>OIDC Federation</td><td>1.0</td><td>Draft</td><td>Trust chains without bilateral metadata exchange</td><td>2024-ongoing</td></tr>
+      <tr><td>OAuth 2.0</td><td>RFC 6749</td><td>Current</td><td>Authorization framework — OIDC adds identity layer</td><td>2012-10</td></tr>
+      <tr><td>OAuth 2.1</td><td>Draft</td><td>Draft</td><td>Merges PKCE, deprecates implicit flow</td><td>2024-ongoing</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Library Compatibility</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Library</th><th scope="col">Language</th><th scope="col">Protocol</th><th scope="col">Min Runtime</th><th scope="col">Latest Stable</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>@node-saml/passport-saml</code></td><td>Node.js</td><td>SAML 2.0</td><td>Node 18+</td><td>5.x</td></tr>
+      <tr><td><code>python3-saml</code></td><td>Python</td><td>SAML 2.0</td><td>Python 3.8+</td><td>1.16.x</td></tr>
+      <tr><td><code>openid-client</code></td><td>Node.js</td><td>OIDC</td><td>Node 18+</td><td>6.x</td></tr>
+      <tr><td><code>oidc-client-ts</code></td><td>TypeScript</td><td>OIDC</td><td>ES2015+ browsers</td><td>3.x</td></tr>
+      <tr><td><code>go-oidc</code></td><td>Go</td><td>OIDC</td><td>Go 1.21+</td><td>3.11.x</td></tr>
+      <tr><td>Spring Security SAML</td><td>Java</td><td>SAML 2.0</td><td>Java 17+</td><td>6.x</td></tr>
+      <tr><td>Spring Security OAuth2</td><td>Java</td><td>OIDC</td><td>Java 17+</td><td>6.x</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Enterprise customers require SSO with their corporate IdP</td><td>Only need API-to-API authentication (no user identity)</td><td>OAuth 2.0 Client Credentials flow</td></tr>
+      <tr><td>Building multi-tenant SaaS where each tenant has its own IdP</td><td>Simple username/password login for a single-tenant app</td><td>Session-based auth with bcrypt</td></tr>
+      <tr><td>Regulatory compliance requires federated identity (SOC 2, HIPAA)</td><td>Social login only (Google, GitHub, Facebook)</td><td>OAuth 2.0 Authorization Code with PKCE</td></tr>
+      <tr><td>Integrating with legacy enterprise systems (AD FS, Shibboleth)</td><td>Internal microservice-to-microservice auth</td><td>mTLS or JWT service tokens</td></tr>
+      <tr><td>Need Single Logout across multiple applications</td><td>Mobile app with biometric login as primary auth</td><td>Platform native auth (Face ID, fingerprint)</td></tr>
+      <tr><td>Customer's IT department mandates SAML specifically</td><td>Real-time API authorization decisions</td><td>OAuth 2.0 token introspection or policy engines</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>SAML 2.0 and OIDC solve <strong>authentication</strong> (who is this user?) — they do not solve <strong>authorization</strong> (what can this user do?). Authorization requires a separate layer (RBAC, ABAC, policy engines).</li>
+    <li>SAML certificate rotation requires coordinated updates between SP and IdP. Plan rotation 30 days before expiry and support dual certificates during the transition window.</li>
+    <li>OIDC <code>client_secret</code> should never be embedded in SPAs or mobile apps — use PKCE with a public client instead.</li>
+    <li>Some IdPs have proprietary extensions or non-standard claim names. Test with your specific IdP; don't assume standard-compliant behavior.</li>
+    <li>SAML SLO (Single Logout) is notoriously unreliable in practice because it requires all SPs to respond to logout requests synchronously. Consider implementing independent session timeouts as a fallback.</li>
+    <li>When bridging SAML and OIDC, use an identity broker (Keycloak, Auth0, Azure AD) rather than building the bridge yourself.</li>
+    <li>XML-based SAML libraries are vulnerable to XXE, XSW, and Billion Laughs attacks if the XML parser is not properly hardened. Always use actively maintained and audited libraries.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/oauth2-authorization-code-pkce/2026" data-relationship="depends_on">OAuth 2.0 Authorization Code with PKCE</a>
+    <a href="/software/patterns/jwt-implementation/2026" data-relationship="related_to">JWT Implementation and Validation</a>
+    <a href="/software/patterns/session-management/2026" data-relationship="related_to">Session Management Patterns</a>
+    <a href="/software/patterns/rbac-implementation/2026" data-relationship="related_to">Role-Based Access Control Implementation</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

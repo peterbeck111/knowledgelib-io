@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Fix CORS Errors in the Browser | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to fixing browser CORS errors: 13 scenarios, preflight analysis, wildcard vs credentials, Private Network Access (Chrome 130+),...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/browser-cors-errors/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Fix CORS Errors in the Browser | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to fixing browser CORS errors: 13 scenarios, preflight analysis, wildcard vs credentials, Private Network Access (Chrome 130+), Express/nginx/FastAPI/Flask/Django/Spring configs, 4 code examples, 4 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/browser-cors-errors/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-18">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Fix CORS Errors in the Browser | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to fixing browser CORS errors: 13 scenarios, preflight analysis, wildcard vs credentials, Private Network Access (Chrome 130+), Express/nginx/FastAPI/Flask/Django/Spring configs, 4 code examples, 4 anti-pattern pairs. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.95">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/browser_cors_errors">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I fix CORS errors in the browser?">
+    <meta name="ai:aliases"
+        content="CORS error browser; Access-Control-Allow-Origin missing; CORS policy blocked; preflight request failed; CORS credentials wildcard; No Access-Control-Allow-Origin header; CORS fix server configuration; cross-origin request blocked; Access-Control-Allow-Private-Network; private network access CORS">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/browser-cors-errors/2026.md">
+    <meta name="ai:token_estimate" content="6800">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-18">
+    <meta name="ai:inputs_needed" content="environment,credentials,server_framework">
+    <meta name="ai:constraints"
+        content="Access-Control-Allow-Origin: * cannot be combined with Access-Control-Allow-Credentials: true; CORS headers must be set on the SERVER response, never on the client request; Error responses (4xx/5xx) must also include CORS headers; Chrome 130+ enforces Private Network Access (PNA) preflights; The Authorization header is never covered by the Allow-Headers wildcard (*); Cross-origin cookies require SameSite=None; Secure attributes">
+    <meta name="ai:skip_this_unit_if"
+        content="Error is about mixed content (HTTP on HTTPS) not cross-origin → Fix mixed content by serving all resources over HTTPS; Error occurs in server-to-server calls (CORS is browser-only) → Check firewall/DNS/TLS instead; Error is about CSP violations not CORS → Check Content-Security-Policy headers">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Fix CORS Errors in the Browser",
+    "headline": "How to Fix CORS Errors in the Browser",
+    "description": "Complete debugging guide for browser CORS errors covering 13 scenarios, preflight requests, wildcard vs credentials, Private Network Access (Chrome 130+), and server configuration for Express, nginx, FastAPI, Flask, Django, and Spring Boot.",
+    "keywords": ["CORS", "Access-Control-Allow-Origin", "preflight", "Same-Origin Policy", "browser security", "HTTP headers", "Private Network Access"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-18",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "Any web server or framework",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "MDN — CORS", "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS" },
+      { "@type": "WebPage", "name": "MDN — Same-origin policy", "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy" },
+      { "@type": "WebPage", "name": "FreeCodeCamp — CORS Errors", "url": "https://www.freecodecamp.org/news/cors-error-how-to-fix/" },
+      { "@type": "WebPage", "name": "SuperTokens — CORS Errors", "url": "https://supertokens.com/blog/cors-errors" },
+      { "@type": "WebPage", "name": "Descope — CORS", "url": "https://www.descope.com/learn/post/cors" },
+      { "@type": "WebPage", "name": "Fetch Living Standard — CORS protocol", "url": "https://fetch.spec.whatwg.org/#http-cors-protocol" },
+      { "@type": "WebPage", "name": "Chrome — Private Network Access preflights", "url": "https://developer.chrome.com/blog/private-network-access-preflight" },
+      { "@type": "WebPage", "name": "Acunetix — CORS Security", "url": "https://www.acunetix.com/blog/articles/cors-security-vulnerabilities/" }
+    ]
+  }
+  </script>
+
+    <!-- Structured data: Dataset -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Fix CORS Errors in the Browser",
+    "description": "Structured reference for browser CORS error debugging with 13-scenario ranking, server configuration examples, Private Network Access guidance, and security best practices.",
+    "keywords": ["CORS", "browser security", "HTTP headers", "preflight", "Same-Origin Policy", "Private Network Access"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-18",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Mozilla (MDN)"},
+      {"@type": "Organization", "name": "WHATWG"},
+      {"@type": "Organization", "name": "Google Chrome"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Fix CORS Errors in the Browser" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I fix CORS errors in the browser?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CORS errors are always a server-side configuration problem (or a missing server-side proxy). The browser is working correctly — it's enforcing the Same-Origin Policy. The fix is to add the correct Access-Control-Allow-Origin (and related) headers to the server's response, not to the browser or client code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CORS error browser",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CORS errors are always a server-side configuration problem (or a missing server-side proxy). The browser is working correctly — it's enforcing the Same-Origin Policy. The fix is to add the correct Access-Control-Allow-Origin (and related) headers to the server's response, not to the browser or client code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Access-Control-Allow-Origin missing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CORS errors are always a server-side configuration problem (or a missing server-side proxy). The browser is working correctly — it's enforcing the Same-Origin Policy. The fix is to add the correct Access-Control-Allow-Origin (and related) headers to the server's response, not to the browser or client code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CORS policy blocked",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CORS errors are always a server-side configuration problem (or a missing server-side proxy). The browser is working correctly — it's enforcing the Same-Origin Policy. The fix is to add the correct Access-Control-Allow-Origin (and related) headers to the server's response, not to the browser or client code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "preflight request failed",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CORS errors are always a server-side configuration problem (or a missing server-side proxy). The browser is working correctly — it's enforcing the Same-Origin Policy. The fix is to add the correct Access-Control-Allow-Origin (and related) headers to the server's response, not to the browser or client code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CORS credentials wildcard",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: CORS errors are always a server-side configuration problem (or a missing server-side proxy). The browser is working correctly — it's enforcing the Same-Origin Policy. The fix is to add the correct Access-Control-Allow-Origin (and related) headers to the server's response, not to the browser or client code."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Fix CORS Errors in the Browser</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I fix CORS errors in the browser?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/browser-cors-errors/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: CORS errors are always a <strong>server-side configuration
+                    problem</strong>. The browser is working correctly — it enforces the Same-Origin Policy. Fix: add
+                the correct <code>Access-Control-Allow-Origin</code> (and related) headers to the <strong>server's
+                    response</strong>.</li>
+            <li><strong>Key tool/command</strong>: DevTools → Network tab → click the failed request → Response Headers
+                → look for <code>Access-Control-Allow-Origin</code>. Missing or wrong? That's your fix target.</li>
+            <li><strong>Watch out for</strong>: <code>Access-Control-Allow-Origin: *</code> cannot be combined with
+                <code>Access-Control-Allow-Credentials: true</code>. Echo the specific origin instead. Also, the
+                <code>Authorization</code> header is never covered by the <code>*</code> wildcard in
+                <code>Access-Control-Allow-Headers</code> — it must be listed explicitly.</li>
+            <li><strong>Works with</strong>: All modern browsers (Chrome, Firefox, Safari, Edge). Applies to Fetch API,
+                XMLHttpRequest, and any browser-initiated cross-origin request. Chrome 130+ also enforces Private
+                Network Access preflights.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>Never combine wildcard origin with credentials</strong>:
+                <code>Access-Control-Allow-Origin: *</code> + <code>Access-Control-Allow-Credentials: true</code> is
+                rejected by all browsers. Echo the specific requesting origin and add <code>Vary: Origin</code>. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://supertokens.com/blog/cors-errors">src4</a>]</li>
+            <li><strong>CORS headers belong on the server response only</strong>: Adding
+                <code>Access-Control-Allow-Origin</code> to a <code>fetch()</code> request header does nothing — the
+                browser sets <code>Origin</code> automatically and checks response headers. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">src2</a>]</li>
+            <li><strong>Error responses must include CORS headers</strong>: If your server returns 4xx/5xx without CORS
+                headers, the browser blocks the error response and you see a generic CORS failure. Use
+                <code>always</code> in nginx or ensure middleware runs unconditionally. [<a
+                    href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>, <a
+                    href="https://supertokens.com/blog/cors-errors">src4</a>]</li>
+            <li><strong>Private Network Access (Chrome 130+)</strong>: Public websites accessing localhost or private IPs
+                must respond to preflight with <code>Access-Control-Allow-Private-Network: true</code>. Without this,
+                Chrome blocks the request entirely. [<a
+                    href="https://developer.chrome.com/blog/private-network-access-preflight">src7</a>]</li>
+            <li><strong>Authorization header requires explicit listing</strong>: The <code>*</code> wildcard in
+                <code>Access-Control-Allow-Headers</code> does not cover <code>Authorization</code> — you must list it
+                explicitly. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</li>
+            <li><strong>Cross-origin cookies need SameSite=None; Secure</strong>: Even with correct CORS headers,
+                cookies won't be sent cross-origin in Chrome 80+ unless they have both attributes set. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://supertokens.com/blog/cors-errors">src4</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Error / Scenario</th>
+                        <th scope="col">Root Cause</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>No 'Access-Control-Allow-Origin' header</td>
+                        <td>Server doesn't send the header</td>
+                        <td>Add <code>Access-Control-Allow-Origin</code> to server response [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Origin not allowed</td>
+                        <td>Origin not in server's allowlist</td>
+                        <td>Add specific origin to allowlist [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://supertokens.com/blog/cors-errors">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Preflight (OPTIONS) fails</td>
+                        <td>Server doesn't handle OPTIONS</td>
+                        <td>Return CORS headers on OPTIONS with 204 [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Wildcard + credentials</td>
+                        <td><code>*</code> can't be used with credentials</td>
+                        <td>Echo specific origin; set <code>Vary: Origin</code> [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://supertokens.com/blog/cors-errors">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Custom header blocked</td>
+                        <td>Header not in <code>Allow-Headers</code></td>
+                        <td>Add to <code>Access-Control-Allow-Headers</code> [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Method blocked</td>
+                        <td>Method not in <code>Allow-Methods</code></td>
+                        <td>Add to <code>Access-Control-Allow-Methods</code> [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Cookie not sent cross-origin</td>
+                        <td><code>credentials: 'include'</code> missing</td>
+                        <td>Add on client + <code>Allow-Credentials: true</code> on server [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://supertokens.com/blog/cors-errors">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Trailing slash mismatch</td>
+                        <td><code>https://example.com/</code> ≠ <code>https://example.com</code></td>
+                        <td>Strip trailing slash from origin comparison [<a
+                                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>, <a
+                                href="https://www.descope.com/learn/post/cors">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>HTTP vs HTTPS mismatch</td>
+                        <td>Protocol is part of origin</td>
+                        <td>Ensure both sides use same protocol [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">src2</a>,
+                            <a href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Port mismatch</td>
+                        <td>Port is part of origin</td>
+                        <td>Include port in allowed origins [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">src2</a>,
+                            <a href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Redirect changes origin</td>
+                        <td>Redirect to different origin</td>
+                        <td>Handle CORS on redirect target too [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Private Network Access blocked</td>
+                        <td>Public site accessing private IP</td>
+                        <td>Add <code>Access-Control-Allow-Private-Network: true</code> to preflight response [<a
+                                href="https://developer.chrome.com/blog/private-network-access-preflight">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>Authorization header not allowed</td>
+                        <td><code>*</code> wildcard doesn't cover Authorization</td>
+                        <td>Explicitly list <code>Authorization</code> in <code>Access-Control-Allow-Headers</code> [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                                href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — Browser shows CORS error
+├── DevTools → Network → find the failed request
+│   ├── Preflight OPTIONS request present?
+│   │   ├── YES — OPTIONS fails (4xx or no CORS headers)
+│   │   │   ├── 404/405 on OPTIONS → add OPTIONS handler [src1, src6]
+│   │   │   ├── "No Access-Control-Allow-Private-Network" → add PNA header [src7]
+│   │   │   └── OPTIONS ok but actual fails → check Allow-Methods/Headers [src1]
+│   │   └── NO — Simple request
+│   │       ├── No Access-Control-Allow-Origin → add to server [src1, src3]
+│   │       ├── Wrong origin → fix allowlist [src1, src4]
+│   │       └── Has * but credentials → echo specific origin [src1, src4]
+├── Request includes cookies / Authorization?
+│   ├── YES → specific origin (not *) + Allow-Credentials: true
+│   │         + explicit Authorization in Allow-Headers [src1, src4, src6]
+│   └── NO → Wildcard * is fine for public APIs [src1, src5]
+├── Custom header blocked (Authorization, X-API-Key)?
+│   └── Add to Access-Control-Allow-Headers (Authorization always explicit) [src1, src3]
+├── Public site accessing localhost / private IP?
+│   └── Add Access-Control-Allow-Private-Network: true [src7]
+└── Development only? → Use dev proxy (Vite/webpack) [src3, src5]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Diagnose the exact error</h3>
+        <p>Read the browser console — the message tells you exactly what's missing. [<a
+                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]
+        </p>
+        <pre><code># Common messages:
+"No 'Access-Control-Allow-Origin' header is present"
+→ Server doesn't send the header at all
+
+"The 'Access-Control-Allow-Origin' header has a value that is not equal to the supplied origin"
+→ Server sends wrong origin
+
+"Response to preflight request doesn't pass access control check"
+→ Server doesn't handle OPTIONS preflight
+
+"The value of 'Access-Control-Allow-Origin' must not be '*' when credentials mode is 'include'"
+→ Wildcard + credentials conflict
+
+"No 'Access-Control-Allow-Private-Network' header was present in the preflight response"
+→ Private Network Access preflight missing [src7]</code></pre>
+
+        <h3>2. Fix on the server — Express.js (Node.js)</h3>
+        <p>The <code>cors</code> npm package is the standard solution. [<a
+                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>, <a
+                href="https://supertokens.com/blog/cors-errors">src4</a>]</p>
+        <pre><code class="language-javascript">const cors = require('cors');
+const allowedOrigins = ['https://app.example.com', 'https://www.example.com'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  credentials: true,
+  maxAge: 86400,
+}));
+app.options('*', cors());  // Handle preflight for all routes</code></pre>
+
+        <h3>3. Fix on the server — nginx</h3>
+        <p>Configure CORS headers in nginx for any backend. [<a
+                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]
+        </p>
+        <pre><code class="language-nginx">location /api/ {
+    set $cors_origin "";
+    if ($http_origin ~* "^https://(app|www)\.example\.com$") {
+        set $cors_origin $http_origin;
+    }
+    add_header 'Access-Control-Allow-Origin' $cors_origin always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+    add_header 'Vary' 'Origin' always;
+
+    if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Max-Age' '86400';
+        add_header 'Content-Length' '0';
+        return 204;
+    }
+    proxy_pass http://backend:8080;
+}</code></pre>
+
+        <h3>4. Fix on the server — Python (FastAPI / Flask)</h3>
+        <p>Standard CORS middleware for Python frameworks. [<a
+                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                href="https://supertokens.com/blog/cors-errors">src4</a>]</p>
+        <pre><code class="language-python"># FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(CORSMiddleware,
+    allow_origins=["https://app.example.com"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+    max_age=86400)
+
+# Flask
+from flask_cors import CORS
+CORS(app, origins=["https://app.example.com"],
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"])</code></pre>
+
+        <h3>5. Development proxy (Vite / webpack)</h3>
+        <p>Never disable browser security. Use a dev proxy instead. [<a
+                href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>, <a
+                href="https://www.descope.com/learn/post/cors">src5</a>]</p>
+        <pre><code class="language-javascript">// vite.config.js
+export default {
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api.example.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
+};</code></pre>
+
+        <h3>6. Client-side: sending credentials correctly</h3>
+        <p>Credentials must be explicitly requested on the client. [<a
+                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                href="https://supertokens.com/blog/cors-errors">src4</a>]</p>
+        <pre><code class="language-javascript">// Include cookies and auth headers cross-origin
+fetch('https://api.example.com/data', {
+  credentials: 'include',
+  headers: { 'Authorization': 'Bearer token123' },
+});
+
+// axios
+axios.get('https://api.example.com/data', { withCredentials: true });</code></pre>
+
+        <h3>7. Handle Private Network Access (Chrome 130+)</h3>
+        <p>Public websites accessing localhost/private IPs need PNA headers. [<a
+                href="https://developer.chrome.com/blog/private-network-access-preflight">src7</a>]</p>
+        <pre><code class="language-javascript">// Express middleware for Private Network Access
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.headers['access-control-request-private-network'] === 'true') {
+    res.header('Access-Control-Allow-Private-Network', 'true');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Express.js — production CORS middleware</h3>
+        <pre><code class="language-javascript">const express = require('express');
+const cors = require('cors');
+const app = express();
+
+const allowedOrigins = [
+  'https://app.example.com',
+  'https://www.example.com',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-API-Key'],
+  credentials: true,
+  maxAge: 86400,
+}));
+
+app.options('*', cors());
+
+app.get('/api/data', (req, res) => {
+  res.json({ data: 'hello' });
+});</code></pre>
+
+        <h3>nginx — dynamic origin allowlist with preflight</h3>
+        <pre><code class="language-nginx">server {
+    listen 443 ssl;
+    server_name api.example.com;
+
+    location /api/ {
+        set $cors_origin "";
+        if ($http_origin ~* "^https://(app|www)\.example\.com$") {
+            set $cors_origin $http_origin;
+        }
+
+        add_header 'Access-Control-Allow-Origin' $cors_origin always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With' always;
+        add_header 'Access-Control-Max-Age' '86400' always;
+        add_header 'Vary' 'Origin' always;
+
+        if ($request_method = 'OPTIONS') {
+            add_header 'Content-Length' '0';
+            add_header 'Content-Type' 'text/plain charset=UTF-8';
+            return 204;
+        }
+
+        proxy_pass http://backend:8080;
+    }
+}</code></pre>
+
+        <h3>FastAPI — full CORS configuration</h3>
+        <pre><code class="language-python">from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://app.example.com",
+        "https://www.example.com",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
+    max_age=86400,
+)
+
+@app.get("/api/data")
+async def get_data():
+    return {"data": "hello"}</code></pre>
+
+        <h3>Express.js — Private Network Access handler</h3>
+        <pre><code class="language-javascript">// For local dev servers accessed from public websites (Chrome 130+)
+const express = require('express');
+const app = express();
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle Private Network Access preflight
+  if (req.headers['access-control-request-private-network'] === 'true') {
+    res.header('Access-Control-Allow-Private-Network', 'true');
+  }
+
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Wildcard with credentials</h3>
+        <pre><code class="language-http"><!-- BAD — browser blocks this combination [src1, src4] -->
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+<!-- Error: "must not be '*' when credentials mode is 'include'" --></code></pre>
+
+        <h3>Correct: Echo specific origin with credentials</h3>
+        <pre><code class="language-javascript">// GOOD — reflect the specific requesting origin [src1, src4]
+app.use(cors({
+  origin: (origin, cb) => cb(null, allowedOrigins.includes(origin)),
+  credentials: true,
+}));
+// Response: Access-Control-Allow-Origin: https://app.example.com
+//           Access-Control-Allow-Credentials: true
+//           Vary: Origin</code></pre>
+
+        <h3>Wrong: Disabling browser security for development</h3>
+        <pre><code class="language-bash"># BAD — dangerous, masks real issues [src3, src5]
+chrome.exe --disable-web-security --user-data-dir="%TEMP%\chrome_dev"</code></pre>
+
+        <h3>Correct: Use a dev proxy</h3>
+        <pre><code class="language-javascript">// GOOD — vite.config.js [src3, src5]
+export default {
+  server: {
+    proxy: {
+      '/api': { target: 'https://api.example.com', changeOrigin: true }
+    }
+  }
+};</code></pre>
+
+        <h3>Wrong: Adding CORS headers on the client</h3>
+        <pre><code class="language-javascript">// BAD — CORS headers are response headers; client can't set them [src1, src2]
+fetch(url, {
+  headers: {
+    'Access-Control-Allow-Origin': '*',  // Does nothing!
+  }
+});</code></pre>
+
+        <h3>Correct: Fix the server response headers</h3>
+        <pre><code class="language-javascript">// GOOD — CORS is always fixed on the server [src1, src2]
+// In Express: app.use(cors({ origin: 'https://myapp.com' }))
+// In nginx: add_header 'Access-Control-Allow-Origin' 'https://myapp.com' always;</code></pre>
+
+        <h3>Wrong: Using fetch mode 'no-cors' to silence errors</h3>
+        <pre><code class="language-javascript">// BAD — gives opaque response you can't read [src1, src6]
+const response = await fetch('https://api.example.com/data', {
+  mode: 'no-cors',  // Silences error but response.json() will fail
+});
+// response.type === 'opaque', status === 0, body unreadable</code></pre>
+
+        <h3>Correct: Fix CORS on the server or use a proxy</h3>
+        <pre><code class="language-javascript">// GOOD — fix the server, or proxy through your own backend [src1, src3]
+// Option 1: Fix server CORS headers
+// Option 2: Proxy through your own backend
+const response = await fetch('/api/proxy/data');  // Same-origin, no CORS needed</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>CORS is enforced by the browser, not the server</strong>: Postman/curl always work because they
+                don't enforce CORS. The server processes the request either way. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">src2</a>]</li>
+            <li><strong>Missing <code>Vary: Origin</code> header</strong>: If your server echoes the requesting origin
+                dynamically, add <code>Vary: Origin</code> to prevent CDNs from caching a response for one origin and
+                serving it to another. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</li>
+            <li><strong>Preflight caching</strong>: <code>Access-Control-Max-Age</code> caches preflight results. Set to
+                0 during development; 86400 in production. Chrome caps this at 7200 (2h). [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</li>
+            <li><strong>Error responses missing CORS headers</strong>: If your server returns 4xx/5xx without CORS
+                headers, the browser blocks the error response. Use <code>always</code> in nginx or ensure middleware
+                runs before error handlers. [<a
+                    href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>, <a
+                    href="https://supertokens.com/blog/cors-errors">src4</a>]</li>
+            <li><strong>Trailing slash / port mismatch</strong>: <code>https://example.com</code> ≠
+                <code>https://example.com/</code> ≠ <code>https://example.com:443</code>. Origin comparison is exact.
+                [<a href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">src2</a>, <a
+                    href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>]</li>
+            <li><strong>Cookies require <code>SameSite=None; Secure</code></strong>: For cross-origin cookies to be sent
+                (Chrome 80+), they must have these attributes. Without them, <code>credentials: 'include'</code> sends
+                no cookies. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://supertokens.com/blog/cors-errors">src4</a>]</li>
+            <li><strong>Private Network Access surprises in development</strong>: Chrome 130+ sends PNA preflights when a
+                public website accesses a private IP. If your local dev server doesn't handle
+                <code>Access-Control-Request-Private-Network</code>, requests silently fail. [<a
+                    href="https://developer.chrome.com/blog/private-network-access-preflight">src7</a>]</li>
+            <li><strong>Authorization header and the wildcard</strong>: Using
+                <code>Access-Control-Allow-Headers: *</code> does not cover <code>Authorization</code> per the Fetch
+                spec. Always list it explicitly. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Test CORS headers with curl (simple request)
+curl -H "Origin: https://app.example.com" \
+     -v https://api.example.com/data 2>&amp;1 | grep -i "access-control"
+
+# Test preflight request
+curl -X OPTIONS \
+     -H "Origin: https://app.example.com" \
+     -H "Access-Control-Request-Method: POST" \
+     -H "Access-Control-Request-Headers: Content-Type, Authorization" \
+     -v https://api.example.com/data 2>&amp;1 | grep -i "access-control"
+
+# Test Private Network Access preflight (Chrome 130+)
+curl -X OPTIONS \
+     -H "Origin: https://public-site.com" \
+     -H "Access-Control-Request-Method: GET" \
+     -H "Access-Control-Request-Private-Network: true" \
+     -v http://localhost:3000/api 2>&amp;1 | grep -i "access-control"
+
+# Check all response headers
+curl -I -H "Origin: https://app.example.com" https://api.example.com/data
+
+# Browser DevTools steps:
+# 1. F12 → Network tab
+# 2. Find failed request (red)
+# 3. Click → Headers → Response Headers
+# 4. Look for: Access-Control-Allow-Origin, Access-Control-Allow-Credentials
+# 5. Find OPTIONS preflight above the main request (if any)</code></pre>
+
+        <h2>Server Configuration Quick Reference</h2>
+        <pre><code class="language-text">Express (Node.js):    npm install cors → app.use(cors({ origin: '...', credentials: true }))
+FastAPI (Python):     CORSMiddleware(allow_origins=[...], allow_credentials=True)
+Flask (Python):       pip install flask-cors → CORS(app, origins=[...], supports_credentials=True)
+Django (Python):      pip install django-cors-headers → CORS_ALLOWED_ORIGINS = [...]
+Spring Boot (Java):   @CrossOrigin(origins = "...") or global CorsConfigurationSource bean
+ASP.NET Core (C#):    builder.Services.AddCors(...) → app.UseCors("MyPolicy")
+nginx:                add_header 'Access-Control-Allow-Origin' '...' always; add_header 'Vary' 'Origin' always;
+Apache:               Header always set Access-Control-Allow-Origin "..."</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version / Standard</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Fetch Living Standard (current)</td>
+                        <td>Full CORS</td>
+                        <td><code>credentials: 'include'</code> replaces XHR <code>withCredentials</code>; wildcard
+                            <code>*</code> for Allow-Headers does not cover Authorization [<a
+                                href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Chrome 130+ (2024-10)</td>
+                        <td>Private Network Access enforced</td>
+                        <td>Public-to-private requests require
+                            <code>Access-Control-Allow-Private-Network: true</code> preflight [<a
+                                href="https://developer.chrome.com/blog/private-network-access-preflight">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Chrome 80+ (2020)</td>
+                        <td>SameSite=None required</td>
+                        <td>Cross-origin cookies need <code>SameSite=None; Secure</code> [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Chrome 66+ (2018)</td>
+                        <td>Preflight caching limited</td>
+                        <td><code>Access-Control-Max-Age</code> capped at 7200s (2h) in Chrome [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Safari 12+ (2018)</td>
+                        <td>Full CORS</td>
+                        <td>ITP may block third-party cookies even with CORS [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Firefox 3.5+ (2009)</td>
+                        <td>Full CORS</td>
+                        <td>First browser to implement CORS [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>IE 10+ (2012)</td>
+                        <td>XDomainRequest deprecated</td>
+                        <td>Use standard Fetch/XHR [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>RFC 6454 (2011)</td>
+                        <td>Origin header</td>
+                        <td>Defines the Origin header format [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">src2</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Browser JS calls a different domain/port/protocol</td>
+                        <td>Server-to-server calls</td>
+                        <td>No CORS needed for server-to-server</td>
+                    </tr>
+                    <tr>
+                        <td>API needs cross-origin browser access</td>
+                        <td>Same-origin requests</td>
+                        <td>No CORS config needed</td>
+                    </tr>
+                    <tr>
+                        <td>Need cookies/auth cross-origin</td>
+                        <td>Using CDN for static assets</td>
+                        <td>CDN doesn't need CORS for HTML/CSS/JS (but does for Fetch/XHR)</td>
+                    </tr>
+                    <tr>
+                        <td>Embedding resources from another domain</td>
+                        <td>Mobile apps (React Native)</td>
+                        <td>Mobile apps don't enforce CORS</td>
+                    </tr>
+                    <tr>
+                        <td>Public site accessing localhost/private IPs</td>
+                        <td>WebSocket connections</td>
+                        <td>WebSockets don't use CORS (different security model)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>CORS is not a security mechanism for your API</strong>: Anyone can call your API from curl or a
+                server. Use authentication (JWT, API keys, sessions) to actually secure your API. [<a
+                    href="https://www.acunetix.com/blog/articles/cors-security-vulnerabilities/">src8</a>]</li>
+            <li><code>Access-Control-Allow-Origin: *</code> is safe for truly public APIs (open datasets, public weather
+                data) but must never be used with <code>credentials: true</code> or for user-specific data. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://www.acunetix.com/blog/articles/cors-security-vulnerabilities/">src8</a>]</li>
+            <li><strong>Preflight requests count against rate limits</strong>: Use <code>Access-Control-Max-Age</code>
+                to cache preflight results and reduce OPTIONS round-trips. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</li>
+            <li><strong>CORS errors on error responses</strong>: Middleware that only adds CORS headers on success will
+                cause confusing CORS errors when the backend returns 4xx/5xx. Always use <code>always</code> in nginx.
+                [<a href="https://www.freecodecamp.org/news/cors-error-how-to-fix/">src3</a>, <a
+                    href="https://supertokens.com/blog/cors-errors">src4</a>]</li>
+            <li><strong>WebSockets don't use CORS</strong>: They use the <code>Origin</code> header but have their own
+                security model. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>]</li>
+            <li><strong><code>fetch()</code> mode <code>'no-cors'</code> is a trap</strong>: It silences the CORS error
+                but gives you an opaque response you can't read. Only useful for fire-and-forget requests. [<a
+                    href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">src1</a>, <a
+                    href="https://fetch.spec.whatwg.org/#http-cors-protocol">src6</a>]</li>
+            <li><strong>Private Network Access is expanding</strong>: Chrome's PNA enforcement (Chrome 130+) adds a new
+                class of CORS-like errors for public-to-private requests. This also covers WebSocket handshakes since
+                Chrome 126. Expect other browsers to adopt this spec. [<a
+                    href="https://developer.chrome.com/blog/private-network-access-preflight">src7</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/ssl-tls-certificate-errors/2026"
+            data-relationship="related_to">SSL/TLS Certificate Errors</a>
+        <a href="/software/debugging/nodejs-econnrefused/2026"
+            data-relationship="related_to">Node.js ECONNREFUSED</a>
+        <a href="/software/debugging/kubernetes-crashloopbackoff/2026"
+            data-relationship="solves">Kubernetes CrashLoopBackOff</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

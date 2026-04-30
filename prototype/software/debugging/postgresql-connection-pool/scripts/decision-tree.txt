@@ -1,0 +1,33 @@
+START — "FATAL: sorry, too many clients already" or connection timeout
+│
+├── Step 1: Diagnose — assess current connection state
+│   ├── SHOW max_connections;                         # check limit
+│   ├── SELECT count(*) FROM pg_stat_activity;        # check usage
+│   └── SELECT state, count(*) FROM pg_stat_activity GROUP BY state;
+│       ├── HIGH "active" → actual query load (need more capacity or PgBouncer)
+│       ├── HIGH "idle" → connection leak (app not releasing connections)
+│       └── HIGH "idle in transaction" → transaction leak (BEGIN without COMMIT/ROLLBACK)
+│
+├── Step 2: Emergency mitigation
+│   ├── Kill idle connections (emergency only) → pg_terminate_backend() [src3]
+│   ├── Set idle_in_transaction_session_timeout → prevents future stalls [src1]
+│   └── Temporarily increase max_connections → restart required, temporary fix [src1]
+│
+├── Step 3: Root cause + permanent fix
+│   ├── No connection pooler?
+│   │   └── INSTALL PgBouncer in transaction pooling mode [src2, src4]
+│   │       • 10,000+ app connections → 20–100 PostgreSQL connections
+│   ├── PgBouncer installed but pool_size too small?
+│   │   └── Increase pool_size per db in pgbouncer.ini [src2]
+│   ├── Application connection leak?
+│   │   ├── Check for missing connection.close() or context manager
+│   │   ├── Set connection pool max size in app (SQLAlchemy pool_size, etc.)
+│   │   └── Set idle timeouts in PgBouncer (server_idle_timeout) [src2]
+│   └── Long-running transactions holding idle connections?
+│       ├── idle_in_transaction_session_timeout = 30000 ms [src1]
+│       └── statement_timeout = 30000 ms [src1]
+│
+└── Step 4: Monitor and prevent recurrence
+    ├── Alert when pg_stat_activity count > 80% of max_connections
+    ├── Monitor PgBouncer: SHOW POOLS; cl_waiting > 0 = problem
+    └── Dashboard: Grafana + postgres_exporter

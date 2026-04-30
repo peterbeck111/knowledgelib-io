@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Data Warehouse vs Data Lake Architecture | knowledgelib.io</title>
+  <meta name="description" content="Complete architecture guide for data warehouse vs data lake vs lakehouse design. 14-component comparison table, decision tree, medallion architecture...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/data-warehouse-data-lake/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Data Warehouse vs Data Lake Architecture | knowledgelib.io">
+  <meta property="og:description" content="Complete architecture guide for data warehouse vs data lake vs lakehouse design. 14-component comparison table, decision tree, medallion architecture patterns, dbt and PySpark code examples, 4 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/data-warehouse-data-lake/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Warehouse vs Data Lake Architecture | knowledgelib.io">
+  <meta name="twitter:description" content="Complete architecture guide for data warehouse vs data lake vs lakehouse design. 14-component comparison table, decision tree, medallion architecture patterns, dbt and PySpark code examples, 4 anti-patterns, and 8 pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.91">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/data_warehouse_data_lake">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a data warehouse vs data lake architecture?">
+  <meta name="ai:aliases" content="data warehouse vs data lake comparison; when to use data warehouse or data lake; data lakehouse architecture design; warehouse lake lakehouse decision guide; medallion architecture bronze silver gold">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/data-warehouse-data-lake/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="architecture_type,primary_workload,data_volume">
+  <meta name="ai:constraints" content="Never store PII/PHI/PCI in raw lake zone without encryption and access controls; Schema-on-write mandatory for financial/regulatory workloads; Do not build a lake without governance layer; Separate storage and compute in any new architecture; Budget 30-40% for data quality and governance">
+  <meta name="ai:skip_this_unit_if" content="Need microservices event streaming patterns -> software/system-design/cqrs-event-sourcing/2026; Need real-time dashboard design -> software/system-design/realtime-dashboard/2026; Need OLTP database migration -> software/migrations/mysql-to-postgresql/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Data Warehouse vs Data Lake Architecture",
+    "headline": "Data Warehouse vs Data Lake Architecture",
+    "description": "Complete architecture guide for designing data warehouse, data lake, and data lakehouse systems. Covers component comparison, medallion architecture, decision tree for choosing the right approach, dbt transformation pipelines, PySpark ingestion patterns, anti-patterns, and cost optimization strategies.",
+    "keywords": ["data warehouse", "data lake", "data lakehouse", "medallion architecture", "Delta Lake", "Apache Iceberg", "dbt", "Snowflake", "BigQuery", "PySpark", "system design"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Snowflake / BigQuery / Databricks, dbt Core 1.9+, Apache Spark 3.5+, Delta Lake 4.0+ or Apache Iceberg 1.7+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Snowflake Key Concepts and Architecture",
+        "url": "https://docs.snowflake.com/en/user-guide/intro-key-concepts"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Data Lakehouse Architecture",
+        "url": "https://www.databricks.com/product/data-lakehouse"
+      },
+      {
+        "@type": "WebPage",
+        "name": "BigQuery Overview and Architecture",
+        "url": "https://docs.google.com/bigquery/docs/introduction"
+      },
+      {
+        "@type": "WebPage",
+        "name": "What is a Medallion Architecture?",
+        "url": "https://www.databricks.com/glossary/medallion-architecture"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Modern Data Engineering Best Practices",
+        "url": "https://www.getdbt.com/blog/modern-data-engineering-best-practices"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Apache Iceberg vs Delta Lake vs Apache Hudi — Lakehouse Feature Comparison",
+        "url": "https://www.onehouse.ai/blog/apache-hudi-vs-delta-lake-vs-apache-iceberg-lakehouse-feature-comparison"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Data Lakes vs Data Warehouses: A Cost Comparison",
+        "url": "https://www.fivetran.com/blog/data-lakes-vs-data-warehouses-a-cost-comparison-by-gigaom"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Data Warehouse vs Data Lake Architecture",
+    "description": "Structured comparison of data warehouse, data lake, and data lakehouse architectures with component comparison table, decision tree, code examples, anti-patterns, and implementation guide.",
+    "keywords": ["data warehouse", "data lake", "data lakehouse", "medallion architecture", "system design", "data engineering"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Snowflake"},
+      {"@type": "Organization", "name": "Databricks"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "dbt Labs"},
+      {"@type": "Organization", "name": "Onehouse"},
+      {"@type": "Organization", "name": "GigaOm"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Data Warehouse vs Data Lake Architecture" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a data warehouse vs data lake architecture?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both — most greenfield projects in 2024-2026 should default to lakehouse architecture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "data warehouse vs data lake comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both — most greenfield projects in 2024-2026 should default to lakehouse architecture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "when to use data warehouse or data lake",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both — most greenfield projects in 2024-2026 should default to lakehouse architecture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "data lakehouse architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both — most greenfield projects in 2024-2026 should default to lakehouse architecture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "warehouse lake lakehouse decision guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both — most greenfield projects in 2024-2026 should default to lakehouse architecture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "data warehouse data lake architecture patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both — most greenfield projects in 2024-2026 should default to lakehouse architecture."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Data Warehouse vs Data Lake Architecture</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a data warehouse vs data lake architecture?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/data-warehouse-data-lake/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Choose a data warehouse for structured BI/SQL workloads, a data lake for unstructured/ML workloads, or a lakehouse for both &mdash; most greenfield projects in 2024-2026 should default to lakehouse architecture.</li>
+    <li><strong>Key tool/command</strong>: <code>dbt build --select tag:gold</code> (transform raw lake data into warehouse-grade models via medallion architecture)</li>
+    <li><strong>Watch out for</strong>: Building a data lake without governance &mdash; within 12 months it becomes a "data swamp" that nobody trusts or uses.</li>
+    <li><strong>Works with</strong>: Snowflake, Databricks, BigQuery, AWS Redshift + S3, Azure Synapse, Apache Iceberg, Delta Lake, Apache Hudi, dbt, Apache Spark, Apache Flink.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never store sensitive data (PII, PHI, PCI) in a raw data lake zone without encryption-at-rest and access controls &mdash; compliance violations carry legal penalties</li>
+    <li>Data warehouse schema-on-write is mandatory for financial reporting and regulatory workloads that require auditability and ACID compliance</li>
+    <li>Do not build a data lake without a governance layer (catalog, lineage, access policies) &mdash; ungoverned lakes become data swamps within 6-12 months</li>
+    <li>Separate storage and compute in any new architecture &mdash; tightly coupled systems cannot scale cost-effectively</li>
+    <li>Budget 30-40% of project effort for data quality and governance tooling &mdash; technology selection is only 20% of the problem</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Data Warehouse</th><th scope="col">Data Lake</th><th scope="col">Data Lakehouse</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Schema approach</strong></td><td>Schema-on-write (predefined)</td><td>Schema-on-read (flexible)</td><td>Schema-on-write + schema-on-read</td></tr>
+      <tr><td><strong>Data types</strong></td><td>Structured (SQL tables)</td><td>Structured, semi-structured, unstructured</td><td>All types with ACID transactions</td></tr>
+      <tr><td><strong>Storage format</strong></td><td>Proprietary columnar (internal)</td><td>Parquet, ORC, Avro, JSON, CSV</td><td>Open table formats (Iceberg, Delta, Hudi)</td></tr>
+      <tr><td><strong>Storage cost</strong></td><td>~$23/TB/month (cloud DW)</td><td>~$2-5/TB/month (object storage)</td><td>~$2-5/TB/month (object storage)</td></tr>
+      <tr><td><strong>Compute model</strong></td><td>Integrated or separated</td><td>Separated (Spark, Presto, etc.)</td><td>Separated (multi-engine)</td></tr>
+      <tr><td><strong>Query performance</strong></td><td>Sub-second to seconds (optimized)</td><td>Seconds to minutes (scan-heavy)</td><td>Seconds (with caching/indexing)</td></tr>
+      <tr><td><strong>ACID transactions</strong></td><td>Full ACID</td><td>None (without table format)</td><td>Full ACID via table format</td></tr>
+      <tr><td><strong>Governance</strong></td><td>Built-in (roles, masking, audit)</td><td>Manual (must add catalog + ACLs)</td><td>Built-in (Unity Catalog, Polaris)</td></tr>
+      <tr><td><strong>Primary users</strong></td><td>Business analysts, BI developers</td><td>Data engineers, data scientists</td><td>All data roles</td></tr>
+      <tr><td><strong>Best workload</strong></td><td>BI dashboards, ad-hoc SQL, reporting</td><td>ML training, log analytics, raw storage</td><td>Mixed: BI + ML + streaming</td></tr>
+      <tr><td><strong>Vendor examples</strong></td><td>Snowflake, BigQuery, Redshift</td><td>S3 + Athena, ADLS + Synapse, GCS</td><td>Databricks Lakehouse, BigQuery Omni</td></tr>
+      <tr><td><strong>Time-to-insight</strong></td><td>Fast (pre-modeled data)</td><td>Slow (requires transformation)</td><td>Medium (medallion layers)</td></tr>
+      <tr><td><strong>Data freshness</strong></td><td>Batch (ELT) or micro-batch</td><td>Real-time streaming possible</td><td>Real-time + batch unified</td></tr>
+      <tr><td><strong>Scaling strategy</strong></td><td>Auto-scale compute (credits)</td><td>Scale storage infinitely, compute on-demand</td><td>Storage infinite, compute elastic</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Is your primary workload BI/SQL reporting with structured data only?
+│   ├── YES → Data Warehouse (Snowflake, BigQuery, Redshift)
+│   │         Best for: dashboards, ad-hoc queries, regulatory reporting
+│   └── NO ↓
+├── Is your primary workload ML/data science with unstructured data?
+│   ├── YES → Data Lake (S3/ADLS + Spark/Athena)
+│   │         Best for: training pipelines, log analytics, raw archival
+│   └── NO ↓
+├── Do you need BOTH SQL analytics AND ML on the same data?
+│   ├── YES ↓
+│   │   ├── Data volume &gt; 10 TB or &gt; 5 data teams?
+│   │   │   ├── YES → Data Lakehouse (Databricks, BigQuery with Iceberg)
+│   │   │   │         Use medallion architecture (Bronze → Silver → Gold)
+│   │   │   └── NO → Managed Warehouse + object storage export
+│   └── NO ↓
+├── Do you need real-time streaming analytics?
+│   ├── YES → Data Lakehouse with streaming ingestion
+│   │         (Delta Live Tables, Apache Flink + Iceberg)
+│   └── NO ↓
+└── DEFAULT → Start with a managed Data Warehouse
+              Migrate to Lakehouse when lake requirements emerge</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Audit data sources and classify workloads</h3>
+  <p>Inventory all data sources and classify each by structure level (structured, semi-structured, unstructured), volume, velocity, and primary consumers. This classification drives the architecture decision. [<a href="https://www.databricks.com/product/data-lakehouse">src2</a>]</p>
+  <pre><code class="language-yaml"># data_source_inventory.yaml
+sources:
+  - name: transactional_db
+    type: structured
+    format: PostgreSQL
+    volume_gb_per_day: 5
+    velocity: batch_daily
+    consumers: [bi_analysts, finance]
+    sensitivity: pii
+
+  - name: clickstream_logs
+    type: semi_structured
+    format: JSON
+    volume_gb_per_day: 200
+    velocity: real_time
+    consumers: [data_scientists, product]
+    sensitivity: none</code></pre>
+  <p><strong>Verify</strong>: Count sources by type &mdash; if &gt;60% structured + SQL consumers, lean warehouse. If &gt;40% unstructured/ML, lean lake. Mixed = lakehouse.</p>
+
+  <h3>2. Select storage layer and table format</h3>
+  <p>Choose your storage tier based on workload classification. For lakehouse, select an open table format that provides ACID transactions on top of object storage. [<a href="https://www.onehouse.ai/blog/apache-hudi-vs-delta-lake-vs-apache-iceberg-lakehouse-feature-comparison">src6</a>]</p>
+  <pre><code class="language-sql">-- Lakehouse: Delta Lake setup (Databricks)
+-- Creates a managed Delta table with schema enforcement
+CREATE TABLE IF NOT EXISTS bronze.raw_events (
+  event_id STRING,
+  event_type STRING,
+  payload STRING,
+  ingested_at TIMESTAMP
+)
+USING DELTA
+PARTITIONED BY (date_trunc('day', ingested_at))
+TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true'
+);</code></pre>
+  <p><strong>Verify</strong>: <code>DESCRIBE EXTENDED bronze.raw_events</code> &rarr; should show <code>Provider: delta</code>, partitioning columns, and table properties.</p>
+
+  <h3>3. Implement medallion architecture layers</h3>
+  <p>Structure data flow through Bronze (raw), Silver (cleansed), and Gold (business-ready) layers. Each layer has a specific purpose and quality contract. [<a href="https://www.databricks.com/glossary/medallion-architecture">src4</a>]</p>
+  <pre><code class="language-sql">-- Silver layer: cleansed and conformed (dbt model)
+{{ config(
+    materialized='incremental',
+    unique_key='event_id',
+    partition_by={'field': 'event_date', 'data_type': 'date'}
+) }}
+
+SELECT
+    event_id, event_type,
+    JSON_EXTRACT_SCALAR(payload, '$.user_id') AS user_id,
+    CAST(ingested_at AS DATE) AS event_date
+FROM {{ source('bronze', 'raw_events') }}
+WHERE event_type IS NOT NULL
+{% if is_incremental() %}
+  AND ingested_at &gt; (SELECT MAX(ingested_at) FROM {{ this }})
+{% endif %}</code></pre>
+  <p><strong>Verify</strong>: <code>dbt test --select stg_events</code> &rarr; all tests pass (not_null, unique on event_id).</p>
+
+  <h3>4. Configure governance and access controls</h3>
+  <p>Set up a data catalog, column-level security, and row-level access policies. This is the step most teams skip &mdash; and the #1 cause of data swamp failure. [<a href="https://docs.snowflake.com/en/user-guide/intro-key-concepts">src1</a>]</p>
+  <pre><code class="language-sql">-- Snowflake: row-level security policy
+CREATE OR REPLACE ROW ACCESS POLICY pii_access_policy
+  AS (val VARCHAR) RETURNS BOOLEAN -&gt;
+  CASE
+    WHEN CURRENT_ROLE() IN ('DATA_ENGINEER', 'COMPLIANCE') THEN TRUE
+    ELSE FALSE
+  END;
+
+ALTER TABLE gold.dim_customers
+  ADD ROW ACCESS POLICY pii_access_policy ON (email);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT email FROM gold.dim_customers LIMIT 5</code> as analyst role &rarr; should show <code>***@domain.com</code>.</p>
+
+  <h3>5. Set up transformation pipeline with dbt</h3>
+  <p>Configure dbt to transform data through medallion layers with testing, documentation, and lineage tracking. [<a href="https://www.getdbt.com/blog/modern-data-engineering-best-practices">src5</a>]</p>
+  <pre><code class="language-yaml"># dbt_project.yml
+name: 'analytics_lakehouse'
+version: '1.0.0'
+models:
+  analytics_lakehouse:
+    bronze:
+      +materialized: view
+      +schema: bronze
+    silver:
+      +materialized: incremental
+      +schema: silver
+    gold:
+      +materialized: table
+      +schema: gold</code></pre>
+  <p><strong>Verify</strong>: <code>dbt debug</code> &rarr; connection OK. <code>dbt build --select tag:gold</code> &rarr; all models and tests pass.</p>
+
+  <h3>6. Implement monitoring and cost controls</h3>
+  <p>Set up query monitoring, storage lifecycle policies, and cost alerting. Cloud data platforms can incur runaway costs without proper guardrails. [<a href="https://docs.google.com/bigquery/docs/introduction">src3</a>]</p>
+  <pre><code class="language-sql">-- BigQuery: cost monitoring query
+SELECT
+  user_email,
+  SUM(total_bytes_processed) / POW(2, 40) AS tb_processed,
+  SUM(total_bytes_processed) / POW(2, 40) * 5 AS est_cost_usd
+FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+WHERE creation_time &gt; TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+GROUP BY user_email ORDER BY tb_processed DESC;</code></pre>
+  <p><strong>Verify</strong>: Check reservation utilization in Cloud Console. Set billing alerts at 80% of monthly budget.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>SQL (dbt): Gold layer business model</h3>
+  <pre><code class="language-sql">-- models/gold/fct_daily_revenue.sql
+-- Input:  Silver-layer orders and products tables
+-- Output: Daily revenue fact table for BI dashboards
+{{ config(
+    materialized='table',
+    partition_by={'field': 'order_date', 'data_type': 'date'},
+    cluster_by=['product_category', 'region']
+) }}
+
+SELECT
+    o.order_date,
+    p.product_category,
+    o.region,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    SUM(o.quantity * p.unit_price) AS gross_revenue,
+    SUM(o.discount_amount) AS total_discounts,
+    SUM(o.quantity * p.unit_price) - SUM(o.discount_amount) AS net_revenue
+FROM {{ ref('stg_orders') }} o
+JOIN {{ ref('stg_products') }} p ON o.product_id = p.product_id
+GROUP BY 1, 2, 3</code></pre>
+
+  <h3>Python (PySpark): Bronze layer ingestion</h3>
+  <pre><code class="language-python"># Input:  Raw JSON files from S3/ADLS landing zone
+# Output: Bronze Delta table with metadata columns
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import current_timestamp, input_file_name
+
+spark = SparkSession.builder.appName("bronze_ingestion") \
+    .config("spark.sql.extensions",
+            "io.delta.sql.DeltaSparkSessionExtension").getOrCreate()
+
+bronze_df = (spark.readStream.format("cloudFiles")
+    .option("cloudFiles.format", "json")
+    .option("cloudFiles.schemaLocation", "s3://lakehouse/schemas/events")
+    .load("s3://landing-zone/events/"))
+
+(bronze_df.withColumn("_ingested_at", current_timestamp())
+    .withColumn("_source_file", input_file_name())
+    .writeStream.format("delta").outputMode("append")
+    .option("checkpointLocation", "s3://lakehouse/checkpoints/bronze_events")
+    .trigger(availableNow=True).toTable("bronze.raw_events"))</code></pre>
+
+  <h3>Python (PySpark): Silver layer transformation</h3>
+  <pre><code class="language-python"># Input:  Bronze Delta table (raw events)
+# Output: Silver Delta table (cleansed, deduplicated)
+from pyspark.sql.functions import from_json, col, to_date, row_number
+from pyspark.sql.window import Window
+from delta.tables import DeltaTable
+
+dedup_window = Window.partitionBy("event_id").orderBy(col("_ingested_at").desc())
+
+silver_df = (spark.read.table("bronze.raw_events")
+    .withColumn("parsed", from_json(col("payload"), payload_schema))
+    .select("event_id", "event_type",
+            col("parsed.user_id").alias("user_id"),
+            col("parsed.amount").alias("amount"),
+            to_date("parsed.timestamp").alias("event_date"))
+    .filter(col("event_id").isNotNull())
+    .withColumn("rn", row_number().over(dedup_window))
+    .filter(col("rn") == 1).drop("rn"))
+
+# Merge into Silver (upsert pattern)
+silver_table = DeltaTable.forPath(spark, "s3://lakehouse/silver/events")
+(silver_table.alias("t").merge(silver_df.alias("s"), "t.event_id = s.event_id")
+    .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Dumping everything into a data lake with no governance</h3>
+  <pre><code class="language-python"># BAD &mdash; raw dump with no catalog, no schema, no access controls
+df.write.parquet("s3://company-lake/data/")
+# Result: "data swamp" &mdash; nobody knows what's there</code></pre>
+
+  <h3>Correct: Ingesting with schema registry, metadata, and catalog</h3>
+  <pre><code class="language-python"># GOOD &mdash; structured ingestion with governance
+(df.withColumn("_ingested_at", current_timestamp())
+   .withColumn("_source", lit("crm_export"))
+   .withColumn("_schema_version", lit("v2.1"))
+   .write.format("delta").option("mergeSchema", "true")
+   .mode("append").saveAsTable("bronze.crm_contacts"))
+# Registered in Unity Catalog with lineage + ACLs</code></pre>
+
+  <h3>Wrong: One massive Gold table for all consumers</h3>
+  <pre><code class="language-sql">-- BAD &mdash; single denormalized table serving every team
+CREATE TABLE gold.everything AS
+SELECT * FROM silver.orders
+JOIN silver.customers ON ...
+JOIN silver.products ON ...
+JOIN silver.inventory ON ...;
+-- 500+ columns, slow queries, impossible to maintain</code></pre>
+
+  <h3>Correct: Purpose-built Gold models per domain</h3>
+  <pre><code class="language-sql">-- GOOD &mdash; domain-specific Gold models
+-- gold/finance/fct_daily_revenue.sql (10 columns)
+-- gold/marketing/fct_campaign_attribution.sql (15 columns)
+-- gold/product/fct_user_engagement.sql (12 columns)
+-- Each model is tested, documented, and owned by a team</code></pre>
+
+  <h3>Wrong: Running ML training directly on the warehouse</h3>
+  <pre><code class="language-python"># BAD &mdash; warehouse compute for ML training (5-10x cost)
+results = snowflake_cursor.execute(
+    "SELECT * FROM gold.features WHERE training_set = TRUE"
+)  # Pulling 500GB through warehouse = $$$
+model.fit(pd.DataFrame(results.fetchall()))</code></pre>
+
+  <h3>Correct: Using lake storage for ML, warehouse for BI</h3>
+  <pre><code class="language-python"># GOOD &mdash; read from lake storage for ML
+training_df = spark.read.format("delta").load(
+    "s3://lakehouse/silver/features"
+)  # Spark cluster reads from object storage directly
+model.fit(training_df.toPandas())</code></pre>
+
+  <h3>Wrong: Tightly coupling storage and compute</h3>
+  <pre><code class="language-text">BAD &mdash; legacy on-prem warehouse with fixed capacity
+Cannot scale storage independently from compute.
+Paying for idle compute during off-peak hours.
+Over-provisioned or under-performing.</code></pre>
+
+  <h3>Correct: Decoupled storage and compute</h3>
+  <pre><code class="language-sql">-- GOOD &mdash; Snowflake virtual warehouses scale independently
+ALTER WAREHOUSE prod_wh SET
+  WAREHOUSE_SIZE = 'X-LARGE'
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  MIN_CLUSTER_COUNT = 1
+  MAX_CLUSTER_COUNT = 6;
+-- Storage infinite, compute on demand</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Data swamp</strong>: Building a lake without metadata catalog, data quality checks, or access policies. Within 6-12 months nobody trusts the data. Fix: Deploy a governance layer (Unity Catalog, AWS Glue Catalog, or Apache Atlas) from day one. [<a href="https://www.databricks.com/glossary/medallion-architecture">src4</a>]</li>
+    <li><strong>Warehouse cost explosion</strong>: Running exploratory queries on full datasets without partition pruning or cost limits. Fix: Enable <code>STATEMENT_TIMEOUT_IN_SECONDS</code> (Snowflake), <code>maximumBytesBilled</code> (BigQuery), or slot reservations. [<a href="https://docs.google.com/bigquery/docs/introduction">src3</a>]</li>
+    <li><strong>Schema drift in lake</strong>: Source schemas change silently, breaking downstream pipelines. Fix: Use schema evolution in Delta Lake (<code>mergeSchema</code>) or Iceberg and add <code>dbt test</code> for schema assertions. [<a href="https://www.onehouse.ai/blog/apache-hudi-vs-delta-lake-vs-apache-iceberg-lakehouse-feature-comparison">src6</a>]</li>
+    <li><strong>Medallion layer skipping</strong>: Writing directly from ingestion to Gold, bypassing Bronze and Silver. Fix: Always land in Bronze first, transform in Silver, aggregate in Gold. [<a href="https://www.databricks.com/glossary/medallion-architecture">src4</a>]</li>
+    <li><strong>Vendor lock-in</strong>: Building on proprietary formats that prevent multi-engine access. Fix: Use open table formats (Apache Iceberg for multi-engine, Delta Lake for Databricks-native). [<a href="https://www.onehouse.ai/blog/apache-hudi-vs-delta-lake-vs-apache-iceberg-lakehouse-feature-comparison">src6</a>]</li>
+    <li><strong>Ignoring data lifecycle</strong>: Storing all data at the hot tier indefinitely. Fix: Implement tiered storage with lifecycle policies &mdash; move data older than 90 days to cold storage. [<a href="https://www.fivetran.com/blog/data-lakes-vs-data-warehouses-a-cost-comparison-by-gigaom">src7</a>]</li>
+    <li><strong>Under-estimating ETL complexity</strong>: Assuming ingestion is simple. Fix: Budget 50-60% of project time for pipeline development, testing, monitoring, and error handling. [<a href="https://www.getdbt.com/blog/modern-data-engineering-best-practices">src5</a>]</li>
+    <li><strong>No cost observability</strong>: Running platforms without per-team cost attribution. Fix: Tag queries by team/project, set up daily cost reports, alert on anomalies exceeding 20% of baseline. [<a href="https://www.fivetran.com/blog/data-lakes-vs-data-warehouses-a-cost-comparison-by-gigaom">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Delta Lake table health (Databricks)
+DESCRIBE DETAIL delta.`s3://lakehouse/silver/events`
+
+# Check table format version and properties
+SHOW TBLPROPERTIES bronze.raw_events
+
+# Verify dbt model freshness
+dbt source freshness --select source:bronze
+
+# Check Snowflake warehouse utilization
+SELECT WAREHOUSE_NAME, AVG(AVG_RUNNING), AVG(QUEUED_LOAD)
+FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_LOAD_HISTORY
+WHERE START_TIME &gt; DATEADD('day', -7, CURRENT_TIMESTAMP())
+GROUP BY WAREHOUSE_NAME;
+
+# Check BigQuery slot utilization
+SELECT period_start,
+  SUM(period_slot_ms) / (1000 * 60) AS slot_minutes
+FROM `region-us`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_PROJECT
+WHERE period_start &gt; TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY)
+GROUP BY period_start ORDER BY period_start;
+
+# Check data lake storage size (AWS)
+aws s3 ls s3://lakehouse/ --recursive --summarize | tail -2</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Technology</th><th scope="col">Current Version</th><th scope="col">Key Feature</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Apache Iceberg</td><td>1.7.x (2025)</td><td>Universal compatibility, partition evolution</td><td>Preferred for multi-engine lakehouse</td></tr>
+      <tr><td>Delta Lake</td><td>4.0 (2025)</td><td>UniForm (Iceberg/Hudi interop), liquid clustering</td><td>Databricks-native, open-source</td></tr>
+      <tr><td>Apache Hudi</td><td>1.0 (2025)</td><td>Record-level upserts, incremental queries</td><td>Best for CDC-heavy workloads</td></tr>
+      <tr><td>dbt Core</td><td>1.9.x (2025)</td><td>Microbatch incremental, unit testing</td><td>Standard transformation tool</td></tr>
+      <tr><td>Apache Spark</td><td>3.5.x (2025)</td><td>Spark Connect, improved Iceberg support</td><td>De facto lake compute engine</td></tr>
+      <tr><td>Snowflake</td><td>Current</td><td>Iceberg Tables, Polaris Catalog (open-source)</td><td>Warehouse + lake convergence</td></tr>
+      <tr><td>BigQuery</td><td>Current</td><td>BigLake, Omni (multi-cloud), Iceberg support</td><td>Serverless warehouse + lake</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Structured BI/reporting is the only workload</td><td>You need ML training on unstructured data</td><td>Data Lake or Lakehouse</td></tr>
+      <tr><td>Need sub-second query latency for dashboards</td><td>Data volume is &lt; 100 GB total</td><td>PostgreSQL + materialized views</td></tr>
+      <tr><td>Regulatory compliance requires full audit trail</td><td>Budget is &lt; $500/month for data infrastructure</td><td>Managed PostgreSQL + dbt</td></tr>
+      <tr><td>Mixed workloads: BI + ML + streaming</td><td>Team has &lt; 3 data engineers</td><td>Start with a managed warehouse</td></tr>
+      <tr><td>Data volume exceeds 10 TB with diverse formats</td><td>All data fits in a single relational database</td><td>OLTP database with read replicas</td></tr>
+      <tr><td>Multiple teams need independent compute scaling</td><td>Only one data consumer team</td><td>Single managed warehouse</td></tr>
+      <tr><td>Real-time streaming + batch analytics required</td><td>Latency requirements are &gt; 1 hour acceptable</td><td>Batch warehouse with scheduled ELT</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Cloud data warehouse pricing models differ significantly: Snowflake charges per-second of compute (credits), BigQuery charges per-byte scanned (on-demand) or per-slot (reserved), Redshift charges per-node-hour. Direct cost comparisons require normalizing to the same workload.</li>
+    <li>The "lakehouse" term is used differently by each vendor: Databricks means Delta Lake + Unity Catalog, Snowflake means Iceberg Tables + Polaris Catalog, Google means BigQuery + BigLake. Evaluate specific capabilities, not marketing labels.</li>
+    <li>Open table formats (Iceberg, Delta, Hudi) are converging &mdash; Delta Lake UniForm can expose Delta tables as Iceberg or Hudi, and Iceberg REST Catalog is becoming a standard. Choose based on your primary compute engine.</li>
+    <li>Data lake storage costs are 77-95% lower than warehouse storage, but total cost of ownership includes compute, governance tooling, and engineering time &mdash; a well-run warehouse can be cheaper than a poorly-governed lake.</li>
+    <li>Medallion architecture (Bronze/Silver/Gold) is the dominant pattern but not the only one &mdash; some teams use a two-layer approach (raw + curated) or a data mesh pattern with domain-owned data products.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/cqrs-event-sourcing/2026" data-relationship="related_to">CQRS and Event Sourcing</a>
+    <a href="/software/system-design/realtime-dashboard/2026" data-relationship="related_to">Real-Time Analytics Dashboard Design</a>
+    <a href="/software/system-design/database-sharding/2026" data-relationship="related_to">Database Sharding Strategies</a>
+    <a href="/software/system-design/iot-data-pipeline/2026" data-relationship="solves">IoT Data Ingestion Pipeline</a>
+    <a href="/software/migrations/oracle-to-postgresql/2026" data-relationship="often_confused_with">Oracle to PostgreSQL Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

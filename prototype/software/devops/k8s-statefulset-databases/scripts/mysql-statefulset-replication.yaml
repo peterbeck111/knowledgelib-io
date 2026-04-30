@@ -1,0 +1,124 @@
+# Input:  Kubernetes cluster with dynamic provisioner + mysql-secret
+# Output: MySQL primary (ordinal 0) + read replicas with ConfigMap-based config
+# Usage:  kubectl apply -f mysql-statefulset-replication.yaml
+# Ref:    https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  primary.cnf: |
+    [mysqld]
+    log-bin=mysql-bin
+    server-id=1
+  replica.cnf: |
+    [mysqld]
+    super-read-only
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-hl
+spec:
+  clusterIP: None
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      name: mysql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-read
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      name: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: mysql-hl
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      initContainers:
+        - name: init-mysql
+          image: mysql:8.0
+          command: ['sh', '-c']
+          args:
+            - |
+              ORDINAL=$(echo $HOSTNAME | rev | cut -d'-' -f1 | rev)
+              if [ "$ORDINAL" = "0" ]; then
+                cp /mnt/config/primary.cnf /mnt/conf.d/server.cnf
+              else
+                cp /mnt/config/replica.cnf /mnt/conf.d/server.cnf
+              fi
+              # Set unique server-id based on ordinal
+              echo "server-id=$((100 + $ORDINAL))" >> /mnt/conf.d/server.cnf
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /mnt/config
+            - name: conf
+              mountPath: /mnt/conf.d
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: conf
+              mountPath: /etc/mysql/conf.d
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-config
+        - name: conf
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 10Gi

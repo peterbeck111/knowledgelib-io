@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes StatefulSet for Databases | knowledgelib.io</title>
+  <meta name="description" content="Complete Kubernetes StatefulSet reference for database deployments: StatefulSet vs Deployment comparison, database operator guide (CloudNativePG,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-statefulset-databases/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes StatefulSet for Databases | knowledgelib.io">
+  <meta property="og:description" content="Complete Kubernetes StatefulSet reference for database deployments: StatefulSet vs Deployment comparison, database operator guide (CloudNativePG, Percona), PVC management, backup CronJobs, and init container patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-statefulset-databases/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes StatefulSet for Databases | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Kubernetes StatefulSet reference for database deployments: StatefulSet vs Deployment comparison, database operator guide (CloudNativePG, Percona), PVC management, backup CronJobs, and init container patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes StatefulSet for Databases">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Kubernetes reference: StatefulSet for databases">
+  <meta name="ai:aliases" content="Kubernetes StatefulSet database deployment; how to run a database on Kubernetes; StatefulSet vs Deployment for databases; Kubernetes persistent volume database; k8s StatefulSet PostgreSQL MySQL; database operator Kubernetes; headless service StatefulSet; volumeClaimTemplates database">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-statefulset-databases/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="database_engine,management_approach,team_size">
+  <meta name="ai:constraints" content="StatefulSets REQUIRE a headless Service (clusterIP: None); volumeClaimTemplates CANNOT be modified after creation; PVCs are NOT auto-deleted on scale-down; NEVER use Deployment for databases needing stable identity; Database backups MUST use native dump tools">
+  <meta name="ai:skip_this_unit_if" content="Running stateless app → software/devops/k8s-deployment-service-ingress/2026; Need autoscaling → software/devops/k8s-hpa/2026; Using managed DB (RDS, Cloud SQL) → cloud provider docs">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes StatefulSet for Databases",
+    "headline": "Kubernetes StatefulSet for Databases",
+    "description": "Complete reference for deploying databases on Kubernetes using StatefulSets: comparison with Deployments, database operator options (CloudNativePG, Percona), PVC management, headless Services, init containers for replication, backup CronJobs, and production best practices.",
+    "keywords": ["Kubernetes StatefulSet", "database Kubernetes", "StatefulSet vs Deployment", "CloudNativePG", "Percona Operator", "volumeClaimTemplates", "headless Service", "PostgreSQL Kubernetes", "MySQL Kubernetes", "MongoDB Kubernetes"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.26+, kubectl, StorageClass with dynamic provisioner",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "StatefulSets",
+        "url": "https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Run a Replicated Stateful Application",
+        "url": "https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CloudNativePG - PostgreSQL Operator for Kubernetes",
+        "url": "https://cloudnative-pg.io/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Operators Compared",
+        "url": "https://www.percona.com/blog/kubernetes-operators-compared"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Deploy PostgreSQL Statefulset Cluster on Kubernetes",
+        "url": "https://devopscube.com/deploy-postgresql-statefulset/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to choose your Kubernetes Postgres Operator?",
+        "url": "https://www.simplyblock.io/blog/choosing-a-kubernetes-postgres-operator/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A Practical Guide to Kubernetes Stateful Backup and Recovery",
+        "url": "https://thenewstack.io/a-practical-guide-to-kubernetes-stateful-backup-and-recovery/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes StatefulSet for Databases",
+    "description": "Structured knowledge unit covering Kubernetes StatefulSet patterns for database deployments, operator comparison, PVC management, backup strategies, and production best practices.",
+    "keywords": ["Kubernetes StatefulSet", "database Kubernetes", "CloudNativePG", "Percona Operator", "PostgreSQL", "MySQL", "MongoDB", "volumeClaimTemplates"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes"},
+      {"@type": "Organization", "name": "CloudNativePG"},
+      {"@type": "Organization", "name": "Percona"},
+      {"@type": "Organization", "name": "DevOpsCube"},
+      {"@type": "Organization", "name": "Simplyblock"},
+      {"@type": "Organization", "name": "The New Stack"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes StatefulSet for Databases" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kubernetes reference: StatefulSet for databases",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes StatefulSet database deployment",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to run a database on Kubernetes",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "StatefulSet vs Deployment for databases",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes persistent volume database",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "k8s StatefulSet PostgreSQL MySQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes StatefulSet for Databases</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Kubernetes reference: StatefulSet for databases</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-statefulset-databases/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use StatefulSets when you need stable Pod identities and persistent storage for databases on Kubernetes; use a database operator (CloudNativePG, Percona) for production to automate failover, backups, and replication.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl apply -f statefulset.yaml</code> with <code>volumeClaimTemplates</code> and a headless Service (<code>clusterIP: None</code>)</li>
+    <li><strong>Watch out for</strong>: volumeClaimTemplates cannot be modified after creation, and PVCs are never automatically deleted on scale-down -- orphaned PVCs silently accumulate cost.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.26+ (StatefulSet GA since 1.9; start ordinals GA in 1.31). All major database engines.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>StatefulSets REQUIRE a headless Service (clusterIP: None) -- without it, Pods have no stable DNS names for replication</li>
+    <li>volumeClaimTemplates CANNOT be modified after StatefulSet creation -- plan storage size and class before deploying</li>
+    <li>PersistentVolumeClaims are NOT automatically deleted when StatefulSet is scaled down or deleted -- orphaned PVCs accumulate cost</li>
+    <li>NEVER use Deployment for databases that require stable network identity or ordered startup (e.g., primary/replica topology)</li>
+    <li>Database backups MUST use the database's native dump tool (pg_dump, mysqldump, mongodump) -- filesystem-level PVC snapshots can produce corrupt backups</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup tables -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>StatefulSet vs Deployment for Databases</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">StatefulSet</th><th scope="col">Deployment</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pod naming</td><td>Predictable: <code>{name}-0</code>, <code>{name}-1</code>, ...</td><td>Random: <code>{name}-{hash}</code></td></tr>
+      <tr><td>Network identity</td><td>Stable DNS via headless Service</td><td>Ephemeral, load-balanced</td></tr>
+      <tr><td>Storage</td><td>Per-Pod PVC via volumeClaimTemplates</td><td>Shared or no persistent storage</td></tr>
+      <tr><td>Scaling order</td><td>Sequential (0, 1, 2...)</td><td>Parallel</td></tr>
+      <tr><td>Deletion order</td><td>Reverse sequential (2, 1, 0)</td><td>Parallel</td></tr>
+      <tr><td>Rolling update</td><td>Reverse ordinal (highest first)</td><td>Configurable (maxSurge)</td></tr>
+      <tr><td>Use for databases</td><td>Yes -- primary/replica, stable identity</td><td>Only stateless caches</td></tr>
+      <tr><td>Headless Service required</td><td>Yes</td><td>No</td></tr>
+      <tr><td>PVC cleanup on delete</td><td>Manual</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Database Operator Comparison</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Operator</th><th scope="col">Database</th><th scope="col">License</th><th scope="col">HA</th><th scope="col">Auto-Backup</th><th scope="col">Monitoring</th><th scope="col">CNCF</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CloudNativePG</td><td>PostgreSQL</td><td>Apache 2.0</td><td>Streaming replication + auto-failover</td><td>Object store (S3, GCS, Azure) + PITR</td><td>Prometheus exporter</td><td>Sandbox</td></tr>
+      <tr><td>Percona Operator PG</td><td>PostgreSQL</td><td>Apache 2.0</td><td>Patroni-based HA</td><td>S3/GCS/Azure + PITR</td><td>PMM integration</td><td>No</td></tr>
+      <tr><td>Percona Operator MySQL</td><td>MySQL (PXC)</td><td>Apache 2.0</td><td>Galera multi-primary</td><td>S3/GCS + PITR</td><td>PMM integration</td><td>No</td></tr>
+      <tr><td>Percona Operator MongoDB</td><td>MongoDB</td><td>Apache 2.0</td><td>Replica set auto-failover</td><td>S3/GCS + PITR</td><td>PMM integration</td><td>No</td></tr>
+      <tr><td>MongoDB Community</td><td>MongoDB</td><td>Apache 2.0</td><td>Replica set</td><td>Manual</td><td>Basic</td><td>No</td></tr>
+      <tr><td>Zalando PG Operator</td><td>PostgreSQL</td><td>MIT</td><td>Patroni HA</td><td>WAL-G to S3/GCS</td><td>Built-in</td><td>No</td></tr>
+      <tr><td>Crunchy PGO</td><td>PostgreSQL</td><td>Apache 2.0</td><td>Patroni HA</td><td>pgBackRest</td><td>Prometheus</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>StatefulSet Pod DNS Pattern</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">DNS Format</th><th scope="col">Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pod</td><td><code>{pod}.{service}.{namespace}.svc.cluster.local</code></td><td><code>postgres-0.postgres-hl.default.svc.cluster.local</code></td></tr>
+      <tr><td>Service (headless)</td><td><code>{service}.{namespace}.svc.cluster.local</code></td><td><code>postgres-hl.default.svc.cluster.local</code></td></tr>
+      <tr><td>Primary (convention)</td><td><code>{statefulset}-0.{service}.{ns}.svc.cluster.local</code></td><td><code>postgres-0.postgres-hl.default.svc.cluster.local</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Do you need a database on Kubernetes?
+&#9500;&#9472;&#9472; Can you use a managed database (RDS, Cloud SQL, Azure DB)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use managed database. Simplest, most reliable option.
+&#9474;   &#9492;&#9472;&#9472; NO (on-prem, air-gapped, cost, or data sovereignty) &#8595;
+&#9500;&#9472;&#9472; Team has 3+ engineers with Kubernetes experience?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use a database operator (CloudNativePG, Percona, Crunchy PGO)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Database is PostgreSQL?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; CloudNativePG (simplest operator, CNCF, strong community)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Database is MySQL?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Percona Operator for MySQL (Galera-based HA)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Database is MongoDB?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Percona Operator for MongoDB (replica set + sharding)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Need fine-grained control or learning exercise?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Manual StatefulSet (see Step-by-Step Guide)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; CloudNativePG for PostgreSQL, Percona for MySQL/MongoDB.</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create a headless Service</h3>
+  <p>The headless Service provides stable DNS names for each Pod. Without it, StatefulSet Pods cannot be individually addressed. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-hl
+spec:
+  clusterIP: None          # Headless
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      name: postgres</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get svc postgres-hl</code> &#8594; should show <code>CLUSTER-IP: None</code></p>
+
+  <h3>2. Create a Secret for database credentials</h3>
+  <p>Never store passwords in plain text in StatefulSet YAML. Use Kubernetes Secrets. [<a href="https://devopscube.com/deploy-postgresql-statefulset/">src5</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "changeme-use-strong-password"
+  POSTGRES_USER: "postgres"
+  POSTGRES_DB: "appdb"</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get secret postgres-secret</code> &#8594; <code>Opaque</code> type with 3 data keys</p>
+
+  <h3>3. Deploy the StatefulSet with volumeClaimTemplates</h3>
+  <p>Creates a PostgreSQL instance with persistent storage. Each replica gets its own PVC. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src1</a>] [<a href="https://devopscube.com/deploy-postgresql-statefulset/">src5</a>]</p>
+  <pre><code class="language-yaml">apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres-hl
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          # ... (see full YAML in Code Examples)
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 10Gi</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get statefulset postgres</code> &#8594; <code>READY: 1/1</code>; <code>kubectl get pvc</code> &#8594; <code>postgres-data-postgres-0</code> Bound</p>
+
+  <h3>4. Configure init containers for replica bootstrap</h3>
+  <p>For primary/replica setups, use init containers to determine the Pod's role based on its ordinal index. [<a href="https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/">src2</a>]</p>
+  <pre><code class="language-yaml">initContainers:
+  - name: init-role
+    image: postgres:16-alpine
+    command: ['sh', '-c']
+    args:
+      - |
+        ORDINAL=$(echo $HOSTNAME | rev | cut -d'-' -f1 | rev)
+        if [ "$ORDINAL" = "0" ]; then
+          echo "primary" &gt; /config/role
+        else
+          echo "replica" &gt; /config/role
+        fi</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl exec postgres-0 -- cat /config/role</code> &#8594; <code>primary</code></p>
+
+  <h3>5. Set up a backup CronJob</h3>
+  <p>Use the database's native backup tool in a CronJob, not filesystem snapshots. [<a href="https://thenewstack.io/a-practical-guide-to-kubernetes-stateful-backup-and-recovery/">src7</a>]</p>
+  <pre><code class="language-yaml">apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+spec:
+  schedule: "0 2 * * *"   # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: postgres:16-alpine
+              command: ['sh', '-c']
+              args:
+                - pg_dump -h postgres-0.postgres-hl -U postgres -Fc appdb &gt; /backup/$(date +%Y%m%d).dump</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get cronjob postgres-backup</code> &#8594; schedule <code>0 2 * * *</code></p>
+
+  <h3>6. Deploy with a database operator (recommended for production)</h3>
+  <p>For production PostgreSQL, install CloudNativePG and declare a Cluster resource. [<a href="https://cloudnative-pg.io/">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: app-db
+spec:
+  instances: 3
+  storage:
+    size: 20Gi
+    storageClass: standard
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://my-bucket/backups</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get cluster app-db</code> &#8594; <code>Phase: Cluster in healthy state</code></p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Complete PostgreSQL StatefulSet</h3>
+  <p>Full script: <a href="scripts/postgres-statefulset.yaml">postgres-statefulset.yaml</a> (48 lines)</p>
+  <pre><code class="language-yaml"># Input:  Kubernetes cluster with dynamic storage provisioner
+# Output: Single PostgreSQL instance with persistent storage
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres-hl
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 10Gi</code></pre>
+
+  <h3>YAML: CloudNativePG Cluster with Automated Backups</h3>
+  <pre><code class="language-yaml"># Input:  Kubernetes cluster with CloudNativePG operator installed
+# Output: 3-node PostgreSQL HA cluster with S3 backups + PITR
+
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: production-db
+spec:
+  instances: 3
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "512MB"
+  storage:
+    size: 50Gi
+    storageClass: fast-ssd
+  backup:
+    retentionPolicy: "30d"
+    barmanObjectStore:
+      destinationPath: s3://backups/production-db</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using a Deployment for a database with replication</h3>
+  <pre><code class="language-yaml"># BAD -- Deployment gives random Pod names, no stable DNS for replication
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+      volumes:
+        - name: data
+          emptyDir: {}  # Data lost on Pod restart!</code></pre>
+
+  <h3>Correct: Using a StatefulSet with persistent volumes</h3>
+  <pre><code class="language-yaml"># GOOD -- StatefulSet provides stable identity and persistent storage
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres-hl
+  replicas: 3
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi</code></pre>
+
+  <h3>Wrong: Using a regular ClusterIP Service for StatefulSet</h3>
+  <pre><code class="language-yaml"># BAD -- ClusterIP Service load-balances; replicas can't address each other
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+  # Missing clusterIP: None -- creates a load-balanced Service</code></pre>
+
+  <h3>Correct: Using a headless Service</h3>
+  <pre><code class="language-yaml"># GOOD -- headless Service creates individual DNS records per Pod
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-hl
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: 5432</code></pre>
+
+  <h3>Wrong: Backing up a database by copying PVC files</h3>
+  <pre><code class="language-bash"># BAD -- copying data directory while database is running produces corrupt backup
+kubectl cp postgres-0:/var/lib/postgresql/data ./backup/
+# WAL files may be inconsistent; you'll get a corrupted restore</code></pre>
+
+  <h3>Correct: Using the database's native dump tool</h3>
+  <pre><code class="language-bash"># GOOD -- pg_dump creates a consistent logical backup
+kubectl exec postgres-0 -- pg_dump -U postgres -Fc appdb &gt; backup.dump
+
+# GOOD -- for physical backup, use pg_basebackup
+kubectl exec postgres-0 -- pg_basebackup -D /tmp/backup -Ft -z -P</code></pre>
+
+  <h3>Wrong: Hardcoding passwords in StatefulSet YAML</h3>
+  <pre><code class="language-yaml"># BAD -- credentials visible in version control and kubectl describe
+env:
+  - name: POSTGRES_PASSWORD
+    value: "mysecretpassword"</code></pre>
+
+  <h3>Correct: Using Kubernetes Secrets</h3>
+  <pre><code class="language-yaml"># GOOD -- reference Secret for credentials
+envFrom:
+  - secretRef:
+      name: postgres-secret</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>volumeClaimTemplates immutability</strong>: You cannot resize or change StorageClass after StatefulSet creation. Fix: Create a new StatefulSet with updated templates, migrate data, then delete the old one. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src1</a>]</li>
+    <li><strong>Orphaned PVCs after scale-down</strong>: Scaling from 3 to 1 replica leaves PVCs for Pod-1 and Pod-2 allocated and billed. Fix: Manually delete PVCs: <code>kubectl delete pvc postgres-data-postgres-1 postgres-data-postgres-2</code>. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src1</a>]</li>
+    <li><strong>PGDATA subdirectory requirement</strong>: PostgreSQL requires PGDATA to be a subdirectory, not the volume root. Fix: Set <code>PGDATA=/var/lib/postgresql/data/pgdata</code> and mount volume at <code>/var/lib/postgresql/data</code>. [<a href="https://devopscube.com/deploy-postgresql-statefulset/">src5</a>]</li>
+    <li><strong>Missing readiness probes</strong>: Without readiness probes, Kubernetes considers Pods ready immediately, causing replication to start before initialization. Fix: Add <code>pg_isready</code> or <code>mysqladmin ping</code> as readiness probe. [<a href="https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/">src2</a>]</li>
+    <li><strong>StorageClass mismatch</strong>: Using <code>ReadWriteMany</code> when the storage provider only supports <code>ReadWriteOnce</code> causes PVC binding failures. Fix: Check <code>kubectl get storageclass</code> and match access modes. [<a href="https://devopscube.com/deploy-postgresql-statefulset/">src5</a>]</li>
+    <li><strong>Pod stuck in Pending after node failure</strong>: If a node fails and the PV uses local storage, the Pod cannot reschedule. Fix: Use network-attached storage (EBS, Ceph, GCE PD) for production databases. [<a href="https://thenewstack.io/a-practical-guide-to-kubernetes-stateful-backup-and-recovery/">src7</a>]</li>
+    <li><strong>Missing Pod Disruption Budgets</strong>: Without a PDB, cluster upgrades can take down all database Pods simultaneously. Fix: Create a PDB with <code>minAvailable: 1</code> for database StatefulSets. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src1</a>]</li>
+    <li><strong>Operator version drift</strong>: Running an outdated operator version misses critical security patches and bug fixes. Fix: Pin operator versions and include them in your upgrade runbook. [<a href="https://www.percona.com/blog/kubernetes-operators-compared">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># List StatefulSet status and ready replicas
+kubectl get statefulset postgres -o wide
+
+# Check PVC status (should all be Bound)
+kubectl get pvc -l app=postgres
+
+# View Pod DNS resolution from inside the cluster
+kubectl run -it --rm debug --image=busybox -- nslookup postgres-0.postgres-hl
+
+# Check database readiness from Pod
+kubectl exec postgres-0 -- pg_isready -U postgres
+
+# View StatefulSet events (useful for debugging stuck rollouts)
+kubectl describe statefulset postgres
+
+# Check storage class availability
+kubectl get storageclass
+
+# View Pod logs for database startup errors
+kubectl logs postgres-0 --tail=50
+
+# Check PV reclaim policy (should be Retain for production)
+kubectl get pv -o custom-columns=NAME:.metadata.name,RECLAIM:.spec.persistentVolumeReclaimPolicy,STATUS:.status.phase
+
+# Check operator status (CloudNativePG)
+kubectl get cluster -A
+kubectl get pods -n cnpg-system</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+
+  <h3>Kubernetes StatefulSet Features</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">K8s Version</th><th scope="col">Feature</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1.9+</td><td>StatefulSet API</td><td>GA (apps/v1)</td><td>Stable since 2017</td></tr>
+      <tr><td>1.24+</td><td>PVC auto-deletion</td><td>Beta</td><td>StatefulSetAutoDeletePVC feature gate</td></tr>
+      <tr><td>1.25+</td><td>minReadySeconds</td><td>GA</td><td>Pod must be ready for N seconds</td></tr>
+      <tr><td>1.26+</td><td>Start ordinal</td><td>Beta</td><td>Custom starting ordinal index</td></tr>
+      <tr><td>1.27+</td><td>PVC resize for StatefulSets</td><td>Stable</td><td>Expand PVCs without recreation</td></tr>
+      <tr><td>1.31+</td><td>Start ordinal</td><td>GA</td><td>Custom ordinal ranges fully stable</td></tr>
+      <tr><td>1.31+</td><td>maxUnavailable for RollingUpdate</td><td>Beta</td><td>Parallel rolling updates</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Database Operators</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Operator</th><th scope="col">Latest Version</th><th scope="col">Min K8s</th><th scope="col">Database Support</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CloudNativePG</td><td>1.25.x</td><td>1.27+</td><td>PostgreSQL 12-17</td></tr>
+      <tr><td>Percona Operator PG</td><td>2.5.x</td><td>1.27+</td><td>PostgreSQL 13-17</td></tr>
+      <tr><td>Percona Operator MySQL</td><td>1.16.x</td><td>1.26+</td><td>MySQL 8.0 (PXC)</td></tr>
+      <tr><td>Percona Operator MongoDB</td><td>1.18.x</td><td>1.26+</td><td>MongoDB 6.0-8.0</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Database requires stable Pod identity for primary/replica topology</td><td>Application is stateless (web servers, API gateways)</td><td>Deployment</td></tr>
+      <tr><td>Need ordered startup (primary before replicas)</td><td>Database can tolerate random Pod names</td><td>Deployment with PVC</td></tr>
+      <tr><td>Per-Pod persistent storage is required</td><td>All replicas share the same data volume</td><td>Deployment + single PVC</td></tr>
+      <tr><td>Running on-prem or air-gapped (no managed DB option)</td><td>Cloud provider offers managed database</td><td>Managed database service</td></tr>
+      <tr><td>Dev/test environment needing realistic database setup</td><td>Production DB needing automated failover and PITR</td><td>Database operator (CloudNativePG, Percona)</td></tr>
+      <tr><td>Learning Kubernetes stateful workloads</td><td>Team lacks Kubernetes operational expertise</td><td>Managed database service</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>StatefulSet PVC auto-deletion (<code>persistentVolumeClaimRetentionPolicy</code>) is Beta as of Kubernetes 1.31 -- do not rely on it in production without testing; the default behavior is to retain PVCs</li>
+    <li>CloudNativePG does NOT use StatefulSets internally -- it manages Pods directly for finer control over failover; understanding StatefulSets is still essential for other databases and concepts</li>
+    <li>volumeClaimTemplates storage size can be expanded (since K8s 1.27) only if the StorageClass has <code>allowVolumeExpansion: true</code> -- shrinking is never supported</li>
+    <li>Running databases on Kubernetes adds operational complexity; for teams without dedicated platform engineers, managed database services are usually more cost-effective</li>
+    <li>Pod Disruption Budgets (PDB) are critical for database StatefulSets -- without them, cluster upgrades may simultaneously evict all database Pods</li>
+    <li>StatefulSet rolling updates proceed in reverse ordinal order (highest to lowest), which means replicas update before the primary -- verify your replication topology handles this correctly</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/k8s-deployment-service-ingress/2026" data-relationship="depends_on">Kubernetes Deployment, Service &amp; Ingress Basics</a>
+    <a href="/software/devops/k8s-hpa/2026" data-relationship="related_to">Kubernetes Horizontal Pod Autoscaler</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

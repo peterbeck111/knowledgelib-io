@@ -1,0 +1,28 @@
+START
+├── Query uses only equality (=)?
+│   ├── YES → Single column?
+│   │   ├── YES → Hash index (PG) or B-tree (MySQL/SQL Server)
+│   │   └── NO → Composite B-tree index (columns in selectivity order)
+│   └── NO ↓
+├── Query uses range (>, <, BETWEEN) or ORDER BY?
+│   ├── YES → B-tree index (range column last in composite)
+│   └── NO ↓
+├── Column is JSONB, array, or tsvector?
+│   ├── YES → GIN index (PostgreSQL)
+│   └── NO ↓
+├── Column is geometry/geography or range type?
+│   ├── YES → GiST index (PostgreSQL) or spatial index (MySQL/SQL Server)
+│   └── NO ↓
+├── Data is append-only / time-series with physical sort order?
+│   ├── YES → BRIN index (PostgreSQL) — 1000x smaller than B-tree
+│   └── NO ↓
+├── Only a small fraction of rows match your filter?
+│   ├── YES → Partial index (WHERE active = true)
+│   └── NO ↓
+├── Query reads many columns but only filters on few?
+│   ├── YES → Covering index (INCLUDE extra columns)
+│   └── NO ↓
+├── Workload is analytical (aggregations on millions of rows)?
+│   ├── YES → Columnstore index (SQL Server)
+│   └── NO ↓
+└── DEFAULT → B-tree index on the filtered/sorted column(s)

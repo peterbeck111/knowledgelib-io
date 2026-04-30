@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Docker Compose Redis Cluster: Standalone, Sentinel | knowledgelib.io</title>
+  <meta name="description" content="Complete Docker Compose reference for Redis deployments: Standalone, Sentinel (HA), and Cluster (sharding) modes with docker-compose.yml examples,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/docker-redis-cluster/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Docker Compose Redis Cluster: Standalone, Sentinel | knowledgelib.io">
+  <meta property="og:description" content="Complete Docker Compose reference for Redis deployments: Standalone, Sentinel (HA), and Cluster (sharding) modes with docker-compose.yml examples, redis.conf configs, persistence setup, and connection code for Python and Node.js. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/docker-redis-cluster/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Docker Compose Redis Cluster: Standalone, Sentinel | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Docker Compose reference for Redis deployments: Standalone, Sentinel (HA), and Cluster (sharding) modes with docker-compose.yml examples, redis.conf configs, persistence setup, and connection code for Python and Node.js. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Docker Redis Cluster">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Docker Compose reference: Redis Cluster">
+  <meta name="ai:aliases" content="Redis Cluster docker compose setup; docker compose redis sentinel configuration; redis cluster 6 nodes docker; redis high availability docker compose; redis standalone vs sentinel vs cluster docker; docker redis persistence AOF RDB; redis cluster NAT docker networking; redis-cli --cluster create docker">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/docker-redis-cluster/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="deployment_mode,persistence_need">
+  <meta name="ai:constraints" content="Redis Cluster requires MINIMUM 3 master nodes; Both data port AND cluster bus port (port+10000) MUST be accessible; Does NOT support NAT by default; NEVER use default Docker bridge network; cluster-config-file MUST persist via volumes; Multi-key ops only work in same hash slot">
+  <meta name="ai:skip_this_unit_if" content="Need simple Redis cache → use standalone docker run redis:7.4-alpine; Need Redis modules in cluster → use redis/redis-stack-server image; Using managed Redis (ElastiCache, Memorystore) → refer to cloud provider docs">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Docker Compose Redis Cluster: Standalone, Sentinel & Cluster Modes",
+    "headline": "Docker Compose Redis Cluster: Standalone, Sentinel & Cluster Modes",
+    "description": "Complete Docker Compose reference for Redis deployments covering three modes: Standalone, Sentinel (high availability with automatic failover), and Cluster (sharding with 16384 hash slots). Includes docker-compose.yml files, redis.conf configurations, persistence setup (RDB/AOF), and client connection examples for Python and Node.js.",
+    "keywords": ["Docker Compose", "Redis Cluster", "Redis Sentinel", "Redis standalone", "docker-compose.yml", "redis.conf", "AOF persistence", "RDB persistence", "hash slots", "high availability"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Redis 7.4+, Docker Compose v2, Docker Engine 20.10+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Scale with Redis Cluster",
+        "url": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Redis persistence",
+        "url": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "High availability with Redis Sentinel",
+        "url": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "redis - Official Image",
+        "url": "https://hub.docker.com/_/redis"
+      },
+      {
+        "@type": "WebPage",
+        "name": "bitnami/redis-cluster - Docker Image",
+        "url": "https://hub.docker.com/r/bitnami/redis-cluster/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Redis Solutions: Standalone vs Sentinel vs Cluster",
+        "url": "https://medium.com/hepsiburadatech/redis-solutions-standalone-vs-sentinel-vs-cluster-f46e703307a9"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Use the Redis Docker Official Image",
+        "url": "https://www.docker.com/blog/how-to-use-the-redis-docker-official-image/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Docker Compose Redis Cluster: Standalone, Sentinel & Cluster Modes",
+    "description": "Structured knowledge unit covering Docker Compose configurations for Redis Standalone, Sentinel, and Cluster deployments with persistence options, networking setup, and client connection examples.",
+    "keywords": ["Docker Compose", "Redis Cluster", "Redis Sentinel", "Redis persistence", "docker-compose.yml", "redis.conf", "AOF", "RDB", "hash slots"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Redis Ltd"},
+      {"@type": "Organization", "name": "Docker Inc"},
+      {"@type": "Organization", "name": "Bitnami (VMware)"},
+      {"@type": "Organization", "name": "Hepsiburada Tech"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Docker Redis Cluster" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Docker Compose reference: Redis Cluster",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Redis Cluster docker compose setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "docker compose redis sentinel configuration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "redis cluster 6 nodes docker",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "redis high availability docker compose",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "redis standalone vs sentinel vs cluster docker",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Docker Compose Redis Cluster: Standalone, Sentinel &amp; Cluster Modes</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Docker Compose reference: Redis Cluster</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/docker-redis-cluster/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Redis offers three deployment modes in Docker Compose -- Standalone (simplest), Sentinel (HA with automatic failover), and Cluster (sharding + HA) -- choose based on data size, availability needs, and whether you need horizontal write scaling.</li>
+    <li><strong>Key tool/command</strong>: <code>redis-cli --cluster create node1:6379 node2:6379 node3:6379 node4:6379 node5:6379 node6:6379 --cluster-replicas 1</code></li>
+    <li><strong>Watch out for</strong>: Docker's default bridge network breaks Redis Cluster node discovery -- use a user-defined bridge network with <code>cluster-announce-ip</code> or host networking.</li>
+    <li><strong>Works with</strong>: Redis 7.0+ (recommended 7.4+), Docker Compose v2, Docker Engine 20.10+. All examples use <code>redis:7.4-alpine</code>.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Redis Cluster requires a MINIMUM of 3 master nodes -- fewer masters cannot form a quorum for failover</li>
+    <li>Both the data port (default 6379) AND cluster bus port (data port + 10000) MUST be accessible between all nodes</li>
+    <li>Redis Cluster does NOT support NATted environments by default -- use host networking or cluster-announce-ip/port directives</li>
+    <li>NEVER use the default Docker bridge network for Redis Cluster -- use a user-defined bridge or host networking</li>
+    <li>cluster-config-file (nodes.conf) MUST persist across container restarts via Docker volumes</li>
+    <li>Multi-key operations (MGET, MSET, transactions) only work on keys in the same hash slot -- use hash tags {tag} to co-locate</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Redis Deployment Modes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Mode</th><th scope="col">Nodes</th><th scope="col">HA</th><th scope="col">Sharding</th><th scope="col">Max Data</th><th scope="col">Write Scaling</th><th scope="col">Use Case</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Standalone</td><td>1</td><td>No</td><td>No</td><td>Single node RAM</td><td>No</td><td>Dev, testing, caching</td></tr>
+      <tr><td>Replication</td><td>1 master + N replicas</td><td>Manual failover</td><td>No</td><td>Single node RAM</td><td>Read-only replicas</td><td>Read scaling, backups</td></tr>
+      <tr><td>Sentinel</td><td>1 master + N replicas + 3 sentinels</td><td>Auto failover</td><td>No</td><td>Single node RAM</td><td>No</td><td>Production HA, &lt;100GB</td></tr>
+      <tr><td>Cluster</td><td>3+ masters + replicas</td><td>Auto failover</td><td>Yes (16384 hash slots)</td><td>Aggregate RAM</td><td>Yes</td><td>Production, &gt;100GB, high throughput</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Docker Compose Service Configuration</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Service</th><th scope="col">Image</th><th scope="col">Ports</th><th scope="col">Volumes</th><th scope="col">Key Config</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Redis Standalone</td><td><code>redis:7.4-alpine</code></td><td><code>6379:6379</code></td><td><code>redis-data:/data</code></td><td><code>appendonly yes</code></td></tr>
+      <tr><td>Redis Master (Sentinel)</td><td><code>redis:7.4-alpine</code></td><td><code>6379:6379</code></td><td><code>master-data:/data</code></td><td><code>appendonly yes</code></td></tr>
+      <tr><td>Redis Replica (Sentinel)</td><td><code>redis:7.4-alpine</code></td><td><code>6380:6379</code></td><td><code>replica-data:/data</code></td><td><code>--replicaof master 6379</code></td></tr>
+      <tr><td>Redis Sentinel</td><td><code>redis:7.4-alpine</code></td><td><code>26379:26379</code></td><td><code>sentinel-data:/data</code></td><td><code>sentinel monitor mymaster master 6379 2</code></td></tr>
+      <tr><td>Redis Cluster Node</td><td><code>redis:7.4-alpine</code></td><td><code>6371-6376:6379</code></td><td><code>node-N-data:/data</code></td><td><code>cluster-enabled yes</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Persistence Modes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Strategy</th><th scope="col">Config</th><th scope="col">Data Loss Risk</th><th scope="col">Performance</th><th scope="col">Recommended For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>None</td><td>Default</td><td>Total on restart</td><td>Fastest</td><td>Cache-only</td></tr>
+      <tr><td>RDB only</td><td><code>save 60 1000</code></td><td>Minutes between snapshots</td><td>Fast</td><td>Backups, cache with recovery</td></tr>
+      <tr><td>AOF everysec</td><td><code>appendonly yes</code>, <code>appendfsync everysec</code></td><td>~1 second</td><td>Good</td><td>Most production workloads</td></tr>
+      <tr><td>AOF always</td><td><code>appendonly yes</code>, <code>appendfsync always</code></td><td>None</td><td>Slow</td><td>Financial/critical data</td></tr>
+      <tr><td>RDB + AOF</td><td>Both enabled</td><td>~1 second</td><td>Good</td><td>PostgreSQL-level durability</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What do you need from Redis?
+&#9500;&#9472;&#9472; Just a cache for development/testing?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Standalone mode (1 container, simplest setup)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Need high availability (auto-failover)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8595;
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Data fits in single node RAM (&lt;100GB)?
+&#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Sentinel mode (1 master + 2 replicas + 3 sentinels)
+&#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Need to shard data or scale writes?
+&#9474;   &#9474;       &#9500;&#9472;&#9472; YES &#8594; Use Cluster mode (6+ nodes: 3 masters + 3 replicas)
+&#9474;   &#9474;       &#9492;&#9472;&#9472; NO &#8594; Use Sentinel mode
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Need read scaling only?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Replication (1 master + N replicas, no Sentinel)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Start with Standalone, add Sentinel when uptime matters</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Set up Redis Standalone with Docker Compose</h3>
+  <p>The simplest mode: a single Redis instance with optional persistence. Ideal for development and testing. [<a href="https://hub.docker.com/_/redis">src4</a>]</p>
+  <pre><code class="language-yaml"># docker-compose.yml -- Redis Standalone
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: redis-standalone
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: &gt;
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --save 60 1000
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis-data:</code></pre>
+  <p><strong>Verify</strong>: <code>docker compose up -d &amp;&amp; docker exec redis-standalone redis-cli ping</code> &#8594; expected: <code>PONG</code></p>
+
+  <h3>2. Set up Redis Sentinel for high availability</h3>
+  <p>Sentinel monitors a master and its replicas, automatically promoting a replica if the master fails. Minimum: 1 master + 2 replicas + 3 sentinels. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/">src3</a>]</p>
+  <pre><code class="language-conf"># sentinel.conf
+sentinel monitor mymaster redis-master 6379 2
+sentinel down-after-milliseconds mymaster 5000
+sentinel failover-timeout mymaster 10000
+sentinel parallel-syncs mymaster 1
+sentinel resolve-hostnames yes</code></pre>
+  <p>Full script: <a href="scripts/docker-compose-sentinel.yml">docker-compose-sentinel.yml</a> (53 lines)</p>
+  <p><strong>Verify</strong>: <code>docker exec redis-sentinel-1 redis-cli -p 26379 sentinel masters</code> &#8594; shows <code>mymaster</code> with status <code>ok</code></p>
+
+  <h3>3. Set up Redis Cluster (6 nodes)</h3>
+  <p>Redis Cluster distributes data across 3+ masters using 16,384 hash slots. Each master has a replica for failover. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/">src1</a>]</p>
+  <pre><code class="language-conf"># redis-cluster.conf (shared by all nodes)
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+appendonly yes
+appendfsync everysec
+save 60 1000
+maxmemory 256mb
+maxmemory-policy allkeys-lru</code></pre>
+  <p>Full script: <a href="scripts/docker-compose-cluster.yml">docker-compose-cluster.yml</a> (99 lines)</p>
+  <p><strong>Verify</strong>: <code>docker exec redis-node-1 redis-cli cluster info</code> &#8594; <code>cluster_state:ok</code>, <code>cluster_slots_assigned:16384</code></p>
+
+  <h3>4. Create the Redis Cluster</h3>
+  <p>After all 6 nodes are running, initialize the cluster topology. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/">src1</a>]</p>
+  <pre><code class="language-bash"># Create cluster with 3 masters + 3 replicas
+docker exec redis-node-1 redis-cli --cluster create \
+  redis-node-1:6379 redis-node-2:6379 redis-node-3:6379 \
+  redis-node-4:6379 redis-node-5:6379 redis-node-6:6379 \
+  --cluster-replicas 1 --cluster-yes</code></pre>
+  <p><strong>Verify</strong>: <code>docker exec redis-node-1 redis-cli --cluster check redis-node-1:6379</code> &#8594; <code>[OK] All 16384 slots covered</code></p>
+
+  <h3>5. Configure persistence for production</h3>
+  <p>Choose persistence based on durability requirements. Redis 7.0+ uses multi-part AOF with an appendonlydir directory. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/">src2</a>]</p>
+  <pre><code class="language-conf"># Production redis.conf -- RDB + AOF
+save 900 1
+save 300 10
+save 60 10000
+appendonly yes
+appendfsync everysec
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000</code></pre>
+  <p><strong>Verify</strong>: <code>docker exec redis-node-1 redis-cli info persistence</code> &#8594; check <code>aof_enabled:1</code>, <code>rdb_last_save_time</code> is recent</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Docker Compose: Redis Standalone with Custom Config</h3>
+  <pre><code class="language-yaml"># Input:  redis.conf mounted from host
+# Output: Redis instance with persistence and memory limits
+services:
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis-data:</code></pre>
+
+  <h3>Python: Connecting to Redis Cluster</h3>
+  <pre><code class="language-python"># Input:  Redis Cluster running on localhost ports 6371-6376
+# Output: Distributed key-value operations across cluster
+from redis.cluster import RedisCluster  # redis-py &gt;= 4.1.0
+
+rc = RedisCluster(
+    startup_nodes=[
+        {"host": "127.0.0.1", "port": 6371},
+        {"host": "127.0.0.1", "port": 6372},
+        {"host": "127.0.0.1", "port": 6373},
+    ],
+    decode_responses=True,
+)
+rc.set("user:{1001}:name", "Alice")    # Hash slot from {1001}
+rc.set("user:{1001}:email", "a@b.com") # Same slot
+print(rc.get("user:{1001}:name"))      # "Alice"</code></pre>
+
+  <h3>Node.js: Connecting to Redis Cluster</h3>
+  <pre><code class="language-javascript">// Input:  Redis Cluster running on localhost ports 6371-6376
+// Output: Distributed key-value operations across cluster
+import { createCluster } from 'redis';  // redis &gt;= 4.0.0
+
+const cluster = createCluster({
+  rootNodes: [
+    { url: 'redis://127.0.0.1:6371' },
+    { url: 'redis://127.0.0.1:6372' },
+    { url: 'redis://127.0.0.1:6373' },
+  ],
+});
+await cluster.connect();
+await cluster.set('user:{1001}:name', 'Alice');
+const name = await cluster.get('user:{1001}:name');
+console.log(name); // "Alice"
+await cluster.quit();</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using default bridge network for Redis Cluster</h3>
+  <pre><code class="language-yaml"># BAD -- default bridge network uses internal IPs unreachable between containers
+services:
+  redis-node-1:
+    image: redis:7.4-alpine
+    ports:
+      - "6371:6379"
+    # No custom network defined -- uses default bridge</code></pre>
+
+  <h3>Correct: Using a user-defined bridge network</h3>
+  <pre><code class="language-yaml"># GOOD -- user-defined bridge network enables DNS resolution by container name
+services:
+  redis-node-1:
+    image: redis:7.4-alpine
+    networks:
+      - redis-cluster
+
+networks:
+  redis-cluster:
+    driver: bridge</code></pre>
+
+  <h3>Wrong: No volume for cluster-config-file</h3>
+  <pre><code class="language-yaml"># BAD -- nodes.conf lost on container restart, cluster state corrupted
+services:
+  redis-node-1:
+    image: redis:7.4-alpine
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf
+    # No volume for /data -- nodes.conf is written to /data</code></pre>
+
+  <h3>Correct: Persistent volume for /data directory</h3>
+  <pre><code class="language-yaml"># GOOD -- nodes.conf and persistence files survive restarts
+services:
+  redis-node-1:
+    image: redis:7.4-alpine
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf
+    volumes:
+      - node1-data:/data
+
+volumes:
+  node1-data:</code></pre>
+
+  <h3>Wrong: Using MGET across different hash slots</h3>
+  <pre><code class="language-python"># BAD -- keys land on different slots, raises CrossSlotError
+rc.mget("user:1:name", "user:2:name", "user:3:name")
+# redis.exceptions.CrossSlotError</code></pre>
+
+  <h3>Correct: Using hash tags to co-locate keys</h3>
+  <pre><code class="language-python"># GOOD -- {user:1} ensures all keys go to the same hash slot
+rc.mget("{user:1}:name", "{user:1}:email", "{user:1}:role")
+# All keys share hash slot for {user:1}</code></pre>
+
+  <h3>Wrong: Exposing only client port in firewall</h3>
+  <pre><code class="language-yaml"># BAD -- cluster bus port (16379) blocked, nodes can't gossip
+services:
+  redis-node-1:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+    # Missing: port 16379 for cluster bus</code></pre>
+
+  <h3>Correct: Both ports accessible on user-defined network</h3>
+  <pre><code class="language-yaml"># GOOD -- all ports open between containers on user-defined network
+services:
+  redis-node-1:
+    image: redis:7.4-alpine
+    ports:
+      - "6371:6379"  # Client access from host only
+    networks:
+      - redis-cluster  # Port 16379 open within network</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>NAT breaks cluster discovery</strong>: Redis nodes advertise their container-internal IP, which is unreachable from the host or other networks. Fix: Use <code>cluster-announce-ip</code> and <code>cluster-announce-port</code> in redis.conf, or use <code>--net=host</code>. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/">src1</a>]</li>
+    <li><strong>nodes.conf not persisted</strong>: If the container restarts without a volume mount for <code>/data</code>, the node loses its cluster identity. Fix: Always mount a named volume to <code>/data</code> for every cluster node. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/">src1</a>]</li>
+    <li><strong>Cluster creation before all nodes ready</strong>: Running <code>redis-cli --cluster create</code> before all 6 nodes are healthy causes partial cluster formation. Fix: Add <code>depends_on</code> with healthchecks in docker-compose.yml, or wait with a script. [<a href="https://hub.docker.com/_/redis">src4</a>]</li>
+    <li><strong>Single-node "cluster"</strong>: Running only 1-2 masters. Redis Cluster needs a majority to elect a new master. Fix: Always use at least 3 masters (6 nodes with replicas). [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/">src1</a>]</li>
+    <li><strong>Port conflicts with multiple nodes</strong>: Assigning the same host port to multiple Redis containers. Fix: Map different host ports (6371-6376) or use <code>network_mode: host</code> with different <code>--port</code> values. [<a href="https://hub.docker.com/_/redis">src4</a>]</li>
+    <li><strong>Forgetting cluster-node-timeout</strong>: Default is 15000ms. In Docker networks, nodes may be marked as failed too slowly. Fix: Set <code>cluster-node-timeout 5000</code> for Docker environments. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/">src1</a>]</li>
+    <li><strong>AOF rewrite during cluster creation</strong>: Large AOF rewrites can block the event loop during cluster initialization. Fix: Disable AOF rewrite during initial data load, enable after cluster is stable. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/">src2</a>]</li>
+    <li><strong>Redis Cluster with Sentinel</strong>: Trying to use Sentinel to monitor a Redis Cluster. Sentinel is for standalone master-replica setups only. Fix: Choose one mode, not both. [<a href="https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check cluster health (from any node)
+docker exec redis-node-1 redis-cli cluster info
+
+# Verify all 16384 slots are assigned
+docker exec redis-node-1 redis-cli --cluster check redis-node-1:6379
+
+# List all cluster nodes and their roles
+docker exec redis-node-1 redis-cli cluster nodes
+
+# Check which slot a key belongs to
+docker exec redis-node-1 redis-cli cluster keyslot mykey
+
+# Check Sentinel status (Sentinel mode)
+docker exec redis-sentinel-1 redis-cli -p 26379 sentinel masters
+
+# Trigger manual failover on a replica
+docker exec redis-node-4 redis-cli cluster failover
+
+# Check persistence status
+docker exec redis-node-1 redis-cli info persistence
+
+# Check memory usage
+docker exec redis-node-1 redis-cli info memory
+
+# Test cluster write across all masters
+docker exec redis-node-1 redis-cli -c set test:key1 "hello"
+docker exec redis-node-1 redis-cli -c set test:key2 "world"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Docker Image</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Redis 8.0</td><td>Current</td><td>Unified modules into core, new ACL categories</td><td><code>redis:8.0-alpine</code></td></tr>
+      <tr><td>Redis 7.4</td><td>Stable</td><td>Hash field expiration, performance improvements</td><td><code>redis:7.4-alpine</code></td></tr>
+      <tr><td>Redis 7.2</td><td>Maintained</td><td>Cluster improvements, enhanced ACLs</td><td><code>redis:7.2-alpine</code></td></tr>
+      <tr><td>Redis 7.0</td><td>Maintained</td><td>Multi-part AOF, sharded pub/sub, CLUSTER SHARDS</td><td><code>redis:7.0-alpine</code></td></tr>
+      <tr><td>Redis 6.2</td><td>EOL</td><td>ACL improvements, GETDEL/GETEX commands</td><td><code>redis:6.2-alpine</code></td></tr>
+      <tr><td>Redis 4.0</td><td>EOL</td><td>cluster-announce-ip/port (NAT support), modules API</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Docker Compose</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>V2 (docker compose)</td><td>Current</td><td>Built into Docker CLI, YAML v3 syntax</td></tr>
+      <tr><td>V1 (docker-compose)</td><td>Deprecated</td><td>Standalone binary, removed in Docker 25+</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Need sharding across multiple nodes (data &gt; single node RAM)</td><td>Data fits in a single Redis instance</td><td>Standalone or Sentinel</td></tr>
+      <tr><td>Need automatic failover AND horizontal write scaling</td><td>Only need HA without sharding</td><td>Sentinel (simpler ops)</td></tr>
+      <tr><td>High-throughput writes exceeding single-node capacity</td><td>Latency-sensitive multi-key transactions across data</td><td>Single-instance Redis for atomicity</td></tr>
+      <tr><td>Building microservices with independent keyspaces</td><td>Running on a single Docker host with limited resources</td><td>Standalone with persistence</td></tr>
+      <tr><td>Production system requiring zero-downtime upgrades</td><td>Development or testing environment</td><td>Standalone is sufficient</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Redis Cluster uses asynchronous replication -- writes acknowledged before replicated to replicas, so data loss is possible during master failure</li>
+    <li>The WAIT command can enforce synchronous replication but does not guarantee strong consistency -- in a network partition, acknowledged writes can still be lost</li>
+    <li>Multi-key operations (MGET, MSET, EXEC transactions, Lua scripts) require all keys to be in the same hash slot -- use hash tags <code>{tag}</code> to co-locate related keys</li>
+    <li>Docker Desktop on macOS/Windows runs containers in a Linux VM, adding a network layer that can complicate <code>cluster-announce-ip</code> settings</li>
+    <li>Bitnami Redis Cluster images simplify setup but use different config paths (<code>/opt/bitnami/redis/etc/</code>) and environment variables -- do not mix documentation</li>
+    <li>Redis 8.0 changed ACL categories to include module commands -- existing ACL configurations may need updates when upgrading</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/docker-compose-networking/2026" data-relationship="related_to">Docker Compose Networking Guide</a>
+    <a href="/software/devops/redis-sentinel-setup/2026" data-relationship="often_confused_with">Redis Sentinel Setup</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

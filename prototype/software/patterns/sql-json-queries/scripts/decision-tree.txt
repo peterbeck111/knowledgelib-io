@@ -1,0 +1,40 @@
+START
+├── Which database?
+│   ├── PostgreSQL ↓
+│   │   ├── Column type is json (not jsonb)?
+│   │   │   ├── YES → ALTER TABLE t ALTER COLUMN data TYPE jsonb USING data::jsonb
+│   │   │   │         Then proceed with jsonb operations below
+│   │   │   └── NO (already jsonb) ↓
+│   │   ├── Need to extract a single value?
+│   │   │   ├── As text → data->>'key' or data #>> '{nested,path}'
+│   │   │   └── As JSON → data->'key' or data #> '{nested,path}'
+│   │   ├── Need to filter rows by JSON content?
+│   │   │   ├── Exact key-value match → WHERE data @> '{"status":"active"}'::jsonb
+│   │   │   │   (add GIN index with jsonb_path_ops for performance)
+│   │   │   ├── Complex filter → WHERE jsonb_path_exists(data, '$.items[*] ? (@.price > $min)')
+│   │   │   └── Key existence → WHERE data ? 'email'
+│   │   ├── Need to flatten arrays to rows?
+│   │   │   ├── PG 12+ → jsonb_path_query(data, '$.items[*]')
+│   │   │   └── Any version → jsonb_array_elements(data->'items')
+│   │   └── Need to index for performance?
+│   │       ├── Query varied keys → GIN (data) with jsonb_ops (default)
+│   │       ├── Only containment queries → GIN (data jsonb_path_ops) — 2-3x smaller
+│   │       └── Always filter same key → B-tree on (data->>'status') — fastest for single key
+│   │
+│   └── MySQL ↓
+│       ├── Need to extract a value?
+│       │   ├── As text → data->>'$.key' or JSON_UNQUOTE(JSON_EXTRACT(data, '$.key'))
+│       │   └── As JSON → data->'$.key' or JSON_EXTRACT(data, '$.key')
+│       ├── Need to filter rows by JSON content?
+│       │   ├── Exact match → WHERE JSON_EXTRACT(data, '$.status') = '"active"'
+│       │   │   (or create generated column + index for performance)
+│       │   ├── Array contains → WHERE 'tag' MEMBER OF(data->'$.tags')
+│       │   │   (requires multi-valued index, MySQL 8.0.17+)
+│       │   └── Path exists → WHERE JSON_CONTAINS_PATH(data, 'one', '$.email')
+│       ├── Need to flatten arrays to rows?
+│       │   └── JSON_TABLE(data, '$.items[*]' COLUMNS(name VARCHAR(100) PATH '$.name'))
+│       └── Need to index for performance?
+│           ├── Scalar value → Generated column + B-tree index
+│           ├── Array search → Multi-valued index (MySQL 8.0.17+)
+│           └── Multiple keys → Multiple generated columns, each indexed
+└── DEFAULT → Start with PostgreSQL jsonb if choosing a database — superior JSON support

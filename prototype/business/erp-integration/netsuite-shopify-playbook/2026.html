@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>NetSuite-Shopify Integration Playbook | knowledgelib.io</title>
+  <meta name="description" content="NetSuite-Shopify integration playbook: order import, inventory sync, fulfillment pushback, returns/refunds.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/netsuite-shopify-playbook/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="NetSuite-Shopify Integration Playbook | knowledgelib.io">
+  <meta property="og:description" content="NetSuite-Shopify integration playbook: order import, inventory sync, fulfillment pushback, returns/refunds. Rate limits, field mapping, auth, anti-patterns. 8 sources, all cited.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/netsuite-shopify-playbook/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NetSuite-Shopify Integration Playbook | knowledgelib.io">
+  <meta name="twitter:description" content="NetSuite-Shopify integration playbook: order import, inventory sync, fulfillment pushback, returns/refunds. Rate limits, field mapping, auth, anti-patterns. 8 sources, all cited.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/netsuite-shopify-playbook">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you integrate NetSuite with Shopify - the highest-volume SMB integration pattern?">
+  <meta name="ai:aliases" content="NetSuite Shopify integration playbook; How to sync Shopify orders to NetSuite; Shopify NetSuite inventory sync real-time; Celigo NetSuite Shopify connector setup">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/netsuite-shopify-playbook/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="current">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Oracle NetSuite (2025.1); Shopify (Admin API 2025-01); Celigo integrator.io (Current)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction,middleware">
+  <meta name="ai:constraints" content="NetSuite concurrency: 5-55 concurrent requests account-wide; Shopify REST: 40 req/min (Plus: 400/min); Shopify GraphQL: 50 pts/s (Plus: 500 pts/s); SKU case-sensitive match required; Shopify webhooks at-least-once delivery; Single tax engine required">
+  <meta name="ai:skip_this_unit_if" content="Need NetSuite-only API reference → business/erp-integration/netsuite-suitetalk-api-capabilities/2026; Need Shopify with different ERP → business/erp-integration/ecommerce-to-erp/2026; Need Salesforce-NetSuite CRM integration → business/erp-integration/salesforce-netsuite-integration/2026">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "NetSuite-Shopify Integration Playbook",
+    "headline": "NetSuite-Shopify Integration Playbook",
+    "description": "Complete integration playbook for Oracle NetSuite and Shopify: order import, inventory sync, fulfillment pushback, returns/refunds. Covers API surfaces (SuiteTalk REST/SOAP, Shopify REST/GraphQL/Webhooks), rate limits, authentication (TBA + OAuth), field mapping, error handling, and anti-patterns.",
+    "keywords": ["NetSuite", "Shopify", "ERP integration", "ecommerce integration", "order sync", "inventory sync", "Celigo", "SuiteTalk"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Oracle NetSuite 2025.1, Shopify Admin API 2025-01",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "NetSuite SuiteTalk REST Web Services API",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_1540391670.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Shopify Admin API Rate Limits",
+        "url": "https://shopify.dev/docs/api/usage/limits"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite Shopify Integration: Complete Technical Guide",
+        "url": "https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Shopify-NetSuite Integration: Complete Step-by-Step Guide",
+        "url": "https://www.anchorgroup.tech/blog/integrate-shopify-netsuite"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Celigo Shopify-NetSuite Integration App Overview",
+        "url": "https://docs.celigo.com/hc/en-us/articles/228207227-Shopify-NetSuite-integration-app-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite API Rate Limits",
+        "url": "https://coefficient.io/netsuite-api/netsuite-api-rate-limits"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Setting Up Real-Time Order Sync for Shopify in NetSuite Connector",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_163723984857.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite Integration Concurrency Limits - 2025",
+        "url": "https://www.katoomi.com/netsuite-integration-concurrency-limits-2025/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "NetSuite-Shopify Integration Playbook",
+    "description": "Integration playbook covering order import, inventory sync, fulfillment pushback, and returns/refunds between Oracle NetSuite and Shopify, with API rate limits, field mapping, authentication, and anti-patterns.",
+    "keywords": ["NetSuite", "Shopify", "ERP integration", "ecommerce", "order sync", "inventory management"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "Shopify"},
+      {"@type": "Organization", "name": "Celigo"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "NetSuite-Shopify Integration Playbook" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you integrate NetSuite with Shopify - the highest-volume SMB integration pattern?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Shopify handles storefront/checkout; NetSuite is the financial/inventory system of record. Orders flow Shopify → NetSuite as Sales Orders; inventory flows NetSuite → Shopify near-real-time; fulfillment status pushes back to Shopify with tracking numbers. Celigo is the dominant iPaaS for this pair."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "NetSuite Shopify integration playbook",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Shopify handles storefront/checkout; NetSuite is the financial/inventory system of record. Orders flow Shopify → NetSuite as Sales Orders; inventory flows NetSuite → Shopify near-real-time; fulfillment status pushes back to Shopify with tracking numbers. Celigo is the dominant iPaaS for this pair."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to sync Shopify orders to NetSuite",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Shopify handles storefront/checkout; NetSuite is the financial/inventory system of record. Orders flow Shopify → NetSuite as Sales Orders; inventory flows NetSuite → Shopify near-real-time; fulfillment status pushes back to Shopify with tracking numbers. Celigo is the dominant iPaaS for this pair."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Shopify NetSuite inventory sync real-time",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Shopify handles storefront/checkout; NetSuite is the financial/inventory system of record. Orders flow Shopify → NetSuite as Sales Orders; inventory flows NetSuite → Shopify near-real-time; fulfillment status pushes back to Shopify with tracking numbers. Celigo is the dominant iPaaS for this pair."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Celigo NetSuite Shopify connector setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Shopify handles storefront/checkout; NetSuite is the financial/inventory system of record. Orders flow Shopify → NetSuite as Sales Orders; inventory flows NetSuite → Shopify near-real-time; fulfillment status pushes back to Shopify with tracking numbers. Celigo is the dominant iPaaS for this pair."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>NetSuite-Shopify Integration Playbook</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you integrate NetSuite with Shopify - the highest-volume SMB integration pattern?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/netsuite-shopify-playbook/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>Systems:</strong> Oracle NetSuite (2025.1) + Shopify (Admin API 2025-01) + Celigo</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> current</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Shopify handles storefront/checkout; NetSuite is the financial/inventory system of record. Orders flow Shopify &rarr; NetSuite as Sales Orders; inventory flows NetSuite &rarr; Shopify near-real-time; fulfillment status pushes back to Shopify with tracking numbers. Celigo is the dominant iPaaS for this pair.</li>
+    <li><strong>Key limit</strong>: NetSuite concurrency (5-15 base) is the bottleneck &mdash; every Shopify webhook that triggers a NetSuite write counts against the shared concurrency pool across all integrations.</li>
+    <li><strong>Watch out for</strong>: SKU mismatches between Shopify variant SKUs and NetSuite item names are the #1 cause of order import failures &mdash; case-sensitive, no trailing spaces.</li>
+    <li><strong>Best for</strong>: SMB/mid-market DTC brands with 100-10,000 orders/day needing automated order-to-cash with real-time inventory accuracy.</li>
+    <li><strong>Authentication</strong>: NetSuite TBA (Token-Based Authentication) for server-to-server; Shopify OAuth 2.0 or custom app API key for Admin API access.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This playbook covers the most common SMB ecommerce integration pattern: Shopify as the storefront/checkout platform with Oracle NetSuite as the ERP for financials, inventory, fulfillment, and accounting. It applies to all Shopify plans (Basic through Plus) and all NetSuite editions (Standard through SuiteCloud Plus), though Plus/SuiteCloud Plus unlock higher API limits. The playbook covers three middleware approaches: Celigo (pre-built connector), Oracle's native NetSuite Connector for Shopify, and custom middleware (Node.js/Python).</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Shopify</td><td>Storefront, checkout, customer-facing</td><td>REST Admin API, GraphQL Admin API, Webhooks</td><td>Outbound (orders, customers) + Inbound (inventory, fulfillment)</td></tr>
+      <tr><td>Oracle NetSuite</td><td>ERP &mdash; financials, inventory, fulfillment, accounting</td><td>SuiteTalk REST, SuiteTalk SOAP, RESTlet, SuiteQL</td><td>Inbound (orders) + Outbound (inventory, fulfillment)</td></tr>
+      <tr><td>Celigo / Custom Middleware</td><td>Integration orchestrator</td><td>Pre-built flows or custom API client</td><td>Bidirectional orchestrator</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Req</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Shopify REST Admin API</td><td>HTTPS/JSON</td><td>Orders, products, customers, inventory</td><td>250 per page</td><td>40 req/min (Plus: 400)</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Shopify GraphQL Admin API</td><td>HTTPS/GraphQL</td><td>Complex queries, bulk ops, mutations</td><td>Paginated</td><td>50 pts/s (Plus: 500)</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Shopify Webhooks</td><td>HTTPS POST</td><td>Real-time event notifications</td><td>1 event/delivery</td><td>At-least-once; 19 retries</td><td>Yes</td><td>N/A</td></tr>
+      <tr><td>NetSuite SuiteTalk REST</td><td>HTTPS/JSON</td><td>CRUD on standard records, SuiteQL</td><td>1,000 per page</td><td>5-55 concurrent</td><td>Yes</td><td>No</td></tr>
+      <tr><td>NetSuite SuiteTalk SOAP</td><td>HTTPS/XML</td><td>Legacy CRUD, upsertList batch writes</td><td>1,000 per upsertList</td><td>Shares concurrency pool</td><td>Yes</td><td>Semi</td></tr>
+      <tr><td>NetSuite RESTlet</td><td>HTTPS/JSON</td><td>Custom endpoints, business logic</td><td>Custom</td><td>5 concurrent/user</td><td>Yes</td><td>Custom</td></tr>
+      <tr><td>NetSuite SuiteQL</td><td>HTTPS/JSON</td><td>Ad hoc queries, reporting</td><td>100,000 rows</td><td>Shares concurrency pool</td><td>No</td><td>Query-only</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max records per REST page</td><td>1,000</td><td>NetSuite SuiteTalk REST</td><td>Use offset/limit pagination</td></tr>
+      <tr><td>Max records per SOAP upsertList</td><td>1,000</td><td>NetSuite SuiteTalk SOAP</td><td>Split larger batches</td></tr>
+      <tr><td>Max items per Shopify REST page</td><td>250</td><td>Shopify REST Admin API</td><td>Use cursor-based pagination</td></tr>
+      <tr><td>Max SuiteQL rows</td><td>100,000</td><td>NetSuite SuiteQL</td><td>Paginate with OFFSET</td></tr>
+      <tr><td>Shopify webhook response timeout</td><td>5 seconds</td><td>Shopify Webhooks</td><td>Return 200 immediately, process async</td></tr>
+      <tr><td>NetSuite payload limit per RESTlet</td><td>10 MB</td><td>NetSuite RESTlet</td><td>Chunk larger payloads</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Shopify REST requests</td><td>40 per app per store</td><td>Per minute (2/s refill)</td><td>Plus: 400/min (20/s refill)</td></tr>
+      <tr><td>Shopify GraphQL cost</td><td>50 points/s (1,000 bucket)</td><td>Per second</td><td>Advanced: 100 pts/s; Plus: 500 pts/s</td></tr>
+      <tr><td>NetSuite concurrent requests</td><td>5 (base)</td><td>Per account, real-time</td><td>+10 per SuiteCloud Plus license; Tier 5: 55</td></tr>
+      <tr><td>NetSuite frequency limit</td><td>Account-specific</td><td>60s + 24h windows</td><td>Varies by account tier</td></tr>
+      <tr><td>Shopify webhook retries</td><td>19 retries</td><td>48 hours</td><td>Exponential backoff by Shopify</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Transaction / Governor Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Per-Transaction Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>NetSuite SuiteScript governance units</td><td>1,000 (client), 10,000 (server)</td><td>User Event Scripts on order creation consume from this pool</td></tr>
+      <tr><td>NetSuite search results per page</td><td>1,000</td><td>Use pagination for larger result sets</td></tr>
+      <tr><td>NetSuite sublist line limit</td><td>~4,000 lines</td><td>Orders with more line items must be split</td></tr>
+      <tr><td>NetSuite concurrent web service users</td><td>Account-wide shared pool</td><td>One slow integration blocks all others</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">System</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Token-Based Auth (TBA)</td><td>NetSuite</td><td>Server-to-server (recommended)</td><td>Indefinite</td><td>No (static)</td><td>Consumer key/secret + token ID/secret</td></tr>
+      <tr><td>OAuth 2.0</td><td>NetSuite</td><td>Modern integrations, granular scopes</td><td>60 min</td><td>Yes</td><td>Newer; not all SuiteApps support it yet</td></tr>
+      <tr><td>OAuth 2.0</td><td>Shopify</td><td>Public apps, app store distribution</td><td>Varies</td><td>Yes</td><td>Standard OAuth 2.0 authorization code flow</td></tr>
+      <tr><td>Custom App API Key</td><td>Shopify</td><td>Private/custom apps (most integrations)</td><td>Indefinite</td><td>No</td><td>Admin API access token from Shopify admin</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>NetSuite TBA requires a dedicated Integration Record plus an integration role with minimum required permissions &mdash; never use Administrator role for API access. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_1540391670.html">src1</a>]</li>
+    <li>Shopify custom app tokens are scoped per store &mdash; multi-store integrations need separate tokens per store with correct API scopes. [<a href="https://shopify.dev/docs/api/usage/limits">src2</a>]</li>
+    <li>NetSuite OAuth 2.0 requires SuiteCloud Plus license and certificate-based authentication for machine-to-machine flow. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_1540391670.html">src1</a>]</li>
+    <li>Shopify webhook HMAC verification is required to prevent spoofed deliveries &mdash; validate the X-Shopify-Hmac-SHA256 header against your app secret. [<a href="https://shopify.dev/docs/api/usage/limits">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NetSuite concurrency is the system-wide bottleneck: all integrations share the same 5-55 concurrent request pool. One slow integration degrades all others.</li>
+    <li>Shopify webhooks are at-least-once delivery with no guaranteed ordering &mdash; middleware must be idempotent (use Shopify order ID as idempotency key).</li>
+    <li>Shopify variant SKUs must exactly match NetSuite item names/numbers. Case-sensitive. Leading/trailing spaces cause silent failures.</li>
+    <li>NetSuite does not natively support Shopify's product variant model &mdash; variants map to Matrix Items + Matrix Sub-Items.</li>
+    <li>Tax calculation: choose one engine (Avalara/TaxJar) and disable the other. Dual calculation causes divergence.</li>
+    <li>NetSuite Customer records enforce unique email &mdash; guest checkout creates orders without accounts, requiring a dedup strategy.</li>
+    <li>Shopify REST Admin API is being deprecated for new development in favor of GraphQL.</li>
+    <li>Multi-location inventory requires explicit mapping between Shopify locations and NetSuite warehouses.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START &mdash; Integrate Shopify storefront with NetSuite ERP
+&#9500;&#9472;&#9472; What's your order volume?
+&#9474;   &#9500;&#9472;&#9472; &lt; 500 orders/day
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Budget &lt; $500/month? &rarr; NetSuite Connector for Shopify (~$200/mo)
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Need customization? &rarr; Celigo Standard ($500-1,000/mo)
+&#9474;   &#9500;&#9472;&#9472; 500-5,000 orders/day
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Standard flows sufficient? &rarr; Celigo Premium ($1,000-2,000/mo)
+&#9474;   &#9474;   &#9492;&#9472;&#9472; Complex custom logic? &rarr; Custom middleware (Node.js/Python)
+&#9474;   &#9492;&#9472;&#9472; &gt; 5,000 orders/day
+&#9474;       &#9500;&#9472;&#9472; Requires Shopify Plus (higher API limits)
+&#9474;       &#9492;&#9472;&#9472; Celigo Enterprise or custom high-throughput middleware
+&#9500;&#9472;&#9472; Which data flows?
+&#9474;   &#9500;&#9472;&#9472; Orders only (Shopify &rarr; NetSuite) &rarr; Webhook: orders/create
+&#9474;   &#9500;&#9472;&#9472; Orders + Inventory &rarr; Webhooks + scheduled sync (5-15 min)
+&#9474;   &#9500;&#9472;&#9472; Full lifecycle &rarr; 5 flows: product, inventory, order, fulfillment, returns
+&#9474;   &#9492;&#9472;&#9472; Multi-store? &rarr; Celigo cloning or per-store tokens
+&#9500;&#9472;&#9472; Inventory sync strategy?
+&#9474;   &#9500;&#9472;&#9472; Near-real-time (&lt; 5 min) &rarr; Saved Search + scheduled SuiteScript
+&#9474;   &#9500;&#9472;&#9472; Batch (15-60 min) &rarr; SuiteQL + Shopify GraphQL bulk
+&#9474;   &#9492;&#9472;&#9472; On-demand &rarr; Not recommended (race conditions)
+&#9492;&#9472;&#9472; Error handling?
+    &#9500;&#9472;&#9472; Zero-loss &rarr; DLQ + retry + alerting
+    &#9492;&#9472;&#9472; Best-effort &rarr; Retry 3x + log + manual review</code></pre>
+  </section>
+
+  <!-- Quick Reference: Process Flow -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <h3>Process Flow</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Step</th><th scope="col">Source</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">Data Objects</th><th scope="col">Failure Handling</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1. Product Sync</td><td>NetSuite</td><td>Item created/updated &rarr; push</td><td>Shopify</td><td>Item &rarr; Product (title, price, variants, SKUs)</td><td>Retry 3x; log SKU mismatches</td></tr>
+      <tr><td>2. Inventory Sync</td><td>NetSuite</td><td>Scheduled: available qty per location</td><td>Shopify</td><td>Inventory Item &rarr; Inventory Level</td><td>Alert if delta &gt; 10%</td></tr>
+      <tr><td>3. Order Import</td><td>Shopify</td><td>Webhook: orders/create</td><td>NetSuite</td><td>Order &rarr; Sales Order</td><td>DLQ + retry; create customer if missing</td></tr>
+      <tr><td>4. Customer Sync</td><td>Shopify</td><td>New customer &rarr; upsert</td><td>NetSuite</td><td>Customer &rarr; Customer Record</td><td>Dedup by email; merge if existing</td></tr>
+      <tr><td>5. Payment Capture</td><td>Shopify</td><td>Payment captured &rarr; record</td><td>NetSuite</td><td>Transaction &rarr; Customer Payment</td><td>Alert on amount mismatch</td></tr>
+      <tr><td>6. Fulfillment Pushback</td><td>NetSuite</td><td>Item Fulfillment &rarr; push tracking</td><td>Shopify</td><td>Fulfillment (tracking, carrier)</td><td>Retry 3x; alert on 422</td></tr>
+      <tr><td>7. Returns/Refunds</td><td>Shopify</td><td>Refund created &rarr; credit memo</td><td>NetSuite</td><td>Refund &rarr; Credit Memo / RA</td><td>Manual review if partial</td></tr>
+      <tr><td>8. Financial Close</td><td>NetSuite</td><td>Reconcile payouts vs deposits</td><td>NetSuite</td><td>Payout &rarr; Bank Deposit</td><td>Flag variances</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Configure NetSuite Authentication (TBA)</h3>
+  <p>Create a dedicated integration user in NetSuite with minimum required permissions. Never use an admin account for API access. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_1540391670.html">src1</a>]</p>
+  <pre><code class="language-bash"># NetSuite Setup (via UI):
+# 1. Setup &gt; Company &gt; Enable Features &gt; SuiteCloud:
+#    Enable Token-Based Authentication + SuiteTalk + REST Web Services
+# 2. Setup &gt; Integration &gt; Manage Integrations &gt; New:
+#    Name: "Shopify Integration" / TBA: enabled
+#    Record Consumer Key and Consumer Secret
+# 3. Create integration role with minimum permissions:
+#    Transactions: Sales Order, Item Fulfillment, Credit Memo, Customer Payment
+#    Lists: Items, Customers, Locations
+# 4. Create integration employee with this role
+# 5. Generate Access Token (Token ID + Token Secret)</code></pre>
+  <p><strong>Verify</strong>: Setup &gt; Integration &gt; Integration Governance shows the new integration with 0 active connections.</p>
+
+  <h3>2. Configure Shopify Custom App</h3>
+  <p>Create a custom app in Shopify Admin for API credentials. [<a href="https://shopify.dev/docs/api/usage/limits">src2</a>]</p>
+  <pre><code class="language-bash"># Shopify Admin &gt; Settings &gt; Apps &gt; Develop apps &gt; Create app:
+# Admin API scopes: read_orders, write_orders, read_products, write_products,
+#   read_inventory, write_inventory, read_customers, write_customers,
+#   read_fulfillments, write_fulfillments, read_locations
+# Install app &rarr; generate Admin API access token (shown once)
+# Register webhooks: orders/create, orders/updated, refunds/create,
+#   customers/create, customers/update</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "X-Shopify-Access-Token: {token}" https://{store}.myshopify.com/admin/api/2025-01/shop.json</code> returns 200.</p>
+
+  <h3>3. Set Up Order Import (Shopify &rarr; NetSuite)</h3>
+  <p>Shopify webhook fires on order creation; middleware transforms and writes Sales Order to NetSuite via SuiteTalk REST. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_163723984857.html">src7</a>]</p>
+  <pre><code class="language-javascript">// Transform Shopify order &rarr; NetSuite Sales Order
+function transformOrderToSalesOrder(shopifyOrder) {
+  return {
+    externalId: `SHOP-${shopifyOrder.id}`,  // Idempotent upsert key
+    entity: { externalId: `SHOPCUST-${shopifyOrder.customer?.id || shopifyOrder.email}` },
+    tranDate: shopifyOrder.created_at.split('T')[0],
+    memo: `Shopify #${shopifyOrder.order_number}`,
+    item: {
+      items: shopifyOrder.line_items.map(li =&gt; ({
+        item: { externalId: li.sku },
+        quantity: li.quantity,
+        rate: parseFloat(li.price),
+        amount: parseFloat(li.price) * li.quantity
+      }))
+    },
+    custbody_shopify_order_id: String(shopifyOrder.id)
+  };
+}</code></pre>
+  <p><strong>Verify</strong>: Test order in Shopify dev store appears in NetSuite &gt; Transactions &gt; Sales Orders with correct line items.</p>
+
+  <h3>4. Set Up Inventory Sync (NetSuite &rarr; Shopify)</h3>
+  <p>NetSuite is the source of truth. Query available quantities and push to Shopify. Run every 5-15 minutes. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>, <a href="https://www.anchorgroup.tech/blog/integrate-shopify-netsuite">src4</a>]</p>
+  <pre><code class="language-javascript">// Scheduled inventory sync: NetSuite SuiteQL &rarr; Shopify inventory_levels/set
+async function syncInventory(netsuiteClient, shopifyClient) {
+  const items = await netsuiteClient.suiteql(`
+    SELECT i.itemId, i.externalId, il.quantityAvailable, il.location
+    FROM item i JOIN inventoryBalance il ON i.id = il.item
+    WHERE i.isInactive = 'F'`);
+  for (const item of items) {
+    await shopifyClient.post('/admin/api/2025-01/inventory_levels/set.json', {
+      location_id: locationMap[item.location],
+      inventory_item_id: await lookupShopifyId(item.externalId),
+      available: Math.max(0, item.quantityAvailable)
+    });
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Change quantity in NetSuite; after sync cycle, Shopify Admin &gt; Products &gt; Inventory matches.</p>
+
+  <h3>5. Set Up Fulfillment Pushback (NetSuite &rarr; Shopify)</h3>
+  <p>When NetSuite creates an Item Fulfillment, push tracking info back to Shopify. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>, <a href="https://docs.celigo.com/hc/en-us/articles/228207227-Shopify-NetSuite-integration-app-overview">src5</a>]</p>
+  <pre><code class="language-javascript">// Push fulfillment tracking to Shopify
+async function pushFulfillment(fulfillment, shopifyClient) {
+  await shopifyClient.post(
+    `/admin/api/2025-01/orders/${fulfillment.shopifyOrderId}/fulfillments.json`,
+    { fulfillment: {
+        tracking_number: fulfillment.trackingNumber,
+        tracking_company: mapCarrier(fulfillment.shipMethod),
+        notify_customer: true
+    }}
+  );
+}</code></pre>
+  <p><strong>Verify</strong>: Test Item Fulfillment in NetSuite; Shopify order shows fulfillment status and tracking URL.</p>
+
+  <h3>6. Handle Returns and Refunds (Shopify &rarr; NetSuite)</h3>
+  <p>Refunds in Shopify generate Credit Memos in NetSuite. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>, <a href="https://docs.celigo.com/hc/en-us/articles/228207227-Shopify-NetSuite-integration-app-overview">src5</a>]</p>
+  <pre><code class="language-javascript">// Webhook: refunds/create &rarr; NetSuite Credit Memo
+function transformRefundToCreditMemo(refund) {
+  return {
+    externalId: `SHOPREFUND-${refund.id}`,
+    createdFrom: { externalId: `SHOP-${refund.order_id}` },
+    item: { items: refund.refund_line_items.map(rli =&gt; ({
+      item: { externalId: rli.line_item.sku },
+      quantity: rli.quantity,
+      rate: parseFloat(rli.line_item.price)
+    }))}
+  };
+}</code></pre>
+  <p><strong>Verify</strong>: Test refund in Shopify; NetSuite Credit Memo appears with matching amounts.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Bulk Inventory Sync via Shopify GraphQL</h3>
+  <pre><code class="language-python"># Input:  NetSuite inventory levels (from SuiteQL)
+# Output: Shopify inventory updates via GraphQL mutation
+
+import requests, time
+
+GRAPHQL_URL = f"https://{STORE}.myshopify.com/admin/api/2025-01/graphql.json"
+HEADERS = {"X-Shopify-Access-Token": TOKEN, "Content-Type": "application/json"}
+
+def bulk_set_inventory(updates):
+    mutation = """
+    mutation inventorySetQuantities($input: InventorySetQuantitiesInput!) {
+      inventorySetQuantities(input: $input) {
+        inventoryAdjustmentGroup { reason }
+        userErrors { field message }
+      }
+    }"""
+    for update in updates:
+        variables = {"input": {"name": "available", "reason": "correction",
+            "quantities": [{"inventoryItemId": update["iid"],
+                "locationId": update["lid"], "quantity": update["qty"]}]}}
+        resp = requests.post(GRAPHQL_URL, json={"query": mutation,
+            "variables": variables}, headers=HEADERS)
+        if resp.status_code == 429:
+            time.sleep(2)
+        time.sleep(0.2)  # Respect 50 pts/s rate limit</code></pre>
+
+  <h3>cURL: Test NetSuite and Shopify Connections</h3>
+  <pre><code class="language-bash"># Test Shopify Admin API
+curl -H "X-Shopify-Access-Token: {token}" \
+  "https://{store}.myshopify.com/admin/api/2025-01/shop.json"
+# Check: X-Shopify-Shop-Api-Call-Limit: 1/40
+
+# Test NetSuite REST API (TBA)
+curl -X GET \
+  "https://{account}.suitetalk.api.netsuite.com/services/rest/record/v1/metadata-catalog" \
+  -H "Authorization: OAuth realm=\"{account}\", ..." \
+  -H "Content-Type: application/json"
+# Expected: 200 OK with record type catalog</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Field Mapping Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Shopify Field</th><th scope="col">NetSuite Field</th><th scope="col">Type</th><th scope="col">Transform</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>order.id</td><td>salesOrder.externalId</td><td>String</td><td>Prefix "SHOP-"</td><td>Must be unique per record type</td></tr>
+      <tr><td>order.order_number</td><td>salesOrder.otherRefNum</td><td>String</td><td>Direct</td><td>Human-readable # (e.g., #1001)</td></tr>
+      <tr><td>order.customer.id</td><td>customer.externalId</td><td>String</td><td>Prefix "SHOPCUST-"</td><td>Guest checkout may lack customer.id</td></tr>
+      <tr><td>order.customer.email</td><td>customer.email</td><td>Email</td><td>Direct</td><td>NS enforces unique email per customer</td></tr>
+      <tr><td>line_items[].sku</td><td>item[].item.externalId</td><td>String</td><td>Case-sensitive</td><td>#1 failure cause: SKU mismatch</td></tr>
+      <tr><td>line_items[].price</td><td>item[].rate</td><td>Decimal</td><td>parseFloat()</td><td>Shopify stores as string</td></tr>
+      <tr><td>shipping_address</td><td>shipAddress</td><td>Object</td><td>Map subfields</td><td>province_code vs state abbreviation</td></tr>
+      <tr><td>total_tax</td><td>taxTotal</td><td>Decimal</td><td>Use ONE source</td><td>Dual tax calculation = #2 failure</td></tr>
+      <tr><td>variants[].sku</td><td>item.itemId</td><td>String</td><td>Case-sensitive</td><td>Variant &ne; Item; use Matrix Items</td></tr>
+      <tr><td>fulfillment.tracking_number</td><td>itemFulfillment.trackingNumber</td><td>String</td><td>Direct</td><td>NS may concatenate multiple numbers</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Shopify stores monetary amounts as strings (e.g., "29.99"); NetSuite expects numeric. Always parseFloat() and round to 2 decimals. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>]</li>
+    <li>Shopify datetime is ISO 8601 with timezone; NetSuite tranDate is date-only in company timezone. Strip time and convert. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>]</li>
+    <li>NetSuite Customer.companyName has 83-char limit vs Shopify's 255. Truncate gracefully. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>]</li>
+    <li>Shopify discount_codes are order-level; NetSuite discounts can be line-level or order-level. Decide mapping strategy before implementation. [<a href="https://www.anchorgroup.tech/blog/integrate-shopify-netsuite">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">System</th><th scope="col">Meaning</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>429</td><td>NetSuite REST</td><td>Too Many Requests (concurrency exceeded)</td><td>Exponential backoff: 2^n seconds, max 60s</td></tr>
+      <tr><td>SSS_REQUEST_LIMIT_EXCEEDED</td><td>NetSuite SOAP</td><td>Governance limit hit</td><td>Queue requests; implement connection pooling</td></tr>
+      <tr><td>INVALID_KEY_OR_REF</td><td>NetSuite</td><td>ExternalId reference not found</td><td>Create referenced record first, then retry</td></tr>
+      <tr><td>UNIQUE_CUST_EMAIL</td><td>NetSuite</td><td>Duplicate customer email</td><td>Lookup existing customer; update not create</td></tr>
+      <tr><td>422</td><td>Shopify</td><td>Unprocessable Entity (bad payload)</td><td>Check response body for field-level errors</td></tr>
+      <tr><td>429</td><td>Shopify</td><td>Rate limit exceeded</td><td>Wait per Retry-After header</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Inventory oversell during flash sales</strong>: Shopify sells faster than sync updates. Fix: <code>Increase sync frequency during sales; implement safety stock buffer; use Shopify inventory reservations</code>. [<a href="https://www.houseblend.io/articles/netsuite-shopify-integration-technical-guide">src3</a>]</li>
+    <li><strong>Order queue backlog at NetSuite concurrency wall</strong>: Peak webhook volume exceeds 5-15 concurrent limit, causing cascading 429s. Fix: <code>Durable message queue (SQS/Redis) between webhooks and NetSuite; controlled concurrency</code>. [<a href="https://coefficient.io/netsuite-api/netsuite-api-rate-limits">src6</a>, <a href="https://www.katoomi.com/netsuite-integration-concurrency-limits-2025/">src8</a>]</li>
+    <li><strong>SKU mismatch causing silent order failures</strong>: "ABC-123" &ne; "abc-123" (case sensitivity). Fix: <code>Normalize all SKUs to uppercase; daily reconciliation script</code>. [<a href="https://www.anchorgroup.tech/blog/integrate-shopify-netsuite">src4</a>]</li>
+    <li><strong>Guest checkout creating duplicate customers</strong>: No customer ID to match on. Fix: <code>Match on email first; create only if no match; weekly dedup</code>. [<a href="https://www.anchorgroup.tech/blog/integrate-shopify-netsuite">src4</a>]</li>
+    <li><strong>Webhook delivery gaps after Shopify outage</strong>: Orders missing in NetSuite. Fix: <code>Daily reconciliation job comparing Shopify orders vs NetSuite Sales Orders</code>. [<a href="https://shopify.dev/docs/api/usage/limits">src2</a>]</li>
+    <li><strong>Tax amount mismatch</strong>: Divergent calculations compound over thousands of orders. Fix: <code>Use one tax engine for both systems; disable the other's calculation</code>. [<a href="https://www.anchorgroup.tech/blog/integrate-shopify-netsuite">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Polling Shopify for new orders</h3>
+  <pre><code class="language-javascript">// BAD &mdash; wastes API calls (40/min limit); introduces 30s+ latency
+setInterval(async () =&gt; {
+  const orders = await shopify.get('/orders.json', {created_at_min: lastPoll});
+  for (const order of orders) await importToNetSuite(order);
+}, 30000);</code></pre>
+
+  <h3>Correct: Use Shopify webhooks</h3>
+  <pre><code class="language-javascript">// GOOD &mdash; instant delivery, no wasted API calls
+app.post('/webhooks/orders/create', async (req, res) =&gt; {
+  if (!verifyHMAC(req)) return res.status(401).send('Invalid');
+  res.status(200).send('OK');  // Return within 5s
+  await orderQueue.enqueue(req.body);  // Process async
+});</code></pre>
+
+  <h3>Wrong: Not using ExternalId (creates duplicates on retry)</h3>
+  <pre><code class="language-javascript">// BAD &mdash; webhook retry creates duplicate Sales Orders
+await netsuite.post('/salesOrder', transformOrder(shopifyOrder));</code></pre>
+
+  <h3>Correct: Always use ExternalId with upsert</h3>
+  <pre><code class="language-javascript">// GOOD &mdash; idempotent: same Shopify order always maps to same record
+salesOrder.externalId = `SHOP-${shopifyOrder.id}`;
+await netsuite.put(`/salesOrder/eid:SHOP-${shopifyOrder.id}`, salesOrder);</code></pre>
+
+  <h3>Wrong: Bidirectional inventory sync</h3>
+  <pre><code class="language-javascript">// BAD &mdash; infinite loops and race conditions
+shopifyWebhook('inventory/update', (e) =&gt; netsuite.update(e));
+netsuiteSchedule(() =&gt; shopify.bulkUpdate(netsuite.getLevels()));</code></pre>
+
+  <h3>Correct: One-way inventory (NetSuite &rarr; Shopify only)</h3>
+  <pre><code class="language-javascript">// GOOD &mdash; NetSuite is single source of truth
+async function scheduledSync() {
+  const levels = await netsuite.suiteql('SELECT ... FROM inventoryBalance ...');
+  for (const item of levels) {
+    await shopify.setInventoryLevel(item.id, item.location, item.qty);
+  }
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Multi-store token management</strong>: Each Shopify store needs its own API token, webhooks, and field mappings. Fix: <code>Store configuration registry with per-store token, location map, and SKU prefix</code>. [<a href="https://www.anchorgroup.tech/blog/integrate-shopify-netsuite">src4</a>]</li>
+    <li><strong>Saved Search vs SuiteQL</strong>: Saved Searches are slower with older pagination. Fix: <code>Use SuiteQL for all new integrations; standard SQL pagination (OFFSET/FETCH)</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_1540391670.html">src1</a>]</li>
+    <li><strong>Ignoring Shopify webhook retry behavior</strong>: 19 retries over 48h; deployment outage causes retry flood. Fix: <code>Return 200 immediately; process async; implement idempotency via ExternalId</code>. [<a href="https://shopify.dev/docs/api/usage/limits">src2</a>]</li>
+    <li><strong>Ignoring draft orders</strong>: B2B/phone orders use different webhook topic and data structure. Fix: <code>Subscribe to draft_orders/update; transform separately</code>. [<a href="https://shopify.dev/docs/api/usage/limits">src2</a>]</li>
+    <li><strong>Sandbox concurrency mismatch</strong>: NetSuite sandbox has lower limits than production. Fix: <code>Load-test with realistic volumes; request matching concurrency from Oracle</code>. [<a href="https://coefficient.io/netsuite-api/netsuite-api-rate-limits">src6</a>]</li>
+    <li><strong>Hardcoding NetSuite internal IDs</strong>: IDs differ between sandbox and production. Fix: <code>Use ExternalId for all lookups; maintain registry per environment</code>. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/chapter_1540391670.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Shopify API rate limit usage
+curl -s -I -H "X-Shopify-Access-Token: {token}" \
+  "https://{store}.myshopify.com/admin/api/2025-01/shop.json" | \
+  grep -i "x-shopify-shop-api-call-limit"
+# Expected: X-Shopify-Shop-Api-Call-Limit: 1/40
+
+# List Shopify webhook subscriptions
+curl -H "X-Shopify-Access-Token: {token}" \
+  "https://{store}.myshopify.com/admin/api/2025-01/webhooks.json"
+
+# NetSuite concurrency monitoring
+# Setup &gt; Integration &gt; Integration Governance
+# Monitor: Active Sessions, Peak Concurrency, Queue Depth
+
+# Verify NetSuite item exists by ExternalId
+# GET /services/rest/record/v1/inventoryItem/eid:{externalId}
+
+# Reconcile order counts
+# Shopify: GET /admin/api/2025-01/orders/count.json?created_at_min=2026-03-01
+# NetSuite: SuiteQL: SELECT COUNT(*) FROM transaction
+#   WHERE externalId LIKE 'SHOP-%' AND tranDate &gt;= '2026-03-01'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Version</th><th scope="col">Release Date</th><th scope="col">Status</th><th scope="col">Breaking Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>NetSuite 2025.1</td><td>SuiteTalk REST + SOAP</td><td>2025-02</td><td>Current</td><td>REST API record-level filtering</td></tr>
+      <tr><td>NetSuite 2024.2</td><td>SuiteTalk REST + SOAP</td><td>2024-08</td><td>Supported</td><td>REST API expanded record types</td></tr>
+      <tr><td>Shopify 2025-01</td><td>REST + GraphQL</td><td>2025-01</td><td>Current</td><td>Several REST endpoints deprecated</td></tr>
+      <tr><td>Shopify 2024-10</td><td>REST + GraphQL</td><td>2024-10</td><td>Supported</td><td>Inventory API v2</td></tr>
+      <tr><td>Shopify 2024-04</td><td>REST + GraphQL</td><td>2024-04</td><td>Supported</td><td>Fulfillment Orders API required</td></tr>
+      <tr><td>Celigo App</td><td>SaaS (continuous)</td><td>Ongoing</td><td>Current</td><td>Check release notes monthly</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SMB/mid-market DTC with Shopify + NetSuite</td><td>Enterprise 50K+ orders/day needing sub-second sync</td><td>Custom event-driven architecture (Kafka/SQS)</td></tr>
+      <tr><td>Standard order-to-cash flow</td><td>Complex B2B pricing with contract rates in NetSuite</td><td>NetSuite SuiteCommerce or Shopify B2B with custom pricing</td></tr>
+      <tr><td>1-10 Shopify stores, shared NetSuite</td><td>Multi-subsidiary with intercompany transactions</td><td>Custom middleware with subsidiary routing</td></tr>
+      <tr><td>Standard catalog (&lt; 50K SKUs)</td><td>Complex BOM/kit assembly configurator</td><td>NetSuite Advanced Manufacturing + custom CPQ</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>NetSuite concurrency limits are the #1 performance bottleneck. All integrations share the same pool &mdash; a slow report can starve the Shopify integration of connections.</li>
+    <li>Shopify is aggressively deprecating REST Admin API endpoints in favor of GraphQL. Check connector API version compatibility before upgrading.</li>
+    <li>Celigo pricing ranges from ~$500/month (Standard) to $2,000+/month (Enterprise), not including NetSuite SuiteCloud Plus licensing.</li>
+    <li>Tax calculation divergence is a compliance risk. Audit monthly by comparing Shopify tax reports against NetSuite tax liability accounts.</li>
+    <li>This playbook covers standard DTC. Shopify B2B wholesale has different order structure (draft orders, negotiated pricing) requiring additional mapping logic.</li>
+    <li>Rate limits and concurrency numbers are current as of March 2026. Both platforms adjust periodically &mdash; verify against official docs before capacity planning.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/netsuite-suitetalk-api-capabilities/2026" data-relationship="depends_on">NetSuite SuiteTalk API Capabilities</a>
+    <a href="/business/erp-integration/netsuite-tba-vs-oauth2/2026" data-relationship="depends_on">NetSuite TBA vs OAuth 2.0</a>
+    <a href="/business/erp-integration/netsuite-suitescript-governance/2026" data-relationship="related_to">NetSuite SuiteScript Governance</a>
+    <a href="/business/erp-integration/celigo-netsuite-integration/2026" data-relationship="related_to">Celigo NetSuite Integration Platform</a>
+    <a href="/business/erp-integration/ecommerce-to-erp/2026" data-relationship="related_to">Ecommerce-to-ERP Integration Patterns</a>
+    <a href="/business/erp-integration/order-to-cash-integration/2026" data-relationship="solves">Order-to-Cash Integration</a>
+    <a href="/business/erp-integration/salesforce-netsuite-integration/2026" data-relationship="often_confused_with">Salesforce-NetSuite CRM Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

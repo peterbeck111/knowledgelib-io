@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Database Sharding Strategies: A Complete System | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to database sharding strategies: hash, range, geo, directory-based, and consistent hashing.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/system-design/database-sharding/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Database Sharding Strategies: A Complete System | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to database sharding strategies: hash, range, geo, directory-based, consistent hashing. Shard key selection, Citus/Vitess/MongoDB examples, decision tree, anti-patterns. 7 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/system-design/database-sharding/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-23">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Database Sharding Strategies: A Complete System | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to database sharding: hash, range, geo, directory-based, consistent hashing. Shard key selection, code examples, anti-patterns. 7 sources.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/system-design/database_sharding">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="What are the best database sharding strategies?">
+    <meta name="ai:aliases"
+        content="database sharding strategies comparison; horizontal database partitioning patterns; how to shard a database; hash vs range sharding; consistent hashing for databases; database sharding system design; shard key selection best practices; when to shard a database">
+    <meta name="ai:raw" content="/api/v1/units/software/system-design/database-sharding/2026.md">
+    <meta name="ai:token_estimate" content="5800">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-23">
+    <meta name="ai:inputs_needed" content="sharding_key_choice,current_scale,database_engine">
+    <meta name="ai:constraints"
+        content="Never shard before exhausting vertical scaling, read replicas, caching, and query optimization; Shard key is immutable after data is distributed; Cross-shard JOINs and transactions are either unsupported or orders of magnitude slower; Auto-increment primary keys are not globally unique across shards; Resharding requires a migration plan">
+    <meta name="ai:skip_this_unit_if"
+        content="Database is slow but under 1TB and <10K queries/sec -> Optimize indexes and queries first; Need to partition a single table without distributing across servers -> Use native table partitioning; Want to avoid sharding entirely -> Use a distributed NewSQL database">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"Database Sharding Strategies: A Complete System Design Guide","headline":"Database Sharding Strategies: A Complete System Design Guide","description":"Comprehensive guide comparing hash-based, range-based, geo-based, directory-based, and consistent hashing sharding strategies. Includes shard key selection, implementation with Citus, Vitess, and MongoDB, code examples in Python, SQL, and Go, anti-patterns, and diagnostic commands.","keywords":["database sharding","horizontal partitioning","consistent hashing","shard key","Vitess","Citus","CockroachDB","MongoDB sharding","distributed database","system design"],"dateModified":"2026-02-23","datePublished":"2026-02-23","proficiencyLevel":"Expert","dependencies":"PostgreSQL + Citus, MySQL + Vitess, MongoDB, CockroachDB, Cassandra, YugabyteDB, TiDB","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"Vitess Sharding Documentation","url":"https://vitess.io/docs/23.0/reference/features/sharding/"},{"@type":"WebPage","name":"Hash-Sharded Indexes: Unlock Linear Scaling for Sequential Workloads","url":"https://www.cockroachlabs.com/blog/hash-sharded-indexes-unlock-linear-scaling-for-sequential-workloads/"},{"@type":"WebPage","name":"Understanding Partitioning and Sharding in Postgres and Citus","url":"https://www.citusdata.com/blog/2023/08/04/understanding-partitioning-and-sharding-in-postgres-and-citus/"},{"@type":"WebPage","name":"4 Data Sharding Strategies We Analyzed When Building YugabyteDB","url":"https://www.yugabyte.com/blog/four-data-sharding-strategies-we-analyzed-in-building-a-distributed-sql-database/"},{"@type":"WebPage","name":"Sharding Pattern - Azure Architecture Center","url":"https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding"},{"@type":"WebPage","name":"A Guide to Database Sharding: Key Strategies","url":"https://blog.bytebytego.com/p/a-guide-to-database-sharding-key"},{"@type":"WebPage","name":"Choose a Shard Key - MongoDB Manual","url":"https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/"}]}</script>
+
+    <!-- Dataset structured data (for Google Dataset Search) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Database Sharding Strategies: A Complete System Design Guide",
+        "description": "Structured comparison of database sharding strategies (hash, range, geo, directory-based, consistent hashing) with implementation guides for Citus, Vitess, MongoDB, and CockroachDB. Includes shard key selection criteria, code examples, anti-patterns, and diagnostic commands.",
+        "keywords": ["database sharding", "horizontal partitioning", "consistent hashing", "shard key selection", "Vitess", "Citus", "distributed database"],
+        "temporalCoverage": "2020/2026",
+        "dateModified": "2026-02-23",
+        "datePublished": "2026-02-23",
+        "sourceOrganization": [
+            { "@type": "Organization", "name": "Vitess / PlanetScale" },
+            { "@type": "Organization", "name": "CockroachDB" },
+            { "@type": "Organization", "name": "Citus Data / Microsoft" },
+            { "@type": "Organization", "name": "YugabyteDB" },
+            { "@type": "Organization", "name": "Microsoft Azure" },
+            { "@type": "Organization", "name": "ByteByteGo" },
+            { "@type": "Organization", "name": "MongoDB" }
+        ],
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "creator": {
+            "@type": "Organization",
+            "name": "knowledgelib.io",
+            "url": "https://knowledgelib.io"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "knowledgelib.io",
+            "url": "https://knowledgelib.io"
+        }
+    }
+    </script>
+
+    <!-- Breadcrumb structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+            { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+            { "@type": "ListItem", "position": 4, "name": "Database Sharding Strategies" }
+        ]
+    }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best database sharding strategies?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "database sharding strategies comparison",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "horizontal database partitioning patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to shard a database",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "hash vs range sharding",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "consistent hashing for databases",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    <!-- RENDERED HTML CONTENT - for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+    
+  <main role="main">
+
+<h1>Database Sharding Strategies: A Complete System Design Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best database sharding strategies?</h2>
+
+    <aside class="unit-meta" data-card-id="software/system-design/database-sharding/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR - agents: parse this section for a quick answer -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Choose hash-based sharding for uniform distribution, range-based for time-series/ordered queries, geo-based for multi-region latency, or directory-based for maximum flexibility -- the shard key determines everything.</li>
+            <li><strong>Key tool/command</strong>: <code>SELECT create_distributed_table('orders', 'tenant_id');</code> (Citus) or <code>PARTITION BY HASH</code> (Vitess vschema)</li>
+            <li><strong>Watch out for</strong>: Choosing a low-cardinality shard key (e.g., country code or status enum) -- creates hot shards and uneven distribution that cannot be fixed without full migration.</li>
+            <li><strong>Works with</strong>: PostgreSQL + Citus, MySQL + Vitess/PlanetScale, MongoDB native sharding, CockroachDB, Cassandra/ScyllaDB, YugabyteDB, TiDB.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints - agents: read before recommending any action -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never shard before exhausting vertical scaling, read replicas, caching, and query optimization -- sharding adds permanent operational complexity</li>
+            <li>Shard key is immutable after data is distributed -- changing it requires full data migration across all shards</li>
+            <li>Cross-shard JOINs and transactions are either unsupported or orders of magnitude slower -- design schema to keep related data on the same shard</li>
+            <li>Auto-increment primary keys are not globally unique across shards -- use UUIDs, ULIDs, or Snowflake IDs</li>
+            <li>Resharding (adding/removing shards) requires a migration plan -- consistent hashing minimizes data movement but does not eliminate it</li>
+            <li>Unique constraints cannot span shards -- globally unique columns must include the shard key or use an external uniqueness service</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference - the core lookup table -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Strategy</th>
+                        <th scope="col">How It Works</th>
+                        <th scope="col">Distribution</th>
+                        <th scope="col">Range Queries</th>
+                        <th scope="col">Resharding Cost</th>
+                        <th scope="col">Best For</th>
+                        <th scope="col">Worst For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Hash-based</td>
+                        <td><code>shard = hash(key) % N</code></td>
+                        <td>Uniform (even)</td>
+                        <td>Poor (scatter-gather)</td>
+                        <td>High (rehash all data)</td>
+                        <td>High-write workloads, random access by ID</td>
+                        <td>Time-series, range scans</td>
+                    </tr>
+                    <tr>
+                        <td>Consistent hashing</td>
+                        <td>Hash ring with virtual nodes</td>
+                        <td>Uniform</td>
+                        <td>Poor</td>
+                        <td>Low (only K/N keys move)</td>
+                        <td>Elastic scaling, frequent shard add/remove</td>
+                        <td>Range queries, ordered access</td>
+                    </tr>
+                    <tr>
+                        <td>Range-based</td>
+                        <td><code>shard = key_range(value)</code></td>
+                        <td>Depends on data</td>
+                        <td>Excellent (single shard)</td>
+                        <td>Medium (split/merge ranges)</td>
+                        <td>Time-series, ordered data, date partitions</td>
+                        <td>Monotonic keys (hot last shard)</td>
+                    </tr>
+                    <tr>
+                        <td>Geo-based</td>
+                        <td><code>shard = region(location)</code></td>
+                        <td>Uneven (population)</td>
+                        <td>Good within region</td>
+                        <td>Low (region reassignment)</td>
+                        <td>Multi-region apps, data residency compliance</td>
+                        <td>Global queries, small datasets</td>
+                    </tr>
+                    <tr>
+                        <td>Directory-based</td>
+                        <td>Lookup table maps key to shard</td>
+                        <td>Configurable</td>
+                        <td>Depends on mapping</td>
+                        <td>Low (update directory)</td>
+                        <td>Complex routing, tenant isolation</td>
+                        <td>High throughput (directory = bottleneck)</td>
+                    </tr>
+                    <tr>
+                        <td>Hash + range (compound)</td>
+                        <td>Hash on tenant, range on time</td>
+                        <td>Balanced</td>
+                        <td>Good within tenant</td>
+                        <td>Medium</td>
+                        <td>Multi-tenant SaaS with time-series</td>
+                        <td>Simple applications</td>
+                    </tr>
+                    <tr>
+                        <td>Schema-based</td>
+                        <td>Each tenant gets own schema</td>
+                        <td>Isolated</td>
+                        <td>Full SQL within tenant</td>
+                        <td>Low (move schema)</td>
+                        <td>Strong tenant isolation, compliance</td>
+                        <td>Large tenant counts (&gt;10K schemas)</td>
+                    </tr>
+                    <tr>
+                        <td>Algorithmic (jump hash)</td>
+                        <td><code>jump_consistent_hash(key, N)</code></td>
+                        <td>Near-perfect</td>
+                        <td>Poor</td>
+                        <td>Very low (minimal movement)</td>
+                        <td>Caching layers, stateless routing</td>
+                        <td>Dynamic shard topology</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree - structured decision logic -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START -- What is your primary access pattern?
+|
++-- Single-entity lookup (user_id, order_id, tenant_id)?
+|   +-- Need elastic scaling (frequently add/remove shards)?
+|   |   +-- YES --&gt; Consistent hashing (virtual nodes)
+|   |   +-- NO  --&gt; Hash-based sharding (simple modulo or jump hash)
+|   |
++-- Range scans (time-series, date ranges, sequential IDs)?
+|   +-- Data is append-only (logs, events, IoT)?
+|   |   +-- YES --&gt; Range-based with time buckets (e.g., monthly shards)
+|   |   +-- NO  --&gt; Range-based with dynamic range splitting
+|   |
++-- Geographic queries (user location, data residency)?
+|   +-- YES --&gt; Geo-based sharding (shard per region/country)
+|   |
++-- Multi-tenant SaaS with mixed access patterns?
+|   +-- &lt;1K tenants with strong isolation needs?
+|   |   +-- YES --&gt; Schema-based sharding (Citus schema-based)
+|   +-- &gt;1K tenants?
+|       +-- YES --&gt; Hash on tenant_id (co-locate all tenant data)
+|
++-- Unknown or complex routing needs?
+    +-- YES --&gt; Directory-based (lookup table with flexibility)
+    +-- DEFAULT --&gt; Start with hash-based on most-queried entity ID</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Identify your shard key candidates</h3>
+        <p>Analyze your query patterns to find the column that appears in the WHERE clause of 80%+ of your queries. The shard key must have high cardinality (thousands+ distinct values) and appear in most queries to avoid scatter-gather operations. [<a href="https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/">src7</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL: Find most common WHERE clause columns
+SELECT query, calls, mean_exec_time
+FROM pg_stat_statements
+ORDER BY calls DESC LIMIT 20;</code></pre>
+        <p><strong>Verify</strong>: The top 5 queries all include your candidate shard key in their WHERE clause.</p>
+
+        <h3>2. Evaluate shard key quality</h3>
+        <p>A good shard key has high cardinality, high frequency in queries, and low monotonicity. Test distribution before committing. [<a href="https://www.citusdata.com/blog/2023/08/04/understanding-partitioning-and-sharding-in-postgres-and-citus/">src3</a>]</p>
+        <pre><code class="language-sql">-- Check cardinality: should be &gt;10x your planned shard count
+SELECT COUNT(DISTINCT tenant_id) AS cardinality FROM orders;
+
+-- Check distribution: no single value should exceed 5% of total
+SELECT tenant_id, COUNT(*) AS row_count,
+       ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) AS pct
+FROM orders GROUP BY tenant_id ORDER BY row_count DESC LIMIT 20;</code></pre>
+        <p><strong>Verify</strong>: <code>cardinality &gt; 10 * planned_shards</code> and <code>max(pct) &lt; 5%</code>.</p>
+
+        <h3>3. Choose your sharding strategy</h3>
+        <p>Based on the decision tree, select hash, range, geo, or directory-based sharding. For most OLTP applications, hash-based on tenant_id or user_id is the safest default. [<a href="https://blog.bytebytego.com/p/a-guide-to-database-sharding-key">src6</a>]</p>
+        <p><strong>Verify</strong>: Your chosen strategy handles your top 5 queries without cross-shard operations.</p>
+
+        <h3>4. Implement sharding with your chosen technology</h3>
+        <p>Deploy using a proven sharding middleware or native distributed database rather than building custom sharding logic. [<a href="https://vitess.io/docs/23.0/reference/features/sharding/">src1</a>]</p>
+        <pre><code class="language-sql">-- PostgreSQL + Citus (hash distribution)
+SELECT create_distributed_table('orders', 'tenant_id');
+SELECT create_distributed_table('order_items', 'tenant_id',
+       colocate_with =&gt; 'orders');</code></pre>
+        <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM citus_shards;</code> shows data distributed across all nodes.</p>
+
+        <h3>5. Set up monitoring and rebalancing</h3>
+        <p>Monitor shard distribution, query routing, and hotspots. Set up alerts for shard imbalance exceeding 20%. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding">src5</a>]</p>
+        <pre><code class="language-sql">-- Citus: Check shard sizes and distribution
+SELECT nodename, COUNT(*) AS shard_count,
+       pg_size_pretty(SUM(shard_size)) AS total_size
+FROM citus_shards GROUP BY nodename;</code></pre>
+        <p><strong>Verify</strong>: Shard sizes are within 20% of each other. No single shard handles &gt;30% of total queries.</p>
+    </section>
+
+    <!-- Code Examples - multi-language, tested, copy-pasteable -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Python: Consistent Hashing Ring Implementation</h3>
+        <pre><code class="language-python"># Input:  List of shard nodes + data keys to route
+# Output: Shard assignment for each key with minimal disruption on node changes
+import hashlib
+from bisect import bisect_right
+
+class ConsistentHashRing:
+    def __init__(self, nodes=None, virtual_nodes=150):
+        self.ring, self.sorted_keys = {}, []
+        self.virtual_nodes = virtual_nodes
+        for node in (nodes or []): self.add_node(node)
+
+    def _hash(self, key): return int(hashlib.md5(key.encode()).hexdigest(), 16)
+
+    def add_node(self, node):
+        for i in range(self.virtual_nodes):
+            h = self._hash(f"{node}:vn{i}")
+            self.ring[h] = node; self.sorted_keys.append(h)
+        self.sorted_keys.sort()</code></pre>
+        <p>Full script: <a href="scripts/python-consistent-hashing-ring-implementation.py">python-consistent-hashing-ring-implementation.py</a> (42 lines)</p>
+
+        <h3>SQL/Vitess: VSchema Configuration for Hash-Based Sharding</h3>
+        <pre><code class="language-json">// Vitess vschema -- defines sharding strategy for MySQL
+{
+  "sharded": true,
+  "vindexes": { "hash_tenant": { "type": "hash" } },
+  "tables": {
+    "orders": {
+      "column_vindexes": [{ "column": "tenant_id", "name": "hash_tenant" }]
+    }
+  }
+}</code></pre>
+        <p>Full config: <a href="scripts/sql-vitess-vschema-configuration-for-hash-based-sh.json">vschema-configuration.json</a> (31 lines)</p>
+
+        <h3>Go: Application-Level Shard Router</h3>
+        <pre><code class="language-go">// Input:  Shard key (tenant_id) + database connections
+// Output: Routes queries to correct shard based on hash
+func (r *ShardRouter) GetShard(tenantID string) *sql.DB {
+    h := fnv.New32a()
+    h.Write([]byte(tenantID))
+    idx := h.Sum32() % r.count
+    return r.shards[idx]
+}</code></pre>
+        <p>Full script: <a href="scripts/go-application-level-shard-router.go">go-application-level-shard-router.go</a> (34 lines)</p>
+    </section>
+
+    <!-- Anti-Patterns - wrong vs right code -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Sharding by auto-increment ID with modulo</h3>
+        <pre><code class="language-sql">-- BAD -- Modulo on auto-increment creates hot shard for recent data.
+-- All new inserts go to shard = (max_id + 1) % N, hammering one shard.
+INSERT INTO orders_shard_%s VALUES (...);  -- shard = order_id % 4</code></pre>
+
+        <h3>Correct: Hash the shard key with consistent hashing</h3>
+        <pre><code class="language-sql">-- GOOD -- Hash distributes evenly regardless of key ordering.
+-- Adding a 5th shard moves only ~20% of data (1/N).
+SELECT create_distributed_table('orders', 'tenant_id');  -- Citus handles hashing</code></pre>
+
+        <h3>Wrong: Using a low-cardinality column as shard key</h3>
+        <pre><code class="language-python"># BAD -- country_code has ~200 values. With 16 shards, some shards
+# get USA (40% of data) while others get Liechtenstein (0.001%).
+shard = hash(row["country_code"]) % 16  # massive skew</code></pre>
+
+        <h3>Correct: Use a high-cardinality key, add geo-routing at application level</h3>
+        <pre><code class="language-python"># GOOD -- Shard by tenant_id (millions of values = even distribution).
+# Handle geo-routing in the application layer, not the shard key.
+shard = consistent_hash(row["tenant_id"])
+cluster = geo_directory[row["region"]]</code></pre>
+
+        <h3>Wrong: Cross-shard JOINs in hot-path queries</h3>
+        <pre><code class="language-sql">-- BAD -- This JOIN hits every shard, aggregates at coordinator.
+-- 16 shards = 16 network round trips + merge. Latency: 50-500ms.
+SELECT o.*, u.name FROM orders o
+JOIN users u ON o.user_id = u.user_id
+WHERE o.created_at &gt; NOW() - INTERVAL '1 hour';</code></pre>
+
+        <h3>Correct: Co-locate related tables on the same shard key</h3>
+        <pre><code class="language-sql">-- GOOD -- Both tables sharded by tenant_id = JOIN stays on one shard.
+SELECT create_distributed_table('orders', 'tenant_id');
+SELECT create_distributed_table('users', 'tenant_id',
+       colocate_with =&gt; 'orders');
+-- Query stays on one shard:
+SELECT o.*, u.name FROM orders o
+JOIN users u ON o.tenant_id = u.tenant_id AND o.user_id = u.user_id
+WHERE o.tenant_id = 'abc123';</code></pre>
+
+        <h3>Wrong: Building custom sharding logic in application code</h3>
+        <pre><code class="language-python"># BAD -- Homegrown shard routing = bugs, no rebalancing, no failover.
+def get_connection(user_id):
+    shard_id = hash(user_id) % len(shards)
+    return psycopg2.connect(shards[shard_id])
+# What about transactions? Failover? Schema migrations?</code></pre>
+
+        <h3>Correct: Use a proven sharding middleware</h3>
+        <pre><code class="language-python"># GOOD -- Let Citus, Vitess, or ProxySQL handle routing, rebalancing,
+# failover, and schema migrations. You write normal SQL.
+conn = psycopg2.connect("host=citus-coordinator dbname=myapp")
+cur = conn.cursor()
+cur.execute("SELECT * FROM orders WHERE tenant_id = %s", ("abc123",))</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Hot shards from monotonic keys</strong>: Sharding by auto-increment ID, timestamp, or ObjectId concentrates all recent writes on one shard. Fix: use hash-based sharding or add a random prefix. [<a href="https://www.cockroachlabs.com/blog/hash-sharded-indexes-unlock-linear-scaling-for-sequential-workloads/">src2</a>]</li>
+            <li><strong>Cross-shard query explosion</strong>: Queries without the shard key in the WHERE clause hit all shards (scatter-gather). Fix: always include the shard key in queries. Denormalize data to avoid cross-shard JOINs. [<a href="https://vitess.io/docs/23.0/reference/features/sharding/">src1</a>]</li>
+            <li><strong>Unbalanced shard sizes over time</strong>: Data growth is rarely uniform -- some tenants grow 100x faster. Fix: implement shard splitting or tenant migration. Citus <code>rebalance_table_shards()</code> handles this automatically. [<a href="https://www.citusdata.com/blog/2023/08/04/understanding-partitioning-and-sharding-in-postgres-and-citus/">src3</a>]</li>
+            <li><strong>Schema migrations across shards</strong>: DDL changes must be applied to every shard atomically. Fix: use middleware's built-in migration tool (Vitess <code>ApplySchema</code>, Citus DDL propagation). [<a href="https://vitess.io/docs/23.0/reference/features/sharding/">src1</a>]</li>
+            <li><strong>Connection pool exhaustion</strong>: N shards x M app servers = N*M connections. With 16 shards and 50 app servers, that is 800 connections per shard. Fix: use PgBouncer per shard or a connection-aware proxy. [<a href="https://www.citusdata.com/blog/2023/08/04/understanding-partitioning-and-sharding-in-postgres-and-citus/">src3</a>]</li>
+            <li><strong>Distributed transaction overhead</strong>: Two-phase commit (2PC) across shards adds 2-10x latency. Fix: design for eventual consistency where possible. Use saga pattern for multi-shard workflows. [<a href="https://www.yugabyte.com/blog/four-data-sharding-strategies-we-analyzed-in-building-a-distributed-sql-database/">src4</a>]</li>
+            <li><strong>Backup and restore complexity</strong>: Each shard must be backed up independently but restored to a consistent point-in-time. Fix: use coordinated snapshots or logical replication with consistent cutover. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding">src5</a>]</li>
+            <li><strong>Testing with fewer shards than production</strong>: Bugs that only manifest with &gt;2 shards go undetected. Fix: run CI tests with production shard count or at minimum 4 shards. [<a href="https://blog.bytebytego.com/p/a-guide-to-database-sharding-key">src6</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># PostgreSQL + Citus: Check shard distribution
+psql -c "SELECT nodename, COUNT(*) AS shards, pg_size_pretty(SUM(shard_size))
+         FROM citus_shards GROUP BY nodename;"
+
+# Citus: Find scatter-gather queries (hitting multiple shards)
+psql -c "SELECT query, calls, mean_exec_time
+         FROM citus_stat_statements
+         WHERE partition_count &gt; 1 ORDER BY calls DESC LIMIT 10;"
+
+# MongoDB: Check balancer status and chunk distribution
+mongosh --eval 'sh.status()'
+mongosh --eval 'db.adminCommand({ balancerStatus: 1 })'
+
+# Vitess: List tablets and their health
+vtctlclient ListAllTablets | grep -v healthy
+
+# General: Check shard key cardinality
+psql -c "SELECT COUNT(DISTINCT tenant_id) AS cardinality,
+                COUNT(*) AS total_rows FROM orders;"</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Technology</th>
+                        <th scope="col">Version</th>
+                        <th scope="col">Sharding Features</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>PostgreSQL + Citus</td><td>13.0 (2025)</td><td>Schema-based sharding, shard rebalancer, CDC</td><td>Citus 12 introduced schema-based sharding (2023)</td></tr>
+                    <tr><td>Vitess</td><td>21.x (2025)</td><td>VReplication, online resharding, VDiff</td><td>Used by Slack, GitHub, PlanetScale. CNCF graduated</td></tr>
+                    <tr><td>MongoDB</td><td>8.0 (2024)</td><td>Hashed + ranged sharding, zone sharding</td><td>Online resharding added in 6.0 (2022)</td></tr>
+                    <tr><td>CockroachDB</td><td>24.x (2025)</td><td>Automatic range splitting, hash-sharded indexes</td><td>Transparent sharding -- no manual shard management</td></tr>
+                    <tr><td>TiDB</td><td>8.x (2025)</td><td>Auto-sharding, TiFlash columnar, placement rules</td><td>MySQL-compatible, auto-splits at 96MB regions</td></tr>
+                    <tr><td>YugabyteDB</td><td>2024.x</td><td>Hash + range sharding, tablespace geo-partitioning</td><td>PostgreSQL-compatible, automatic tablet splitting</td></tr>
+                    <tr><td>Cassandra</td><td>5.0 (2024)</td><td>Consistent hashing (Murmur3), virtual nodes</td><td>Always sharded -- no single-node mode</td></tr>
+                    <tr><td>ScyllaDB</td><td>6.x (2025)</td><td>Tablets (replacing vnodes), Raft-based topology</td><td>Cassandra-compatible, 10x lower latency</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Single database exceeds 1-5TB and vertical scaling is maxed</td><td>Database is &lt;500GB with room to scale vertically</td><td>Add more RAM/CPU, optimize queries, add read replicas</td></tr>
+                    <tr><td>Write throughput exceeds single-node capacity (&gt;50K writes/sec)</td><td>Read-heavy workload with low write volume</td><td>Read replicas with connection routing</td></tr>
+                    <tr><td>Data residency requirements mandate geographic isolation</td><td>All users are in one region</td><td>Single-region deployment with edge caching</td></tr>
+                    <tr><td>Multi-tenant SaaS needs tenant-level isolation and scaling</td><td>&lt;100 tenants with similar data volumes</td><td>Schema-per-tenant or row-level security on single DB</td></tr>
+                    <tr><td>Need to scale horizontally beyond single-machine limits</td><td>Application can tolerate latency from unoptimized indexes</td><td>Index optimization and query tuning first</td></tr>
+                    <tr><td>Compliance requires data in specific jurisdictions (GDPR, CCPA)</td><td>No regulatory data residency requirements</td><td>Single deployment with encryption at rest</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>Sharding is a one-way door operationally -- once data is distributed, unsharding (merging back) requires a full migration project that can take weeks to months depending on data volume</li>
+            <li>Choosing the wrong shard key is the most expensive mistake: it requires migrating all data to a new distribution, which means double storage and extended downtime or complex dual-write periods</li>
+            <li>Distributed databases (CockroachDB, TiDB, YugabyteDB) handle sharding transparently but add latency for cross-range transactions -- benchmark your specific workload before assuming they eliminate sharding complexity</li>
+            <li>Schema-based sharding (Citus 12+) is simpler for SaaS but breaks down beyond ~10K tenants due to PostgreSQL catalog overhead per schema</li>
+            <li>Consistent hashing solves resharding data movement but does not solve cross-shard queries, distributed transactions, or global secondary indexes</li>
+            <li>Cloud-managed sharding services (PlanetScale, Amazon Aurora, Azure Cosmos DB) reduce operational burden but introduce vendor lock-in and higher per-query costs at scale</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="depends_on">PostgreSQL Slow Query Optimization</a>
+        <a href="/software/debugging/postgresql-connection-pool/2026" data-relationship="depends_on">PostgreSQL Connection Pool Tuning</a>
+        <a href="/software/system-design/chat-app-at-scale/2026" data-relationship="related_to">Scalable Chat Application Design</a>
+        <a href="/software/system-design/e-commerce-platform/2026" data-relationship="related_to">E-Commerce Platform Design</a>
+        <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+        Browse: Software &middot; System Design<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,37 @@
+START — How many concurrent users?
+├── <1K concurrent users?
+│   ├── YES → SIMPLE STACK
+│   │   ├── Single Node.js/Go server with WebSocket (Socket.IO or ws)
+│   │   ├── PostgreSQL for messages + users
+│   │   ├── In-memory presence (Map/Set on the server)
+│   │   └── No message queue needed — direct delivery
+│   └── NO ↓
+├── 1K–100K concurrent users?
+│   ├── YES → DISTRIBUTED STACK
+│   │   ├── 2-10 WebSocket gateway servers behind load balancer
+│   │   ├── Redis Pub/Sub for cross-server message routing
+│   │   ├── PostgreSQL (partitioned by conversation_id) or MongoDB
+│   │   ├── Redis for presence + caching
+│   │   ├── Kafka or RabbitMQ for async delivery + push notifications
+│   │   └── S3 + CDN for media
+│   └── NO ↓
+├── 100K–10M concurrent users?
+│   ├── YES → LARGE-SCALE STACK
+│   │   ├── 50-500 WebSocket gateways, sharded by user_id consistent hash
+│   │   ├── Kafka for all message routing (partitioned by conversation_id)
+│   │   ├── Cassandra/ScyllaDB for message storage (billions/day)
+│   │   ├── PostgreSQL for metadata + groups (with read replicas)
+│   │   ├── Redis Cluster for presence + session + cache
+│   │   ├── Elasticsearch for message search
+│   │   └── Dedicated push notification service
+│   └── NO ↓
+└── >10M concurrent users (WhatsApp/Discord scale)?
+    ├── YES → HYPERSCALE STACK
+    │   ├── Custom WebSocket layer (Erlang/BEAM or Rust)
+    │   ├── Per-user message queues (Kafka with millions of partitions or custom)
+    │   ├── ScyllaDB or custom storage (Discord moved from Cassandra to ScyllaDB)
+    │   ├── Multi-region deployment with geo-routing
+    │   ├── Signal Protocol E2E encryption
+    │   ├── Custom presence built on CRDT or gossip protocol
+    │   └── Dedicated teams per subsystem (>50 engineers)
+    └── DEFAULT → Start with DISTRIBUTED STACK, evolve to LARGE-SCALE as needed

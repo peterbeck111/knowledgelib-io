@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes Horizontal Pod Autoscaler (HPA) | knowledgelib.io</title>
+  <meta name="description" content="Complete Kubernetes HPA reference covering autoscaling/v2 configuration, metric types (CPU, memory, custom, external), scaling behavior with...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-hpa/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes Horizontal Pod Autoscaler (HPA) | knowledgelib.io">
+  <meta property="og:description" content="Complete Kubernetes HPA reference covering autoscaling/v2 configuration, metric types (CPU, memory, custom, external), scaling behavior with stabilization windows, prometheus-adapter setup, KEDA integration, and decision tree for HPA vs VPA vs KEDA. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-hpa/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes Horizontal Pod Autoscaler (HPA) | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Kubernetes HPA reference covering autoscaling/v2 configuration, metric types (CPU, memory, custom, external), scaling behavior with stabilization windows, prometheus-adapter setup, KEDA integration, and decision tree for HPA vs VPA vs KEDA. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes HPA">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Kubernetes reference: Horizontal Pod Autoscaler">
+  <meta name="ai:aliases" content="Kubernetes HPA configuration; k8s horizontal pod autoscaler setup; HPA v2 autoscaling YAML; Kubernetes autoscale deployment pods; HPA custom metrics Prometheus adapter; KEDA vs HPA Kubernetes; kubectl autoscale CPU memory; HPA scaling behavior stabilization window">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-hpa/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="metric_type,workload_type">
+  <meta name="ai:constraints" content="Pods MUST have resource requests defined; metrics-server MUST be deployed; HPA and VPA MUST NOT target same pods on same resource metric; Use autoscaling/v2 API; minReplicas >= 1 (use KEDA for scale-to-zero); Custom metrics require a metrics adapter">
+  <meta name="ai:skip_this_unit_if" content="Need event-driven scaling (Kafka, SQS, cron) &rarr; software/devops/keda-autoscaler/2026; Need to right-size pod resources &rarr; software/devops/k8s-vpa/2026; Need to scale cluster nodes &rarr; software/devops/cluster-autoscaler/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes Horizontal Pod Autoscaler (HPA): Complete Reference",
+    "headline": "Kubernetes Horizontal Pod Autoscaler (HPA): Complete Reference",
+    "description": "Complete reference for Kubernetes Horizontal Pod Autoscaler covering autoscaling/v2 API configuration, metric types (Resource, Pods, Object, External), scaling behavior with stabilization windows, prometheus-adapter for custom metrics, KEDA for event-driven autoscaling, and decision guidance for HPA vs VPA vs KEDA.",
+    "keywords": ["Kubernetes HPA", "Horizontal Pod Autoscaler", "autoscaling/v2", "metrics-server", "prometheus-adapter", "KEDA", "Kubernetes autoscaling", "custom metrics", "scaling behavior", "stabilization window"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.23+, metrics-server, prometheus-adapter (optional), KEDA 2.x (optional)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Horizontal Pod Autoscaling",
+        "url": "https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "HorizontalPodAutoscaler Walkthrough",
+        "url": "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "prometheus-adapter: Custom Metrics API using Prometheus",
+        "url": "https://github.com/kubernetes-sigs/prometheus-adapter"
+      },
+      {
+        "@type": "WebPage",
+        "name": "KEDA - Kubernetes Event-driven Autoscaling",
+        "url": "https://keda.sh/docs/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Taming Kubernetes HPA Flapping with Stabilization Windows",
+        "url": "https://www.flightcrew.io/blog/hpa-stabilization-window"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Configuring horizontal Pod autoscaling",
+        "url": "https://docs.cloud.google.com/kubernetes-engine/docs/how-to/horizontal-pod-autoscaling"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Configurable HPA Scale Velocity KEP-853",
+        "url": "https://github.com/kubernetes/enhancements/blob/master/keps/sig-autoscaling/853-configurable-hpa-scale-velocity/README.md"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes Horizontal Pod Autoscaler (HPA): Complete Reference",
+    "description": "Structured knowledge unit on Kubernetes HPA covering autoscaling/v2 configuration, metric types, scaling behavior, stabilization windows, prometheus-adapter, KEDA, and HPA vs VPA decision guidance.",
+    "keywords": ["Kubernetes HPA", "Horizontal Pod Autoscaler", "autoscaling/v2", "metrics-server", "prometheus-adapter", "KEDA", "Kubernetes autoscaling"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes Project"},
+      {"@type": "Organization", "name": "Kubernetes SIGs"},
+      {"@type": "Organization", "name": "KEDA Project (CNCF)"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "FlightCrew"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes HPA" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kubernetes reference: Horizontal Pod Autoscaler",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes HPA configuration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "k8s horizontal pod autoscaler setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "HPA v2 autoscaling YAML",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes autoscale deployment pods",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "HPA custom metrics Prometheus adapter",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes Horizontal Pod Autoscaler (HPA): Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Kubernetes reference: Horizontal Pod Autoscaler</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-hpa/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: HPA automatically adjusts pod replica count based on observed CPU, memory, custom, or external metrics using the formula <code>desiredReplicas = ceil(currentReplicas * (currentMetric / desiredMetric))</code>.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl autoscale deployment &lt;name&gt; --cpu-percent=50 --min=2 --max=10</code></li>
+    <li><strong>Watch out for</strong>: Pods without resource requests defined -- HPA cannot calculate utilization percentage and will not scale.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.23+ (autoscaling/v2 GA). Requires metrics-server for CPU/memory. Custom metrics need prometheus-adapter or equivalent.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Pods MUST have resource requests defined -- HPA calculates utilization as a percentage of requests, not limits</li>
+    <li>metrics-server MUST be deployed in the cluster for CPU/memory-based HPA to function</li>
+    <li>HPA and VPA MUST NOT target the same pods on the same resource metric (CPU/memory) -- use VPA for sizing, HPA with custom metrics for scaling</li>
+    <li>Use autoscaling/v2 API -- v1 only supports CPU and lacks scaling behavior controls</li>
+    <li>minReplicas MUST be &gt;= 1 for HPA (use KEDA if you need scale-to-zero)</li>
+    <li>Custom and external metrics require a metrics adapter registered with the aggregation layer</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>HPA Metric Types</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Metric Type</th><th scope="col">API Group</th><th scope="col">Source</th><th scope="col">Target Types</th><th scope="col">Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Resource</td><td>metrics.k8s.io</td><td>metrics-server</td><td>Utilization, AverageValue</td><td>CPU at 50% utilization</td></tr>
+      <tr><td>2</td><td>ContainerResource</td><td>metrics.k8s.io</td><td>metrics-server</td><td>Utilization, AverageValue</td><td>CPU of specific container</td></tr>
+      <tr><td>3</td><td>Pods</td><td>custom.metrics.k8s.io</td><td>prometheus-adapter</td><td>AverageValue</td><td>requests_per_second per pod</td></tr>
+      <tr><td>4</td><td>Object</td><td>custom.metrics.k8s.io</td><td>prometheus-adapter</td><td>Value, AverageValue</td><td>Ingress requests_per_second</td></tr>
+      <tr><td>5</td><td>External</td><td>external.metrics.k8s.io</td><td>cloud provider adapter</td><td>Value, AverageValue</td><td>SQS queue depth from CloudWatch</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Scaling Behavior Configuration</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Default (Scale Up)</th><th scope="col">Default (Scale Down)</th><th scope="col">Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>stabilizationWindowSeconds</td><td>0</td><td>300 (5 min)</td><td>Window to pick highest/lowest recommendation</td></tr>
+      <tr><td>policies[].type</td><td>Percent / Pods</td><td>Percent / Pods</td><td>Scale by percentage or absolute pod count</td></tr>
+      <tr><td>policies[].value</td><td>100% or 4 pods</td><td>100%</td><td>Maximum change per period</td></tr>
+      <tr><td>policies[].periodSeconds</td><td>15</td><td>60</td><td>How often policy can trigger</td></tr>
+      <tr><td>selectPolicy</td><td>Max</td><td>Max</td><td>Pick largest (Max) or smallest (Min) of policies</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>HPA Algorithm Parameters</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Default</th><th scope="col">Flag</th><th scope="col">Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Sync period</td><td>15s</td><td><code>--horizontal-pod-autoscaler-sync-period</code></td><td>How often HPA evaluates metrics</td></tr>
+      <tr><td>Tolerance</td><td>0.1 (10%)</td><td><code>--horizontal-pod-autoscaler-tolerance</code></td><td>Ratio must differ from 1.0 by this much to trigger scaling</td></tr>
+      <tr><td>Downscale stabilization</td><td>300s</td><td>Via <code>behavior.scaleDown.stabilizationWindowSeconds</code></td><td>Prevents rapid scale-down oscillation</td></tr>
+      <tr><td>Initial readiness delay</td><td>30s</td><td><code>--horizontal-pod-autoscaler-initial-readiness-delay</code></td><td>Ignore unready pods for this duration</td></tr>
+      <tr><td>CPU init period</td><td>5m</td><td><code>--horizontal-pod-autoscaler-cpu-initialization-period</code></td><td>Ignore CPU metrics during startup</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What type of autoscaling do you need?
+|
++-- Need to scale replica count based on CPU/memory?
+|   +-- YES --&gt; Use HPA with Resource metrics (see Step 1-2)
+|   +-- NO |
+|
++-- Need to scale on application-specific metrics (RPS, queue length)?
+|   +-- YES --&gt; Is the metric available inside the cluster (Prometheus)?
+|   |   +-- YES --&gt; Use HPA + prometheus-adapter (see Step 3)
+|   |   +-- NO --&gt; Use HPA + external metrics adapter (see Step 4)
+|   +-- NO |
+|
++-- Need to scale to zero replicas when idle?
+|   +-- YES --&gt; Use KEDA (extends HPA with scale-to-zero)
+|   +-- NO |
+|
++-- Need to right-size pod resource requests, not add replicas?
+|   +-- YES --&gt; Use VPA (Vertical Pod Autoscaler), not HPA
+|   +-- NO |
+|
++-- Workload is stateful (database, cache)?
+|   +-- YES --&gt; Prefer VPA or manual scaling; HPA risks split-brain
+|   +-- NO |
+|
++-- Need cluster node scaling when pods are unschedulable?
+|   +-- YES --&gt; Use Cluster Autoscaler alongside HPA
+|   +-- NO |
+|
++-- DEFAULT --&gt; Start with HPA on CPU at 50-70% target</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Install metrics-server</h3>
+  <p>metrics-server collects CPU and memory usage from kubelets and exposes them via the metrics.k8s.io API. Required for any resource-based HPA. [<a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">src1</a>]</p>
+  <pre><code class="language-bash"># Install metrics-server via kubectl
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# For local clusters (minikube, kind) -- disable TLS verification
+kubectl patch deployment metrics-server -n kube-system \
+  --type='json' \
+  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl top nodes</code> -- should show CPU and memory usage for each node.</p>
+
+  <h3>2. Create a basic HPA with CPU target</h3>
+  <p>Deploy an HPA targeting a Deployment at 50% average CPU utilization. [<a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/">src2</a>]</p>
+  <pre><code class="language-yaml">apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get hpa my-app-hpa</code> -- TARGETS column should show current/target percentages.</p>
+
+  <h3>3. Set up custom metrics with prometheus-adapter</h3>
+  <p>Install prometheus-adapter to expose Prometheus metrics via the custom.metrics.k8s.io API. [<a href="https://github.com/kubernetes-sigs/prometheus-adapter">src3</a>]</p>
+  <pre><code class="language-bash">helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus-adapter prometheus-community/prometheus-adapter \
+  --namespace monitoring \
+  --set prometheus.url=http://prometheus-server.monitoring.svc \
+  --set prometheus.port=9090</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq .</code> -- should list custom metrics.</p>
+
+  <h3>4. Configure scaling behavior (stabilization)</h3>
+  <p>Fine-tune scale-up aggressiveness and scale-down conservatism to prevent flapping. [<a href="https://www.flightcrew.io/blog/hpa-stabilization-window">src5</a>]</p>
+  <pre><code class="language-yaml">behavior:
+  scaleUp:
+    stabilizationWindowSeconds: 30
+    policies:
+    - type: Percent
+      value: 100
+      periodSeconds: 60
+    - type: Pods
+      value: 4
+      periodSeconds: 60
+    selectPolicy: Max
+  scaleDown:
+    stabilizationWindowSeconds: 300
+    policies:
+    - type: Percent
+      value: 10
+      periodSeconds: 120
+    selectPolicy: Min</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl describe hpa my-app-hpa</code> -- check Events section for scaling decisions.</p>
+
+  <h3>5. Create HPA with custom metrics</h3>
+  <p>Scale on application-specific metrics like requests per second after setting up prometheus-adapter. [<a href="https://github.com/kubernetes-sigs/prometheus-adapter">src3</a>]</p>
+  <pre><code class="language-yaml">metrics:
+- type: Pods
+  pods:
+    metric:
+      name: http_requests_per_second
+    target:
+      type: AverageValue
+      averageValue: "100"</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get hpa my-app-hpa-custom</code> -- both metrics should show current values.</p>
+
+  <h3>6. Use KEDA for event-driven autoscaling</h3>
+  <p>When you need scale-to-zero or 60+ external event source integrations beyond what HPA offers natively. [<a href="https://keda.sh/docs/">src4</a>]</p>
+  <pre><code class="language-bash">helm repo add kedacore https://kedacore.github.io/charts
+helm install keda kedacore/keda --namespace keda --create-namespace</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get scaledobject</code> -- READY should be True.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Multi-Metric HPA with External Metrics</h3>
+  <pre><code class="language-yaml"># Input:  Deployment "api-server" running in production
+# Output: HPA scaling on CPU, memory, and AWS SQS queue depth
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-server-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 3
+  maxReplicas: 100
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: External
+    external:
+      metric:
+        name: sqs_queue_messages_visible
+        selector:
+          matchLabels:
+            queue: api-tasks
+      target:
+        type: AverageValue
+        averageValue: "20"</code></pre>
+
+  <h3>Python: Kubernetes Client HPA Management</h3>
+  <pre><code class="language-python"># Input:  Kubernetes cluster with kubeconfig configured
+# Output: Creates/updates an HPA programmatically
+
+from kubernetes import client, config  # kubernetes==29.0.0
+config.load_kube_config()
+autoscaling_v2 = client.AutoscalingV2Api()
+
+hpa = client.V2HorizontalPodAutoscaler(
+    metadata=client.V1ObjectMeta(name="my-app-hpa"),
+    spec=client.V2HorizontalPodAutoscalerSpec(
+        scale_target_ref=client.V2CrossVersionObjectReference(
+            api_version="apps/v1", kind="Deployment", name="my-app"),
+        min_replicas=2, max_replicas=20,
+        metrics=[client.V2MetricSpec(type="Resource",
+            resource=client.V2ResourceMetricSource(name="cpu",
+                target=client.V2MetricTarget(
+                    type="Utilization", average_utilization=50)))]))</code></pre>
+
+  <h3>YAML: KEDA ScaledObject for Queue-Based Scaling</h3>
+  <pre><code class="language-yaml"># Input:  RabbitMQ queue with messages to process
+# Output: Scales consumer from 0 to 30 based on queue depth
+
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: rabbitmq-consumer
+spec:
+  scaleTargetRef:
+    name: consumer-deployment
+  minReplicaCount: 0
+  maxReplicaCount: 30
+  pollingInterval: 15
+  cooldownPeriod: 300
+  triggers:
+  - type: rabbitmq
+    metadata:
+      host: amqp://guest:guest@rabbitmq.default.svc:5672/
+      queueName: task-queue
+      queueLength: "5"</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: HPA without resource requests</h3>
+  <pre><code class="language-yaml"># BAD -- HPA cannot calculate utilization without resource requests
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: my-app:latest
+        # No resources.requests defined!
+# Result: HPA shows &lt;unknown&gt;/50% and never scales</code></pre>
+
+  <h3>Correct: Always define resource requests</h3>
+  <pre><code class="language-yaml"># GOOD -- resource requests let HPA calculate utilization
+containers:
+- name: app
+  image: my-app:latest
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi</code></pre>
+
+  <h3>Wrong: Using autoscaling/v1 for production</h3>
+  <pre><code class="language-yaml"># BAD -- v1 only supports CPU, no scaling behavior
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+spec:
+  targetCPUUtilizationPercentage: 50</code></pre>
+
+  <h3>Correct: Use autoscaling/v2 with behavior controls</h3>
+  <pre><code class="language-yaml"># GOOD -- v2 with scaling behavior prevents flapping
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+spec:
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300</code></pre>
+
+  <h3>Wrong: HPA and VPA both targeting CPU on same pods</h3>
+  <pre><code class="language-yaml"># BAD -- HPA and VPA conflict on the same resource metric
+# HPA wants more pods; VPA wants to resize same pods
+# Result: oscillation, pod restarts, unpredictable behavior</code></pre>
+
+  <h3>Correct: VPA for sizing, HPA on custom metric</h3>
+  <pre><code class="language-yaml"># GOOD -- VPA manages resource requests; HPA scales on custom metric
+# VPA: controlledResources: ["cpu", "memory"]
+# HPA: metric type Pods, name: http_requests_per_second</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Flapping (rapid oscillation)</strong>: Traffic spikes cause HPA to scale up aggressively, then immediately scale down. Fix: Set <code>behavior.scaleDown.stabilizationWindowSeconds: 300</code> and conservative scale-down policies. [<a href="https://www.flightcrew.io/blog/hpa-stabilization-window">src5</a>]</li>
+    <li><strong>Metrics lag during startup</strong>: New pods report high CPU during initialization, causing further scale-up. Fix: Kubernetes ignores CPU for pods in the CPU initialization period (default 5 min). Set appropriate readiness probes. [<a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">src1</a>]</li>
+    <li><strong>Resource requests too low</strong>: If <code>requests.cpu: 50m</code> but app needs 200m idle, HPA sees 400% utilization and over-provisions. Fix: Use VPA recommendations to set accurate requests first. [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/horizontal-pod-autoscaling">src6</a>]</li>
+    <li><strong>Custom metrics not found</strong>: HPA shows <code>FailedGetPodsMetric</code> error. Fix: Verify prometheus-adapter is running and metrics are exposed via <code>kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1"</code>. [<a href="https://github.com/kubernetes-sigs/prometheus-adapter">src3</a>]</li>
+    <li><strong>minReplicas: 1 in production</strong>: Single pod means zero redundancy during scaling lag. Fix: Set <code>minReplicas: 2</code> minimum for production workloads. [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/horizontal-pod-autoscaling">src6</a>]</li>
+    <li><strong>Ignoring the 10% tolerance</strong>: HPA default tolerance of 0.1 means a 50% target won't scale until usage exceeds ~55%. Fix: Account for this when setting targets. [<a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">src1</a>]</li>
+    <li><strong>Multiple metrics select highest replica count</strong>: HPA picks the metric requesting the most replicas, which can cause over-provisioning. Fix: Tune each metric target independently. [<a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check if metrics-server is running
+kubectl get deployment metrics-server -n kube-system
+
+# View current resource usage for pods
+kubectl top pods -n &lt;namespace&gt;
+
+# View HPA status (current metrics vs targets)
+kubectl get hpa -n &lt;namespace&gt;
+
+# Detailed HPA status with events and conditions
+kubectl describe hpa &lt;hpa-name&gt; -n &lt;namespace&gt;
+
+# Verify custom metrics API is registered
+kubectl get apiservice | grep metrics
+
+# List available custom metrics
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq '.resources[].name'
+
+# Watch HPA scaling events in real time
+kubectl get events --field-selector reason=SuccessfulRescale --watch
+
+# Check KEDA ScaledObject status
+kubectl get scaledobject -n &lt;namespace&gt;</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Version</th><th scope="col">K8s Version</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>autoscaling/v2</td><td>1.23+ (GA)</td><td>Current, recommended</td><td>Multiple metrics, custom/external, scaling behavior, container resources</td></tr>
+      <tr><td>autoscaling/v2beta2</td><td>1.12-1.25</td><td>Removed in 1.26</td><td>Identical to v2; migrate to autoscaling/v2</td></tr>
+      <tr><td>autoscaling/v2beta1</td><td>1.8-1.25</td><td>Removed in 1.26</td><td>Early multi-metric support</td></tr>
+      <tr><td>autoscaling/v1</td><td>1.2+</td><td>Supported but limited</td><td>CPU-only, no scaling behavior, no custom metrics</td></tr>
+      <tr><td>Container resources</td><td>1.20 (beta), 1.27 (GA)</td><td>Current</td><td>Per-container metric targeting</td></tr>
+      <tr><td>KEDA 2.x</td><td>Any</td><td>CNCF graduated</td><td>60+ scalers, scale-to-zero, ScaledObject/ScaledJob</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Stateless web services need to handle variable HTTP traffic</td><td>Workload is stateful with complex state management (databases)</td><td>Manual scaling or operator-based scaling</td></tr>
+      <tr><td>CPU/memory utilization correlates with load</td><td>Load pattern is purely event-driven (queue consumers, cron jobs)</td><td>KEDA with event-source triggers</td></tr>
+      <tr><td>Need to scale replicas 1-N based on resource metrics</td><td>Need to scale from 0 to N (cold-start workloads)</td><td>KEDA (supports scale-to-zero)</td></tr>
+      <tr><td>Prometheus already collects application metrics in-cluster</td><td>Need to right-size pod resource requests/limits</td><td>Vertical Pod Autoscaler (VPA)</td></tr>
+      <tr><td>Multiple metrics should drive scaling decisions</td><td>Single-event trigger with complex business logic</td><td>Custom controller or KEDA with multiple triggers</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>The HPA scaling formula operates on average metrics across all ready pods -- a single hot pod does not trigger scaling unless the average exceeds the target</li>
+    <li>HPA evaluates metrics every 15 seconds by default, but scaling decisions are further smoothed by the stabilization window -- expect 30-60 seconds minimum response time for scale-up</li>
+    <li>When multiple metrics are specified, HPA calculates desired replicas for each independently and selects the maximum -- this can lead to over-provisioning</li>
+    <li>Container resource metrics (targeting a specific container) are GA since Kubernetes 1.27 -- use this when sidecar containers skew whole-pod CPU averages</li>
+    <li>KEDA does not replace HPA; it creates and manages HPA objects under the hood -- KEDA handles the 0-1 transition, HPA handles 1-N</li>
+    <li>Cluster Autoscaler is complementary to HPA: HPA scales pods, then Cluster Autoscaler scales nodes when pods cannot be scheduled</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/k8s-metrics-server/2026" data-relationship="depends_on">Kubernetes Metrics Server Setup</a>
+    <a href="/software/devops/k8s-resource-management/2026" data-relationship="related_to">Kubernetes Resource Requests and Limits</a>
+    <a href="/software/devops/prometheus-monitoring/2026" data-relationship="related_to">Prometheus Monitoring Setup</a>
+    <a href="/software/devops/keda-autoscaler/2026" data-relationship="alternative_to">KEDA Event-Driven Autoscaler</a>
+    <a href="/software/devops/k8s-vpa/2026" data-relationship="alternative_to">Kubernetes Vertical Pod Autoscaler</a>
+    <a href="/software/devops/cluster-autoscaler/2026" data-relationship="often_confused_with">Cluster Autoscaler</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "knowledgelib.io API",
+    "description": "Structured, cited knowledge units for AI agents. Search, retrieve, and browse pre-verified product comparisons and reference guides.\n\n## How to use (IMPORTANT — read before calling any endpoint)\n\n1. **Search first** — call `GET /query?q=your+question` to find pre-verified, cited knowledge units.\n2. **Use what you find** — if a relevant unit exists (e.g. a product comparison or software reference), use its content directly in your work. Every claim is sourced and cited.\n3. **Suggest what's missing** — if no good match exists, call `POST /suggest` with the question you need answered. Popular suggestions are prioritized for new unit creation. The next agent that asks will get an answer.",
+    "version": "1.0.0",
+    "contact": {
+      "email": "hello@knowledgelib.io",
+      "url": "https://knowledgelib.io/api"
+    },
+    "license": {
+      "name": "CC BY-SA 4.0",
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://knowledgelib.io/api/v1",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/query": {
+      "get": {
+        "operationId": "queryKnowledge",
+        "summary": "Search knowledge units",
+        "description": "Semantic search across all knowledge units. Returns top matching units ranked by relevance against canonical questions and aliases.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Search query (e.g., 'best wireless earbuds under 150')",
+            "schema": { "type": "string", "minLength": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum results to return (1-20, default 10)",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10 }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "description": "Filter by domain (e.g., 'consumer_electronics', 'computing', 'home')",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": { "type": "string" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "canonical_question": { "type": "string" },
+                          "confidence": { "type": "number" },
+                          "last_verified": { "type": "string", "format": "date" },
+                          "relevance_score": { "type": "number" },
+                          "url": { "type": "string", "format": "uri" },
+                          "raw_md": { "type": "string", "format": "uri" },
+                          "token_estimate": { "type": "integer" },
+                          "source_count": { "type": "integer" },
+                          "freshness": { "type": "string" }
+                        }
+                      }
+                    },
+                    "total_results": { "type": "integer" },
+                    "query_cost_tokens": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid query parameter"
+          }
+        }
+      }
+    },
+    "/suggest": {
+      "post": {
+        "operationId": "suggestQuestion",
+        "summary": "Suggest a new question or topic",
+        "description": "Submit a question that should be covered by knowledgelib.io. If the question is already answered, returns the matching unit. Otherwise, records the suggestion. Popular suggestions are prioritized for new knowledge unit creation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["question"],
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 500,
+                    "description": "The question to suggest (e.g., 'What are the best robot vacuums under $500 in 2026?')"
+                  },
+                  "context": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Optional context about why this question matters"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "description": "Optional domain hint (e.g., 'home', 'consumer_electronics', 'software')"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suggestion recorded or existing match found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["recorded", "already_answered"],
+                      "description": "'recorded' if new suggestion, 'already_answered' if a matching card exists"
+                    },
+                    "suggestion_id": {
+                      "type": "integer",
+                      "description": "ID of the recorded suggestion (only when status is 'recorded')"
+                    },
+                    "is_duplicate": {
+                      "type": "boolean",
+                      "description": "True if this question was previously suggested"
+                    },
+                    "occurrence_count": {
+                      "type": "integer",
+                      "description": "Total times this question has been suggested"
+                    },
+                    "existing_match": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "The matching knowledge unit (only when status is 'already_answered')",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "canonical_question": { "type": "string" },
+                        "url": { "type": "string", "format": "uri" },
+                        "raw_md": { "type": "string", "format": "uri" }
+                      }
+                    },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (missing or too-short question)"
+          },
+          "429": {
+            "description": "Rate limited (max 5 requests per minute per IP)"
+          }
+        }
+      }
+    },
+    "/suggestions": {
+      "get": {
+        "operationId": "listSuggestions",
+        "summary": "List top unanswered question suggestions",
+        "description": "Returns popular unanswered questions submitted by agents, ranked by occurrence count. Useful for pipeline tooling to discover what topics agents need most.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum suggestions to return (1-100, default 20)",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          },
+          {
+            "name": "min_count",
+            "in": "query",
+            "required": false,
+            "description": "Minimum occurrence count filter (default 1)",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter by suggestion status (default 'pending')",
+            "schema": { "type": "string", "enum": ["pending", "approved", "rejected", "created"], "default": "pending" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of question suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "question": { "type": "string" },
+                          "occurrence_count": { "type": "integer" },
+                          "first_seen": { "type": "string", "format": "date-time" },
+                          "last_seen": { "type": "string", "format": "date-time" },
+                          "source_channel": { "type": "string" },
+                          "agent_type": { "type": "string" },
+                          "domain_hint": { "type": "string", "nullable": true },
+                          "context": { "type": "string", "nullable": true }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/units/{unitId}.md": {
+      "get": {
+        "operationId": "getUnitMarkdown",
+        "summary": "Get raw markdown for a knowledge unit",
+        "description": "Returns the full knowledge unit as raw markdown with YAML frontmatter. Most token-efficient way to consume a unit.",
+        "parameters": [
+          {
+            "name": "unitId",
+            "in": "path",
+            "required": true,
+            "description": "Unit ID path (e.g., consumer-electronics/audio/wireless-earbuds-under-150/2026)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raw markdown content",
+            "content": {
+              "text/markdown": {
+                "schema": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unit not found"
+          }
+        }
+      }
+    },
+    "/units/{unitId}.json": {
+      "get": {
+        "operationId": "getUnitJson",
+        "summary": "Get structured JSON for a knowledge unit",
+        "description": "Returns the knowledge unit with parsed YAML frontmatter as metadata and markdown body as a string.",
+        "parameters": [
+          {
+            "name": "unitId",
+            "in": "path",
+            "required": true,
+            "description": "Unit ID path (e.g., consumer-electronics/audio/wireless-earbuds-under-150/2026)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Structured JSON unit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "metadata": { "type": "object" },
+                    "body": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unit not found"
+          }
+        }
+      }
+    }
+  }
+}

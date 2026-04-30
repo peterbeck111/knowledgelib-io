@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>GraphQL Schema Design Patterns | knowledgelib.io</title>
+  <meta name="description" content="Complete GraphQL schema design patterns reference: Relay connections, input types, unions, interfaces, federation, custom scalars, subscriptions,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/graphql-schema-patterns/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="GraphQL Schema Design Patterns | knowledgelib.io">
+  <meta property="og:description" content="Complete GraphQL schema design patterns reference: Relay connections, input types, unions, interfaces, federation, custom scalars, subscriptions, @defer/@stream. Decision tree for monolith vs federation. Code examples in Node.js, Python, TypeScript. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/graphql-schema-patterns/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GraphQL Schema Design Patterns | knowledgelib.io">
+  <meta name="twitter:description" content="Complete GraphQL schema design patterns reference: Relay connections, input types, unions, interfaces, federation, custom scalars, subscriptions, @defer/@stream. Decision tree for monolith vs federation. Code examples in Node.js, Python, TypeScript. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/graphql_schema_patterns">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the best GraphQL schema design patterns?">
+  <meta name="ai:aliases" content="GraphQL schema best practices; GraphQL type design patterns; How to design a GraphQL API schema; GraphQL federation patterns; Relay connection spec pagination; GraphQL input types and mutations; Schema-first vs code-first GraphQL; GraphQL union types and interfaces">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/graphql-schema-patterns/2026.md">
+  <meta name="ai:token_estimate" content="3600">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="client_type,schema_approach,relay_compatible">
+  <meta name="ai:constraints" content="NEVER expose database schema directly as GraphQL schema; ALWAYS implement depth limiting and query complexity analysis; ALWAYS use DataLoader for N+1 problems; Mutation inputs MUST use dedicated Input types; Relay connections MUST return Connection types with edges/node/pageInfo; Breaking changes require @deprecated before removal">
+  <meta name="ai:skip_this_unit_if" content="Debugging N+1 performance specifically -> software/debugging/graphql-n-plus-1-dataloader/2026; Migrating REST to GraphQL -> software/migrations/rest-to-graphql/2026; Designing overall GraphQL API architecture -> software/system-design/graphql-api-architecture/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "GraphQL Schema Design Patterns",
+    "headline": "GraphQL Schema Design Patterns",
+    "description": "Complete reference for GraphQL schema design patterns including Relay connection spec, input types, union types, interfaces, custom scalars, Apollo Federation, subscriptions, and @defer/@stream. Covers decision trees for monolith vs federation, code examples in Node.js/Apollo Server, Python/Strawberry, and TypeScript/TypeGraphQL, plus anti-patterns and pitfalls.",
+    "keywords": ["GraphQL", "schema design", "Relay connections", "Apollo Federation", "DataLoader", "input types", "union types", "interfaces", "subscriptions", "code-first", "schema-first"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "GraphQL spec 2021, Apollo Server 4.x, Relay Connection Spec, DataLoader 2.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "GraphQL Best Practices",
+        "url": "https://graphql.org/learn/best-practices/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Demand Oriented Schema Design",
+        "url": "https://www.apollographql.com/docs/graphos/schema-design/guides/demand-oriented-schema-design"
+      },
+      {
+        "@type": "WebPage",
+        "name": "GraphQL Cursor Connections Specification",
+        "url": "https://relay.dev/graphql/connections.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Shopify GraphQL Design Tutorial",
+        "url": "https://github.com/Shopify/graphql-design-tutorial/blob/master/TUTORIAL.md"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Introduction to Apollo Federation",
+        "url": "https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Solving the N+1 Problem for GraphQL through Batching",
+        "url": "https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Schema Design Best Practices (Part 2)",
+        "url": "https://the-guild.dev/graphql/hive/blog/schema-design-best-practices-part-2"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "GraphQL Schema Design Patterns",
+    "description": "Structured knowledge unit covering GraphQL schema design patterns: Relay connections, input types, unions, interfaces, federation, custom scalars, subscriptions, @defer/@stream. Includes decision tree, code examples, anti-patterns, and diagnostic commands.",
+    "keywords": ["GraphQL", "schema design", "Relay connections", "Apollo Federation", "DataLoader", "API design patterns"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "GraphQL Foundation"},
+      {"@type": "Organization", "name": "Apollo GraphQL"},
+      {"@type": "Organization", "name": "Meta (Relay)"},
+      {"@type": "Organization", "name": "Shopify Engineering"},
+      {"@type": "Organization", "name": "The Guild"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "GraphQL Schema Design Patterns" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best GraphQL schema design patterns?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL schema best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL type design patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to design a GraphQL API schema",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL federation patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Relay connection spec pagination",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>GraphQL Schema Design Patterns</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best GraphQL schema design patterns?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/graphql-schema-patterns/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Design your GraphQL schema around client use cases and business domain, not database tables -- use Relay connections for pagination, input types for mutations, and interfaces/unions for polymorphism.</li>
+    <li><strong>Key tool/command</strong>: <code>type ProductConnection { edges: [ProductEdge!]! pageInfo: PageInfo! }</code> -- the Relay connection spec is the universal pagination pattern.</li>
+    <li><strong>Watch out for</strong>: N+1 queries -- every resolver that fetches related data without DataLoader batching will multiply your database round-trips by the list size.</li>
+    <li><strong>Works with</strong>: Any GraphQL server (Apollo Server 4.x, graphql-yoga 5.x, Strawberry 0.x, gqlgen 0.17+, Absinthe 1.7+).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER expose database schema directly as your GraphQL schema -- design around client use cases, not table structures</li>
+    <li>ALWAYS implement depth limiting and query complexity analysis on public-facing APIs to prevent denial-of-service via deeply nested queries</li>
+    <li>ALWAYS use DataLoader or equivalent batching to solve N+1 query problems</li>
+    <li>Mutation inputs MUST use dedicated Input types -- never reuse output types as mutation arguments</li>
+    <li>Relay connection fields MUST return Connection types with edges/node/pageInfo -- never raw lists for paginated data</li>
+    <li>Breaking schema changes (removing fields, changing types) require a deprecation period using <code>@deprecated</code></li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Use Case</th><th scope="col">Complexity</th><th scope="col">Benefits</th><th scope="col">Trade-offs</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Relay Connections</strong></td><td>Paginated lists</td><td>Medium</td><td>Cursor-based pagination, consistent interface, metadata via edges</td><td>More verbose than simple lists; requires Connection/Edge/PageInfo types</td></tr>
+      <tr><td><strong>Input Types</strong></td><td>Mutations</td><td>Low</td><td>Single variable per mutation, extensible, clear contract</td><td>Extra type definitions; cannot share with output types</td></tr>
+      <tr><td><strong>Union Types</strong></td><td>Polymorphic returns (search, feeds)</td><td>Medium</td><td>Type-safe multi-type results, exhaustive handling with <code>... on</code></td><td>Clients must handle every member; no shared fields</td></tr>
+      <tr><td><strong>Interfaces</strong></td><td>Shared fields across types (Node, Timestamped)</td><td>Medium</td><td>Common fields guaranteed, works with fragments</td><td>Must be implemented completely; adding fields is breaking</td></tr>
+      <tr><td><strong>Custom Scalars</strong></td><td>Domain-specific values (DateTime, URL, Email)</td><td>Low</td><td>Validation at schema level, self-documenting</td><td>Requires parser/serializer on server; clients need codegen</td></tr>
+      <tr><td><strong>Schema Stitching</strong></td><td>Combining multiple schemas (legacy)</td><td>High</td><td>Quick integration of existing APIs</td><td>Fragile merge conflicts; replaced by federation for most cases</td></tr>
+      <tr><td><strong>Apollo Federation</strong></td><td>Multi-team microservice graph</td><td>High</td><td>Independent subgraph deployment, entity resolution across services</td><td>Operational complexity; requires gateway; cold-start latency</td></tr>
+      <tr><td><strong>Subscriptions</strong></td><td>Real-time updates (chat, notifications)</td><td>High</td><td>Push-based data delivery, native GraphQL</td><td>WebSocket infrastructure; connection management at scale</td></tr>
+      <tr><td><strong>@defer / @stream</strong></td><td>Incremental delivery of slow fields</td><td>Medium</td><td>Faster initial response, progressive rendering</td><td>Still draft spec (2024); limited server/client support</td></tr>
+      <tr><td><strong>Enum Types</strong></td><td>Fixed-set values (status, sort order)</td><td>Low</td><td>Type-safe constants, auto-documented</td><td>Adding values can break exhaustive client switches</td></tr>
+      <tr><td><strong>Nullable by Default</strong></td><td>Field evolution and resilience</td><td>Low</td><td>Safe schema evolution, graceful partial failures</td><td>Clients must handle null; requires discipline</td></tr>
+      <tr><td><strong>Payload Types</strong></td><td>Mutation responses</td><td>Medium</td><td>Return errors alongside data, user errors vs system errors</td><td>More boilerplate than returning the entity directly</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Single team or monolith?
+|   |-- YES --> Use single GraphQL server (Apollo Server, graphql-yoga, Strawberry)
+|   |   |-- Need pagination? --> Use Relay connection spec
+|   |   |-- Need polymorphism? --> interfaces (shared fields) or unions (disjoint types)
+|   |   |-- Need real-time? --> Add subscriptions (WebSocket) or @defer/@stream
+|   |-- NO (multiple teams/services) |
+|       |-- Teams own separate domains? --> Apollo Federation v2 with subgraphs
+|       |-- Integrating legacy GraphQL APIs? --> Schema stitching (last resort)
+|
+|-- Schema-first or code-first?
+|   |-- Team needs shared SDL review (design-first) --> Schema-first (SDL files + codegen)
+|   |-- Developers prefer type-safe code --> Code-first (TypeGraphQL, Nexus, Strawberry)
+|
+|-- REST alongside GraphQL?
+|   |-- YES --> GraphQL as BFF layer over REST microservices (Apollo RESTDataSource)
+|   |-- NO (pure GraphQL) --> Direct database/service resolvers with DataLoader
+|
+|-- Relay client?
+|   |-- YES --> MUST implement Node interface, connection spec, global IDs
+|   |-- NO --> Connection spec still recommended for pagination; Node interface optional</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define your domain entities as object types</h3>
+  <p>Start with the core types your clients need. Use descriptive field names and include <code>@deprecated</code> for fields being phased out. [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/demand-oriented-schema-design">src2</a>]</p>
+  <pre><code class="language-graphql">"""A product in the catalog."""
+type Product implements Node {
+  """Global Relay ID."""
+  id: ID!
+  """Human-readable unique handle."""
+  handle: String!
+  title: String!
+  description: String
+  price: Money!
+  status: ProductStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  """Paginated list of product variants."""
+  variants(first: Int, after: String): VariantConnection!
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}</code></pre>
+  <p><strong>Verify</strong>: <code>npx graphql-inspector validate schema.graphql</code> -- should produce no errors.</p>
+
+  <h3>2. Implement Relay connection pagination</h3>
+  <p>For any list that can grow, use the connection spec: Connection, Edge, PageInfo. [<a href="https://relay.dev/graphql/connections.htm">src3</a>]</p>
+  <pre><code class="language-graphql">type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type ProductEdge {
+  node: Product!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}</code></pre>
+  <p><strong>Verify</strong>: Query <code>{ products(first: 2) { pageInfo { hasNextPage endCursor } edges { cursor node { title } } } }</code> returns valid cursors.</p>
+
+  <h3>3. Design mutations with Input types and Payload types</h3>
+  <p>Each mutation takes a single input argument and returns a payload with the result plus user-facing errors. [<a href="https://github.com/Shopify/graphql-design-tutorial/blob/master/TUTORIAL.md">src4</a>]</p>
+  <pre><code class="language-graphql">input CreateProductInput {
+  title: String!
+  description: String
+  price: MoneyInput!
+  status: ProductStatus = DRAFT
+}
+
+type CreateProductPayload {
+  product: Product
+  userErrors: [UserError!]!
+}
+
+type Mutation {
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+}</code></pre>
+  <p><strong>Verify</strong>: Mutation with invalid input returns <code>userErrors</code> array, not a GraphQL error.</p>
+
+  <h3>4. Add interfaces and unions for polymorphism</h3>
+  <p>Use interfaces when types share common fields; use unions when types are disjoint. [<a href="https://graphql.org/learn/best-practices/">src1</a>]</p>
+  <pre><code class="language-graphql">interface Node {
+  id: ID!
+}
+
+union SearchResult = Product | Article | Category
+
+type Query {
+  node(id: ID!): Node
+  search(query: String!, first: Int): SearchResultConnection!
+}</code></pre>
+  <p><strong>Verify</strong>: <code>{ __type(name: "SearchResult") { possibleTypes { name } } }</code> returns all union members.</p>
+
+  <h3>5. Implement DataLoader for batched resolution</h3>
+  <p>Every resolver that fetches related data must use DataLoader to batch requests within a single tick. [<a href="https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching">src6</a>]</p>
+  <pre><code class="language-javascript">import DataLoader from 'dataloader';
+
+const createLoaders = () => ({
+  productById: new DataLoader(async (ids) => {
+    const products = await db.products.findByIds(ids);
+    const map = new Map(products.map(p => [p.id, p]));
+    return ids.map(id => map.get(id) || null);
+  }),
+});
+
+const resolvers = {
+  OrderItem: {
+    product: (item, _, { loaders }) =>
+      loaders.productById.load(item.productId),
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: Enable query logging -- a list of 50 orders should produce 1 batch query, not 50.</p>
+
+  <h3>6. Add query complexity and depth limiting</h3>
+  <p>Protect your API from abusive queries by setting maximum depth and complexity budgets. [<a href="https://graphql.org/learn/best-practices/">src1</a>]</p>
+  <pre><code class="language-javascript">import depthLimit from 'graphql-depth-limit';
+import { createComplexityRule, simpleEstimator, fieldExtensionsEstimator }
+  from 'graphql-query-complexity';
+
+const server = new ApolloServer({
+  schema,
+  validationRules: [
+    depthLimit(10),
+    createComplexityRule({
+      maximumComplexity: 1000,
+      estimators: [
+        fieldExtensionsEstimator(),
+        simpleEstimator({ defaultComplexity: 1 }),
+      ],
+    }),
+  ],
+});</code></pre>
+  <p><strong>Verify</strong>: A deeply nested query (11+ levels) is rejected with a depth-limit error.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js / Apollo Server: Federation subgraph schema</h3>
+  <pre><code class="language-graphql"># Input:  SDL file for Apollo Federation v2
+# Output: Subgraph that composes into a supergraph
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3",
+  import: ["@key", "@shareable", "@external"])
+
+type Product @key(fields: "id") {
+  id: ID!
+  title: String!
+  price: Money!
+  reviews(first: Int = 10, after: String): ReviewConnection!
+}
+
+type Money {
+  amount: Int!       # cents
+  currencyCode: String!
+}</code></pre>
+
+  <h3>Python / Strawberry: Type-safe code-first schema</h3>
+  <pre><code class="language-python"># Input:  Python classes defining GraphQL types
+# Output: Executable schema with Relay pagination
+
+import strawberry
+from strawberry import relay
+
+@strawberry.type
+class Product(relay.Node):
+    id: relay.NodeID[int]
+    title: str
+    price_cents: int
+
+    @relay.connection(relay.ListConnection[Product])
+    def variants(self, info) -> list["Product"]:
+        return get_variants(self.id)
+
+@strawberry.type
+class Query:
+    @relay.connection(relay.ListConnection[Product])
+    def products(self, info, status: str | None = None) -> list[Product]:
+        return get_products(status=status)
+
+schema = strawberry.Schema(query=Query)</code></pre>
+
+  <h3>TypeScript / TypeGraphQL: Decorator-based code-first</h3>
+  <pre><code class="language-typescript">// Input:  TypeScript classes with decorators
+// Output: Executable schema with type safety
+
+import { ObjectType, Field, ID, InputType, Mutation, Arg, Resolver }
+  from "type-graphql";
+
+@ObjectType()
+class Product {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  title!: string;
+
+  @Field({ deprecationReason: "Use priceV2 instead" })
+  price!: number;
+
+  @Field(() => Money)
+  priceV2!: Money;
+}
+
+@InputType()
+class CreateProductInput {
+  @Field()
+  title!: string;
+
+  @Field({ nullable: true })
+  description?: string;
+}
+
+@Resolver(Product)
+class ProductResolver {
+  @Mutation(() => Product)
+  async createProduct(@Arg("input") input: CreateProductInput) {
+    return await ProductService.create(input);
+  }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Exposing database tables as GraphQL types</h3>
+  <pre><code class="language-graphql"># BAD -- mirrors database schema, exposes internal column names
+type products {
+  product_id: Int!
+  product_name: String
+  category_fk: Int          # leaking foreign keys
+  is_deleted: Boolean       # internal soft-delete flag
+  created_at_utc: String    # raw DB column naming
+}</code></pre>
+
+  <h3>Correct: Domain-driven type design</h3>
+  <pre><code class="language-graphql"># GOOD -- models the business domain, hides implementation
+type Product implements Node {
+  id: ID!                   # opaque global ID
+  title: String!            # domain language
+  category: Category!       # resolved object, not FK
+  createdAt: DateTime!      # custom scalar, consistent naming
+  # is_deleted never exposed -- filter at resolver level
+}</code></pre>
+
+  <h3>Wrong: Returning raw lists without pagination</h3>
+  <pre><code class="language-graphql"># BAD -- unbounded list, no cursor, no page info
+type Query {
+  products: [Product!]!     # returns ALL products
+  orderItems(orderId: ID!): [OrderItem!]!
+}</code></pre>
+
+  <h3>Correct: Relay connection pagination</h3>
+  <pre><code class="language-graphql"># GOOD -- bounded, cursor-based, with metadata
+type Query {
+  products(first: Int!, after: String): ProductConnection!
+  orderItems(orderId: ID!, first: Int = 20, after: String): OrderItemConnection!
+}</code></pre>
+
+  <h3>Wrong: Reusing output types as mutation inputs</h3>
+  <pre><code class="language-graphql"># BAD -- output type used as input; id and computed fields cause confusion
+type Mutation {
+  updateProduct(product: Product!): Product!
+}</code></pre>
+
+  <h3>Correct: Dedicated Input types per mutation</h3>
+  <pre><code class="language-graphql"># GOOD -- separate input type with only writable fields
+input UpdateProductInput {
+  title: String
+  description: String
+  price: MoneyInput
+}
+
+type Mutation {
+  updateProduct(id: ID!, input: UpdateProductInput!): UpdateProductPayload!
+}</code></pre>
+
+  <h3>Wrong: No query depth or complexity limits</h3>
+  <pre><code class="language-javascript">// BAD -- no protection against malicious deep queries
+const server = new ApolloServer({ schema });
+// attacker can send: { user { posts { comments { author { posts { ... } } } } } }</code></pre>
+
+  <h3>Correct: Depth limit + complexity analysis</h3>
+  <pre><code class="language-javascript">// GOOD -- bounded depth and computed complexity budget
+import depthLimit from 'graphql-depth-limit';
+import { createComplexityRule } from 'graphql-query-complexity';
+
+const server = new ApolloServer({
+  schema,
+  validationRules: [
+    depthLimit(10),
+    createComplexityRule({ maximumComplexity: 1000 }),
+  ],
+});</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>N+1 query explosion</strong>: Without DataLoader, resolving a list of 100 orders with <code>order.product</code> fires 100 separate DB queries. Fix: <code>new DataLoader(ids => batchFetchProducts(ids))</code> and create loaders per-request. [<a href="https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching">src6</a>]</li>
+    <li><strong>Schema-database coupling</strong>: Auto-generating schema from DB exposes internal structure and makes frontend changes require DB migrations. Fix: treat the schema as a separate API contract. [<a href="https://github.com/Shopify/graphql-design-tutorial/blob/master/TUTORIAL.md">src4</a>]</li>
+    <li><strong>Breaking changes without deprecation</strong>: Removing a field or changing its type breaks existing clients silently. Fix: add <code>@deprecated(reason: "Use fieldV2")</code>, monitor usage for 2+ months, then remove. [<a href="https://graphql.org/learn/best-practices/">src1</a>]</li>
+    <li><strong>Overly broad @shareable in federation</strong>: Marking all fields <code>@shareable</code> defeats ownership boundaries. Fix: only share fields that genuinely need multi-subgraph resolution. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src5</a>]</li>
+    <li><strong>Cursor opacity violation</strong>: Using raw database IDs as cursors couples pagination to the database. Fix: base64-encode cursor payloads. [<a href="https://relay.dev/graphql/connections.htm">src3</a>]</li>
+    <li><strong>Missing error handling in mutations</strong>: Returning GraphQL errors for validation failures mixes user errors with system errors. Fix: return <code>userErrors</code> array in the mutation payload type. [<a href="https://github.com/Shopify/graphql-design-tutorial/blob/master/TUTORIAL.md">src4</a>]</li>
+    <li><strong>Global DataLoader instances</strong>: Sharing a DataLoader across requests causes data leaks between users. Fix: create DataLoader instances per-request in the context factory. [<a href="https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Introspect schema and save locally
+npx graphql-inspector introspect http://localhost:4000/graphql > schema.graphql
+
+# Validate schema against best practices
+npx graphql-inspector validate schema.graphql
+
+# Diff two schema versions for breaking changes
+npx graphql-inspector diff old-schema.graphql new-schema.graphql
+
+# Check query complexity of a specific operation
+npx graphql-query-complexity-cli --schema schema.graphql --query query.graphql
+
+# List all deprecated fields still in use (Apollo Studio)
+rover graph check my-graph@prod --schema schema.graphql
+
+# Test a connection query with curl
+curl -X POST http://localhost:4000/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ products(first:5) { pageInfo { hasNextPage endCursor } edges { node { id title } } } }"}'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version / Spec</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GraphQL spec (Oct 2021)</td><td>Current</td><td>None since June 2018</td><td>Stable foundation</td></tr>
+      <tr><td>Relay Connection Spec</td><td>Stable since 2015</td><td>None</td><td>Universal pagination standard</td></tr>
+      <tr><td>Apollo Federation v2.3+</td><td>Current</td><td>v1 @requires/@external semantics changed in v2</td><td>Migrate with <code>rover subgraph migrate</code></td></tr>
+      <tr><td>Apollo Federation v1</td><td>Deprecated</td><td>N/A</td><td>Upgrade to v2; v1 gateway EOL 2025</td></tr>
+      <tr><td>@defer / @stream</td><td>Draft (2024)</td><td>Spec not finalized</td><td>Apollo Server 4.x + Apollo Client 3.8+ experimental</td></tr>
+      <tr><td>GraphQL-over-HTTP</td><td>Proposed standard (2024)</td><td>Standardizes GET/POST, multipart</td><td>Most servers already comply</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multiple client types (web, mobile, BFF) need different data shapes</td><td>Simple CRUD with one client and no nesting</td><td>REST API</td></tr>
+      <tr><td>Frontend teams need autonomy to query what they need</td><td>High-throughput binary RPC between internal services</td><td>gRPC</td></tr>
+      <tr><td>You need a typed, self-documenting API with introspection</td><td>Real-time streaming of large binary payloads</td><td>WebSocket + binary protocol</td></tr>
+      <tr><td>Multiple teams own different parts of the data graph</td><td>Tiny project with 1-3 endpoints</td><td>REST or tRPC</td></tr>
+      <tr><td>You want to aggregate multiple backend services into one API</td><td>File uploads are the primary operation</td><td>REST multipart upload</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><code>@defer</code> and <code>@stream</code> are still draft directives as of February 2026 -- server and client support varies; do not rely on them in production without verifying your toolchain supports incremental delivery.</li>
+    <li>Apollo Federation v2 is not backward-compatible with v1 -- migrating subgraphs requires updating directives and testing composition; use <code>rover subgraph check</code> to validate before deploying.</li>
+    <li>Query complexity analysis adds ~1-3ms per query -- for latency-critical APIs, consider static analysis at build time instead of runtime complexity checks.</li>
+    <li>GraphQL subscriptions over WebSocket require sticky sessions or a pub/sub layer (Redis, NATS) in multi-instance deployments.</li>
+    <li>The Relay connection spec is optional for non-Relay clients, but it is the de facto standard -- deviating creates friction with code generators and client libraries.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/rest-pagination/2026" data-relationship="related_to">REST API Pagination Patterns</a>
+    <a href="/software/patterns/api-versioning/2026" data-relationship="related_to">API Versioning Strategies</a>
+    <a href="/software/patterns/grpc-service-design/2026" data-relationship="related_to">gRPC Service Design Patterns</a>
+    <a href="/software/patterns/polling-sse-websocket/2026" data-relationship="related_to">Polling vs SSE vs WebSocket</a>
+    <a href="/software/debugging/graphql-n-plus-1-dataloader/2026" data-relationship="depends_on">GraphQL N+1 Problem and DataLoader</a>
+    <a href="/software/system-design/graphql-api-architecture/2026" data-relationship="solves">GraphQL API Architecture</a>
+    <a href="/software/migrations/rest-to-graphql/2026" data-relationship="alternative_to">REST to GraphQL Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

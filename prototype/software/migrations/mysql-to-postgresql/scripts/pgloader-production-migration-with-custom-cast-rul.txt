@@ -1,0 +1,40 @@
+-- Input:  MySQL database with AUTO_INCREMENT, TINYINT(1) booleans, ENUMs, unsigned ints
+-- Output: Fully migrated PostgreSQL database with correct types
+
+LOAD DATABASE
+  FROM mysql://root:secret@mysql.example.com:3306/production
+  INTO postgresql://pgadmin:secret@pg.example.com:5432/production_pg
+
+WITH include drop,
+     create tables,
+     create indexes,
+     reset sequences,
+     workers = 8,
+     concurrency = 4,
+     multiple readers per thread,
+     rows per range = 50000
+
+SET PostgreSQL PARAMETERS
+    maintenance_work_mem to '1GB',
+    work_mem to '128MB',
+    search_path to 'public'
+
+-- Custom type conversion rules
+CAST type tinyint to boolean using tinyint-to-boolean,
+     type int when unsigned to bigint drop typemod,
+     type smallint when unsigned to integer drop typemod,
+     type bigint when unsigned to numeric drop typemod,
+     type bigint with extra auto_increment to bigserial,
+     type int with extra auto_increment to serial,
+     type datetime to timestamptz drop default using zero-dates-to-null,
+     type date drop default using zero-dates-to-null,
+     type tinyblob to bytea using byte-vector-to-bytea,
+     type mediumblob to bytea using byte-vector-to-bytea,
+     type longblob to bytea using byte-vector-to-bytea
+
+-- Only migrate specific tables (optional)
+INCLUDING ONLY TABLE NAMES MATCHING ~/users/, ~/orders/, ~/products/
+
+BEFORE LOAD DO
+$$ DROP SCHEMA IF EXISTS public CASCADE; $$,
+$$ CREATE SCHEMA public; $$;

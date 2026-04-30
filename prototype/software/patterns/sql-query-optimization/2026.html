@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SQL Query Optimization: Complete Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete SQL query optimization reference covering indexing strategies, EXPLAIN ANALYZE, execution plan analysis, anti-patterns, and diagnostic commands...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-query-optimization/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SQL Query Optimization: Complete Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete SQL query optimization reference covering indexing strategies, EXPLAIN ANALYZE, execution plan analysis, anti-patterns, and diagnostic commands for PostgreSQL, MySQL, and SQL Server. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-query-optimization/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Query Optimization: Complete Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete SQL query optimization reference covering indexing strategies, EXPLAIN ANALYZE, execution plan analysis, anti-patterns, and diagnostic commands for PostgreSQL, MySQL, and SQL Server. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/sql_query_optimization">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the best SQL query optimization techniques?">
+  <meta name="ai:aliases" content="SQL query performance tuning; How to optimize slow SQL queries; SQL EXPLAIN ANALYZE optimization; Database query optimization best practices; SQL indexing strategies for performance; SQL query execution plan analysis; How to speed up SQL queries; SQL performance troubleshooting guide">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-query-optimization/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="database_engine, query_type">
+  <meta name="ai:constraints" content="EXPLAIN ANALYZE executes the query -- never run on DML without BEGIN/ROLLBACK; Index creation on production can lock writes -- use CONCURRENTLY/INPLACE; work_mem/sort_buffer_size is per-operation not per-session; Query hints are engine-specific; Statistics staleness causes bad plans">
+  <meta name="ai:skip_this_unit_if" content="Database-wide slowdown with no single slow query -> Check connection pool/lock contention/IO; PostgreSQL-specific slow query diagnosis -> software/debugging/postgresql-slow-queries/2026; ORM-level N+1 problem -> software/debugging/django-n-plus-1/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SQL Query Optimization: Complete Reference",
+    "headline": "SQL Query Optimization: Complete Reference",
+    "description": "Comprehensive reference for SQL query optimization techniques including indexing strategies, EXPLAIN ANALYZE usage, execution plan analysis, anti-patterns, and diagnostic commands across PostgreSQL, MySQL, and SQL Server.",
+    "keywords": ["SQL optimization", "query tuning", "EXPLAIN ANALYZE", "database indexing", "SQL performance", "query execution plan", "PostgreSQL", "MySQL", "SQL Server"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 13+, MySQL 8.0+, SQL Server 2019+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Using EXPLAIN - PostgreSQL Documentation",
+        "url": "https://www.postgresql.org/docs/current/using-explain.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The Slow Query Log - MySQL Reference Manual",
+        "url": "https://dev.mysql.com/doc/refman/8.4/en/slow-query-log.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SQL Indexing and Tuning e-Book - Use The Index, Luke",
+        "url": "https://use-the-index-luke.com/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Execution Plan Overview - SQL Server",
+        "url": "https://learn.microsoft.com/en-us/sql/relational-databases/performance/execution-plans"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Query Performance Tuning in PostgreSQL: EXPLAIN ANALYZE Guide",
+        "url": "https://www.enterprisedb.com/blog/postgresql-query-optimization-performance-tuning-with-explain-analyze"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Identifying High Load with MySQL Slow Query Log and pt-query-digest",
+        "url": "https://www.percona.com/blog/identifying-high-load-mysql-slow-query-log-pt-query-digest/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Getting More Out of MySQL Performance: Query Tuning",
+        "url": "https://cloud.google.com/mysql/query-tuning"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SQL Query Optimization: Complete Reference",
+    "description": "Structured knowledge unit covering SQL query optimization techniques, indexing strategies, execution plan analysis, and diagnostic commands for PostgreSQL, MySQL, and SQL Server.",
+    "keywords": ["SQL optimization", "query tuning", "EXPLAIN ANALYZE", "database indexing", "SQL performance"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Oracle / MySQL"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Markus Winand (Use The Index, Luke)"},
+      {"@type": "Organization", "name": "EnterpriseDB"},
+      {"@type": "Organization", "name": "Percona"},
+      {"@type": "Organization", "name": "Google Cloud"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SQL Query Optimization" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best SQL query optimization techniques?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL query performance tuning",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to optimize slow SQL queries",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL EXPLAIN ANALYZE optimization",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Database query optimization best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL indexing strategies for performance",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SQL Query Optimization: Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best SQL query optimization techniques?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-query-optimization/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Most slow SQL queries are fixed by proper indexing, avoiding full table scans, and rewriting queries to let the optimizer choose efficient plans -- use EXPLAIN ANALYZE to diagnose before guessing.</li>
+    <li><strong>Key tool/command</strong>: <code>EXPLAIN ANALYZE</code> (PostgreSQL/MySQL) or <code>SET STATISTICS IO ON</code> + actual execution plan (SQL Server)</li>
+    <li><strong>Watch out for</strong>: Adding indexes without checking if the optimizer actually uses them -- unused indexes waste write performance and disk space.</li>
+    <li><strong>Works with</strong>: PostgreSQL 13+, MySQL 8.0+, SQL Server 2019+, Oracle 19c+, SQLite 3.35+ (core principles are engine-agnostic).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>EXPLAIN ANALYZE executes the query -- never run it on UPDATE/DELETE/INSERT without wrapping in BEGIN/ROLLBACK</li>
+    <li>Index creation on production tables can lock writes -- use CREATE INDEX CONCURRENTLY (PostgreSQL) or ALGORITHM=INPLACE (MySQL) for zero-downtime deployments</li>
+    <li>work_mem (PostgreSQL) and sort_buffer_size (MySQL) are per-operation, not per-session -- setting too high causes OOM under concurrent load</li>
+    <li>Query hints and optimizer directives are engine-specific -- PostgreSQL has no native hint syntax; MySQL uses optimizer_switch; SQL Server uses query hints</li>
+    <li>Statistics staleness causes bad plans -- ensure ANALYZE / ANALYZE TABLE / UPDATE STATISTICS runs regularly or via autovacuum/auto-stats</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Technique</th><th scope="col">When to Use</th><th scope="col">Impact</th><th scope="col">Complexity</th><th scope="col">Trade-off</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Add covering index</td><td>Queries doing index lookups + heap fetches</td><td>Very high</td><td>Low</td><td>Extra write overhead + disk for each INSERT/UPDATE</td></tr>
+      <tr><td>Rewrite SELECT * to specific columns</td><td>Any query returning unnecessary data</td><td>High</td><td>Trivial</td><td>None -- strictly better</td></tr>
+      <tr><td>Add WHERE clause indexes</td><td>Sequential scans on filtered columns</td><td>Very high</td><td>Low</td><td>Index maintenance cost on writes</td></tr>
+      <tr><td>Replace correlated subquery with JOIN</td><td>Subquery executes once per outer row</td><td>Very high</td><td>Medium</td><td>JOIN may use more memory for hash/merge</td></tr>
+      <tr><td>Use EXISTS instead of IN for subqueries</td><td>Large subquery result sets</td><td>High</td><td>Low</td><td>Semantics differ with NULLs -- test carefully</td></tr>
+      <tr><td>Partition large tables</td><td>Tables &gt; 100M rows with date/range filters</td><td>High</td><td>High</td><td>Query routing complexity, cross-partition JOINs slower</td></tr>
+      <tr><td>Materialize expensive CTEs / views</td><td>Repeated expensive aggregations</td><td>Very high</td><td>Medium</td><td>Stale data if not refreshed; storage cost</td></tr>
+      <tr><td>Use LIMIT with ORDER BY + index</td><td>Pagination queries</td><td>High</td><td>Low</td><td>Requires index matching ORDER BY columns</td></tr>
+      <tr><td>Batch INSERT/UPDATE operations</td><td>Bulk writes causing lock contention</td><td>High</td><td>Medium</td><td>Application-level batching logic needed</td></tr>
+      <tr><td>Add composite indexes</td><td>Multi-column WHERE/ORDER BY</td><td>Very high</td><td>Medium</td><td>Column order matters -- most selective first</td></tr>
+      <tr><td>Avoid implicit type conversions</td><td>WHERE varchar_col = 12345 (int)</td><td>High</td><td>Trivial</td><td>Requires schema awareness</td></tr>
+      <tr><td>Use query plan caching</td><td>Repeated parameterized queries</td><td>Medium</td><td>Low</td><td>Prepared statements may choose suboptimal generic plan</td></tr>
+      <tr><td>Update statistics</td><td>Bad plans after large data changes</td><td>High</td><td>Low</td><td>Brief CPU spike during ANALYZE</td></tr>
+      <tr><td>Denormalize hot paths</td><td>Read-heavy queries joining 5+ tables</td><td>Very high</td><td>High</td><td>Data duplication, consistency burden</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Query is slow
+├── Have you run EXPLAIN ANALYZE?
+│   ├── NO → Run EXPLAIN ANALYZE first (see Step 1 below)
+│   └── YES ↓
+├── Is there a Sequential Scan / Full Table Scan on a large table?
+│   ├── YES → Is there a WHERE clause filtering rows?
+│   │   ├── YES → Add index on WHERE columns (see Step 2)
+│   │   └── NO → Query legitimately needs all rows -- optimize with LIMIT, pagination, or materialized view
+│   └── NO ↓
+├── Is the plan doing Index Scan but still slow?
+│   ├── YES → Check if it's fetching too many columns (heap fetches) → Create covering index
+│   └── NO ↓
+├── Is there a Sort or Hash operation consuming &gt;50% cost?
+│   ├── YES → Add index matching ORDER BY / GROUP BY columns → Or increase work_mem
+│   └── NO ↓
+├── Is there a Nested Loop with high row estimates?
+│   ├── YES → Replace with Hash Join (rewrite query) or add join column indexes
+│   └── NO ↓
+├── Are estimated rows very different from actual rows?
+│   ├── YES → Run ANALYZE to update statistics → Check for data skew
+│   └── NO ↓
+├── Is the query using correlated subqueries?
+│   ├── YES → Rewrite as JOIN or lateral join (see Anti-Patterns)
+│   └── NO ↓
+└── DEFAULT → Profile at application level -- problem may be N+1 queries, connection overhead, or network latency</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Profile the slow query with EXPLAIN ANALYZE</h3>
+  <p>Before changing anything, get the actual execution plan. The plan shows exactly where time is spent. [<a href="https://www.postgresql.org/docs/current/using-explain.html">src1</a>]</p>
+  <pre><code class="language-sql">-- PostgreSQL: EXPLAIN ANALYZE executes the query -- wrap DML in a transaction
+BEGIN;
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT o.id, o.total, c.name
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+WHERE o.created_at &gt; '2025-01-01'
+ORDER BY o.total DESC
+LIMIT 100;
+ROLLBACK;
+
+-- MySQL:
+EXPLAIN ANALYZE
+SELECT o.id, o.total, c.name
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+WHERE o.created_at &gt; '2025-01-01'
+ORDER BY o.total DESC
+LIMIT 100;</code></pre>
+  <p><strong>Verify</strong>: Look for <code>Seq Scan</code> (PostgreSQL), <code>type: ALL</code> (MySQL), or <code>Table Scan</code> (SQL Server) on large tables -- these are the primary targets.</p>
+
+  <h3>2. Identify and add missing indexes</h3>
+  <p>The execution plan reveals which table accesses lack indexes. Add targeted indexes for WHERE, JOIN, and ORDER BY columns. [<a href="https://use-the-index-luke.com/">src3</a>]</p>
+  <pre><code class="language-sql">-- PostgreSQL: Create index without locking writes
+CREATE INDEX CONCURRENTLY idx_orders_created_at
+ON orders (created_at DESC);
+
+-- MySQL: Online DDL (InnoDB)
+ALTER TABLE orders
+ADD INDEX idx_orders_created_at (created_at DESC),
+ALGORITHM=INPLACE, LOCK=NONE;
+
+-- SQL Server: Online index creation
+CREATE NONCLUSTERED INDEX idx_orders_created_at
+ON orders (created_at DESC)
+WITH (ONLINE = ON);</code></pre>
+  <p><strong>Verify</strong>: Re-run EXPLAIN ANALYZE -- you should see <code>Index Scan</code> or <code>Index Only Scan</code> replacing <code>Seq Scan</code>.</p>
+
+  <h3>3. Eliminate unnecessary columns and rows</h3>
+  <p>Fetch only what you need. SELECT * forces the engine to read every column from heap pages even when an index covers the query. [<a href="https://use-the-index-luke.com/">src3</a>]</p>
+  <pre><code class="language-sql">-- Before: fetches all columns, prevents index-only scan
+SELECT * FROM orders WHERE customer_id = 42;
+
+-- After: fetches only needed columns, enables covering index
+SELECT id, total, status FROM orders WHERE customer_id = 42;</code></pre>
+  <p><strong>Verify</strong>: EXPLAIN output should show <code>Index Only Scan</code> (PostgreSQL) or <code>Using index</code> (MySQL) when all selected columns are in the index.</p>
+
+  <h3>4. Rewrite subqueries as JOINs</h3>
+  <p>Correlated subqueries execute once per outer row. JOINs allow the optimizer to choose hash or merge strategies. [<a href="https://www.enterprisedb.com/blog/postgresql-query-optimization-performance-tuning-with-explain-analyze">src5</a>]</p>
+  <pre><code class="language-sql">-- Before: correlated subquery (O(n*m) execution)
+SELECT c.name, (
+  SELECT SUM(o.total) FROM orders o WHERE o.customer_id = c.id
+) AS total_spent
+FROM customers c;
+
+-- After: JOIN with aggregation (single pass)
+SELECT c.name, COALESCE(SUM(o.total), 0) AS total_spent
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+GROUP BY c.id, c.name;</code></pre>
+  <p><strong>Verify</strong>: EXPLAIN should show <code>Hash Aggregate</code> or <code>GroupAggregate</code> instead of <code>SubPlan</code> nodes.</p>
+
+  <h3>5. Create composite and covering indexes</h3>
+  <p>Multi-column indexes must follow the leftmost-prefix rule. A covering index includes all columns the query needs, eliminating heap fetches entirely. [<a href="https://use-the-index-luke.com/">src3</a>]</p>
+  <pre><code class="language-sql">-- Composite index: most selective column first
+CREATE INDEX idx_orders_cust_date
+ON orders (customer_id, created_at DESC);
+
+-- Covering index (PostgreSQL INCLUDE syntax)
+CREATE INDEX idx_orders_covering
+ON orders (customer_id, created_at DESC)
+INCLUDE (total, status);
+
+-- MySQL covering index (all columns in the index)
+CREATE INDEX idx_orders_covering
+ON orders (customer_id, created_at, total, status);</code></pre>
+  <p><strong>Verify</strong>: <code>EXPLAIN</code> shows <code>Index Only Scan</code> (PostgreSQL) or <code>Using index</code> in Extra column (MySQL).</p>
+
+  <h3>6. Optimize aggregation queries</h3>
+  <p>GROUP BY performance depends on whether the optimizer can use an index for grouping or must sort/hash. [<a href="https://www.postgresql.org/docs/current/using-explain.html">src1</a>]</p>
+  <pre><code class="language-sql">-- Create index matching GROUP BY + aggregate
+CREATE INDEX idx_orders_status_total
+ON orders (status, total);
+
+-- Query that benefits from the index
+SELECT status, SUM(total), COUNT(*)
+FROM orders
+GROUP BY status;</code></pre>
+  <p><strong>Verify</strong>: EXPLAIN should show <code>GroupAggregate</code> using an index, not <code>HashAggregate</code> with a <code>Sort</code> node.</p>
+
+  <h3>7. Update statistics after large data changes</h3>
+  <p>The query planner relies on table statistics to estimate row counts. After bulk loads or deletes, statistics become stale and cause bad plans. [<a href="https://www.postgresql.org/docs/current/using-explain.html">src1</a>]</p>
+  <pre><code class="language-sql">-- PostgreSQL
+ANALYZE orders;
+
+-- MySQL
+ANALYZE TABLE orders;
+
+-- SQL Server
+UPDATE STATISTICS orders;
+-- Or with full scan for accuracy
+UPDATE STATISTICS orders WITH FULLSCAN;</code></pre>
+  <p><strong>Verify</strong>: Re-run EXPLAIN ANALYZE -- estimated rows should be close to actual rows (within 10x).</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Find missing indexes with pg_stat_user_tables</h3>
+  <pre><code class="language-sql">-- Input:  connected to PostgreSQL database
+-- Output: tables with high sequential scan ratios (index candidates)
+
+SELECT
+  schemaname,
+  relname AS table_name,
+  seq_scan,
+  idx_scan,
+  CASE WHEN seq_scan + idx_scan &gt; 0
+    THEN ROUND(100.0 * seq_scan / (seq_scan + idx_scan), 1)
+    ELSE 0
+  END AS seq_scan_pct,
+  n_live_tup AS row_count
+FROM pg_stat_user_tables
+WHERE n_live_tup &gt; 10000
+  AND seq_scan &gt; idx_scan
+ORDER BY seq_scan_pct DESC, n_live_tup DESC
+LIMIT 20;</code></pre>
+
+  <h3>MySQL: Enable and query the slow query log</h3>
+  <pre><code class="language-sql">-- Input:  MySQL 8.0+ with admin privileges
+-- Output: slow queries captured to file for analysis
+
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 1;
+SET GLOBAL log_queries_not_using_indexes = 'ON';
+
+-- Check current setting
+SHOW VARIABLES LIKE 'slow_query%';
+
+-- After collecting data, analyze with pt-query-digest:
+-- pt-query-digest /var/lib/mysql/hostname-slow.log</code></pre>
+
+  <h3>SQL Server: Find top resource-consuming queries</h3>
+  <pre><code class="language-sql">-- Input:  SQL Server 2019+ with VIEW SERVER STATE permission
+-- Output: top 20 queries by total elapsed time
+
+SELECT TOP 20
+  qs.total_elapsed_time / qs.execution_count AS avg_elapsed_ms,
+  qs.execution_count,
+  qs.total_logical_reads / qs.execution_count AS avg_logical_reads,
+  SUBSTRING(qt.text, (qs.statement_start_offset / 2) + 1,
+    ((CASE qs.statement_end_offset
+        WHEN -1 THEN DATALENGTH(qt.text)
+        ELSE qs.statement_end_offset
+      END - qs.statement_start_offset) / 2) + 1) AS query_text
+FROM sys.dm_exec_query_stats qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) qt
+ORDER BY qs.total_elapsed_time / qs.execution_count DESC;</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using SELECT * in production queries</h3>
+  <pre><code class="language-sql">-- BAD -- fetches all columns, prevents index-only scans,
+-- breaks when schema changes, transfers unnecessary data
+SELECT * FROM orders WHERE customer_id = 42;</code></pre>
+
+  <h3>Correct: Select only needed columns</h3>
+  <pre><code class="language-sql">-- GOOD -- enables covering indexes, reduces I/O and network transfer
+SELECT id, total, status, created_at
+FROM orders
+WHERE customer_id = 42;</code></pre>
+
+  <h3>Wrong: N+1 query pattern in application code</h3>
+  <pre><code class="language-sql">-- BAD -- executes 1 query + N queries (one per customer)
+-- Application loop:
+--   customers = SELECT * FROM customers;
+--   for each customer:
+--     orders = SELECT * FROM orders WHERE customer_id = ?;</code></pre>
+
+  <h3>Correct: Single JOIN query</h3>
+  <pre><code class="language-sql">-- GOOD -- single query, database optimizes the join
+SELECT c.id, c.name, o.id AS order_id, o.total
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+WHERE c.active = true;</code></pre>
+
+  <h3>Wrong: Using functions on indexed columns in WHERE</h3>
+  <pre><code class="language-sql">-- BAD -- wrapping indexed column in function prevents index usage
+SELECT * FROM orders
+WHERE YEAR(created_at) = 2025;
+
+-- BAD -- implicit type conversion disables index
+SELECT * FROM users
+WHERE phone = 5551234567;  -- phone is VARCHAR, literal is INT</code></pre>
+
+  <h3>Correct: Rewrite to keep indexed column bare</h3>
+  <pre><code class="language-sql">-- GOOD -- sargable: index on created_at is used
+SELECT * FROM orders
+WHERE created_at &gt;= '2025-01-01'
+  AND created_at &lt; '2026-01-01';
+
+-- GOOD -- matching types
+SELECT * FROM users
+WHERE phone = '5551234567';</code></pre>
+
+  <h3>Wrong: Using OR conditions that prevent index usage</h3>
+  <pre><code class="language-sql">-- BAD -- OR on different columns forces full table scan
+SELECT * FROM products
+WHERE category_id = 5 OR supplier_id = 12;</code></pre>
+
+  <h3>Correct: Use UNION ALL for OR on different indexed columns</h3>
+  <pre><code class="language-sql">-- GOOD -- each branch can use its own index
+SELECT * FROM products WHERE category_id = 5
+UNION ALL
+SELECT * FROM products WHERE supplier_id = 12
+  AND category_id &lt;&gt; 5;</code></pre>
+
+  <h3>Wrong: Unbounded queries without LIMIT</h3>
+  <pre><code class="language-sql">-- BAD -- returns potentially millions of rows
+SELECT id, name, email FROM users
+WHERE created_at &gt; '2020-01-01'
+ORDER BY created_at;</code></pre>
+
+  <h3>Correct: Always paginate large result sets</h3>
+  <pre><code class="language-sql">-- GOOD -- keyset pagination (fastest for large offsets)
+SELECT id, name, email FROM users
+WHERE created_at &gt; '2020-01-01'
+  AND id &gt; :last_seen_id
+ORDER BY id
+LIMIT 50;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Stale statistics after bulk operations</strong>: EXPLAIN shows good plan but actual performance is terrible because row estimates are 100x off. Fix: Run <code>ANALYZE</code> (PostgreSQL), <code>ANALYZE TABLE</code> (MySQL), or <code>UPDATE STATISTICS</code> (SQL Server) after large INSERT/DELETE/UPDATE batches. [<a href="https://www.postgresql.org/docs/current/using-explain.html">src1</a>]</li>
+    <li><strong>Over-indexing write-heavy tables</strong>: Every index slows down INSERT/UPDATE/DELETE. Tables with 20+ indexes often have slower write performance than query gains. Fix: Use <code>pg_stat_user_indexes</code> (PostgreSQL) or <code>sys.dm_db_index_usage_stats</code> (SQL Server) to find and drop unused indexes. [<a href="https://use-the-index-luke.com/">src3</a>]</li>
+    <li><strong>Ignoring the buffer cache / I/O distinction</strong>: A query may be fast when data is cached but slow on cold start. Fix: Use <code>EXPLAIN (ANALYZE, BUFFERS)</code> in PostgreSQL to see shared hit vs read ratios. [<a href="https://www.enterprisedb.com/blog/postgresql-query-optimization-performance-tuning-with-explain-analyze">src5</a>]</li>
+    <li><strong>OFFSET pagination on large tables</strong>: <code>OFFSET 100000 LIMIT 50</code> still scans and discards 100,000 rows. Fix: Use keyset/cursor pagination: <code>WHERE id &gt; :last_id ORDER BY id LIMIT 50</code>. [<a href="https://use-the-index-luke.com/">src3</a>]</li>
+    <li><strong>Premature denormalization</strong>: Duplicating data across tables before profiling actual bottlenecks creates consistency bugs. Fix: Profile first with EXPLAIN ANALYZE, add indexes, then denormalize only proven hot paths. [<a href="https://cloud.google.com/mysql/query-tuning">src7</a>]</li>
+    <li><strong>Relying on query cache (MySQL &lt; 8.0)</strong>: MySQL removed the query cache in 8.0 because it caused contention. Fix: Use application-level caching (Redis, Memcached) instead. [<a href="https://dev.mysql.com/doc/refman/8.4/en/slow-query-log.html">src2</a>]</li>
+    <li><strong>Not testing with production-like data volume</strong>: A query that is fast on 1,000 rows may be catastrophically slow on 10 million. Fix: Test optimization changes against a staging environment with production data volume and distribution. [<a href="https://www.percona.com/blog/identifying-high-load-mysql-slow-query-log-pt-query-digest/">src6</a>]</li>
+    <li><strong>Missing VACUUM on PostgreSQL</strong>: Dead tuples cause table bloat and slow sequential scans. Fix: Ensure autovacuum is running and tuned (<code>autovacuum_vacuum_scale_factor</code>, <code>autovacuum_analyze_scale_factor</code>). [<a href="https://www.postgresql.org/docs/current/using-explain.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-sql">-- PostgreSQL: Show execution plan with timing and buffer info
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ... ;
+
+-- PostgreSQL: Find queries consuming the most time (requires pg_stat_statements)
+SELECT query, calls, total_exec_time, mean_exec_time, rows
+FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10;
+
+-- PostgreSQL: Check for unused indexes
+SELECT indexrelname, idx_scan, idx_tup_read
+FROM pg_stat_user_indexes WHERE idx_scan = 0
+ORDER BY pg_relation_size(indexrelid) DESC;
+
+-- PostgreSQL: Check table bloat and dead tuples
+SELECT relname, n_dead_tup, n_live_tup, last_vacuum, last_autovacuum
+FROM pg_stat_user_tables ORDER BY n_dead_tup DESC LIMIT 10;
+
+-- MySQL: Show execution plan
+EXPLAIN ANALYZE SELECT ... ;
+
+-- MySQL: Check slow query log status
+SHOW VARIABLES LIKE 'slow_query%';
+SHOW VARIABLES LIKE 'long_query_time';
+
+-- MySQL: Show table index usage
+SHOW INDEX FROM orders;
+
+-- SQL Server: Show I/O and time statistics
+SET STATISTICS IO ON;
+SET STATISTICS TIME ON;
+SELECT ... ;
+
+-- SQL Server: Show estimated execution plan
+SET SHOWPLAN_XML ON;
+GO
+SELECT ... ;
+GO
+SET SHOWPLAN_XML OFF;</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Engine</th><th scope="col">Version</th><th scope="col">Key Optimization Features</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL 18</td><td>Current (2025)</td><td>EXPLAIN BUFFERS by default, incremental sort improvements</td><td>Parallel query improvements</td></tr>
+      <tr><td>PostgreSQL 16</td><td>Stable</td><td>Parallel FULL OUTER JOIN, improved DISTINCT</td><td>Recommended minimum for modern features</td></tr>
+      <tr><td>PostgreSQL 14</td><td>LTS-like</td><td>Multirange types, query pipeline mode</td><td>Extended statistics improvements</td></tr>
+      <tr><td>MySQL 9.x</td><td>Current (2025)</td><td>Improved hash joins, parallel query</td><td>Innovation release track</td></tr>
+      <tr><td>MySQL 8.4</td><td>LTS (2024)</td><td>Window functions, CTEs, EXPLAIN ANALYZE</td><td>First LTS release</td></tr>
+      <tr><td>MySQL 8.0</td><td>EOL (2026-04)</td><td>Query cache removed, hash joins added</td><td>Upgrade to 8.4+ recommended</td></tr>
+      <tr><td>SQL Server 2022</td><td>Current</td><td>Intelligent Query Processing, Parameter Sensitivity Plan</td><td>Adaptive joins, batch mode on rowstore</td></tr>
+      <tr><td>SQL Server 2019</td><td>Mainstream support</td><td>Adaptive memory grants, batch mode on rowstore</td><td>Table variable deferred compilation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Individual queries are slow (&gt; 100ms for OLTP)</td><td>All queries degraded equally</td><td>Check server resources: CPU, memory, I/O, connections</td></tr>
+      <tr><td>EXPLAIN shows sequential scans on large tables</td><td>Table is small (&lt; 10,000 rows)</td><td>Sequential scan is often faster than index for small tables</td></tr>
+      <tr><td>Application has identified slow endpoints via APM</td><td>Problem is at the ORM/application layer (N+1)</td><td>Fix N+1 at application level first, not database level</td></tr>
+      <tr><td>Read-heavy workload with predictable query patterns</td><td>Write-heavy workload with many indexes already</td><td>Reduce index count, use batch writes, consider async processing</td></tr>
+      <tr><td>Query patterns are stable and well-understood</td><td>Ad-hoc analytical queries on large datasets</td><td>Use OLAP-optimized engines (ClickHouse, DuckDB, BigQuery)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Optimization techniques are engine-specific -- an approach that works on PostgreSQL (e.g., partial indexes, INCLUDE columns) may not exist or behave differently on MySQL or SQL Server</li>
+    <li>Index recommendations from automated tools (pg_stat_statements, Query Store, MySQL Performance Schema) should be validated with EXPLAIN before deploying -- they may suggest redundant or conflicting indexes</li>
+    <li>Cloud-managed databases (AWS RDS, Azure SQL, Cloud SQL) have restricted access to some diagnostic tools and configuration parameters -- check your provider's documentation for available optimization levers</li>
+    <li>Premature optimization without profiling wastes engineering time -- always measure with EXPLAIN ANALYZE first, then target the specific bottleneck</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/database-indexing-strategies/2026" data-relationship="depends_on">Database Indexing Strategies</a>
+    <a href="/software/patterns/sql-materialized-views/2026" data-relationship="related_to">SQL Materialized Views</a>
+    <a href="/software/patterns/caching-patterns/2026" data-relationship="related_to">Application Caching Patterns</a>
+    <a href="/software/patterns/connection-pooling/2026" data-relationship="related_to">Database Connection Pooling</a>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="solves">PostgreSQL Slow Queries</a>
+    <a href="/software/debugging/mysql-deadlocks/2026" data-relationship="solves">MySQL Deadlocks</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

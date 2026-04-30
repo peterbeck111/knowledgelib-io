@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes: Cert-Manager + Let's Encrypt | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to cert-manager with Let's Encrypt on Kubernetes: ClusterIssuer vs Issuer, HTTP-01 vs DNS-01 challenges, wildcard certificates, Ingress annotations, troubleshooting, and auto-renewal. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-cert-manager/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes: Cert-Manager + Let's Encrypt | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to cert-manager with Let's Encrypt on Kubernetes: ClusterIssuer vs Issuer, HTTP-01 vs DNS-01 challenges, wildcard certificates, Ingress annotations, troubleshooting, and auto-renewal. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-cert-manager/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes: Cert-Manager + Let's Encrypt | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to cert-manager with Let's Encrypt on Kubernetes: ClusterIssuer vs Issuer, HTTP-01 vs DNS-01 challenges, wildcard certificates, Ingress annotations, troubleshooting, and auto-renewal. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes Cert-Manager + Let's Encrypt">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I set up cert-manager with Let's Encrypt on Kubernetes for automatic TLS certificates?">
+  <meta name="ai:aliases" content="cert-manager Let's Encrypt Kubernetes setup; Kubernetes automatic TLS certificate management; cert-manager ClusterIssuer Let's Encrypt ACME; Kubernetes wildcard certificate DNS-01 challenge; cert-manager HTTP-01 vs DNS-01 solver; Kubernetes Ingress automatic HTTPS cert-manager; cert-manager troubleshoot certificate not issuing; Kubernetes TLS certificate auto-renewal Let's Encrypt">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-cert-manager/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="challenge_type,dns_provider,ingress_controller">
+  <meta name="ai:constraints" content="cert-manager CRDs MUST be installed before any Issuer/ClusterIssuer/Certificate resources; Wildcard certificates require DNS-01 challenge -- HTTP-01 cannot validate wildcards; Let's Encrypt rate limits: 50 certs/domain/week in production -- always test with staging first; DNS-01 solver credentials MUST be stored in Kubernetes Secrets">
+  <meta name="ai:skip_this_unit_if" content="Using Gateway API with TLS instead of Ingress -> software/devops/k8s-gateway-api/2026; Need to debug Pod stuck in CrashLoopBackOff -> software/debugging/kubernetes-crashloopbackoff/2026; Need general SSL/TLS troubleshooting -> software/debugging/ssl-tls-certificate-errors/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes: Cert-Manager + Let's Encrypt",
+    "headline": "Kubernetes: Cert-Manager + Let's Encrypt",
+    "description": "Complete guide to configuring cert-manager with Let's Encrypt on Kubernetes for automatic TLS certificate provisioning and renewal. Covers ClusterIssuer vs Issuer, HTTP-01 vs DNS-01 ACME challenges, wildcard certificates, Ingress annotations, troubleshooting, and version compatibility.",
+    "keywords": ["cert-manager", "Let's Encrypt", "Kubernetes", "TLS", "ACME", "ClusterIssuer", "DNS-01", "HTTP-01", "wildcard certificate", "Ingress", "automatic TLS"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.29+, cert-manager v1.17+, Ingress controller (NGINX, Traefik, etc.)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "ACME Issuer Configuration",
+        "url": "https://cert-manager.io/docs/configuration/acme/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Troubleshooting Problems with ACME / Let's Encrypt Certificates",
+        "url": "https://cert-manager.io/docs/troubleshooting/acme/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Annotated Ingress Resource",
+        "url": "https://cert-manager.io/docs/usage/ingress/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DNS01 Challenge Solver Configuration",
+        "url": "https://cert-manager.io/docs/configuration/acme/dns01/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DNS Validation Tutorial",
+        "url": "https://cert-manager.io/docs/tutorials/acme/dns-validation/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Supported Releases",
+        "url": "https://cert-manager.io/docs/releases/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "HTTP01 Challenge Solver Configuration",
+        "url": "https://cert-manager.io/docs/configuration/acme/http01/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes: Cert-Manager + Let's Encrypt",
+    "description": "Structured reference for configuring cert-manager with Let's Encrypt on Kubernetes, including ACME challenge types, ClusterIssuer configuration, wildcard certificates, Ingress annotations, troubleshooting commands, and version compatibility.",
+    "keywords": ["cert-manager", "Let's Encrypt", "Kubernetes", "TLS", "ACME", "ClusterIssuer", "DNS-01", "HTTP-01"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "cert-manager project"},
+      {"@type": "Organization", "name": "Let's Encrypt"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes: Cert-Manager + Let's Encrypt" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I set up cert-manager with Let's Encrypt on Kubernetes for automatic TLS certificates?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cert-manager Let's Encrypt Kubernetes setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes automatic TLS certificate management",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cert-manager ClusterIssuer Let's Encrypt ACME",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes wildcard certificate DNS-01 challenge",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cert-manager HTTP-01 vs DNS-01 solver",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes: Cert-Manager + Let's Encrypt</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I set up cert-manager with Let's Encrypt on Kubernetes for automatic TLS certificates?</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-cert-manager/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: cert-manager automates TLS certificate provisioning and renewal on Kubernetes using Let's Encrypt (ACME), supporting both HTTP-01 and DNS-01 challenges via Issuer/ClusterIssuer CRDs.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.yaml</code></li>
+    <li><strong>Watch out for</strong>: Using production Let's Encrypt before validating with staging -- you will hit rate limits (50 certs/domain/week) and get locked out.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.29+ (cert-manager v1.18), 1.31+ (v1.19/1.20); NGINX Ingress, Traefik, HAProxy, AWS ALB, GKE Ingress.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>cert-manager CRDs MUST be installed before creating any Issuer, ClusterIssuer, or Certificate resources -- otherwise resources are silently ignored [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</li>
+    <li>Wildcard certificates (<code>*.example.com</code>) REQUIRE the DNS-01 challenge solver -- HTTP-01 cannot validate wildcard domains [<a href="https://cert-manager.io/docs/configuration/acme/dns01/">src4</a>]</li>
+    <li>Let's Encrypt production rate limits: 50 certificates per registered domain per week -- always validate with the staging endpoint first [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</li>
+    <li>The <code>privateKeySecretRef</code> Secret is your ACME account identity -- deleting it forces re-registration and may trigger rate limits [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</li>
+    <li>DNS-01 solver credentials MUST be stored in Kubernetes Secrets, never hardcoded in the Issuer spec [<a href="https://cert-manager.io/docs/configuration/acme/dns01/">src4</a>]</li>
+    <li>cert-manager v1.18+ defaults <code>revisionHistoryLimit</code> to 1 -- upgrading garbage-collects all stale CertificateRequests [<a href="https://cert-manager.io/docs/releases/">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Resource</th><th scope="col">Kind</th><th scope="col">Scope</th><th scope="col">Purpose</th><th scope="col">Key Fields</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Issuer</td><td><code>cert-manager.io/v1</code></td><td>Namespace</td><td>ACME account + solver config for one namespace</td><td><code>spec.acme.server</code>, <code>spec.acme.solvers</code></td></tr>
+      <tr><td>ClusterIssuer</td><td><code>cert-manager.io/v1</code></td><td>Cluster-wide</td><td>ACME account + solver config for all namespaces</td><td>Same as Issuer, but cluster-scoped</td></tr>
+      <tr><td>Certificate</td><td><code>cert-manager.io/v1</code></td><td>Namespace</td><td>Declares desired TLS certificate</td><td><code>spec.dnsNames</code>, <code>spec.secretName</code>, <code>spec.issuerRef</code></td></tr>
+      <tr><td>CertificateRequest</td><td><code>cert-manager.io/v1</code></td><td>Namespace</td><td>Auto-created; tracks individual issuance attempt</td><td>Read-only status resource</td></tr>
+      <tr><td>Order</td><td><code>acme.cert-manager.io/v1</code></td><td>Namespace</td><td>Auto-created; ACME order lifecycle</td><td>Tracks challenge state</td></tr>
+      <tr><td>Challenge</td><td><code>acme.cert-manager.io/v1</code></td><td>Namespace</td><td>Auto-created; one per domain to validate</td><td>Shows solver status and errors</td></tr>
+      <tr><td>HTTP-01 solver</td><td>solver type</td><td>N/A</td><td>Proves domain ownership via HTTP endpoint</td><td><code>spec.acme.solvers[].http01.ingress</code></td></tr>
+      <tr><td>DNS-01 solver</td><td>solver type</td><td>N/A</td><td>Proves domain ownership via TXT record</td><td><code>spec.acme.solvers[].dns01.&lt;provider&gt;</code></td></tr>
+      <tr><td>Staging endpoint</td><td>Let's Encrypt</td><td>N/A</td><td>Untrusted certs, high rate limits</td><td><code>acme-staging-v02.api.letsencrypt.org/directory</code></td></tr>
+      <tr><td>Production endpoint</td><td>Let's Encrypt</td><td>N/A</td><td>Trusted certs, strict rate limits</td><td><code>acme-v02.api.letsencrypt.org/directory</code></td></tr>
+      <tr><td>Ingress annotation</td><td><code>cert-manager.io/cluster-issuer</code></td><td>Ingress</td><td>Auto-creates Certificate from Ingress TLS section</td><td>Triggers ingress-shim</td></tr>
+      <tr><td>Ingress annotation</td><td><code>cert-manager.io/issuer</code></td><td>Ingress</td><td>Same, references namespaced Issuer</td><td>Must be in same namespace</td></tr>
+      <tr><td>Renewal window</td><td>cert-manager default</td><td>N/A</td><td>Renews 30 days before expiry (LE certs last 90 days)</td><td>Configurable via <code>spec.renewBefore</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Need TLS certificates on Kubernetes?
+├── Single namespace only?
+│   ├── YES → Use Issuer (namespace-scoped)
+│   └── NO → Use ClusterIssuer (cluster-wide)
+├── Need wildcard certificate (*.example.com)?
+│   ├── YES → MUST use DNS-01 challenge
+│   │   ├── DNS provider supported in-tree?
+│   │   │   ├── YES → Configure dns01 solver with provider credentials
+│   │   │   └── NO → Use webhook solver from community
+│   │   └── Store provider API credentials in a Kubernetes Secret
+│   └── NO ↓
+├── Cluster publicly accessible on port 80?
+│   ├── YES → Use HTTP-01 challenge (simplest setup)
+│   └── NO → Use DNS-01 challenge (works behind firewalls/NAT)
+├── Want automatic Certificate creation from Ingress?
+│   ├── YES → Add cert-manager.io/cluster-issuer annotation to Ingress
+│   └── NO → Create Certificate resource manually
+└── DEFAULT → Start with staging endpoint, switch to production after validation</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Install cert-manager</h3>
+  <p>Install cert-manager and its CRDs into the cluster. Helm is recommended for production; kubectl apply is simpler for quick setups. [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</p>
+  <pre><code class="language-bash"># Option A: Helm (recommended for production)
+helm repo add jetstack https://charts.jetstack.io --force-update
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.17.2 \
+  --set crds.enabled=true
+
+# Option B: kubectl apply (quick setup)
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.yaml</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get pods -n cert-manager</code> -- all three Pods should be <code>Running</code></p>
+
+  <h3>2. Create a ClusterIssuer for Let's Encrypt staging</h3>
+  <p>Always start with staging to avoid rate limits. Staging issues untrusted certificates but has much higher rate limits. [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    email: your-email@example.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get clusterissuer letsencrypt-staging -o wide</code> -- READY should be <code>True</code></p>
+
+  <h3>3. Create a ClusterIssuer for Let's Encrypt production</h3>
+  <p>Switch to production once staging works. This endpoint issues browser-trusted certificates. [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    email: your-email@example.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl describe clusterissuer letsencrypt-prod</code> -- Status should show <code>The ACME account was registered with the ACME server</code></p>
+
+  <h3>4. Request a certificate via Ingress annotation</h3>
+  <p>The ingress-shim sub-component watches for annotated Ingress resources and automatically creates Certificate resources. [<a href="https://cert-manager.io/docs/usage/ingress/">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - app.example.com
+      secretName: app-example-com-tls
+  rules:
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-service
+                port:
+                  number: 80</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get certificate -n default</code> -- READY should become <code>True</code> within 1-2 minutes</p>
+
+  <h3>5. Configure DNS-01 for wildcard certificates</h3>
+  <p>Wildcard certificates require DNS-01 validation. Create a Secret with DNS provider API credentials, then configure the solver. [<a href="https://cert-manager.io/docs/configuration/acme/dns01/">src4</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token
+  namespace: cert-manager
+type: Opaque
+stringData:
+  api-token: "your-cloudflare-api-token-here"
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-dns
+spec:
+  acme:
+    email: your-email@example.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-dns-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-example-com
+  namespace: default
+spec:
+  secretName: wildcard-example-com-tls
+  issuerRef:
+    name: letsencrypt-prod-dns
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.example.com"
+    - "example.com"</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get challenges</code> -- should show challenges progressing from <code>pending</code> to <code>valid</code></p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Mixed HTTP-01 + DNS-01 solvers on one ClusterIssuer</h3>
+  <pre><code class="language-yaml">apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-mixed
+spec:
+  acme:
+    email: your-email@example.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-mixed-key
+    solvers:
+      - selector:
+          dnsNames:
+            - "*.example.com"
+        dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
+      - selector: {}
+        http01:
+          ingress:
+            ingressClassName: nginx</code></pre>
+
+  <h3>YAML: CNAME delegation for DNS-01 (security best practice)</h3>
+  <pre><code class="language-yaml"># Create CNAME: _acme-challenge.example.com -> _acme-challenge.acme.delegated.com
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-delegated
+spec:
+  acme:
+    email: your-email@example.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-delegated-key
+    solvers:
+      - dns01:
+          cnameStrategy: Follow
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token</code></pre>
+
+  <h3>Bash: Complete setup script</h3>
+  <p>Full script: <a href="scripts/setup-cert-manager.sh">setup-cert-manager.sh</a> (37 lines)</p>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using production Let's Encrypt from the start</h3>
+  <pre><code class="language-yaml"># BAD -- hitting production endpoint during testing
+# will exhaust rate limits (50 certs/domain/week)
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory</code></pre>
+
+  <h3>Correct: Start with staging, switch to production after validation</h3>
+  <pre><code class="language-yaml"># GOOD -- use staging first
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory</code></pre>
+
+  <h3>Wrong: HTTP-01 for wildcard certificates</h3>
+  <pre><code class="language-yaml"># BAD -- HTTP-01 CANNOT validate wildcard domains
+dnsNames:
+  - "*.example.com"     # Will never be issued via HTTP-01</code></pre>
+
+  <h3>Correct: Use DNS-01 solver for wildcard domains</h3>
+  <pre><code class="language-yaml"># GOOD -- wildcard requires DNS-01
+solvers:
+  - dns01:
+      cloudflare:
+        apiTokenSecretRef:
+          name: cloudflare-api-token
+          key: api-token</code></pre>
+
+  <h3>Wrong: Missing tls.secretName in Ingress</h3>
+  <pre><code class="language-yaml"># BAD -- annotation present but no tls section
+# cert-manager's ingress-shim silently skips this
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  rules:
+    - host: app.example.com
+  # Missing tls section entirely!</code></pre>
+
+  <h3>Correct: Include tls section with secretName and hosts</h3>
+  <pre><code class="language-yaml"># GOOD -- tls section with secretName triggers cert-manager
+spec:
+  tls:
+    - hosts:
+        - app.example.com
+      secretName: app-example-com-tls
+  rules:
+    - host: app.example.com</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Certificate stuck in False READY state</strong>: Walk the resource chain: Certificate -> CertificateRequest -> Order -> Challenge. Fix: <code>kubectl describe challenge &lt;name&gt;</code> to see the specific error. [<a href="https://cert-manager.io/docs/troubleshooting/acme/">src2</a>]</li>
+    <li><strong>HTTP-01 challenge returns 404</strong>: The solver Pod creates a temporary Ingress. Fix: verify <code>ingressClassName</code> matches your controller, or use <code>acme.cert-manager.io/http01-edit-in-place: "true"</code>. [<a href="https://cert-manager.io/docs/troubleshooting/acme/">src2</a>]</li>
+    <li><strong>DNS-01 TXT record not propagating</strong>: Internal DNS resolvers may not see the record. Fix: set <code>--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53</code> and <code>--dns01-recursive-nameservers-only</code>. [<a href="https://cert-manager.io/docs/configuration/acme/dns01/">src4</a>]</li>
+    <li><strong>TLS handshake failure during HTTP-01</strong>: Ingress controller needs a cert to serve HTTPS. Fix: add <code>cert-manager.io/issue-temporary-certificate: "true"</code> annotation. [<a href="https://cert-manager.io/docs/troubleshooting/acme/">src2</a>]</li>
+    <li><strong>ACME account secret conflict</strong>: Previous account Secret conflicts with new Issuer. Fix: <code>kubectl delete secret &lt;name&gt; -n cert-manager</code> and re-apply. [<a href="https://cert-manager.io/docs/troubleshooting/acme/">src2</a>]</li>
+    <li><strong>Rate limit exceeded</strong>: Hit the 50 certs/domain/week limit. Fix: wait 7 days for reset; always use staging for testing. [<a href="https://cert-manager.io/docs/configuration/acme/">src1</a>]</li>
+    <li><strong>Challenge pods not created</strong>: cert-manager webhook or cainjector not running. Fix: <code>kubectl get pods -n cert-manager</code> and check logs. [<a href="https://cert-manager.io/docs/troubleshooting/acme/">src2</a>]</li>
+    <li><strong>Ingress annotation ignored</strong>: Missing <code>tls</code> section or empty <code>secretName</code>. Fix: ensure every tls entry has a secretName and hosts. [<a href="https://cert-manager.io/docs/usage/ingress/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check cert-manager pods are running
+kubectl get pods -n cert-manager
+
+# Check ClusterIssuer/Issuer status
+kubectl get clusterissuer
+kubectl describe clusterissuer letsencrypt-prod
+
+# List all certificates and their READY status
+kubectl get certificates --all-namespaces
+
+# Follow issuance chain: Certificate -> CertificateRequest -> Order -> Challenge
+kubectl describe certificate &lt;name&gt; -n &lt;namespace&gt;
+kubectl get certificaterequest -n &lt;namespace&gt;
+kubectl describe order &lt;name&gt; -n &lt;namespace&gt;
+kubectl get challenges --all-namespaces
+kubectl describe challenge &lt;name&gt; -n &lt;namespace&gt;
+
+# Check TLS secret was created and inspect certificate
+kubectl get secret &lt;secretName&gt; -n &lt;namespace&gt; -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -text
+
+# View cert-manager controller logs
+kubectl logs -n cert-manager deploy/cert-manager --tail=100
+
+# Test DNS-01 TXT record propagation
+dig _acme-challenge.example.com TXT +short</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Release Date</th><th scope="col">K8s Support</th><th scope="col">Breaking Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>v1.20</td><td>Upcoming</td><td>Feb 24, 2026</td><td>1.32-1.35</td><td>TBD</td></tr>
+      <tr><td>v1.19</td><td>Current</td><td>Oct 07, 2025</td><td>1.31-1.35</td><td>None major</td></tr>
+      <tr><td>v1.18</td><td>Supported</td><td>Jun 10, 2025</td><td>1.29-1.33</td><td>revisionHistoryLimit defaults to 1; stale CertificateRequests garbage-collected</td></tr>
+      <tr><td>v1.17</td><td>EOL</td><td>~Feb 2025</td><td>1.28-1.31</td><td>Structured logging; ValidateCAA deprecated</td></tr>
+      <tr><td>v1.16</td><td>EOL</td><td>~Oct 2024</td><td>1.27-1.30</td><td>Last version on OperatorHub</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>You need automatic TLS certificates on Kubernetes</td><td>You are not running Kubernetes</td><td>Certbot standalone or ACME client</td></tr>
+      <tr><td>You want Let's Encrypt auto-renewal (90-day certs)</td><td>You have enterprise CA with manual distribution</td><td>Your CA's certificate management tool</td></tr>
+      <tr><td>You manage multiple domains/services in a cluster</td><td>Single static site with manual cert management</td><td>Cloudflare SSL or hosting provider built-in TLS</td></tr>
+      <tr><td>You need wildcard certificates with DNS-01</td><td>Cluster has no outbound internet access</td><td>Internal CA (Vault PKI, step-ca)</td></tr>
+      <tr><td>You want annotation-driven TLS on Ingress</td><td>Using Gateway API with built-in cert management</td><td>Gateway API + TLS passthrough</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Let's Encrypt certificates are valid for 90 days. cert-manager renews them 30 days before expiry by default. If cert-manager goes down for more than 60 days, certificates will expire.</li>
+    <li>HTTP-01 challenges require port 80 to be publicly accessible from the internet. If your cluster is behind a strict firewall or NAT, use DNS-01 instead.</li>
+    <li>When using DNS-01, the API token needs write access to DNS records. Follow the principle of least privilege: create a scoped token for TXT records only.</li>
+    <li>cert-manager v1.18+ garbage-collects old CertificateRequest resources on upgrade. Set <code>revisionHistoryLimit</code> explicitly if you need historical data.</li>
+    <li>The ACME <code>privateKeySecretRef</code> secret is your account identity with Let's Encrypt. Back it up for cluster migrations.</li>
+    <li>dnsmasq with <code>--filterwin2k</code> flag (common in OpenWRT) drops SOA records, breaking cert-manager DNS zone detection.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/k8s-deployment-service-ingress/2026" data-relationship="depends_on">Kubernetes Deployment + Service + Ingress</a>
+    <a href="/software/debugging/ssl-tls-certificate-errors/2026" data-relationship="related_to">SSL/TLS Certificate Errors</a>
+    <a href="/software/devops/docker-nginx-ssl/2026" data-relationship="related_to">Docker NGINX + SSL</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

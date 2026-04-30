@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Secrets Management: Best Practices and Tool Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete secrets management guide covering tool comparison (Vault, AWS SM, GCP SM, Azure KV, SOPS), secret rotation, pre-commit hooks, code examples for...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/secrets-management/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Secrets Management: Best Practices and Tool Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete secrets management guide covering tool comparison (Vault, AWS SM, GCP SM, Azure KV, SOPS), secret rotation, pre-commit hooks, code examples for Python and Node.js, and 4 anti-patterns with fixes. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/secrets-management/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Secrets Management: Best Practices and Tool Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete secrets management guide covering tool comparison (Vault, AWS SM, GCP SM, Azure KV, SOPS), secret rotation, pre-commit hooks, code examples for Python and Node.js, and 4 anti-patterns with fixes. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/Secrets Management">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the best practices for secrets management?">
+  <meta name="ai:aliases" content="secrets management best practices; how to store API keys securely; HashiCorp Vault secrets management; AWS Secrets Manager vs Vault; prevent hardcoded credentials; CWE-798 prevention; secure credential storage; secrets rotation automation">
+  <meta name="ai:raw" content="/api/v1/units/software/security/secrets-management/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="infrastructure,secret_type">
+  <meta name="ai:constraints" content="NEVER hardcode secrets in source code or config files (CWE-798); NEVER commit secrets to version control; Secrets MUST be encrypted at rest and in transit; Rotate secrets automatically; Apply least-privilege access; NEVER log secret values">
+  <meta name="ai:skip_this_unit_if" content="Need password hashing for users → software/security/password-hashing/2026; Need encryption key management (KMS) → software/security/encryption-key-management/2026; Need OAuth/OIDC token management → software/patterns/oauth-implementation/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Secrets Management: Best Practices and Tool Guide",
+    "headline": "Secrets Management: Best Practices and Tool Guide",
+    "description": "Complete guide to secrets management best practices including tool comparison (HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, SOPS), automated rotation, pre-commit secret detection, and production-ready code examples for Python and Node.js.",
+    "keywords": ["secrets management", "HashiCorp Vault", "AWS Secrets Manager", "CWE-798", "credential management", "secret rotation", "SOPS", "git-secrets", "DevSecOps"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "HashiCorp Vault 1.20.x, hvac 2.4.x, AWS SDK v3, boto3 1.34+, SOPS 3.9.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Secrets Management Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Vault Documentation",
+        "url": "https://developer.hashicorp.com/vault/docs"
+      },
+      {
+        "@type": "WebPage",
+        "name": "AWS Secrets Manager User Guide",
+        "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-798: Use of Hard-coded Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/798.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The Twelve-Factor App: III. Config",
+        "url": "https://12factor.net/config"
+      },
+      {
+        "@type": "WebPage",
+        "name": "git-secrets: Prevents committing secrets to git repositories",
+        "url": "https://github.com/awslabs/git-secrets"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SOPS: Simple and flexible tool for managing secrets",
+        "url": "https://github.com/getsops/sops"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Secrets Management: Best Practices and Tool Guide",
+    "description": "Structured knowledge unit on secrets management best practices with tool comparison, rotation strategies, pre-commit hooks, code examples, and anti-patterns for secure credential handling.",
+    "keywords": ["secrets management", "HashiCorp Vault", "AWS Secrets Manager", "CWE-798", "credential management", "secret rotation", "SOPS", "DevSecOps"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "HashiCorp"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "CNCF"},
+      {"@type": "Organization", "name": "AWS Labs"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "Secrets Management" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best practices for secrets management?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "secrets management best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to store API keys securely",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "HashiCorp Vault secrets management",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "AWS Secrets Manager vs Vault",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "prevent hardcoded credentials",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Secrets Management: Best Practices and Tool Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best practices for secrets management?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/secrets-management/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Centralize secrets in a dedicated secrets manager (Vault, AWS SM, or cloud-native equivalent), automate rotation, enforce least-privilege access, and use pre-commit hooks to prevent secrets from ever reaching version control.</li>
+    <li><strong>Key tool/command</strong>: <code>vault kv get secret/myapp/db</code> (HashiCorp Vault) or <code>aws secretsmanager get-secret-value --secret-id myapp/db</code> (AWS Secrets Manager)</li>
+    <li><strong>Watch out for</strong>: Hardcoded secrets in source code (CWE-798) -- the #1 cause of credential leaks, ranked #14 in the 2024 CWE Top 25.</li>
+    <li><strong>Works with</strong>: All major clouds (AWS, GCP, Azure), Kubernetes (External Secrets Operator), CI/CD pipelines, and every programming language via SDKs.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER hardcode secrets in source code, configuration files, or container images -- CWE-798</li>
+    <li>NEVER commit secrets to version control -- even in private repos, git history retains them permanently</li>
+    <li>Secrets MUST be encrypted at rest and in transit -- use TLS for all secrets manager communication</li>
+    <li>Rotate secrets automatically on a schedule appropriate to sensitivity -- API keys quarterly, database credentials monthly minimum</li>
+    <li>Apply least-privilege access to every secret -- no blanket read-all permissions</li>
+    <li>NEVER log secret values -- mask or redact in all application and infrastructure logs</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Tool Comparison</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Tool</th><th scope="col">Type</th><th scope="col">Best For</th><th scope="col">Rotation</th><th scope="col">Cost</th><th scope="col">Complexity</th><th scope="col">Cloud Lock-in</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HashiCorp Vault</td><td>Self-hosted / HCP</td><td>Multi-cloud, enterprise, dynamic secrets</td><td>Built-in (dynamic)</td><td>Free OSS / HCP from $0.03/hr</td><td>High</td><td>None</td></tr>
+      <tr><td>AWS Secrets Manager</td><td>Managed service</td><td>AWS-native workloads</td><td>Built-in (Lambda)</td><td>$0.40/secret/mo + $0.05/10K API</td><td>Low</td><td>AWS</td></tr>
+      <tr><td>GCP Secret Manager</td><td>Managed service</td><td>GCP-native workloads</td><td>Custom (Cloud Functions)</td><td>$0.06/active version/mo</td><td>Low</td><td>GCP</td></tr>
+      <tr><td>Azure Key Vault</td><td>Managed service</td><td>Azure-native workloads</td><td>Built-in (certificates)</td><td>$0.03/10K ops (Standard)</td><td>Low</td><td>Azure</td></tr>
+      <tr><td>SOPS (CNCF)</td><td>File encryption</td><td>GitOps, encrypted config in repos</td><td>Manual</td><td>Free OSS</td><td>Medium</td><td>None</td></tr>
+      <tr><td>git-crypt</td><td>File encryption</td><td>Simple repo encryption</td><td>Manual</td><td>Free OSS</td><td>Low</td><td>None</td></tr>
+      <tr><td>dotenv (.env)</td><td>Local file</td><td>Local development only</td><td>Manual</td><td>Free</td><td>Low</td><td>None</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Secret Types and Recommended Storage</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Secret Type</th><th scope="col">Recommended Storage</th><th scope="col">Rotation Frequency</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Database credentials</td><td>Vault dynamic secrets / cloud SM</td><td>Per-connection or monthly</td><td>Prefer dynamic (ephemeral) credentials</td></tr>
+      <tr><td>API keys (third-party)</td><td>Cloud secrets manager</td><td>Quarterly or on compromise</td><td>Store with metadata (expiry, owner, scope)</td></tr>
+      <tr><td>TLS certificates</td><td>Vault PKI / cloud certificate manager</td><td>90 days or annually</td><td>Automate with cert-manager in K8s</td></tr>
+      <tr><td>SSH keys</td><td>Vault SSH secrets engine</td><td>Per-session or daily</td><td>Signed certificates preferred over static keys</td></tr>
+      <tr><td>Encryption keys</td><td>Cloud KMS (not secrets manager)</td><td>Annually or per policy</td><td>Envelope encryption -- never store KEK with DEK</td></tr>
+      <tr><td>CI/CD tokens</td><td>CI/CD built-in secrets + short TTL</td><td>Per-pipeline run</td><td>Avoid long-lived tokens; use OIDC federation</td></tr>
+      <tr><td>.env files</td><td>Local only, never committed</td><td>N/A</td><td>Add to .gitignore; use secrets manager for production</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What is your deployment environment?
+&#9500;&#9472;&#9472; Single cloud (AWS/GCP/Azure)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use cloud-native secrets manager (AWS SM, GCP SM, Azure KV)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Multi-cloud or hybrid?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use HashiCorp Vault (self-hosted or HCP)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Kubernetes-only?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; External Secrets Operator + cloud SM or Vault
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Small team, few secrets, GitOps workflow?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; SOPS + cloud KMS for encryption keys
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Local development only?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; dotenv (.env files in .gitignore) + git-secrets pre-commit hook
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; HashiCorp Vault (most flexible, no lock-in)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Install pre-commit secret detection</h3>
+  <p>Prevent secrets from ever reaching version control. Install git-secrets as a pre-commit hook. [<a href="https://github.com/awslabs/git-secrets">src6</a>]</p>
+  <pre><code class="language-bash"># Install git-secrets
+brew install git-secrets   # macOS
+
+# Initialize hooks in your repo
+cd /path/to/your/repo
+git secrets --install
+git secrets --register-aws
+
+# Add custom patterns
+git secrets --add 'PRIVATE KEY'
+git secrets --add 'password\s*=\s*["\047][^"\047]+'</code></pre>
+  <p><strong>Verify</strong>: <code>git secrets --scan</code> &#8594; should report any existing secrets in the repo.</p>
+
+  <h3>2. Set up a centralized secrets manager</h3>
+  <p>Choose based on your infrastructure. Example: HashiCorp Vault dev server for evaluation. [<a href="https://developer.hashicorp.com/vault/docs">src2</a>]</p>
+  <pre><code class="language-bash"># Start Vault dev server (evaluation only)
+vault server -dev -dev-root-token-id="dev-only-token"
+
+# Store a secret
+export VAULT_ADDR='http://127.0.0.1:8200'
+export VAULT_TOKEN='dev-only-token'
+vault kv put secret/myapp/db username="dbadmin" password="s3cur3-p@ssw0rd"</code></pre>
+  <p><strong>Verify</strong>: <code>vault kv get secret/myapp/db</code> &#8594; should display stored key-value pairs.</p>
+
+  <h3>3. Configure application to fetch secrets at runtime</h3>
+  <p>Replace hardcoded credentials with secrets manager SDK calls. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">import os, hvac  # pip install hvac>=2.4.0
+
+client = hvac.Client(
+    url=os.environ['VAULT_ADDR'],
+    token=os.environ['VAULT_TOKEN']
+)
+secret = client.secrets.kv.v2.read_secret_version(
+    path='myapp/db', mount_point='secret'
+)
+db_password = secret['data']['data']['password']</code></pre>
+  <p><strong>Verify</strong>: Application starts and connects to the database without credentials in source code.</p>
+
+  <h3>4. Implement automated secret rotation</h3>
+  <p>Configure automatic rotation to limit blast radius of compromised credentials. [<a href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/">src3</a>]</p>
+  <pre><code class="language-bash"># AWS: Enable rotation with Lambda
+aws secretsmanager rotate-secret \
+  --secret-id myapp/db-credentials \
+  --rotation-lambda-arn arn:aws:lambda:us-east-1:123456789:function:SecretsRotation \
+  --rotation-rules '{"AutomaticallyAfterDays": 30}'</code></pre>
+  <p><strong>Verify</strong>: <code>aws secretsmanager describe-secret --secret-id myapp/db-credentials</code> &#8594; <code>RotationEnabled: true</code>.</p>
+
+  <h3>5. Encrypt secrets in configuration files (GitOps)</h3>
+  <p>For GitOps workflows, encrypt secrets in-repo with SOPS. [<a href="https://github.com/getsops/sops">src7</a>]</p>
+  <pre><code class="language-bash"># Encrypt a secrets file (values only)
+sops --encrypt secrets/production.yaml > secrets/production.enc.yaml
+
+# Decrypt at deploy time
+sops --decrypt secrets/production.enc.yaml > /tmp/production.yaml</code></pre>
+  <p><strong>Verify</strong>: <code>cat secrets/production.enc.yaml</code> &#8594; keys readable, values encrypted.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: HashiCorp Vault with hvac</h3>
+  <pre><code class="language-python"># Input:  VAULT_ADDR and VAULT_TOKEN environment variables
+# Output: Database credentials fetched from Vault KV v2
+
+import os
+import hvac  # pip install hvac>=2.4.0
+
+def get_vault_client():
+    client = hvac.Client(
+        url=os.environ['VAULT_ADDR'],
+        token=os.environ['VAULT_TOKEN']
+    )
+    if not client.is_authenticated():
+        raise RuntimeError("Vault authentication failed")
+    return client
+
+def get_db_credentials(client, path='myapp/db'):
+    resp = client.secrets.kv.v2.read_secret_version(
+        path=path, mount_point='secret'
+    )
+    return resp['data']['data']</code></pre>
+
+  <h3>Node.js: AWS Secrets Manager</h3>
+  <pre><code class="language-javascript">// Input:  AWS credentials (IAM role or env vars) + secret name
+// Output: Parsed secret object with database credentials
+
+const { SecretsManagerClient, GetSecretValueCommand }
+  = require("@aws-sdk/client-secrets-manager");  // ^3.500.0
+
+async function getSecret(secretId, region = "us-east-1") {
+  const client = new SecretsManagerClient({ region });
+  const resp = await client.send(
+    new GetSecretValueCommand({ SecretId: secretId })
+  );
+  return JSON.parse(resp.SecretString);
+}</code></pre>
+
+  <h3>Python: AWS Secrets Manager with boto3</h3>
+  <pre><code class="language-python"># Input:  AWS credentials (IAM role or env vars) + secret name
+# Output: Parsed secret dict with credentials
+
+import json, boto3  # pip install boto3>=1.34.0
+
+def get_secret(secret_name, region="us-east-1"):
+    client = boto3.client("secretsmanager", region_name=region)
+    resp = client.get_secret_value(SecretId=secret_name)
+    return json.loads(resp["SecretString"])</code></pre>
+
+  <h3>Bash: git-secrets Pre-Commit Hook Setup</h3>
+  <pre><code class="language-bash"># Input:  A git repository
+# Output: Pre-commit hook that blocks secret commits
+
+git secrets --install
+git secrets --register-aws
+git secrets --add 'PRIVATE KEY'
+git secrets --add 'password\s*=\s*["\047][^"\047]+'
+
+# Verify: attempt to commit a test secret
+echo "AWS_SECRET=AKIAIOSFODNN7EXAMPLE" &gt; test.txt
+git add test.txt &amp;&amp; git commit -m "test"  # blocked</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Hardcoded secrets in source code</h3>
+  <pre><code class="language-python"># BAD -- CWE-798: hardcoded credentials
+import psycopg2
+conn = psycopg2.connect(
+    host="prod-db.example.com",
+    user="admin",
+    password="SuperSecret123!"  # hardcoded
+)</code></pre>
+
+  <h3>Correct: Fetch secrets from a secrets manager</h3>
+  <pre><code class="language-python"># GOOD -- credentials fetched at runtime from Vault
+import os, hvac, psycopg2
+client = hvac.Client(url=os.environ['VAULT_ADDR'], token=os.environ['VAULT_TOKEN'])
+creds = client.secrets.kv.v2.read_secret_version(path='myapp/db')['data']['data']
+conn = psycopg2.connect(
+    host=creds['host'], user=creds['username'], password=creds['password']
+)</code></pre>
+
+  <h3>Wrong: Secrets committed to git history</h3>
+  <pre><code class="language-bash"># BAD -- git history retains the secret forever
+echo "API_KEY=sk-live-abc123xyz" &gt; config.env
+git add config.env &amp;&amp; git commit -m "add config"
+# Even git rm config.env doesn't remove from history</code></pre>
+
+  <h3>Correct: Pre-commit hooks + .gitignore</h3>
+  <pre><code class="language-bash"># GOOD -- prevent secrets from ever entering the repo
+echo "*.env" &gt;&gt; .gitignore
+git secrets --install
+git secrets --register-aws</code></pre>
+
+  <h3>Wrong: Secrets baked into Docker image</h3>
+  <pre><code class="language-dockerfile"># BAD -- secret visible via docker history
+FROM node:20-alpine
+ENV DATABASE_URL="postgresql://admin:secret@db:5432/myapp"
+COPY . /app
+CMD ["node", "server.js"]</code></pre>
+
+  <h3>Correct: Inject secrets at container runtime</h3>
+  <pre><code class="language-dockerfile"># GOOD -- no secrets in the image
+FROM node:20-alpine
+COPY . /app
+RUN npm install
+# Run with: docker run -e DATABASE_URL="$(vault kv get ...)" myapp
+CMD ["node", "server.js"]</code></pre>
+
+  <h3>Wrong: Env vars visible in process listing</h3>
+  <pre><code class="language-bash"># BAD -- visible via /proc/PID/environ
+docker run -e DB_PASSWORD="secret123" myapp</code></pre>
+
+  <h3>Correct: Mount secrets as files in tmpfs</h3>
+  <pre><code class="language-yaml"># GOOD -- Kubernetes: secrets via sidecar on tmpfs
+apiVersion: v1
+kind: Pod
+spec:
+  volumes:
+    - name: secrets
+      emptyDir:
+        medium: Memory  # tmpfs
+  containers:
+    - name: app
+      volumeMounts:
+        - name: secrets
+          mountPath: /mnt/secrets
+          readOnly: true</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Forgetting .gitignore before first commit</strong>: Once <code>.env</code> is committed, removing it from <code>.gitignore</code> does not remove it from git history. Fix: Add <code>.env</code> to <code>.gitignore</code> in the initial commit. If already committed, use BFG Repo-Cleaner, then rotate all exposed secrets. [<a href="https://cwe.mitre.org/data/definitions/798.html">src4</a>]</li>
+    <li><strong>Using Parameter Store instead of Secrets Manager on AWS</strong>: AWS SSM Parameter Store lacks built-in rotation and has lower throughput limits. Fix: Use Secrets Manager for credentials needing rotation; Parameter Store for non-sensitive config. [<a href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/">src3</a>]</li>
+    <li><strong>Single long-lived Vault token</strong>: A root or long-lived token defeats Vault's security model. Fix: Use AppRole, Kubernetes, or OIDC auth methods that issue short-lived tokens with specific policies. [<a href="https://developer.hashicorp.com/vault/docs">src2</a>]</li>
+    <li><strong>Not masking secrets in CI/CD logs</strong>: Build logs often contain expanded environment variables. Fix: Use your CI/CD platform's secret masking feature (GitHub Actions <code>::add-mask::</code>, GitLab CI masked variables). [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>Storing encryption keys alongside encrypted data</strong>: Defeats the purpose of encryption. Fix: Use envelope encryption -- DEK encrypted with KEK stored in separate KMS. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>Sharing secrets via Slack/email</strong>: Secrets persist in message history and backups. Fix: Use Vault's cubbyhole response wrapping or a one-time-share tool. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>No secret expiry or rotation</strong>: Static secrets accumulate risk over time. Fix: Set TTLs on all secrets; use Vault dynamic secrets for ephemeral credentials. [<a href="https://developer.hashicorp.com/vault/docs">src2</a>]</li>
+    <li><strong>Overly broad IAM policies for secrets access</strong>: Granting <code>secretsmanager:GetSecretValue</code> on <code>*</code> allows any compromised service to read all secrets. Fix: Scope policies to specific secret ARNs. [<a href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Scan repo for hardcoded secrets
+git secrets --scan
+
+# Check for high-entropy strings with trufflehog
+trufflehog git file://. --only-verified
+
+# Verify Vault connectivity and authentication
+vault status
+vault token lookup
+
+# List secrets in a Vault KV path
+vault kv list secret/myapp/
+
+# Check AWS Secrets Manager rotation status
+aws secretsmanager describe-secret --secret-id myapp/db-credentials \
+  --query '{RotationEnabled: RotationEnabled, LastRotated: LastRotatedDate}'
+
+# Scan Docker image for embedded secrets
+docker history --no-trunc myapp:latest | grep -i -E 'password|secret|key|token'
+
+# Verify SOPS encryption
+sops --decrypt secrets/production.enc.yaml &gt; /dev/null &amp;&amp; echo "OK"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Tool</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Change</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HashiCorp Vault</td><td>1.20.x</td><td>Current (GA June 2025)</td><td>Secrets Operator for K8s, IBM RACF support</td></tr>
+      <tr><td>HashiCorp Vault</td><td>1.18.x</td><td>LTS</td><td>Vault Proxy, Secrets Sync</td></tr>
+      <tr><td>AWS Secrets Manager</td><td>Current</td><td>GA</td><td>Cross-account sharing, Lambda rotation v2</td></tr>
+      <tr><td>GCP Secret Manager</td><td>v1</td><td>GA</td><td>Regional replication, IAM conditions</td></tr>
+      <tr><td>Azure Key Vault</td><td>Current</td><td>GA</td><td>RBAC model, soft-delete default</td></tr>
+      <tr><td>SOPS</td><td>3.9.x</td><td>Current (CNCF Sandbox)</td><td>age encryption support, audit logging</td></tr>
+      <tr><td>hvac (Python)</td><td>2.4.x</td><td>Current</td><td>Python 3.8+, KV v2 improvements</td></tr>
+      <tr><td>External Secrets Operator</td><td>0.10.x</td><td>Current</td><td>Multi-provider, PushSecret CRD</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Any production credentials (DB, API keys, tokens)</td><td>Storing non-sensitive config (feature flags, app settings)</td><td>Environment variables or config files</td></tr>
+      <tr><td>Multi-service architecture sharing credentials</td><td>Single-developer local prototype</td><td>.env file with .gitignore</td></tr>
+      <tr><td>Compliance requires audit trail for credential access</td><td>Storing user passwords for authentication</td><td>Password hashing (bcrypt, argon2)</td></tr>
+      <tr><td>Credentials need automatic rotation</td><td>Managing public keys only</td><td>Standard key distribution / PKI</td></tr>
+      <tr><td>GitOps workflow needs encrypted secrets in repo</td><td>Small static secrets that never change</td><td>SOPS may be overkill; consider sealed secrets</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Vault's dev server mode is unencrypted and in-memory only -- NEVER use in production; always configure HA storage backend (Consul, Raft, or Integrated Storage)</li>
+    <li>AWS Secrets Manager charges per secret per month ($0.40) plus per API call -- costs can accumulate with high-frequency rotation and many microservices</li>
+    <li>Environment variables are visible in <code>/proc/PID/environ</code> on Linux, in <code>docker inspect</code>, and in CI/CD logs -- they are NOT a secure storage mechanism for production secrets</li>
+    <li>SOPS encrypts values but not keys -- file structure (key names) remain visible in plaintext, which may leak information about your architecture</li>
+    <li>Kubernetes Secrets are base64-encoded, NOT encrypted by default -- enable etcd encryption at rest or use External Secrets Operator</li>
+    <li>When a secret is compromised, rotation is not enough -- you must also revoke the old credential immediately and audit all access logs</li>
+    <li>The 12-Factor App recommendation for env vars predates modern secrets managers -- for sensitive credentials, prefer mounted files or SDK-based retrieval</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention</a>
+    <a href="/software/devops/docker-security/2026" data-relationship="related_to">Docker Security Best Practices</a>
+    <a href="/software/security/credential-leak-response/2026" data-relationship="solves">Credential Leak Incident Response</a>
+    <a href="/software/security/encryption-key-management/2026" data-relationship="often_confused_with">Encryption Key Management (KMS)</a>
+    <a href="/software/security/password-hashing/2026" data-relationship="often_confused_with">Password Hashing for User Authentication</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

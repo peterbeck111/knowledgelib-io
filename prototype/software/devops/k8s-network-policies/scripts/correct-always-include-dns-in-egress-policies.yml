@@ -1,0 +1,25 @@
+# GOOD -- Allow DNS + specific service egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-egress-with-dns
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Egress
+  egress:
+    - ports:                   # DNS rule (no 'to' = allow to any destination)
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:                      # Service-specific rule
+        - podSelector:
+            matchLabels:
+              app: database
+      ports:
+        - protocol: TCP
+          port: 5432

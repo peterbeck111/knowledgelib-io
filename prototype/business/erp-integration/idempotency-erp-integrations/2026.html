@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Idempotency in ERP Integrations: Keys | knowledgelib.io</title>
+  <meta name="description" content="How to implement idempotency in ERP integrations — idempotency keys, deduplication strategies, upsert patterns across Salesforce, SAP, NetSuite, and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/idempotency-erp-integrations/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Idempotency in ERP Integrations: Keys | knowledgelib.io">
+  <meta property="og:description" content="How to implement idempotency in ERP integrations — idempotency keys, deduplication strategies, upsert patterns across Salesforce, SAP, NetSuite, and Dynamics 365. Cross-system decision tree, code examples, anti-patterns. 8 sources, all cited. Verified 2026-03-02.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/idempotency-erp-integrations/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-02">
+  <meta property="article:modified_time" content="2026-03-02">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Idempotency in ERP Integrations: Keys | knowledgelib.io">
+  <meta name="twitter:description" content="How to implement idempotency in ERP integrations — idempotency keys, deduplication strategies, upsert patterns across Salesforce, SAP, NetSuite, and Dynamics 365. Cross-system decision tree, code examples, anti-patterns. 8 sources, all cited. Verified 2026-03-02.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-03-02">
+  <meta name="ai:domain" content="business/erp-integration/idempotency-erp-integrations">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you implement idempotency in ERP integrations - idempotency keys, deduplication, upsert patterns?">
+  <meta name="ai:aliases" content="Idempotent ERP API patterns and deduplication strategies; How to prevent duplicate records in ERP integrations; Upsert vs insert for ERP data sync idempotency; Idempotency key implementation for enterprise API integrations">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/idempotency-erp-integrations/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-02">
+  <meta name="ai:systems" content="Salesforce (API v62.0); SAP S/4HANA (2408); Oracle NetSuite (2024.2); Microsoft Dynamics 365 (Dataverse API v9.2)">
+  <meta name="ai:inputs_needed" content="erp_system,integration_pattern,failure_tolerance">
+  <meta name="ai:constraints" content="Salesforce max 7 External ID fields per object; NetSuite external IDs are case-insensitive; SAP OData requires middleware for dedup; Dynamics 365 max 5 alternate key fields; Bulk APIs do not support idempotency key headers; OData Repeatable Requests cannot apply to batch requests; Idempotency check + business logic must be in same ACID transaction">
+  <meta name="ai:skip_this_unit_if" content="User needs single-system API reference → business/erp-integration/{system}-rest-api-capabilities/2026; User needs data migration deduplication → pre-migration cleansing; User needs message broker deduplication → Kafka exactly-once semantics">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Idempotency in ERP Integrations: Keys, Deduplication, and Upsert Patterns",
+    "headline": "Idempotency in ERP Integrations: Keys, Deduplication, and Upsert Patterns",
+    "description": "Cross-system architecture pattern for implementing idempotency in ERP integrations. Covers idempotency keys, External ID upsert, OData Repeatable Requests, Idempotent Consumer pattern, and deduplication strategies across Salesforce, SAP S/4HANA, Oracle NetSuite, and Microsoft Dynamics 365.",
+    "keywords": ["idempotency", "ERP integration", "upsert", "deduplication", "idempotency keys", "external ID", "Salesforce", "SAP", "NetSuite", "Dynamics 365"],
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, SAP S/4HANA 2408, NetSuite 2024.2, Dynamics 365 Dataverse API v9.2",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Designing robust and predictable APIs with idempotency",
+        "url": "https://stripe.com/blog/idempotency"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Making retries safe with idempotent APIs",
+        "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OData Repeatable Requests Version 1.0",
+        "url": "https://docs.oasis-open.org/odata/repeatable-requests/v1.0/cnprd01/repeatable-requests-v1.0-cnprd01.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Insert or Update (Upsert) a Record Using an External ID",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "On Idempotency Keys",
+        "url": "https://www.morling.dev/blog/on-idempotency-keys/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Idempotent Consumer Pattern",
+        "url": "https://microservices.io/patterns/communication-style/idempotent-consumer.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite SuiteTalk - Using the Upsert Operation",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP Cloud Integration - Idempotent Process Call",
+        "url": "https://community.sap.com/t5/technology-blog-posts-by-members/sap-cloud-integration-idempotent-process-call/ba-p/13580854"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Idempotency in ERP Integrations: Keys, Deduplication, and Upsert Patterns",
+    "description": "Cross-system reference for idempotency patterns in ERP integrations: idempotency keys, External ID upsert, OData Repeatable Requests, deduplication strategies, with decision tree and code examples for Salesforce, SAP, NetSuite, Dynamics 365.",
+    "keywords": ["idempotency", "ERP integration", "upsert", "deduplication", "Salesforce", "SAP", "NetSuite", "Dynamics 365"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Stripe"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "OASIS"},
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "SAP"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Idempotency in ERP Integrations" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you implement idempotency in ERP integrations - idempotency keys, deduplication, upsert patterns?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP integration that creates or updates records must be idempotent — use upsert with external IDs as the default pattern, add idempotency keys for non-upsertable operations, and implement an idempotent consumer for event-driven flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Idempotent ERP API patterns and deduplication strategies",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP integration that creates or updates records must be idempotent — use upsert with external IDs as the default pattern, add idempotency keys for non-upsertable operations, and implement an idempotent consumer for event-driven flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to prevent duplicate records in ERP integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP integration that creates or updates records must be idempotent — use upsert with external IDs as the default pattern, add idempotency keys for non-upsertable operations, and implement an idempotent consumer for event-driven flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Upsert vs insert for ERP data sync idempotency",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP integration that creates or updates records must be idempotent — use upsert with external IDs as the default pattern, add idempotency keys for non-upsertable operations, and implement an idempotent consumer for event-driven flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Idempotency key implementation for enterprise API integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Every ERP integration that creates or updates records must be idempotent — use upsert with external IDs as the default pattern, add idempotency keys for non-upsertable operations, and implement an idempotent consumer for event-driven flows."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Idempotency in ERP Integrations: Keys, Deduplication, and Upsert Patterns</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you implement idempotency in ERP integrations - idempotency keys, deduplication, upsert patterns?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/idempotency-erp-integrations/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-System (Salesforce, SAP, NetSuite, Dynamics 365)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-02</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Every ERP integration that creates or updates records must be idempotent — use upsert with external IDs as the default pattern, add idempotency keys for non-upsertable operations, and implement an idempotent consumer for event-driven flows.</li>
+    <li><strong>Key limit</strong>: Salesforce allows max 7 External ID fields per object; NetSuite external IDs are case-insensitive; Dynamics 365 alternate keys support max 5 fields per entity.</li>
+    <li><strong>Watch out for</strong>: Bulk APIs (Salesforce Bulk API 2.0, NetSuite CSV Import) do NOT support idempotency key headers natively — you must deduplicate before submission or use external ID upsert mode.</li>
+    <li><strong>Best for</strong>: Any integration that retries on failure, runs on a schedule, or processes messages from an at-least-once delivery queue (Kafka, SQS, Platform Events).</li>
+    <li><strong>Authentication</strong>: Not applicable — this is a cross-system architecture pattern. See individual system cards for auth details.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This is a cross-system architecture pattern card covering idempotency implementation across the four major ERP platforms. Each ERP provides different native mechanisms for achieving idempotency, ranging from built-in upsert operations (Salesforce, NetSuite) to middleware-based duplicate detection (SAP) to alternate key upserts (Dynamics 365).</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Native Idempotency Mechanism</th><th scope="col">API Surface</th><th scope="col">Key Limitation</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Salesforce</strong></td><td>External ID upsert (PATCH)</td><td>REST API v62.0</td><td>Max 7 External ID fields per object</td></tr>
+      <tr><td><strong>SAP S/4HANA</strong></td><td>Idempotent Process Call (middleware)</td><td>OData v4 via Integration Suite</td><td>Requires SAP Integration Suite; OData is stateless</td></tr>
+      <tr><td><strong>Oracle NetSuite</strong></td><td>upsert/upsertList with External ID</td><td>SuiteTalk REST / SOAP</td><td>External IDs are case-insensitive</td></tr>
+      <tr><td><strong>Microsoft Dynamics 365</strong></td><td>Alternate key upsert (PATCH)</td><td>Dataverse Web API v9.2</td><td>Max 5 key fields per alternate key</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Protocol</th><th scope="col">Idempotent?</th><th scope="col">Mechanism</th><th scope="col">Bulk Support</th><th scope="col">Real-time?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Upsert via External ID</td><td>REST (PATCH/PUT)</td><td>Yes — naturally</td><td>Unique external identifier match</td><td>Salesforce Bulk API 2.0, NetSuite upsertList</td><td>Yes</td></tr>
+      <tr><td>Idempotency Key Header</td><td>REST (POST)</td><td>Yes — with key</td><td>Server-side key store + dedup</td><td>No — per-request only</td><td>Yes</td></tr>
+      <tr><td>OData Repeatable Requests</td><td>OData (POST/PATCH/DELETE)</td><td>Yes — with headers</td><td>Repeatability-Request-ID + First-Sent</td><td>No — not for batch requests</td><td>Yes</td></tr>
+      <tr><td>Idempotent Process Call</td><td>SAP Integration Suite</td><td>Yes — middleware</td><td>Message ID in idempotent repository</td><td>Yes — per-message</td><td>Async</td></tr>
+      <tr><td>Idempotent Consumer</td><td>Message queue consumer</td><td>Yes — with dedup store</td><td>Message ID tracked in DB before processing</td><td>Yes — per-message</td><td>Event-driven</td></tr>
+      <tr><td>Database-level MERGE/UPSERT</td><td>SQL (direct DB)</td><td>Yes — naturally</td><td>ON CONFLICT / MERGE statement</td><td>Yes</td><td>Batch</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Idempotency-Specific Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">System</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>External ID fields per object</td><td>7</td><td>Salesforce</td><td>Applies across all External ID types [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</td></tr>
+      <tr><td>Alternate key fields per entity</td><td>5</td><td>Dynamics 365</td><td>Composite alternate keys count each field separately</td></tr>
+      <tr><td>Idempotency key TTL</td><td>24h typical</td><td>General best practice</td><td>Stripe standard; ERP batch jobs may need 7+ days [<a href="https://stripe.com/blog/idempotency">src1</a>]</td></tr>
+      <tr><td>OData Repeatability-First-Sent window</td><td>Server-defined</td><td>OData spec</td><td>Server returns 412 if timestamp precedes earliest tracked request [<a href="https://docs.oasis-open.org/odata/repeatable-requests/v1.0/cnprd01/repeatable-requests-v1.0-cnprd01.html">src3</a>]</td></tr>
+      <tr><td>Idempotent repository retention</td><td>30 days default</td><td>SAP Integration Suite</td><td>Configurable per iFlow; JMS-backed store [<a href="https://community.sap.com/t5/technology-blog-posts-by-members/sap-cloud-integration-idempotent-process-call/ba-p/13580854">src8</a>]</td></tr>
+      <tr><td>External ID uniqueness scope</td><td>Per record type</td><td>NetSuite</td><td>One external ID value per record; case-insensitive [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</td></tr>
+      <tr><td>Upsert batch size</td><td>200 composite / 10K bulk</td><td>Salesforce</td><td>Composite API: 200 records; Bulk API 2.0: 150MB CSV [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Key Generation Overhead</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Strategy</th><th scope="col">Storage Cost</th><th scope="col">Lookup Speed</th><th scope="col">Best For</th><th scope="col">Limitation</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>UUIDv4 (random)</td><td>High — store all keys</td><td>O(1) hash lookup</td><td>Low-volume, simple integrations</td><td>Must store entire key history within TTL window [<a href="https://www.morling.dev/blog/on-idempotency-keys/">src5</a>]</td></tr>
+      <tr><td>UUIDv7 / ULID (timestamped)</td><td>Medium — can prune by time</td><td>O(1) hash lookup</td><td>Most ERP integrations</td><td>Requires clock synchronization [<a href="https://www.morling.dev/blog/on-idempotency-keys/">src5</a>]</td></tr>
+      <tr><td>Monotonic sequence</td><td>Low — store only last value</td><td>O(1) comparison</td><td>Single-producer, ordered streams</td><td>Breaks with multiple concurrent producers [<a href="https://www.morling.dev/blog/on-idempotency-keys/">src5</a>]</td></tr>
+      <tr><td>CDC log position (LSN)</td><td>Zero — derived from DB</td><td>O(1) comparison</td><td>Change Data Capture pipelines</td><td>Tied to source database transaction log [<a href="https://www.morling.dev/blog/on-idempotency-keys/">src5</a>]</td></tr>
+      <tr><td>Natural business key</td><td>Zero — uses existing field</td><td>O(1) hash lookup</td><td>Upsert patterns (order number, invoice ID)</td><td>Assumes business key is truly unique and immutable</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>Not applicable to this architecture pattern card. See individual system cards:</p>
+  <ul>
+    <li><a href="/business/erp-integration/salesforce-oauth-authentication/2026">Salesforce OAuth Authentication</a></li>
+    <li><a href="/business/erp-integration/sap-authentication-methods/2026">SAP Authentication Methods</a></li>
+    <li><a href="/business/erp-integration/netsuite-tba-vs-oauth2/2026">NetSuite TBA vs OAuth 2.0</a></li>
+    <li><a href="/business/erp-integration/dynamics-365-authentication/2026">Dynamics 365 Authentication</a></li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Salesforce External ID limit</strong>: Max 7 External ID fields per sObject. Use a formula field concatenating multiple fields as a single External ID if you need more. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</li>
+    <li><strong>NetSuite case insensitivity</strong>: External IDs are NOT case-sensitive. <code>ORD-001</code> and <code>ord-001</code> collide with a 400 error. Normalize before assignment. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</li>
+    <li><strong>SAP OData statelessness</strong>: Standard SAP S/4HANA OData services have no built-in idempotency. You MUST use SAP Integration Suite's Idempotent Process Call or implement your own dedup store. [<a href="https://community.sap.com/t5/technology-blog-posts-by-members/sap-cloud-integration-idempotent-process-call/ba-p/13580854">src8</a>]</li>
+    <li><strong>Dynamics 365 alternate key limit</strong>: Max 5 fields per alternate key definition. Complex composite keys must use custom duplicate detection rules.</li>
+    <li><strong>Bulk API gap</strong>: Salesforce Bulk API 2.0 and NetSuite CSV Import do not accept idempotency key headers. Use <code>externalIdFieldName</code> parameter on Bulk API upsert jobs. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</li>
+    <li><strong>OData batch limitation</strong>: OData Repeatable Requests cannot be applied to batch requests — only to individual requests within change sets. [<a href="https://docs.oasis-open.org/odata/repeatable-requests/v1.0/cnprd01/repeatable-requests-v1.0-cnprd01.html">src3</a>]</li>
+    <li><strong>ACID requirement</strong>: Idempotency check and business logic MUST run in the same database transaction. Separate transactions risk recording the key without executing the operation. [<a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — User needs idempotent ERP integration
+├── What type of operation?
+│   ├── Create or Update records (most common)
+│   │   ├── Does the target ERP support upsert with external ID?
+│   │   │   ├── YES (Salesforce, NetSuite, Dynamics 365)
+│   │   │   │   ├── Stable business key? → Native upsert with business key as External ID
+│   │   │   │   └── No stable key? → Generate deterministic key (hash) or use source system ID
+│   │   │   └── NO (SAP S/4HANA OData, custom APIs)
+│   │   │       ├── Using SAP Integration Suite? → Enable Idempotent Process Call
+│   │   │       ├── OData supports Repeatable Requests? → Use Repeatability-Request-ID
+│   │   │       └── Neither? → Implement middleware dedup store (Redis/DB + key header)
+│   ├── Event-driven / message consumer
+│   │   └── At-least-once broker? → Idempotent Consumer pattern (track message IDs in DB)
+│   └── Delete operations → Naturally idempotent (deleting already-deleted = no-op)
+├── What key generation strategy?
+│   ├── Natural business key → Use it (order_id, invoice_number)
+│   ├── Source system ID → Use source_system:record_id format
+│   ├── No stable key → Generate UUIDv7 at origin
+│   └── CDC pipeline → Derive from transaction log position (LSN)
+└── What TTL for idempotency keys?
+    ├── Real-time sync → 24 hours
+    ├── Daily batch → 7 days
+    ├── Monthly close → 35 days
+    └── Data migration → Duration + buffer</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Upsert Endpoint</th><th scope="col">HTTP Method</th><th scope="col">Key Field Parameter</th><th scope="col">Max Batch</th><th scope="col">Bulk Upsert?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Salesforce</strong></td><td><code>/sobjects/{Object}/{ExtIdField}/{Value}</code></td><td>PATCH</td><td>URL path segment</td><td>200 (Composite)</td><td>Yes — Bulk API 2.0</td></tr>
+      <tr><td><strong>NetSuite (REST)</strong></td><td><code>/record/v1/{type}/{externalId}</code></td><td>PUT/PATCH</td><td><code>externalId</code> in URL</td><td>1 (REST)</td><td>upsertList (SOAP, 100)</td></tr>
+      <tr><td><strong>Dynamics 365</strong></td><td><code>/{EntitySet}({key}='{val}')</code></td><td>PATCH</td><td>Alternate key in URL</td><td>1000 (batch)</td><td>Yes — $batch</td></tr>
+      <tr><td><strong>SAP S/4HANA</strong></td><td>OData entity path (varies)</td><td>POST + headers</td><td><code>Repeatability-Request-ID</code></td><td>1 (individual)</td><td>No — use Integration Suite</td></tr>
+      <tr><td><strong>Generic REST</strong></td><td>Custom endpoint</td><td>POST</td><td><code>Idempotency-Key</code> header</td><td>1</td><td>Per-record keys in payload</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Strategy</th><th scope="col">Duplicate Risk</th><th scope="col">Complexity</th><th scope="col">Performance Impact</th><th scope="col">Recommended For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Upsert + External ID</strong></td><td>Near-zero</td><td>Low</td><td>Minimal</td><td>Default for all CRUD integrations</td></tr>
+      <tr><td><strong>Idempotency Key + Dedup Store</strong></td><td>Near-zero</td><td>Medium</td><td>+1 DB lookup per request</td><td>POST-only APIs without upsert</td></tr>
+      <tr><td><strong>OData Repeatable Requests</strong></td><td>Near-zero</td><td>Low</td><td>Server-managed</td><td>OData v4 services that support it</td></tr>
+      <tr><td><strong>Pre-check GET + POST</strong></td><td>Medium (race condition)</td><td>Low</td><td>+1 API call</td><td>Last resort — NOT recommended</td></tr>
+      <tr><td><strong>Idempotent Consumer</strong></td><td>Near-zero</td><td>Medium</td><td>+1 DB write per message</td><td>Event-driven architectures</td></tr>
+      <tr><td><strong>Payload hash dedup</strong></td><td>Low</td><td>Medium</td><td>CPU cost for hashing</td><td>When no natural key exists</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Choose your idempotency strategy based on the target ERP</h3>
+  <p>Evaluate whether the target ERP supports native upsert — if yes, use upsert with an External ID as your primary pattern. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</p>
+  <pre><code>Decision matrix:
+Target supports upsert?  → Use native upsert + External ID (90% of cases)
+POST-only API?           → Add Idempotency-Key header
+OData with Repeatable?   → Use Repeatability-Request-ID
+Event consumer?          → Idempotent Consumer pattern</code></pre>
+  <p><strong>Verify</strong>: Check target ERP API docs for "upsert", "external ID", or "alternate key" support.</p>
+
+  <h3>2. Design your external ID / idempotency key</h3>
+  <p>The key must be deterministic, unique, and stable. Prefer natural business keys over synthetic ones. [<a href="https://stripe.com/blog/idempotency">src1</a>, <a href="https://www.morling.dev/blog/on-idempotency-keys/">src5</a>]</p>
+  <pre><code>Good keys:
+  order_id: "ORD-2026-00042"                    # Natural business key
+  source_ref: "shopify:order:9876543210"         # Source system + type + ID
+  composite: "INV-2026-003:LINE-007"             # Parent + child reference
+
+Bad keys:
+  timestamp: "2026-03-02T10:30:00Z"              # Not unique across concurrent ops
+  random_per_retry: uuid()                        # Different on each retry
+  mutable_field: customer.email                   # Can change between retries</code></pre>
+  <p><strong>Verify</strong>: Test uniqueness with <code>SELECT external_id, COUNT(*) GROUP BY external_id HAVING COUNT(*) &gt; 1</code></p>
+
+  <h3>3. Implement the upsert call (Salesforce example)</h3>
+  <p>Salesforce upsert via External ID is the gold standard. The endpoint creates if the External ID value does not exist, or updates if it does. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</p>
+  <pre><code class="language-bash"># Salesforce REST API upsert — PATCH to the External ID endpoint
+curl -X PATCH \
+  "$INSTANCE_URL/services/data/v62.0/sobjects/Invoice__c/Vendor_Invoice_Id__c/INV-2026-003" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"Amount__c": 1500.00, "Vendor__c": "ACME Corp", "Due_Date__c": "2026-04-01"}'
+
+# CREATE: HTTP 201 + {"id": "a0B..."}
+# UPDATE: HTTP 204 No Content
+# CONFLICT: HTTP 300 Multiple Choices (duplicate External IDs — data quality issue)</code></pre>
+  <p><strong>Verify</strong>: Query the record by External ID and confirm field values match.</p>
+
+  <h3>4. Implement idempotency key pattern (POST-only APIs)</h3>
+  <p>When the target does not support upsert, add a client-generated idempotency key. The server stores key + result and returns cached result on replay. [<a href="https://stripe.com/blog/idempotency">src1</a>, <a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/">src2</a>]</p>
+  <pre><code class="language-python">import hashlib, json, time, random, requests
+
+def call_with_idempotency(endpoint, payload, idempotency_key=None, max_retries=5):
+    if idempotency_key is None:
+        payload_hash = hashlib.sha256(
+            json.dumps(payload, sort_keys=True).encode()
+        ).hexdigest()[:32]
+        idempotency_key = f"idem-{payload_hash}"
+
+    headers = {"Content-Type": "application/json", "Idempotency-Key": idempotency_key}
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(endpoint, json=payload, headers=headers)
+            if response.status_code == 409:  # Concurrent request
+                time.sleep(2 ** attempt + random.uniform(0, 1))
+                continue
+            return response
+        except requests.exceptions.ConnectionError:
+            if attempt &lt; max_retries - 1:
+                time.sleep(2 ** attempt + random.uniform(0, 1))
+                continue
+            raise</code></pre>
+  <p><strong>Verify</strong>: Send same request twice with same key — second call returns identical response without creating a duplicate.</p>
+
+  <h3>5. Implement server-side idempotency store</h3>
+  <p>The key requirement is atomicity — check and business logic must execute in a single DB transaction. [<a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/">src2</a>, <a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html">src6</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE idempotency_keys (
+    idempotency_key  VARCHAR(255) PRIMARY KEY,
+    request_path     VARCHAR(500) NOT NULL,
+    request_hash     VARCHAR(64) NOT NULL,
+    status           VARCHAR(20) NOT NULL DEFAULT 'in_progress',
+    response_code    INTEGER,
+    response_body    JSONB,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at       TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '24 hours'
+);
+CREATE INDEX idx_idempotency_expires ON idempotency_keys (expires_at) WHERE status = 'completed';</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM idempotency_keys WHERE status = 'in_progress' AND created_at &lt; NOW() - INTERVAL '1 hour'</code> should be 0.</p>
+
+  <h3>6. Implement Idempotent Consumer for event-driven flows</h3>
+  <p>Track processed message IDs in a DB table within the same transaction as business logic. [<a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html">src6</a>]</p>
+  <pre><code class="language-python">def process_message_idempotently(conn, message):
+    message_id = message["id"]
+    subscriber_id = "erp-sync-worker"
+    with conn.cursor() as cur:
+        try:
+            cur.execute("""
+                INSERT INTO processed_messages (subscriber_id, message_id, received_at)
+                VALUES (%s, %s, NOW())
+            """, (subscriber_id, message_id))
+            result = upsert_to_erp(message["payload"])  # Business logic
+            cur.execute("""
+                UPDATE processed_messages SET status = 'completed', processed_at = NOW()
+                WHERE subscriber_id = %s AND message_id = %s
+            """, (subscriber_id, message_id))
+            conn.commit()
+            return result
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            return {"status": "duplicate", "message_id": message_id}</code></pre>
+  <p><strong>Verify</strong>: Send same message ID twice — second returns <code>{"status": "duplicate"}</code>.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Salesforce batch upsert with External ID and retry logic</h3>
+  <pre><code class="language-python"># Input:  List of records with external IDs, Salesforce credentials
+# Output: Upsert results (created/updated/error counts)
+
+import requests, time, random
+
+def salesforce_upsert_batch(instance_url, access_token, object_name,
+                            ext_id_field, records, batch_size=200):
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+    results = {"created": 0, "updated": 0, "errors": []}
+    for i in range(0, len(records), batch_size):
+        batch = records[i:i + batch_size]
+        composite_body = {
+            "allOrNone": False,
+            "compositeRequest": [
+                {
+                    "method": "PATCH",
+                    "url": f"/services/data/v62.0/sobjects/{object_name}/{ext_id_field}/{rec[ext_id_field]}",
+                    "referenceId": f"ref_{idx}",
+                    "body": {k: v for k, v in rec.items() if k != ext_id_field},
+                }
+                for idx, rec in enumerate(batch)
+            ],
+        }
+        for attempt in range(5):
+            resp = requests.post(f"{instance_url}/services/data/v62.0/composite",
+                                 json=composite_body, headers=headers, timeout=120)
+            if resp.status_code == 429:
+                time.sleep(2 ** attempt + random.uniform(0, 1))
+                continue
+            break
+        for sub in resp.json().get("compositeResponse", []):
+            if sub["httpStatusCode"] == 201: results["created"] += 1
+            elif sub["httpStatusCode"] == 204: results["updated"] += 1
+            else: results["errors"].append(sub)
+    return results</code></pre>
+
+  <h3>JavaScript/Node.js: Generic idempotency middleware for Express</h3>
+  <pre><code class="language-javascript">// Input:  Express request with Idempotency-Key header
+// Output: Cached response on duplicate, or proceeds to handler
+
+const { Pool } = require("pg");
+const crypto = require("crypto");
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+async function idempotencyMiddleware(req, res, next) {
+  const key = req.headers["idempotency-key"];
+  if (!key || req.method === "GET") return next();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const hash = crypto.createHash("sha256").update(JSON.stringify(req.body)).digest("hex");
+    const { rowCount } = await client.query(
+      `INSERT INTO idempotency_keys (idempotency_key, request_path, request_hash, status)
+       VALUES ($1, $2, $3, 'in_progress') ON CONFLICT DO NOTHING RETURNING idempotency_key`,
+      [key, req.path, hash]);
+    if (rowCount === 0) {
+      const { rows } = await client.query(
+        `SELECT status, response_code, response_body FROM idempotency_keys WHERE idempotency_key = $1`, [key]);
+      await client.query("COMMIT");
+      if (rows[0].status === "completed") return res.status(rows[0].response_code).json(rows[0].response_body);
+      return res.status(409).json({ error: "Request in progress" });
+    }
+    await client.query("COMMIT");
+    const origJson = res.json.bind(res);
+    res.json = async (body) => {
+      await pool.query(`UPDATE idempotency_keys SET status='completed', response_code=$1, response_body=$2
+         WHERE idempotency_key=$3`, [res.statusCode, JSON.stringify(body), key]);
+      return origJson(body);
+    };
+    next();
+  } catch (err) { await client.query("ROLLBACK"); next(err); }
+  finally { client.release(); }
+}</code></pre>
+
+  <h3>cURL: OData Repeatable Request with idempotency headers</h3>
+  <pre><code class="language-bash"># Input:  OData v4 endpoint, bearer token, UUIDv4 for request ID
+# Output: Idempotent POST — server skips on replay
+
+REQUEST_ID=$(uuidgen)
+
+# First request — creates the sales order
+curl -X POST \
+  "https://your-s4hana.sap/sap/opu/odata4/sap/API_SALES_ORDER_SRV/A_SalesOrder" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Repeatability-Request-ID: $REQUEST_ID" \
+  -H "Repeatability-First-Sent: $(date -u '+%a, %d %b %Y %H:%M:%S GMT')" \
+  -d '{"SalesOrderType": "OR", "SoldToParty": "10100001"}'
+
+# Retry with SAME headers — server returns: Repeatability-Result: accepted</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Idempotency Key Mapping Across Systems</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Source System Key</th><th scope="col">Salesforce Target</th><th scope="col">NetSuite Target</th><th scope="col">Dynamics 365 Target</th><th scope="col">SAP Target</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>order_id</code> (string)</td><td>External ID field on Order__c</td><td><code>externalId</code> on SalesOrder</td><td>Alternate key on salesorder</td><td>Repeatability-Request-ID or IDoc control</td></tr>
+      <tr><td><code>invoice_number</code></td><td><code>Invoice_Ref__c</code> External ID</td><td><code>externalId</code> on VendorBill</td><td>Alternate key on invoice</td><td>Document number (BELNR)</td></tr>
+      <tr><td><code>customer_id</code></td><td><code>Ext_Customer_Id__c</code> External ID</td><td><code>externalId</code> on Customer</td><td>Alternate key on account</td><td>Business Partner (PARTNER)</td></tr>
+      <tr><td><code>composite_key</code></td><td>Formula field → single External ID</td><td>Single externalId (flatten)</td><td>Multi-field alternate key (up to 5)</td><td>Concatenate in middleware</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Salesforce External IDs are case-sensitive but NetSuite External IDs are case-INsensitive. Normalize to single case at middleware layer. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</li>
+    <li>Dynamics 365 alternate key lookups with NULL values fail silently — all key fields must be non-null or the upsert falls back to create.</li>
+    <li>SAP document numbers may have leading zeros that get stripped by JavaScript/Python — always preserve original format.</li>
+    <li>Timestamps as key components are dangerous — clock skew between systems creates different keys for the same operation.</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">System</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>201</td><td>Created (new record)</td><td>Salesforce upsert</td><td>Success — record did not exist, was created</td></tr>
+      <tr><td>204</td><td>No Content (updated)</td><td>Salesforce upsert</td><td>Success — record existed, was updated</td></tr>
+      <tr><td>300</td><td>Multiple Choices</td><td>Salesforce upsert</td><td>External ID matched multiple records — deduplicate first [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</td></tr>
+      <tr><td>400</td><td>Bad Request</td><td>NetSuite</td><td>External ID already assigned to a different record (case collision) [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</td></tr>
+      <tr><td>409</td><td>Conflict</td><td>Idempotency key</td><td>Concurrent request with same key still in progress — retry with backoff [<a href="https://stripe.com/blog/idempotency">src1</a>]</td></tr>
+      <tr><td>412</td><td>Precondition Failed</td><td>OData Repeatable</td><td>Timestamp precedes server's retention window [<a href="https://docs.oasis-open.org/odata/repeatable-requests/v1.0/cnprd01/repeatable-requests-v1.0-cnprd01.html">src3</a>]</td></tr>
+      <tr><td>422</td><td>Unprocessable Entity</td><td>Idempotency key</td><td>Key reused with different payload — generate new key [<a href="https://stripe.com/blog/idempotency">src1</a>]</td></tr>
+      <tr><td>429</td><td>Too Many Requests</td><td>All systems</td><td>Exponential backoff: wait 2^n seconds, max 5 retries</td></tr>
+      <tr><td>501</td><td>Not Implemented</td><td>OData Repeatable</td><td>Server does not support repeatable requests [<a href="https://docs.oasis-open.org/odata/repeatable-requests/v1.0/cnprd01/repeatable-requests-v1.0-cnprd01.html">src3</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Orphaned in-progress keys</strong>: Process crashes between recording key and completing operation. Fix: <code>Implement TTL-based cleanup job that resets stuck in_progress keys after N minutes.</code> [<a href="https://stripe.com/blog/idempotency">src1</a>]</li>
+    <li><strong>Key collision across environments</strong>: Same keys used in staging and production. Fix: <code>Prefix keys with environment: "prod:ORD-001" vs "staging:ORD-001".</code> [<a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/">src2</a>]</li>
+    <li><strong>Bulk API silent duplicates</strong>: Malformed External ID values in Bulk API create new records. Fix: <code>Validate all External IDs are non-null/non-empty before submission. Post-job duplicate check.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</li>
+    <li><strong>NetSuite case collision</strong>: Two integrations assign <code>ORD-001</code> and <code>ord-001</code> to different records. Fix: <code>Normalize all external IDs to uppercase at assignment. Add lint check.</code> [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</li>
+    <li><strong>Transaction boundary violation</strong>: Key recorded in one transaction, business logic in another. Fix: <code>Always wrap check + logic in single ACID transaction. Use Outbox pattern for microservices.</code> [<a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/">src2</a>]</li>
+    <li><strong>Key reuse with different payload</strong>: Developer reuses a key for a different operation. Fix: <code>Store request payload hash alongside key. Reject with 422 if hash doesn't match.</code> [<a href="https://stripe.com/blog/idempotency">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: POST without idempotency for record creation</h3>
+  <pre><code class="language-python"># BAD — every retry creates a duplicate record
+def create_order(api_client, order_data):
+    response = api_client.post("/api/orders", json=order_data)
+    return response  # Network timeout → retry → duplicate order!</code></pre>
+
+  <h3>Correct: Use upsert with External ID or idempotency key</h3>
+  <pre><code class="language-python"># GOOD — retries are safe, no duplicates
+def create_order(api_client, order_data):
+    ext_id = order_data["order_reference"]  # Stable business key
+    response = api_client.patch(f"/api/orders/external/{ext_id}", json=order_data)
+    return response  # Retry 100 times — same result every time</code></pre>
+
+  <h3>Wrong: Pre-check GET then POST (check-then-act race condition)</h3>
+  <pre><code class="language-python"># BAD — race condition between check and create
+def create_if_not_exists(api_client, record):
+    existing = api_client.get(f"/api/records?ext_id={record['ext_id']}")
+    if not existing.json()["records"]:
+        # Another thread creates the record HERE → duplicate!
+        api_client.post("/api/records", json=record)</code></pre>
+
+  <h3>Correct: Atomic upsert or database-level constraint</h3>
+  <pre><code class="language-python"># GOOD — atomic operation, no race condition
+def create_if_not_exists(api_client, record):
+    api_client.patch(f"/api/records/ext_id/{record['ext_id']}", json=record)</code></pre>
+
+  <h3>Wrong: Random values as idempotency keys</h3>
+  <pre><code class="language-python"># BAD — different key on every retry
+import uuid
+def create_payment(api_client, payment_data):
+    headers = {"Idempotency-Key": str(uuid.uuid4())}  # Random! New every call!
+    return api_client.post("/api/payments", json=payment_data, headers=headers)</code></pre>
+
+  <h3>Correct: Deterministic key generated at point of origin</h3>
+  <pre><code class="language-python"># GOOD — same key on every retry
+def create_payment(api_client, payment_data, idempotency_key):
+    headers = {"Idempotency-Key": idempotency_key}  # Generated ONCE by caller
+    return api_client.post("/api/payments", json=payment_data, headers=headers)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Confusing idempotency keys with deduplication IDs</strong>: An idempotency key identifies a unique <em>intent</em> (client-side). A deduplication ID identifies a unique <em>message</em> (server-side). Use both when integrating through a message broker to an ERP API. [<a href="https://www.morling.dev/blog/on-idempotency-keys/">src5</a>]</li>
+    <li><strong>Forgetting HTTP 300 on Salesforce upsert</strong>: When an External ID matches multiple records, Salesforce returns 300 instead of updating. Fix: <code>Run duplicate detection reports periodically and merge records.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</li>
+    <li><strong>TTL too short for batch jobs</strong>: A 24h TTL works for real-time, but weekly batch retry on Monday finds Friday's keys expired. Fix: <code>Set TTL = max retry window + buffer. Weekly: 10 days. Monthly: 35 days.</code> [<a href="https://stripe.com/blog/idempotency">src1</a>]</li>
+    <li><strong>Key collisions across integration flows</strong>: Two flows using the same key format creates cross-flow collisions. Fix: <code>Prefix keys with flow identifier: "order-sync:ORD-001" vs "invoice-sync:INV-001".</code> [<a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/">src2</a>]</li>
+    <li><strong>Ignoring partial success in bulk upserts</strong>: Bulk operations may partially succeed. Retrying the entire batch wastes API quota. Fix: <code>Parse per-record results and retry only failed records.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_upsert.htm">src4</a>]</li>
+    <li><strong>Using mutable fields as External IDs</strong>: Customer email as External ID fails when the email changes. Fix: <code>Use immutable identifiers (source system ID, UUID) as External IDs.</code> [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_156335203191.html">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check for duplicate External IDs in Salesforce (SOQL via REST API)
+curl -s "$INSTANCE_URL/services/data/v62.0/query?q=SELECT+Ext_Id__c,COUNT(Id)+FROM+MyObject__c+GROUP+BY+Ext_Id__c+HAVING+COUNT(Id)>1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Check idempotency key store for stuck in-progress keys
+psql -c "SELECT idempotency_key, request_path, created_at
+         FROM idempotency_keys
+         WHERE status = 'in_progress'
+         AND created_at &lt; NOW() - INTERVAL '30 minutes';"
+
+# Verify NetSuite external ID assignment
+curl -s "https://{account_id}.suitetalk.api.netsuite.com/services/rest/record/v1/salesOrder?q=externalId IS 'ORD-2026-001'" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Check Dynamics 365 alternate key definition
+curl -s "$D365_URL/api/data/v9.2/EntityDefinitions(LogicalName='salesorder')/Keys" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Monitor idempotency key store growth
+psql -c "SELECT status, COUNT(*), MIN(created_at), MAX(created_at)
+         FROM idempotency_keys GROUP BY status;"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard / Feature</th><th scope="col">Release Date</th><th scope="col">Status</th><th scope="col">Key Change</th><th scope="col">Impact</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OData Repeatable Requests v1.0</td><td>2024-10</td><td>OASIS Standard</td><td>Formalized Repeatability-Request-ID headers</td><td>SAP and Microsoft OData services adopting</td></tr>
+      <tr><td>Salesforce External ID upsert</td><td>2008+ (API v12+)</td><td>GA — stable</td><td>No breaking changes since introduction</td><td>Industry gold standard</td></tr>
+      <tr><td>NetSuite SuiteTalk upsert</td><td>2015+</td><td>GA — stable</td><td>REST API upsert added 2021</td><td>Case-insensitivity unchanged</td></tr>
+      <tr><td>Dynamics 365 Alternate Keys</td><td>2016+ (v8.0+)</td><td>GA — stable</td><td>Max 5 fields, Web API support</td><td>Consistent across Dataverse</td></tr>
+      <tr><td>SAP Idempotent Process Call</td><td>2020+</td><td>GA in Integration Suite</td><td>JMS-backed repository</td><td>Requires Cloud Integration license</td></tr>
+      <tr><td>Stripe Idempotency-Key</td><td>2017+</td><td>Industry de facto</td><td>24h TTL, automatic cleanup</td><td>Most widely copied pattern</td></tr>
+      <tr><td>AWS ClientToken</td><td>2013+</td><td>GA</td><td>Per-API opt-in</td><td>EC2, Lambda, other services</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Any integration that retries on failure</td><td>Read-only integrations (GET is naturally idempotent)</td><td>No idempotency needed</td></tr>
+      <tr><td>At-least-once message queues (Kafka, SQS, Platform Events)</td><td>ERP has built-in exactly-once (rare — verify)</td><td>Still recommended as defense-in-depth</td></tr>
+      <tr><td>Scheduled batch jobs that may be re-triggered</td><td>One-time migration with manual verification</td><td>Pre-migration dedup + manual review</td></tr>
+      <tr><td>Financial transactions (orders, invoices, payments)</td><td>Logging/telemetry where occasional duplicates are OK</td><td>Best-effort retry without dedup</td></tr>
+      <tr><td>Multi-system sync through multiple hops</td><td>Direct database replication (binlog, logical replication)</td><td>DB-level replication handles dedup natively</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle NetSuite</th><th scope="col">Dynamics 365</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Native upsert</strong></td><td>Yes — External ID PATCH</td><td>No — OData POST only (middleware)</td><td>Yes — upsert/upsertList</td><td>Yes — Alternate Key PATCH</td></tr>
+      <tr><td><strong>Idempotency key header</strong></td><td>No native support</td><td>OData Repeatable Requests (limited)</td><td>No native support</td><td>OData Repeatable Requests (Dataverse)</td></tr>
+      <tr><td><strong>External ID limit</strong></td><td>7 per object</td><td>N/A (no external ID in OData)</td><td>1 per record (case-insensitive)</td><td>5 fields per alternate key</td></tr>
+      <tr><td><strong>Bulk upsert</strong></td><td>Bulk API 2.0 (externalIdFieldName)</td><td>File-based (FBDI) with dedup rules</td><td>upsertList (SOAP, 100/batch)</td><td>$batch endpoint (1000/req)</td></tr>
+      <tr><td><strong>Middleware dedup</strong></td><td>Not needed (native upsert)</td><td>Required — Idempotent Process Call</td><td>Not needed (native upsert)</td><td>Optional — native keys usually sufficient</td></tr>
+      <tr><td><strong>CDC for consumers</strong></td><td>CDC + Platform Events</td><td>Event Mesh + Business Events</td><td>User Event Scripts</td><td>Dataverse change tracking</td></tr>
+      <tr><td><strong>Duplicate detection</strong></td><td>Built-in duplicate management</td><td>Custom ABAP checks</td><td>SuiteScript-based</td><td>Built-in duplicate detection rules</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>Idempotency does NOT equal ordering</strong>: Two idempotent operations applied out of order can produce wrong results. Combine idempotency with sequence numbers if order matters.</li>
+    <li><strong>Key storage grows continuously</strong>: Without TTL-based pruning, the idempotency key table becomes a bottleneck. Run daily cleanup. Monitor table size weekly.</li>
+    <li><strong>Sandbox vs production differences</strong>: Salesforce sandboxes may have stale External ID indexes. NetSuite sandboxes have independent namespaces. Verify behavior in full-copy sandbox.</li>
+    <li><strong>Payload consistency across retries</strong>: If the client changes the payload between retries (e.g., updated amount), the server should reject with 422. Verify your implementation enforces this.</li>
+    <li><strong>Multi-tenant ERP isolation</strong>: Ensure idempotency keys are scoped to the tenant. Shared dedup stores risk cross-tenant key collision.</li>
+    <li><strong>API version changes do not affect idempotency</strong>: Upgrading API versions does not change upsert behavior, but new validation rules or triggers may cause previously successful upserts to fail.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-rest-api-capabilities/2026" data-relationship="depends_on">Salesforce REST API Capabilities</a>
+    <a href="/business/erp-integration/sap-integration-suite-capabilities/2026" data-relationship="depends_on">SAP Integration Suite Capabilities</a>
+    <a href="/business/erp-integration/netsuite-suitetalk-api-capabilities/2026" data-relationship="related_to">NetSuite SuiteTalk API Capabilities</a>
+    <a href="/business/erp-integration/dynamics-365-web-api-capabilities/2026" data-relationship="related_to">Dynamics 365 Web API Capabilities</a>
+    <a href="/business/erp-integration/salesforce-bulk-api-capabilities/2026" data-relationship="solves">Salesforce Bulk API Capabilities</a>
+    <a href="/business/erp-integration/salesforce-streaming-platform-events/2026" data-relationship="often_confused_with">Salesforce Streaming &amp; Platform Events</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

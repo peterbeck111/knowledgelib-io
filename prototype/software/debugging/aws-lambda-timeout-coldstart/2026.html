@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Fix AWS Lambda Timeouts and Cold Start Issues | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to fixing AWS Lambda timeouts and cold starts: memory/CPU tuning, VPC networking, SnapStart, provisioned concurrency, deployment...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/aws-lambda-timeout-coldstart/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Fix AWS Lambda Timeouts and Cold Start Issues | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete AWS Lambda timeout and cold start guide: memory tuning, VPC networking, SnapStart, provisioned concurrency, deployment optimization. 8 authoritative sources, verified 2026-02-20.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/aws-lambda-timeout-coldstart/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-20">
+    <meta property="article:modified_time" content="2026-02-20">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Fix AWS Lambda Timeouts and Cold Start Issues | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete AWS Lambda timeout and cold start guide: memory tuning, VPC networking, SnapStart, provisioned concurrency, deployment optimization.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-20">
+    <meta name="ai:domain" content="software/debugging/aws_lambda_timeout_coldstart">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I fix AWS Lambda timeouts and cold start issues?">
+    <meta name="ai:aliases"
+        content="Lambda task timed out; AWS Lambda cold start; Lambda timeout troubleshooting; Lambda cold start optimization; Lambda provisioned concurrency; Lambda SnapStart; Lambda VPC timeout; Lambda slow invocation; Lambda ETIMEDOUT; Lambda init duration">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/aws-lambda-timeout-coldstart/2026.md">
+    <meta name="ai:token_estimate" content="4200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="evolving">
+    <meta name="ai:temporal_status" content="evolving">
+    <meta name="ai:change_sensitivity" content="high">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-20">
+    <meta name="ai:inputs_needed" content="runtime,vpc_attached,issue_type">
+    <meta name="ai:constraints" content="AWS Lambda only — does not apply to Azure Functions, GCP Cloud Functions, or Cloudflare Workers; Maximum Lambda timeout is 900s (15 min) — use Step Functions/ECS/Fargate for longer; SnapStart limited to Java 11+, Python 3.12+, .NET 8+ — not available for Node.js/Go/Rust; Provisioned concurrency costs ~$0.015/GB-hour even when idle — requires cost analysis; VPC guidance assumes Hyperplane ENI (2019+) — pre-2019 accounts may see legacy ~10s attach penalty">
+    <meta name="ai:skip_this_unit_if" content="Using Azure Functions or GCP Cloud Functions → platform-specific tuning guides; Using Cloudflare Workers/Deno Deploy/V8 isolates → no traditional cold start, consult platform docs; Lambda error is IAM/permissions (AccessDeniedException) → AWS IAM troubleshooting guide; Application logic bug causing infinite loop → general debugging guide for the runtime">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Fix AWS Lambda Timeouts and Cold Start Issues",
+    "headline": "How Do I Fix AWS Lambda Timeouts and Cold Start Issues?",
+    "description": "Complete reference for diagnosing and fixing AWS Lambda timeout errors and cold start latency covering memory/CPU tuning, VPC networking, SnapStart, provisioned concurrency, and deployment package optimization.",
+    "keywords": ["AWS Lambda", "Lambda timeout", "cold start", "SnapStart", "provisioned concurrency", "Lambda VPC", "serverless performance"],
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "AWS Lambda, AWS CLI, CloudWatch",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Configure Lambda function timeout", "url": "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html" },
+      { "@type": "WebPage", "name": "Troubleshoot execution issues in Lambda", "url": "https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html" },
+      { "@type": "WebPage", "name": "Lambda execution environment lifecycle", "url": "https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html" },
+      { "@type": "WebPage", "name": "Lambda SnapStart", "url": "https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html" },
+      { "@type": "WebPage", "name": "Troubleshoot networking issues in Lambda", "url": "https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html" },
+      { "@type": "WebPage", "name": "Understanding and Remediating Cold Starts", "url": "https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/" },
+      { "@type": "WebPage", "name": "Lambda Cold Starts — Lumigo", "url": "https://lumigo.io/blog/this-is-all-you-need-to-know-about-lambda-cold-starts/" },
+      { "@type": "WebPage", "name": "Operating Lambda: Performance optimization", "url": "https://aws.amazon.com/blogs/compute/operating-lambda-performance-optimization-part-1/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Fix AWS Lambda Timeouts and Cold Start Issues",
+    "description": "Structured reference for AWS Lambda timeout and cold start diagnosis with ranked cause table, decision tree, code examples, and anti-patterns.",
+    "keywords": ["AWS Lambda", "timeout", "cold start", "serverless", "SnapStart", "provisioned concurrency"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "sourceOrganization": [{"@type": "Organization", "name": "Amazon Web Services"}],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Fix AWS Lambda Timeouts and Cold Start Issues" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I fix AWS Lambda timeouts and cold start issues?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Lambda timeouts stem from 4 root causes in order of likelihood: insufficient memory/CPU (Lambda allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and deployment package bloat causing slow INIT. Cold starts affect <1% of invocations but add 100ms-5s latency depending on runtime and package size. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with SnapStart (Java/Python/.NET), provisioned concurrency, or ..."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Lambda task timed out",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Lambda timeouts stem from 4 root causes in order of likelihood: insufficient memory/CPU (Lambda allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and deployment package bloat causing slow INIT. Cold starts affect <1% of invocations but add 100ms-5s latency depending on runtime and package size. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with SnapStart (Java/Python/.NET), provisioned concurrency, or ..."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "AWS Lambda cold start",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Lambda timeouts stem from 4 root causes in order of likelihood: insufficient memory/CPU (Lambda allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and deployment package bloat causing slow INIT. Cold starts affect <1% of invocations but add 100ms-5s latency depending on runtime and package size. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with SnapStart (Java/Python/.NET), provisioned concurrency, or ..."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Lambda timeout troubleshooting",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Lambda timeouts stem from 4 root causes in order of likelihood: insufficient memory/CPU (Lambda allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and deployment package bloat causing slow INIT. Cold starts affect <1% of invocations but add 100ms-5s latency depending on runtime and package size. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with SnapStart (Java/Python/.NET), provisioned concurrency, or ..."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Lambda cold start optimization",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Lambda timeouts stem from 4 root causes in order of likelihood: insufficient memory/CPU (Lambda allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and deployment package bloat causing slow INIT. Cold starts affect <1% of invocations but add 100ms-5s latency depending on runtime and package size. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with SnapStart (Java/Python/.NET), provisioned concurrency, or ..."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Lambda provisioned concurrency",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Lambda timeouts stem from 4 root causes in order of likelihood: insufficient memory/CPU (Lambda allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and deployment package bloat causing slow INIT. Cold starts affect <1% of invocations but add 100ms-5s latency depending on runtime and package size. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with SnapStart (Java/Python/.NET), provisioned concurrency, or ..."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Fix AWS Lambda Timeouts and Cold Start Issues?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I fix AWS Lambda timeouts and cold start issues?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/aws-lambda-timeout-coldstart/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-20</span></span>
+        <span><strong>Freshness:</strong> evolving</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Lambda timeouts stem from 4 root causes: insufficient memory/CPU (Lambda
+                allocates CPU proportionally to memory), downstream service latency, VPC networking misconfiguration, and
+                deployment package bloat causing slow INIT. Cold starts affect &lt;1% of invocations but add
+                100ms&ndash;5s latency. Fix timeouts by increasing memory to 1769 MB (1 full vCPU), adding connection
+                timeouts to downstream calls, and configuring NAT gateway for VPC functions. Fix cold starts with
+                SnapStart (Java/Python/.NET), provisioned concurrency, or smaller packages.</li>
+            <li><strong>Key tool/command</strong>:
+                <code>aws lambda update-function-configuration --function-name my-func --memory-size 1769 --timeout 30</code>
+            </li>
+            <li><strong>Watch out for</strong>: Setting timeout close to average duration causes intermittent failures.
+                The default 3-second timeout is almost always too low for production functions.</li>
+            <li><strong>Works with</strong>: All Lambda runtimes (Node.js, Python, Java, Go, .NET, Rust). SnapStart
+                requires Java 11+, Python 3.12+, or .NET 8+. Provisioned concurrency works with all runtimes.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Maximum Lambda timeout is 900 seconds (15 minutes). For longer workloads, use Step Functions, ECS, or
+                Fargate. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>]
+            </li>
+            <li>INIT phase has a hard 10-second timeout (extended to 15 min with provisioned concurrency or SnapStart).
+                If initialization takes &gt;10s, the function fails before the handler runs. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]</li>
+            <li>SnapStart only works on published function versions and aliases &mdash; not $LATEST. Cannot be combined
+                with provisioned concurrency, Amazon EFS, or ephemeral storage &gt;512 MB. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</li>
+            <li>Lambda functions in a VPC have no internet access by default. They require a NAT gateway in a public
+                subnet for outbound traffic. Without it, external HTTP calls timeout silently. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]</li>
+            <li>Memory ranges from 128 MB to 10,240 MB. CPU is allocated proportionally: 1769 MB = 1 vCPU, 3538 MB = 2
+                vCPUs. Below 1769 MB, your function runs on fractional CPU. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>, <a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]</li>
+            <li>Lambda supports max 20 concurrent TCP connections for DNS resolution. Exceeding this causes
+                <code>UNKNOWNHOSTEXCEPTION</code> regardless of timeout. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Insufficient memory/CPU</td>
+                        <td>~30%</td>
+                        <td><code>Duration</code> near timeout; <code>Max Memory Used</code> near
+                            <code>Memory Size</code></td>
+                        <td>Increase memory to 1769 MB (1 vCPU) [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>,
+                            <a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Downstream service timeout</td>
+                        <td>~25%</td>
+                        <td><code>Task timed out after X.XX seconds</code>; no error log before timeout</td>
+                        <td>Add explicit connection/read timeouts (5s/10s) to HTTP clients [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>VPC without NAT gateway</td>
+                        <td>~20%</td>
+                        <td><code>ETIMEDOUT</code> or <code>Task timed out</code> on external HTTP calls</td>
+                        <td>Add NAT gateway to public subnet; route private subnet through it [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Cold start during INIT</td>
+                        <td>~10%</td>
+                        <td><code>Init Duration: NNNNms</code> in REPORT log; first invocation slow</td>
+                        <td>SnapStart, provisioned concurrency, or reduce package size [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>,
+                            <a href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Large deployment package</td>
+                        <td>~5%</td>
+                        <td>High <code>Init Duration</code> (&gt;1s); large ZIP artifact</td>
+                        <td>Tree-shake dependencies; use Lambda Layers [<a
+                                href="https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/">src6</a>,
+                            <a
+                                href="https://lumigo.io/blog/this-is-all-you-need-to-know-about-lambda-cold-starts/">src7</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Recursive/infinite loop</td>
+                        <td>~5%</td>
+                        <td>Function always times out at exact timeout limit</td>
+                        <td>Check S3 trigger writing to same bucket, SQS re-queue loops [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Payload too large</td>
+                        <td>~3%</td>
+                        <td>Timeout with large event payloads</td>
+                        <td>Batch smaller; use S3 pre-signed URLs for large data [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Default 3s timeout</td>
+                        <td>~2%</td>
+                        <td><code>Task timed out after 3.00 seconds</code></td>
+                        <td>Set 30&ndash;60s for APIs, 300s for data processing [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Network ACL blocking ephemeral ports</td>
+                        <td>Rare</td>
+                        <td>Intermittent <code>ETIMEDOUT</code> in VPC functions</td>
+                        <td>Allow TCP/UDP ports 1024&ndash;65535 in subnet Network ACLs [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>DNS resolution limit exceeded</td>
+                        <td>Rare</td>
+                        <td><code>UNKNOWNHOSTEXCEPTION</code> under high concurrency</td>
+                        <td>Reduce concurrent DNS lookups; max 20 TCP DNS connections [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START &mdash; Lambda function timing out or slow
+├── Check REPORT log in CloudWatch
+│   ├── "Init Duration" present and &gt; 1000ms?
+│   │   ├── YES &rarr; COLD START ISSUE
+│   │   │   ├── Runtime is Java/Python/.NET? &rarr; Enable SnapStart [src4]
+│   │   │   ├── Package &gt; 50 MB? &rarr; Tree-shake, use Layers [src6, src7]
+│   │   │   ├── Need guaranteed &lt;100ms start? &rarr; Provisioned Concurrency [src3]
+│   │   │   └── Heavy SDK imports? &rarr; Lazy-load, import only needed clients [src8]
+│   │   └── NO &rarr; RUNTIME TIMEOUT ISSUE &darr;
+│   │
+│   ├── "Max Memory Used" close to "Memory Size"?
+│   │   ├── YES &rarr; Increase memory (doubles CPU too) [src1, src3]
+│   │   └── NO &darr;
+│   │
+│   ├── Duration close to timeout every time?
+│   │   ├── YES &rarr; Likely infinite loop or recursive trigger [src2]
+│   │   └── NO &darr;
+│   │
+│   ├── Function in VPC?
+│   │   ├── YES &rarr; Check NAT gateway exists for outbound internet [src5]
+│   │   │   ├── No NAT &rarr; Add NAT gateway + route table
+│   │   │   ├── AWS services only? &rarr; Use VPC endpoints [src5]
+│   │   │   └── Intermittent? &rarr; Check Network ACL ephemeral ports [src5]
+│   │   └── NO &darr;
+│   │
+│   └── Timeout only on some invocations?
+│       ├── YES &rarr; Downstream service latency &rarr; add client-side timeouts [src2]
+│       └── NO &rarr; Increase function timeout; check payload size [src1]
+│
+└── No REPORT log at all?
+    └── Check execution role has AWSLambdaBasicExecutionRole [src2]</code></pre>
+    </section>
+
+    <!-- Step-by-Step -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Check CloudWatch REPORT logs for diagnosis</h3>
+        <p>Every Lambda invocation produces a REPORT line with key metrics. This is your starting point. [<a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html">src2</a>, <a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]</p>
+        <pre><code class="language-bash"># CloudWatch Logs Insights — find recent timeouts
+fields @timestamp, @message
+| filter @message like /Task timed out/
+| sort @timestamp desc
+| limit 20
+
+# Analyze cold start frequency and duration
+fields @timestamp, @initDuration, @duration, @maxMemoryUsed, @memorySize
+| filter ispresent(@initDuration)
+| stats avg(@initDuration) as avgColdStart, max(@initDuration) as maxColdStart,
+        count(*) as coldStartCount
+| sort coldStartCount desc</code></pre>
+        <p><strong>Verify</strong>: REPORT line shows <code>Duration</code>, <code>Billed Duration</code>,
+            <code>Memory Size</code>, <code>Max Memory Used</code>, and <code>Init Duration</code> (if cold start).
+        </p>
+
+        <h3>2. Increase memory to get more CPU</h3>
+        <p>Lambda allocates CPU proportionally to memory. Below 1769 MB, you get fractional CPU. This is the single most
+            impactful tuning knob. [<a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>, <a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]</p>
+        <pre><code class="language-bash"># Set memory to 1769 MB (1 full vCPU) and timeout to 30 seconds
+aws lambda update-function-configuration \
+  --function-name my-function \
+  --memory-size 1769 \
+  --timeout 30</code></pre>
+        <p><strong>Verify</strong>:
+            <code>aws lambda get-function-configuration --function-name my-function --query '{Memory: MemorySize, Timeout: Timeout}'</code>
+        </p>
+
+        <h3>3. Add explicit timeouts to downstream calls</h3>
+        <p>Never rely on the Lambda timeout as your only safety net. Set client-side timeouts on every external call. [<a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html">src2</a>]</p>
+        <pre><code class="language-python"># Python — explicit timeouts on AWS SDK and HTTP calls
+import boto3
+from botocore.config import Config
+
+boto_config = Config(
+    connect_timeout=5,    # 5s to establish connection
+    read_timeout=10,      # 10s to read response
+    retries={'max_attempts': 2}
+)
+dynamodb = boto3.client('dynamodb', config=boto_config)</code></pre>
+
+        <h3>4. Fix VPC internet access (if VPC-attached)</h3>
+        <p>VPC-attached functions have no internet access by default. All outbound traffic goes through the VPC. [<a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]</p>
+        <pre><code class="language-yaml"># SAM template — Lambda in VPC with NAT gateway
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 1769
+      Timeout: 30
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1</code></pre>
+
+        <h3>5. Enable SnapStart for Java, Python, or .NET</h3>
+        <p>SnapStart takes a microVM snapshot after INIT, reducing cold starts from seconds to sub-second. [<a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</p>
+        <pre><code class="language-bash"># Enable SnapStart and publish a version
+aws lambda update-function-configuration \
+  --function-name my-function \
+  --snap-start ApplyOn=PublishedVersions
+
+aws lambda publish-version --function-name my-function</code></pre>
+        <p><strong>Verify</strong>: Check CloudWatch for <code>Restore Duration</code> instead of
+            <code>Init Duration</code> &mdash; restore should be &lt;200ms.</p>
+
+        <h3>6. Configure provisioned concurrency for zero cold starts</h3>
+        <p>Provisioned concurrency keeps environments pre-warmed. Most reliable but most expensive approach. [<a
+                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>, <a
+                href="https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/">src6</a>]
+        </p>
+        <pre><code class="language-bash"># Set 10 provisioned concurrent executions
+aws lambda put-provisioned-concurrency-config \
+  --function-name my-function \
+  --qualifier live \
+  --provisioned-concurrent-executions 10</code></pre>
+        <p><strong>Verify</strong>: <code>Status</code> should be <code>READY</code>. REPORT log should show no
+            <code>Init Duration</code>.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Python: Lambda handler with cold start optimization</h3>
+        <pre><code class="language-python"># Input:  API Gateway event
+# Output: JSON response with downstream data
+
+import json, os, boto3
+from botocore.config import Config
+
+# INIT phase: runs once per cold start, persists across warm invocations
+boto_config = Config(connect_timeout=5, read_timeout=10, retries={'max_attempts': 2})
+dynamodb = boto3.resource('dynamodb', config=boto_config)
+table = dynamodb.Table(os.environ['TABLE_NAME'])
+
+def handler(event, context):
+    remaining_ms = context.get_remaining_time_in_millis()
+    if remaining_ms &lt; 5000:
+        return {'statusCode': 503, 'body': json.dumps({'error': 'Insufficient time'})}
+    try:
+        item_id = event.get('pathParameters', {}).get('id', '')
+        response = table.get_item(Key={'id': item_id})
+        item = response.get('Item')
+        if not item:
+            return {'statusCode': 404, 'body': json.dumps({'error': 'Not found'})}
+        return {'statusCode': 200, 'body': json.dumps(item, default=str)}
+    except Exception as e:
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}</code></pre>
+
+        <h3>Node.js: Optimized handler with modular imports</h3>
+        <pre><code class="language-javascript">// Input:  API Gateway event
+// Output: JSON response
+
+const { DynamoDBClient, GetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { unmarshall } = require('@aws-sdk/util-dynamodb');
+
+const client = new DynamoDBClient({
+  requestHandler: { connectionTimeout: 5000, socketTimeout: 10000 },
+  maxAttempts: 2
+});
+
+exports.handler = async (event, context) =&gt; {
+  if (context.getRemainingTimeInMillis() &lt; 5000) {
+    return { statusCode: 503, body: JSON.stringify({ error: 'Insufficient time' }) };
+  }
+  const id = event.pathParameters?.id;
+  const { Item } = await client.send(new GetItemCommand({
+    TableName: process.env.TABLE_NAME,
+    Key: { id: { S: id } }
+  }));
+  if (!Item) return { statusCode: 404, body: JSON.stringify({ error: 'Not found' }) };
+  return { statusCode: 200, body: JSON.stringify(unmarshall(Item)) };
+};</code></pre>
+
+        <h3>Java: SnapStart-optimized handler with CRaC hooks</h3>
+        <pre><code class="language-java">// Input:  API Gateway proxy request
+// Output: API Gateway proxy response
+// Requires: Java 11+ runtime with SnapStart enabled
+
+import software.amazon.awssdk.services.dynamodb.DynamoDBClient;
+import org.crac.Core;
+import org.crac.Resource;
+
+public class Handler implements RequestHandler&lt;APIGatewayProxyRequestEvent,
+        APIGatewayProxyResponseEvent&gt;, Resource {
+
+    private final DynamoDBClient dynamodb = DynamoDBClient.create();
+
+    public Handler() {
+        Core.getGlobalContext().register(this);  // Register CRaC hooks
+    }
+
+    @Override
+    public void beforeCheckpoint(org.crac.Context&lt;?&gt; ctx) {
+        dynamodb.describeEndpoints();  // Pre-warm connection before snapshot
+    }
+
+    @Override
+    public void afterRestore(org.crac.Context&lt;?&gt; ctx) {
+        // Re-validate connections after restore
+    }
+}</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Using default 3-second timeout in production</h3>
+        <pre><code class="language-yaml"># ❌ BAD — 3-second default is almost never enough [src1]
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      # No Timeout — defaults to 3 seconds; cold start + any call &gt; 3s = failure</code></pre>
+
+        <h3>Correct: Set appropriate timeout with margin</h3>
+        <pre><code class="language-yaml"># ✅ GOOD — explicit timeout with memory tuning [src1]
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 1769    # 1 full vCPU
+      Timeout: 30         # 30s for API backends</code></pre>
+
+        <h3>Wrong: Importing entire AWS SDK</h3>
+        <pre><code class="language-javascript">// ❌ BAD — imports entire SDK (~60MB), dramatically increases cold start [src7, src8]
+const AWS = require('aws-sdk');
+const dynamodb = new AWS.DynamoDB();
+// Init Duration: 800-1500ms due to massive import</code></pre>
+
+        <h3>Correct: Import only needed clients</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — modular imports, minimal cold start impact [src7, src8]
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+// Init Duration: 150-300ms — only loads what's needed</code></pre>
+
+        <h3>Wrong: Creating SDK clients inside the handler</h3>
+        <pre><code class="language-python"># ❌ BAD — new client every invocation, wasting warm-start reuse [src3, src8]
+def handler(event, context):
+    dynamodb = boto3.resource('dynamodb')  # NEW client every time
+    table = dynamodb.Table('my-table')
+    return table.get_item(Key={'id': event['id']})</code></pre>
+
+        <h3>Correct: Initialize clients outside the handler</h3>
+        <pre><code class="language-python"># ✅ GOOD — client created once in INIT, reused across warm invocations [src3, src8]
+import boto3
+dynamodb = boto3.resource('dynamodb')      # Created once during INIT
+table = dynamodb.Table('my-table')
+
+def handler(event, context):
+    return table.get_item(Key={'id': event['id']})  # Reuses warm connection</code></pre>
+
+        <h3>Wrong: VPC Lambda without NAT for external calls</h3>
+        <pre><code class="language-yaml"># ❌ BAD — VPC function with no internet path silently times out [src5]
+VpcConfig:
+  SecurityGroupIds: [!Ref SG]
+  SubnetIds: [!Ref PrivateSubnet]
+# No NAT gateway — ALL external HTTP calls will ETIMEDOUT</code></pre>
+
+        <h3>Correct: Route VPC traffic through NAT or VPC endpoints</h3>
+        <pre><code class="language-yaml"># ✅ GOOD — private subnet routes to NAT for internet; VPC endpoints for AWS [src5]
+NATGateway:
+  Type: AWS::EC2::NatGateway
+  Properties:
+    SubnetId: !Ref PublicSubnet
+    AllocationId: !GetAtt EIP.AllocationId
+PrivateRoute:
+  Type: AWS::EC2::Route
+  Properties:
+    DestinationCidrBlock: 0.0.0.0/0
+    NatGatewayId: !Ref NATGateway</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Default 3-second timeout</strong>: The Lambda console defaults to 3 seconds. Set to at least
+                10&ndash;30s for API backends and 120&ndash;900s for data processing. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>]</li>
+            <li><strong>Memory = CPU misconception</strong>: Developers increase timeout when the real problem is CPU
+                starvation. At 128 MB, you get fractional CPU. Increasing to 1769 MB gives 1 full vCPU and often makes
+                functions 10x faster at the same cost. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>, <a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]</li>
+            <li><strong>VPC internet access</strong>: VPC-attached functions lose internet unless you configure a NAT
+                gateway. The error is a silent <code>ETIMEDOUT</code>, not a clear networking error. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]</li>
+            <li><strong>SnapStart uniqueness trap</strong>: SnapStart restores from snapshot. UUIDs, random seeds, or
+                encryption keys generated during INIT will be identical across all restored instances. Generate these in
+                the handler. [<a href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</li>
+            <li><strong>Recursive invocation loops</strong>: An S3 trigger writing to the same bucket creates an
+                infinite loop. Always write to a different resource or use key prefixes to filter. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html">src2</a>]</li>
+            <li><strong>Provisioned concurrency + SnapStart conflict</strong>: These cannot be combined. SnapStart is
+                free (Java); provisioned concurrency costs ~$15&ndash;30/month per 10 environments at 512 MB. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</li>
+            <li><strong>API Gateway 29-second limit</strong>: Even with 900s Lambda timeout, API Gateway has a hard
+                29-second integration timeout. Use async invocation or Step Functions for long tasks. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>]</li>
+            <li><strong>Cold start burst after deployment</strong>: Every code deploy invalidates warm environments.
+                Deploy during low traffic or use traffic shifting with aliases. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>, <a
+                    href="https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/">src6</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Check current function configuration
+aws lambda get-function-configuration --function-name my-function \
+  --query '{Memory: MemorySize, Timeout: Timeout, Runtime: Runtime, VPC: VpcConfig.SubnetIds, SnapStart: SnapStart}'
+
+# Find recent timeouts (CloudWatch Logs Insights)
+fields @timestamp, @message
+| filter @message like /Task timed out/
+| sort @timestamp desc | limit 50
+
+# Analyze cold start frequency
+fields @timestamp, @initDuration, @duration, @maxMemoryUsed, @memorySize
+| filter ispresent(@initDuration)
+| stats count(*) as coldStarts, avg(@initDuration) as avgInitMs,
+        max(@initDuration) as maxInitMs, pct(@initDuration, 99) as p99InitMs
+  by bin(1h)
+
+# Check memory utilization
+fields @maxMemoryUsed, @memorySize, @duration
+| stats avg(@maxMemoryUsed) as avgMemUsed, max(@maxMemoryUsed) as maxMemUsed
+
+# Check provisioned concurrency status
+aws lambda get-provisioned-concurrency-config \
+  --function-name my-function --qualifier live
+
+# Check VPC route table for NAT gateway
+aws ec2 describe-route-tables \
+  --filters "Name=association.subnet-id,Values=subnet-xxxxx" \
+  --query 'RouteTables[*].Routes[?DestinationCidrBlock==`0.0.0.0/0`]'
+
+# Test invocation
+aws lambda invoke --function-name my-function \
+  --payload '{"test": true}' --cli-read-timeout 60 response.json</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Lambda timeout (max 15 min)</td>
+                        <td>2018</td>
+                        <td>Increased from 5 min; all runtimes [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>VPC Hyperplane ENI</td>
+                        <td>2019</td>
+                        <td>Eliminated ~10s VPC cold start penalty [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-networking.html">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Provisioned concurrency</td>
+                        <td>Dec 2019</td>
+                        <td>All runtimes; eliminates cold starts [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ARM64/Graviton support</td>
+                        <td>2021</td>
+                        <td>20% faster cold starts vs x86; lower cost [<a
+                                href="https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/">src6</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>SnapStart for Java</td>
+                        <td>Nov 2022</td>
+                        <td>Java 11+ Corretto; free [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>INIT phase logging (INIT_REPORT)</td>
+                        <td>Nov 2023</td>
+                        <td>Explicit Init/Restore phase error reporting [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>SnapStart for Python</td>
+                        <td>Dec 2024</td>
+                        <td>Python 3.12+; caching/restore charges apply [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>SnapStart for .NET</td>
+                        <td>Dec 2024</td>
+                        <td>.NET 8+; requires Annotations v1.6.0+ [<a
+                                href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Lambda Managed Instances</td>
+                        <td>2025 preview</td>
+                        <td>Multi-concurrent execution on EC2-class instances</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Timeout &lt;15 min and stateless workload</td>
+                        <td>Processing &gt;15 min</td>
+                        <td>AWS Step Functions or ECS/Fargate</td>
+                    </tr>
+                    <tr>
+                        <td>Cold start &lt;2s is acceptable</td>
+                        <td>Hard real-time &lt;10ms requirement</td>
+                        <td>EC2, ECS, or always-on containers</td>
+                    </tr>
+                    <tr>
+                        <td>Traffic is spiky or unpredictable</td>
+                        <td>Steady &gt;1000 req/s sustained</td>
+                        <td>ECS/Fargate with ALB (cheaper at scale)</td>
+                    </tr>
+                    <tr>
+                        <td>SnapStart available for your runtime</td>
+                        <td>Need zero cold starts guaranteed</td>
+                        <td>Provisioned concurrency or containers</td>
+                    </tr>
+                    <tr>
+                        <td>API Gateway integration &lt;29s</td>
+                        <td>Long-running API response &gt;29s</td>
+                        <td>Async invocation + polling, or WebSocket API</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>Cold starts affect &lt;1% of invocations</strong> in steady-state but can be 100% after a
+                deployment or traffic spike from zero. Monitor <code>Init Duration</code> in CloudWatch, not just
+                averages. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>, <a
+                    href="https://lumigo.io/blog/this-is-all-you-need-to-know-about-lambda-cold-starts/">src7</a>]</li>
+            <li><strong>Memory cost trade-off</strong>: 14x memory does not always mean 14x cost. Faster execution =
+                shorter billed duration. Use AWS Lambda Power Tuning to find cost-optimal memory. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html">src1</a>]</li>
+            <li><strong>SnapStart snapshot uniqueness</strong>: Initialization code runs once, then the snapshot is
+                reused. Random values or credentials generated during INIT are identical across restored instances.
+                Generate in the handler. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html">src4</a>]</li>
+            <li><strong>Provisioned concurrency costs even when idle</strong>: ~$0.015/GB-hour. Use Application Auto
+                Scaling to adjust based on traffic patterns. [<a
+                    href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html">src3</a>]</li>
+            <li><strong>ARM64 (Graviton) gives free performance</strong>: Up to 20% better price-performance with faster
+                cold starts. No code changes needed for interpreted runtimes. [<a
+                    href="https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/">src6</a>]
+            </li>
+        </ul>
+    </section>
+
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/postgresql-slow-queries/2026"
+            data-relationship="related_to">PostgreSQL Slow Query Diagnosis</a>
+        <a href="/software/debugging/api-gateway-504-timeout/2026" data-relationship="solves">API Gateway 504 Timeout
+            Errors</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

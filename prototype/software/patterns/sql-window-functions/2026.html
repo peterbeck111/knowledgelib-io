@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SQL Window Functions: Running Totals, Rankings | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to SQL window functions covering ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, and more.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-window-functions/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SQL Window Functions: Running Totals, Rankings | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to SQL window functions covering ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, and more. 14-row decision matrix, decision tree, 4 code examples, 6 anti-pattern pairs, and 8 common pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-window-functions/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Window Functions: Running Totals, Rankings | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to SQL window functions covering ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, and more. 14-row decision matrix, decision tree, 4 code examples, 6 anti-pattern pairs, and 8 common pitfalls. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/patterns/sql_window_functions">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I use SQL window functions (running totals, rankings, lag/lead)?">
+  <meta name="ai:aliases" content="SQL window functions tutorial; SQL OVER PARTITION BY ORDER BY; SQL ROW_NUMBER RANK DENSE_RANK examples; SQL LAG LEAD running total; SQL analytic functions guide; window functions vs GROUP BY; SQL cumulative sum partition; SQL NTILE PERCENT_RANK CUME_DIST">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-window-functions/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="biannual">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="database_engine,use_case">
+  <meta name="ai:constraints" content="Window functions can only appear in SELECT and ORDER BY clauses; MySQL requires 8.0+ for window function support; LAST_VALUE with default frame returns current row not partition last; Window functions execute after WHERE GROUP BY HAVING; ORDER BY inside OVER changes default frame to cumulative">
+  <meta name="ai:skip_this_unit_if" content="User needs to debug slow window function queries specifically -> software/debugging/postgresql-slow-queries/2026; User is migrating between database engines -> software/migrations/mysql-to-postgresql/2026; User needs GROUP BY aggregation not per-row calculations -> General SQL aggregation tutorial">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SQL Window Functions: Running Totals, Rankings, Lag/Lead",
+    "headline": "SQL Window Functions: Running Totals, Rankings, Lag/Lead",
+    "description": "Complete guide to SQL window functions covering ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, FIRST_VALUE, LAST_VALUE, NTILE, PERCENT_RANK, and CUME_DIST. Includes decision matrix, decision tree, running totals, rankings, gap analysis code examples, anti-patterns, common pitfalls, and cross-database compatibility reference.",
+    "keywords": ["SQL", "window functions", "ROW_NUMBER", "RANK", "DENSE_RANK", "LAG", "LEAD", "OVER", "PARTITION BY", "running total", "analytic functions", "PostgreSQL", "MySQL"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 8.4+, MySQL 8.0+, SQL Server 2005+, Oracle 8i+, SQLite 3.25+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL 18: Window Functions",
+        "url": "https://www.postgresql.org/docs/current/functions-window.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Tutorial: Window Functions",
+        "url": "https://www.postgresql.org/docs/current/tutorial-window.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MySQL 8.4 Reference Manual: Window Function Concepts and Syntax",
+        "url": "https://dev.mysql.com/doc/refman/8.4/en/window-functions-usage.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MySQL 8.4 Reference Manual: Window Function Frame Specification",
+        "url": "https://dev.mysql.com/doc/refman/8.4/en/window-functions-frames.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Window Functions for Data Analysis with Postgres",
+        "url": "https://www.crunchydata.com/blog/window-functions-for-data-analysis-with-postgres"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OVER Clause (Transact-SQL) - SQL Server",
+        "url": "https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Indexing for Windowing Functions",
+        "url": "https://www.brentozar.com/archive/2015/06/indexing-for-windowing-functions/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SQL Window Functions: Running Totals, Rankings, Lag/Lead",
+    "description": "Structured reference for SQL window functions including ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, running totals, frame specifications, and cross-database compatibility. Decision matrix with 14 patterns, 4 code examples, 6 anti-patterns, and 8 pitfalls.",
+    "keywords": ["SQL", "window functions", "ROW_NUMBER", "RANK", "LAG", "LEAD", "running total", "analytics", "PostgreSQL", "MySQL"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Oracle Corporation"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Crunchy Data"},
+      {"@type": "Organization", "name": "Brent Ozar Unlimited"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SQL Window Functions" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I use SQL window functions (running totals, rankings, lag/lead)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Window functions compute values across related rows without collapsing them -- use function() OVER (PARTITION BY ... ORDER BY ...) for rankings, running totals, and row comparisons."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL window functions tutorial",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Window functions compute values across related rows without collapsing them -- use function() OVER (PARTITION BY ... ORDER BY ...) for rankings, running totals, and row comparisons."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL OVER PARTITION BY ORDER BY",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Window functions compute values across related rows without collapsing them -- use function() OVER (PARTITION BY ... ORDER BY ...) for rankings, running totals, and row comparisons."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL ROW_NUMBER RANK DENSE_RANK examples",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Window functions compute values across related rows without collapsing them -- use function() OVER (PARTITION BY ... ORDER BY ...) for rankings, running totals, and row comparisons."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL LAG LEAD running total",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Window functions compute values across related rows without collapsing them -- use function() OVER (PARTITION BY ... ORDER BY ...) for rankings, running totals, and row comparisons."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL analytic functions guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Window functions compute values across related rows without collapsing them -- use function() OVER (PARTITION BY ... ORDER BY ...) for rankings, running totals, and row comparisons."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SQL Window Functions: Running Totals, Rankings, Lag/Lead</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I use SQL window functions (running totals, rankings, lag/lead)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-window-functions/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> biannual</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Window functions compute values across related rows without collapsing them -- use <code>function() OVER (PARTITION BY ... ORDER BY ...)</code> for rankings, running totals, and row comparisons.</li>
+    <li><strong>Key tool/command</strong>: <code>ROW_NUMBER() OVER (PARTITION BY group_col ORDER BY sort_col)</code></li>
+    <li><strong>Watch out for</strong>: Default frame with ORDER BY is <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>, which silently gives cumulative (not full-partition) results for SUM/AVG.</li>
+    <li><strong>Works with</strong>: PostgreSQL 8.4+, MySQL 8.0+, SQL Server 2005+, Oracle 8i+, SQLite 3.25+, MariaDB 10.2+.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Window functions can only appear in SELECT and ORDER BY clauses -- never in WHERE, GROUP BY, or HAVING. To filter on a window function result, wrap it in a CTE or subquery.</li>
+    <li>MySQL requires 8.0+ for window function support; MariaDB requires 10.2+. Earlier versions must use self-joins or variables.</li>
+    <li>LAST_VALUE with the default frame returns the current row's value, not the partition's last row. Always specify <code>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code>.</li>
+    <li>Window functions execute after WHERE, GROUP BY, and HAVING in SQL's logical processing order. They see the filtered/grouped result set, not raw table data.</li>
+    <li>Adding ORDER BY inside OVER() silently changes the default frame from the entire partition to <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>. This causes SUM/AVG to return cumulative, not total, results.</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table (PATTERNS decision matrix) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Function</th><th scope="col">Syntax</th><th scope="col">Frame Needed</th><th scope="col">Trade-off</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Unique row numbering</td><td><code>ROW_NUMBER()</code></td><td><code>ROW_NUMBER() OVER (ORDER BY col)</code></td><td>No</td><td>Arbitrary tiebreaker for duplicates</td></tr>
+      <tr><td>Ranking with gaps</td><td><code>RANK()</code></td><td><code>RANK() OVER (ORDER BY col DESC)</code></td><td>No</td><td>Tied rows get same rank, next rank skipped</td></tr>
+      <tr><td>Ranking without gaps</td><td><code>DENSE_RANK()</code></td><td><code>DENSE_RANK() OVER (ORDER BY col DESC)</code></td><td>No</td><td>Tied rows get same rank, no gap</td></tr>
+      <tr><td>Running total</td><td><code>SUM() OVER</code></td><td><code>SUM(amt) OVER (ORDER BY dt ROWS UNBOUNDED PRECEDING)</code></td><td>Yes</td><td>Must specify ROWS to avoid RANGE default peer behavior</td></tr>
+      <tr><td>Running average</td><td><code>AVG() OVER</code></td><td><code>AVG(amt) OVER (ORDER BY dt ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)</code></td><td>Yes</td><td>Sliding window -- adjust N for smoothing</td></tr>
+      <tr><td>Previous row value</td><td><code>LAG()</code></td><td><code>LAG(col, 1, default) OVER (ORDER BY dt)</code></td><td>No</td><td>Returns NULL if no prior row; set default</td></tr>
+      <tr><td>Next row value</td><td><code>LEAD()</code></td><td><code>LEAD(col, 1, default) OVER (ORDER BY dt)</code></td><td>No</td><td>Returns NULL if no following row; set default</td></tr>
+      <tr><td>First value in partition</td><td><code>FIRST_VALUE()</code></td><td><code>FIRST_VALUE(col) OVER (PARTITION BY grp ORDER BY dt)</code></td><td>Implicit</td><td>Default frame is fine for first value</td></tr>
+      <tr><td>Last value in partition</td><td><code>LAST_VALUE()</code></td><td><code>LAST_VALUE(col) OVER (... ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)</code></td><td>Yes, always</td><td>Default frame WRONG -- must override</td></tr>
+      <tr><td>Nth value in partition</td><td><code>NTH_VALUE()</code></td><td><code>NTH_VALUE(col, 2) OVER (ORDER BY dt ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)</code></td><td>Yes</td><td>Not available in SQL Server; use OFFSET/FETCH</td></tr>
+      <tr><td>Split into N buckets</td><td><code>NTILE()</code></td><td><code>NTILE(4) OVER (ORDER BY score DESC)</code></td><td>No</td><td>Uneven buckets when row count not divisible by N</td></tr>
+      <tr><td>Percentile rank</td><td><code>PERCENT_RANK()</code></td><td><code>PERCENT_RANK() OVER (ORDER BY score)</code></td><td>No</td><td>Range 0.0-1.0; first row always 0</td></tr>
+      <tr><td>Cumulative distribution</td><td><code>CUME_DIST()</code></td><td><code>CUME_DIST() OVER (ORDER BY score)</code></td><td>No</td><td>Range &gt;0.0-1.0; fraction of rows &lt;= current</td></tr>
+      <tr><td>Deduplicate rows</td><td><code>ROW_NUMBER()</code> filter</td><td><code>WHERE rn = 1</code> (in CTE)</td><td>No</td><td>Pick one row per group; deterministic ORDER BY needed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Need to assign a position/number to each row?
+|   |-- YES: Need unique numbers (no ties)?
+|   |   |-- YES --&gt; ROW_NUMBER()
+|   |   +-- NO: Need gaps after ties?
+|   |       |-- YES --&gt; RANK()
+|   |       +-- NO --&gt; DENSE_RANK()
+|   +-- NO |
+|-- Need to access a different row's value?
+|   |-- YES: Previous row?
+|   |   |-- YES --&gt; LAG(col, offset, default)
+|   |   +-- NO: Next row?
+|   |       |-- YES --&gt; LEAD(col, offset, default)
+|   |       +-- NO: First/last in partition?
+|   |           |-- FIRST --&gt; FIRST_VALUE(col)
+|   |           +-- LAST --&gt; LAST_VALUE(col) + explicit ROWS frame
+|   +-- NO |
+|-- Need a running/cumulative calculation?
+|   |-- YES: Running total?
+|   |   |-- YES --&gt; SUM(col) OVER (ORDER BY ... ROWS UNBOUNDED PRECEDING)
+|   |   +-- NO: Sliding window (e.g., 3-row moving avg)?
+|   |       |-- YES --&gt; AVG(col) OVER (ORDER BY ... ROWS BETWEEN N PRECEDING AND CURRENT ROW)
+|   |       +-- NO --&gt; COUNT/MIN/MAX OVER (ORDER BY ... ROWS ...)
+|   +-- NO |
+|-- Need distribution/percentile analysis?
+|   |-- YES: Split into equal buckets?
+|   |   |-- YES --&gt; NTILE(n)
+|   |   +-- NO --&gt; PERCENT_RANK() or CUME_DIST()
+|   +-- NO |
++-- DEFAULT --&gt; Check if GROUP BY with standard aggregates suffices</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Understand the OVER() clause anatomy</h3>
+  <p>Every window function follows the pattern <code>function() OVER (window_specification)</code>. The window specification has three optional parts: PARTITION BY (groups rows), ORDER BY (sorts within partitions), and frame clause (limits which rows the function sees). [<a href="https://www.postgresql.org/docs/current/functions-window.html">src1</a>]</p>
+  <pre><code class="language-sql">-- Anatomy of a window function call
+SELECT
+    employee_id,
+    department,
+    salary,
+    function_name(args) OVER (
+        PARTITION BY department          -- (1) group rows
+        ORDER BY salary DESC             -- (2) sort within groups
+        ROWS BETWEEN UNBOUNDED PRECEDING -- (3) frame: which rows to include
+             AND CURRENT ROW
+    ) AS result
+FROM employees;</code></pre>
+  <p><strong>Verify</strong>: Run <code>EXPLAIN ANALYZE</code> on your query -- look for "WindowAgg" nodes in the plan.</p>
+
+  <h3>2. Choose the right ranking function</h3>
+  <p>ROW_NUMBER gives unique sequential integers. RANK gives the same number to ties but skips. DENSE_RANK gives the same number to ties without skipping. [<a href="https://www.postgresql.org/docs/current/tutorial-window.html">src2</a>]</p>
+  <pre><code class="language-sql">SELECT
+    name, score,
+    ROW_NUMBER() OVER (ORDER BY score DESC) AS row_num,   -- 1,2,3,4
+    RANK()       OVER (ORDER BY score DESC) AS rank_val,   -- 1,2,2,4  (gap after tie)
+    DENSE_RANK() OVER (ORDER BY score DESC) AS dense_val   -- 1,2,2,3  (no gap)
+FROM students;</code></pre>
+  <p><strong>Verify</strong>: Insert test data with ties and confirm: <code>SELECT * FROM (above query) WHERE rank_val != dense_val;</code> returns rows with ties.</p>
+
+  <h3>3. Build running totals with explicit frame</h3>
+  <p>Always specify the frame clause for cumulative aggregates. Without it, the default RANGE frame treats peers (same ORDER BY value) as one unit, which can give unexpected jumps. [<a href="https://dev.mysql.com/doc/refman/8.4/en/window-functions-frames.html">src4</a>]</p>
+  <pre><code class="language-sql">SELECT
+    order_date,
+    amount,
+    SUM(amount) OVER (
+        ORDER BY order_date
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS running_total
+FROM orders;</code></pre>
+  <p><strong>Verify</strong>: The last row's running_total should equal <code>SELECT SUM(amount) FROM orders;</code></p>
+
+  <h3>4. Use LAG/LEAD for row-to-row comparisons</h3>
+  <p>LAG looks backward, LEAD looks forward. Both accept an offset (default 1) and a default value for when no row exists. [<a href="https://www.crunchydata.com/blog/window-functions-for-data-analysis-with-postgres">src5</a>]</p>
+  <pre><code class="language-sql">SELECT
+    month,
+    revenue,
+    LAG(revenue, 1, 0)  OVER (ORDER BY month) AS prev_month,
+    LEAD(revenue, 1, 0) OVER (ORDER BY month) AS next_month,
+    revenue - LAG(revenue, 1) OVER (ORDER BY month) AS month_over_month_change
+FROM monthly_revenue;</code></pre>
+  <p><strong>Verify</strong>: First row's <code>prev_month</code> should be your default (0). Last row's <code>next_month</code> should be your default (0).</p>
+
+  <h3>5. Define named windows for reuse</h3>
+  <p>When multiple window functions share the same PARTITION BY and ORDER BY, define a named window to avoid repetition and ensure consistency. [<a href="https://www.postgresql.org/docs/current/tutorial-window.html">src2</a>]</p>
+  <pre><code class="language-sql">SELECT
+    department,
+    employee,
+    salary,
+    RANK()       OVER w AS dept_rank,
+    SUM(salary)  OVER w AS dept_running_total,
+    LAG(salary)  OVER w AS prev_salary
+FROM employees
+WINDOW w AS (PARTITION BY department ORDER BY salary DESC);</code></pre>
+  <p><strong>Verify</strong>: Check that all three columns use the same partitioning: <code>EXPLAIN</code> should show a single sort operation.</p>
+
+  <h3>6. Create a POC index for performance</h3>
+  <p>For production queries, create an index that matches (P)ARTITION BY columns, then (O)RDER BY columns, then (c)overing columns as INCLUDE. This eliminates sorts and enables index-only scans. [<a href="https://www.brentozar.com/archive/2015/06/indexing-for-windowing-functions/">src7</a>]</p>
+  <pre><code class="language-sql">-- POC index for: OVER (PARTITION BY department ORDER BY salary DESC)
+CREATE INDEX idx_emp_window
+    ON employees (department, salary DESC)
+    INCLUDE (employee_id, name);</code></pre>
+  <p><strong>Verify</strong>: Run <code>EXPLAIN ANALYZE</code> and confirm no "Sort" node appears before "WindowAgg".</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>SQL: Running Total with Partitioned Reset</h3>
+  <pre><code class="language-sql">-- Input:  transactions table (account_id, txn_date, amount)
+-- Output: running balance per account, ordered by date
+
+SELECT
+    account_id,
+    txn_date,
+    amount,
+    SUM(amount) OVER (
+        PARTITION BY account_id
+        ORDER BY txn_date, txn_id  -- txn_id breaks date ties deterministically
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS running_balance
+FROM transactions
+ORDER BY account_id, txn_date;</code></pre>
+
+  <h3>SQL: Top-N per Group (Deduplication Pattern)</h3>
+  <pre><code class="language-sql">-- Input:  products table (category, product_name, rating, review_count)
+-- Output: top 3 products per category by rating
+
+WITH ranked AS (
+    SELECT
+        category,
+        product_name,
+        rating,
+        review_count,
+        ROW_NUMBER() OVER (
+            PARTITION BY category
+            ORDER BY rating DESC, review_count DESC
+        ) AS rn
+    FROM products
+)
+SELECT category, product_name, rating, review_count
+FROM ranked
+WHERE rn &lt;= 3
+ORDER BY category, rn;</code></pre>
+
+  <h3>SQL: Gap Analysis with LAG/LEAD</h3>
+  <pre><code class="language-sql">-- Input:  sensor_readings table (sensor_id, reading_time, value)
+-- Output: detect gaps &gt; 5 minutes between consecutive readings
+
+WITH gaps AS (
+    SELECT
+        sensor_id,
+        reading_time,
+        LAG(reading_time) OVER (
+            PARTITION BY sensor_id
+            ORDER BY reading_time
+        ) AS prev_time,
+        reading_time - LAG(reading_time) OVER (
+            PARTITION BY sensor_id
+            ORDER BY reading_time
+        ) AS gap_interval
+    FROM sensor_readings
+)
+SELECT sensor_id, prev_time, reading_time, gap_interval
+FROM gaps
+WHERE gap_interval &gt; INTERVAL '5 minutes'
+ORDER BY gap_interval DESC;</code></pre>
+
+  <h3>SQL: Moving Average and Cumulative Percentage</h3>
+  <pre><code class="language-sql">-- Input:  daily_sales table (sale_date, region, amount)
+-- Output: 7-day moving average and cumulative % of total per region
+
+SELECT
+    sale_date,
+    region,
+    amount,
+    ROUND(AVG(amount) OVER (
+        PARTITION BY region
+        ORDER BY sale_date
+        ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+    ), 2) AS moving_avg_7d,
+    ROUND(
+        SUM(amount) OVER (
+            PARTITION BY region
+            ORDER BY sale_date
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) * 100.0 /
+        SUM(amount) OVER (PARTITION BY region),
+    2) AS cumulative_pct
+FROM daily_sales
+ORDER BY region, sale_date;</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using window function result in WHERE clause</h3>
+  <pre><code class="language-sql">-- BAD -- window functions cannot be used in WHERE
+SELECT employee_id, department, salary,
+       ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS rn
+FROM employees
+WHERE rn &lt;= 3;  -- ERROR: column "rn" does not exist</code></pre>
+
+  <h3>Correct: Wrap in CTE or subquery to filter</h3>
+  <pre><code class="language-sql">-- GOOD -- filter window function results via CTE
+WITH ranked AS (
+    SELECT employee_id, department, salary,
+           ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS rn
+    FROM employees
+)
+SELECT employee_id, department, salary
+FROM ranked
+WHERE rn &lt;= 3;</code></pre>
+
+  <h3>Wrong: Relying on default frame with LAST_VALUE</h3>
+  <pre><code class="language-sql">-- BAD -- default frame with ORDER BY stops at current row
+SELECT department, employee, salary,
+       LAST_VALUE(employee) OVER (
+           PARTITION BY department ORDER BY salary
+       ) AS highest_paid  -- returns CURRENT row's employee, not the last!
+FROM employees;</code></pre>
+
+  <h3>Correct: Specify full frame for LAST_VALUE</h3>
+  <pre><code class="language-sql">-- GOOD -- explicit frame includes all rows in partition
+SELECT department, employee, salary,
+       LAST_VALUE(employee) OVER (
+           PARTITION BY department ORDER BY salary
+           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+       ) AS highest_paid
+FROM employees;</code></pre>
+
+  <h3>Wrong: Non-deterministic ROW_NUMBER for deduplication</h3>
+  <pre><code class="language-sql">-- BAD -- ties produce arbitrary, non-reproducible numbering
+SELECT *, ROW_NUMBER() OVER (PARTITION BY email ORDER BY created_at) AS rn
+FROM users;
+-- Two users with same email AND same created_at: which gets rn=1 is random</code></pre>
+
+  <h3>Correct: Add tiebreaker column to ORDER BY</h3>
+  <pre><code class="language-sql">-- GOOD -- primary key as tiebreaker ensures deterministic results
+SELECT *, ROW_NUMBER() OVER (PARTITION BY email ORDER BY created_at, user_id) AS rn
+FROM users;</code></pre>
+
+  <h3>Wrong: Mixing ROWS and RANGE without understanding</h3>
+  <pre><code class="language-sql">-- BAD -- RANGE treats peers as one unit; three rows with same date
+-- get the sum of ALL three, not a progressive running total
+SELECT order_date, amount,
+       SUM(amount) OVER (ORDER BY order_date) AS running_total
+       -- implicit: RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+FROM orders;
+-- If 3 rows share order_date='2026-01-15', all 3 show the same running_total</code></pre>
+
+  <h3>Correct: Use ROWS for progressive cumulative sums</h3>
+  <pre><code class="language-sql">-- GOOD -- ROWS treats each physical row independently
+SELECT order_date, amount,
+       SUM(amount) OVER (
+           ORDER BY order_date
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       ) AS running_total
+FROM orders;
+-- Each row increments independently even with duplicate dates</code></pre>
+
+  <h3>Wrong: Unnecessary self-join instead of window function</h3>
+  <pre><code class="language-sql">-- BAD -- self-join to get previous row is slow and fragile
+SELECT a.id, a.value,
+       b.value AS prev_value
+FROM measurements a
+LEFT JOIN measurements b
+    ON b.id = (SELECT MAX(id) FROM measurements WHERE id &lt; a.id);</code></pre>
+
+  <h3>Correct: Use LAG for previous row access</h3>
+  <pre><code class="language-sql">-- GOOD -- LAG is purpose-built for this, faster, and clearer
+SELECT id, value,
+       LAG(value) OVER (ORDER BY id) AS prev_value
+FROM measurements;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Default frame surprise</strong>: When ORDER BY is present inside OVER(), the default frame becomes <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>. This silently turns SUM() into a cumulative sum instead of a partition total. Fix: always specify an explicit frame clause for aggregate window functions, or omit ORDER BY if you want the full partition. [<a href="https://dev.mysql.com/doc/refman/8.4/en/window-functions-frames.html">src4</a>]</li>
+    <li><strong>LAST_VALUE returns current row</strong>: With the default frame, LAST_VALUE() sees only up to the current row, so it returns the current row's value. Fix: <code>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code>. [<a href="https://www.postgresql.org/docs/current/functions-window.html">src1</a>]</li>
+    <li><strong>NULLs in PARTITION BY</strong>: NULLs are grouped together in a single partition (SQL standard behavior). If this is wrong for your use case, filter NULLs out before the window function or use COALESCE. Fix: <code>PARTITION BY COALESCE(group_col, 'unknown')</code>. [<a href="https://dev.mysql.com/doc/refman/8.4/en/window-functions-usage.html">src3</a>]</li>
+    <li><strong>ORDER BY in OVER vs final ORDER BY</strong>: The ORDER BY inside OVER() only determines the logical ordering for the window calculation -- it does NOT guarantee the output row order. Fix: always add a final <code>ORDER BY</code> clause to the outer query. [<a href="https://www.postgresql.org/docs/current/tutorial-window.html">src2</a>]</li>
+    <li><strong>Performance: missing POC index</strong>: Without a matching index, every window function triggers a full sort. On large tables this can cause spills to disk. Fix: create a composite index matching (PARTITION BY cols, ORDER BY cols) with INCLUDE for covered columns. [<a href="https://www.brentozar.com/archive/2015/06/indexing-for-windowing-functions/">src7</a>]</li>
+    <li><strong>MySQL 5.7 compatibility</strong>: Window functions do not exist in MySQL 5.7 or earlier. Queries using OVER() will fail with a syntax error. Fix: upgrade to MySQL 8.0+ or rewrite using variables (<code>@row_number := @row_number + 1</code>). [<a href="https://dev.mysql.com/doc/refman/8.4/en/window-functions-usage.html">src3</a>]</li>
+    <li><strong>NTILE bucket imbalance</strong>: NTILE(n) distributes rows as evenly as possible, but when row count is not divisible by n, earlier buckets get one extra row. This is by design but can surprise users expecting exact quartiles. Fix: use PERCENT_RANK() or CUME_DIST() for exact percentile calculations. [<a href="https://www.postgresql.org/docs/current/functions-window.html">src1</a>]</li>
+    <li><strong>Multiple different windows cause multiple sorts</strong>: Each distinct OVER() specification may require a separate sort pass. Fix: reuse named windows (<code>WINDOW w AS (...)</code>) and align PARTITION BY/ORDER BY across functions when possible. [<a href="https://www.brentozar.com/archive/2015/06/indexing-for-windowing-functions/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Database</th><th scope="col">First Version</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL</td><td>8.4 (2009)</td><td>Full support since 8.4+</td><td>Named windows, GROUPS frame (v11+), FILTER (v9.4+)</td></tr>
+      <tr><td>MySQL</td><td>8.0 (2018)</td><td>Full support since 8.0+</td><td>No GROUPS frame clause; no FILTER clause</td></tr>
+      <tr><td>MariaDB</td><td>10.2 (2017)</td><td>Full support since 10.2+</td><td>Follows MySQL syntax closely</td></tr>
+      <tr><td>SQL Server</td><td>2005</td><td>Full support since 2012+</td><td>2005-2008 limited to ROW_NUMBER/RANK/DENSE_RANK; full frames in 2012+</td></tr>
+      <tr><td>Oracle</td><td>8i (1999)</td><td>Full support since 8i+</td><td>Pioneer of analytic functions; broadest syntax</td></tr>
+      <tr><td>SQLite</td><td>3.25 (2018)</td><td>Full support since 3.25+</td><td>All standard window functions supported</td></tr>
+      <tr><td>BigQuery</td><td>GA</td><td>Full support</td><td>Standard SQL syntax; QUALIFY clause for filtering</td></tr>
+      <tr><td>Snowflake</td><td>GA</td><td>Full support</td><td>QUALIFY clause; named windows; GROUPS frame</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Need per-row calculations alongside group-level aggregates</td><td>Simple aggregation per group is enough</td><td>GROUP BY with aggregate functions</td></tr>
+      <tr><td>Top-N per group / deduplication</td><td>Top-N of entire table (no partitioning needed)</td><td>ORDER BY + LIMIT</td></tr>
+      <tr><td>Running totals, moving averages, cumulative sums</td><td>Single total or average across all rows</td><td>Plain SUM()/AVG() aggregate</td></tr>
+      <tr><td>Comparing current row to previous/next row (gap detection)</td><td>Comparing to a fixed reference value</td><td>WHERE clause with constant/subquery</td></tr>
+      <tr><td>Ranking within categories (leaderboards)</td><td>Global rank with simple sort</td><td>ORDER BY + ROW_NUMBER in app code</td></tr>
+      <tr><td>Percentile/distribution analysis</td><td>Exact median (window PERCENTILE_CONT is non-standard)</td><td>Database-specific PERCENTILE_CONT() aggregate</td></tr>
+      <tr><td>Need both detail rows and aggregates in one query</td><td>Only need aggregate rows</td><td>GROUP BY is cleaner and faster</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Window functions are computed after WHERE, JOIN, GROUP BY, and HAVING. If you need to filter on a window function result, you must use a CTE or subquery -- there is no QUALIFY clause in standard SQL (BigQuery and Snowflake support it as an extension).</li>
+    <li>The RANGE frame mode operates on values (not physical row positions). It only works with numeric and date/timestamp ORDER BY columns. ROWS operates on physical row positions and works universally.</li>
+    <li>NTH_VALUE is not supported in SQL Server. Use a combination of ROW_NUMBER + CTE as a workaround.</li>
+    <li>Performance of window functions degrades with partition size. If partitions contain millions of rows, consider pre-aggregating or limiting the frame with ROWS BETWEEN N PRECEDING AND CURRENT ROW.</li>
+    <li>SQLite supports window functions but lacks some advanced features like GROUPS frame mode and FILTER clause.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="related_to">PostgreSQL Slow Query Debugging</a>
+    <a href="/software/debugging/mysql-deadlocks/2026" data-relationship="related_to">MySQL Deadlock Debugging</a>
+    <a href="/software/migrations/mysql-to-postgresql/2026" data-relationship="related_to">MySQL to PostgreSQL Migration</a>
+    <a href="/software/migrations/oracle-to-postgresql/2026" data-relationship="related_to">Oracle to PostgreSQL Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

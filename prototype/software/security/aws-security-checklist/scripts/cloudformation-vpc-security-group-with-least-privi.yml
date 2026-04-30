@@ -1,0 +1,31 @@
+# Input:  CloudFormation stack deployment
+# Output: Security group allowing only HTTPS from specific CIDR, all egress
+
+Resources:
+  WebServerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Web server - HTTPS only from corporate network"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 10.0.0.0/8          # Corporate network only
+          Description: "HTTPS from corporate"
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: "HTTPS outbound for API calls"
+      Tags:
+        - Key: Name
+          Value: web-server-sg
+
+  # BAD: Never do this in production
+  # SecurityGroupIngress:
+  #   - IpProtocol: tcp
+  #     FromPort: 0
+  #     ToPort: 65535
+  #     CidrIp: 0.0.0.0/0    # All ports open to the internet

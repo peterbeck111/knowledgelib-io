@@ -1,0 +1,31 @@
+START — Lambda function timing out or slow
+├── Check REPORT log in CloudWatch
+│   ├── "Init Duration" present and > 1000ms?
+│   │   ├── YES → COLD START ISSUE
+│   │   │   ├── Runtime is Java/Python/.NET? → Enable SnapStart [src4]
+│   │   │   ├── Package > 50 MB? → Tree-shake, use Layers [src6, src7]
+│   │   │   ├── Need guaranteed <100ms start? → Provisioned Concurrency [src3]
+│   │   │   └── Using heavy SDK imports? → Lazy-load, import only needed clients [src8]
+│   │   └── NO → RUNTIME TIMEOUT ISSUE ↓
+│   │
+│   ├── "Max Memory Used" close to "Memory Size"?
+│   │   ├── YES → Increase memory (doubles CPU too) [src1, src3]
+│   │   └── NO ↓
+│   │
+│   ├── Duration close to timeout limit every time?
+│   │   ├── YES → Likely infinite loop or recursive trigger [src2]
+│   │   └── NO ↓
+│   │
+│   ├── Function in VPC?
+│   │   ├── YES → Check NAT gateway exists for outbound internet [src5]
+│   │   │   ├── No NAT → Add NAT gateway + route table
+│   │   │   ├── Using AWS services only? → Use VPC endpoints instead [src5]
+│   │   │   └── Intermittent? → Check Network ACL ephemeral ports [src5]
+│   │   └── NO ↓
+│   │
+│   └── Timeout only on some invocations?
+│       ├── YES → Downstream service latency → add client-side timeouts [src2]
+│       └── NO → Increase function timeout; check payload size [src1]
+│
+└── No REPORT log at all?
+    └── Check execution role has AWSLambdaBasicExecutionRole [src2]

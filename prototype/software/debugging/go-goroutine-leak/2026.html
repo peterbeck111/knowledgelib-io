@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Detect and Fix Goroutine Leaks in Go | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to Go goroutine leak detection and prevention: goleak, pprof, synctest, common leak patterns (forgotten sender, early return, missing...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/go-goroutine-leak/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Detect and Fix Goroutine Leaks in Go | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete Go goroutine leak guide: goleak, pprof, synctest, forgotten sender/receiver patterns, context cancellation, errgroup. 8 sources, verified 2026-02-20.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/go-goroutine-leak/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-20">
+    <meta property="article:modified_time" content="2026-02-20">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Detect and Fix Goroutine Leaks in Go | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete Go goroutine leak guide: goleak, pprof, synctest, forgotten sender/receiver patterns, context cancellation, errgroup.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-20">
+    <meta name="ai:domain" content="software/debugging/go_goroutine_leak">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I detect and fix goroutine leaks in Go?">
+    <meta name="ai:aliases"
+        content="Go goroutine leak; goroutine leak detection Go; goleak goroutine testing; Go pprof goroutine debug; blocked goroutine Go; goroutine not exiting Go; context cancellation goroutine leak; Go channel leak goroutine; runtime.NumGoroutine leak; goroutine leak prevention Go">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/go-goroutine-leak/2026.md">
+    <meta name="ai:token_estimate" content="4200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="stable">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-20">
+    <meta name="ai:inputs_needed" content="go_version,environment">
+    <meta name="ai:constraints" content="Go-only — does not apply to Java thread leaks, Python asyncio task leaks, or Rust async task leaks; goleak only detects leaked goroutines at test cleanup — not a production runtime detector; pprof goroutine profile shows all goroutines including runtime-internal ones — does not distinguish leaked vs intentional; context.WithCancel/WithTimeout must always be followed by defer cancel() immediately — forgetting cancel() is itself a leak source; experimental goroutineleak pprof profile (Go 1.26+) uses GC reachability — cannot detect goroutines blocked on globally-reachable channels">
+    <meta name="ai:skip_this_unit_if" content="Go nil pointer dereference panic (no goroutine growth) → software/debugging/go-nil-pointer/2026; Java OutOfMemoryError or thread count growth → software/debugging/java-outofmemoryerror/2026; Go memory usage grows but runtime.NumGoroutine() stable → use pprof heap profile instead; Python asyncio tasks accumulating → Python asyncio task leak debugging (different runtime)">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Detect and Fix Goroutine Leaks in Go",
+    "headline": "How Do I Detect and Fix Goroutine Leaks in Go?",
+    "description": "Complete reference for detecting and fixing goroutine leaks in Go covering goleak, pprof goroutine profiling, synctest, common leak patterns (forgotten sender, early return, missing context cancellation), and prevention strategies (errgroup, worker pools, buffered channels).",
+    "keywords": ["Go", "goroutine leak", "goleak", "pprof", "concurrency", "context cancellation", "errgroup", "channel", "synctest"],
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "Go 1.13+, go.uber.org/goleak v1.3.0",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Goroutine Leaks — The Forgotten Sender", "url": "https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html" },
+      { "@type": "WebPage", "name": "uber-go/goleak — Goroutine Leak Detector", "url": "https://github.com/uber-go/goleak" },
+      { "@type": "WebPage", "name": "Detecting Goroutine Leaks with synctest/pprof", "url": "https://antonz.org/detecting-goroutine-leaks/" },
+      { "@type": "WebPage", "name": "Early Return and Goroutine Leak", "url": "https://rednafi.com/go/early-return-and-goroutine-leak/" },
+      { "@type": "WebPage", "name": "goleak package — go.uber.org/goleak", "url": "https://pkg.go.dev/go.uber.org/goleak" },
+      { "@type": "WebPage", "name": "Debugging Go Routine Leaks", "url": "https://blog.min.io/debugging-go-routine-leaks/" },
+      { "@type": "WebPage", "name": "How to Find and Fix Goroutine Leaks in Go", "url": "https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go" },
+      { "@type": "WebPage", "name": "proposal: runtime/pprof — new goroutine leak profile", "url": "https://github.com/golang/go/issues/74609" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Detect and Fix Goroutine Leaks in Go",
+    "description": "Structured reference for Go goroutine leak detection and prevention with diagnostic table, decision tree, code examples, and anti-patterns.",
+    "keywords": ["Go", "goroutine leak", "concurrency debugging", "goleak", "pprof"],
+    "temporalCoverage": "2012/2026",
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Ardan Labs"},
+      {"@type": "Organization", "name": "Uber Technologies"},
+      {"@type": "Organization", "name": "Go Team"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Detect and Fix Goroutine Leaks in Go" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I detect and fix goroutine leaks in Go?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A goroutine leak occurs when a goroutine is started but never terminates, usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no exit path. Detect with runtime.NumGoroutine() trending, net/http/pprof goroutine dumps, or Uber's goleak in tests. Fix by ensuring every goroutine has a guaranteed exit path via context.Context cancellation, buffered channels, or errgroup."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Go goroutine leak",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A goroutine leak occurs when a goroutine is started but never terminates, usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no exit path. Detect with runtime.NumGoroutine() trending, net/http/pprof goroutine dumps, or Uber's goleak in tests. Fix by ensuring every goroutine has a guaranteed exit path via context.Context cancellation, buffered channels, or errgroup."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "goroutine leak detection Go",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A goroutine leak occurs when a goroutine is started but never terminates, usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no exit path. Detect with runtime.NumGoroutine() trending, net/http/pprof goroutine dumps, or Uber's goleak in tests. Fix by ensuring every goroutine has a guaranteed exit path via context.Context cancellation, buffered channels, or errgroup."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "goleak goroutine testing",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A goroutine leak occurs when a goroutine is started but never terminates, usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no exit path. Detect with runtime.NumGoroutine() trending, net/http/pprof goroutine dumps, or Uber's goleak in tests. Fix by ensuring every goroutine has a guaranteed exit path via context.Context cancellation, buffered channels, or errgroup."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Go pprof goroutine debug",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A goroutine leak occurs when a goroutine is started but never terminates, usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no exit path. Detect with runtime.NumGoroutine() trending, net/http/pprof goroutine dumps, or Uber's goleak in tests. Fix by ensuring every goroutine has a guaranteed exit path via context.Context cancellation, buffered channels, or errgroup."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "blocked goroutine Go",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A goroutine leak occurs when a goroutine is started but never terminates, usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no exit path. Detect with runtime.NumGoroutine() trending, net/http/pprof goroutine dumps, or Uber's goleak in tests. Fix by ensuring every goroutine has a guaranteed exit path via context.Context cancellation, buffered channels, or errgroup."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Detect and Fix Goroutine Leaks in Go?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I detect and fix goroutine leaks in Go?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/go-goroutine-leak/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-20</span></span>
+        <span><strong>Freshness:</strong> stable</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: A goroutine leak occurs when a goroutine is started but never terminates,
+                usually because it is blocked on a channel send/receive, waiting on a lock, or stuck in a loop with no
+                exit path. Detect with <code>runtime.NumGoroutine()</code> trending, <code>net/http/pprof</code>
+                goroutine dumps, or Uber's <code>goleak</code> in tests. Fix by ensuring every goroutine has a
+                guaranteed exit path via <code>context.Context</code> cancellation, buffered channels, or
+                <code>errgroup</code>.</li>
+            <li><strong>Key tool/command</strong>: <code>go.uber.org/goleak</code> with
+                <code>defer goleak.VerifyNone(t)</code> in tests;
+                <code>http://localhost:6060/debug/pprof/goroutine?debug=2</code> in production.</li>
+            <li><strong>Watch out for</strong>: Unbuffered channels where the sender blocks forever when the receiver
+                returns early (the "forgotten sender" pattern). This is the #1 cause of goroutine leaks.</li>
+            <li><strong>Works with</strong>: Go 1.13+. <code>goleak</code> v1.3.0 supports the two most recent Go minor
+                versions. <code>synctest</code> available in Go 1.24+. Experimental <code>goroutineleak</code> pprof
+                profile in Go 1.26+.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>The Go runtime does NOT forcibly terminate goroutines. Once started, a goroutine runs until it returns or
+                the program exits. There is no <code>goroutine.Kill()</code>.</li>
+            <li><code>goleak.VerifyNone(t)</code> is incompatible with <code>t.Parallel()</code>. Use
+                <code>goleak.VerifyTestMain(m)</code> for parallel test packages. [<a
+                    href="https://github.com/uber-go/goleak">src2</a>, <a
+                    href="https://pkg.go.dev/go.uber.org/goleak">src5</a>]</li>
+            <li><code>runtime.NumGoroutine()</code> includes runtime-internal goroutines (GC, finalizer, signal
+                handler). Raw count comparisons can produce false positives. [<a
+                    href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>]</li>
+            <li>Never rely solely on <code>go vet</code> or the race detector to find goroutine leaks — neither detects
+                them. [<a href="https://rednafi.com/go/early-return-and-goroutine-leak/">src4</a>]</li>
+            <li>The <code>synctest</code> package (Go 1.24+) only detects goroutines blocked on synchronization
+                primitives. CPU-bound infinite loops are not detected. [<a
+                    href="https://antonz.org/detecting-goroutine-leaks/">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Unbuffered channel — forgotten sender</td>
+                        <td>~35%</td>
+                        <td>Goroutine blocked on <code>ch &lt;-</code> with no receiver</td>
+                        <td>Use buffered channel <code>make(chan T, 1)</code> or drain before return [<a
+                                href="https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Unbuffered channel — forgotten receiver</td>
+                        <td>~20%</td>
+                        <td>Goroutine blocked on <code>&lt;-ch</code> with no sender/close</td>
+                        <td>Close channel when sender is done: <code>defer close(ch)</code> [<a
+                                href="https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Missing context cancellation</td>
+                        <td>~20%</td>
+                        <td>Goroutine in <code>select{}</code> without <code>ctx.Done()</code> case</td>
+                        <td>Always pass and check <code>context.Context</code> [<a
+                                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Early return skipping channel reads</td>
+                        <td>~10%</td>
+                        <td>Multiple goroutines spawned, only first result consumed</td>
+                        <td>Use <code>errgroup.Group</code> or drain all channels [<a
+                                href="https://rednafi.com/go/early-return-and-goroutine-leak/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Range over unclosed channel</td>
+                        <td>~5%</td>
+                        <td><code>for v := range ch</code> blocks forever</td>
+                        <td>Sender must <code>close(ch)</code> when done [<a
+                                href="https://antonz.org/detecting-goroutine-leaks/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Infinite loop without exit condition</td>
+                        <td>~5%</td>
+                        <td>Goroutine in <code>for{}</code> with no <code>return</code></td>
+                        <td>Add <code>ctx.Done()</code> or done channel check [<a
+                                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Leaked <code>time.Ticker</code> goroutine</td>
+                        <td>~3%</td>
+                        <td><code>time.NewTicker</code> without <code>ticker.Stop()</code></td>
+                        <td>Always <code>defer ticker.Stop()</code> [<a
+                                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Orphaned background worker</td>
+                        <td>~2%</td>
+                        <td>Library starts goroutine; caller forgets <code>Stop()</code>/<code>Close()</code></td>
+                        <td>Follow library contract — call cleanup methods [<a
+                                href="https://antonz.org/detecting-goroutine-leaks/">src3</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — suspected goroutine leak
+├── In tests?
+│   ├── YES → Add defer goleak.VerifyNone(t) [src2]
+│   │   ├── Using t.Parallel()? → Use goleak.VerifyTestMain(m) [src5]
+│   │   └── Go 1.24+? → Consider synctest.Test() [src3]
+│   └── NO ↓
+├── In production/development?
+│   ├── Can add pprof endpoint?
+│   │   ├── YES → import _ "net/http/pprof"; /debug/pprof/goroutine?debug=2 [src6]
+│   │   └── NO → Log runtime.NumGoroutine() periodically [src7]
+│   └── Have Prometheus? → Export go_goroutines; alert on sustained increase [src7]
+│
+├── Leak confirmed — what is blocked?
+│   ├── Channel send (ch &lt;-) → Receiver missing or returned early
+│   │   ├── Can buffer? → make(chan T, 1) [src1]
+│   │   └── Multiple senders? → errgroup or drain all channels [src4]
+│   ├── Channel receive (&lt;-ch) → Sender never sends or closes
+│   │   └── Ensure sender calls close(ch) [src1]
+│   ├── select{} without ctx.Done() → Add cancellation case [src7]
+│   ├── Mutex/lock → Check for deadlock (separate issue)
+│   └── I/O operation → Add timeout via context or Deadline [src7]
+│
+└── DEFAULT → Use pprof goroutine dump to identify blocked stack [src6]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Add goleak to your test suite</h3>
+        <p>The fastest way to catch goroutine leaks is in tests. [<a
+                href="https://github.com/uber-go/goleak">src2</a>, <a
+                href="https://pkg.go.dev/go.uber.org/goleak">src5</a>]</p>
+        <pre><code class="language-bash">go get -u go.uber.org/goleak</code></pre>
+        <pre><code class="language-go">package mypackage
+
+import (
+    "testing"
+    "go.uber.org/goleak"
+)
+
+func TestNoLeak(t *testing.T) {
+    defer goleak.VerifyNone(t)
+    // Your test code here.
+    // goleak checks for unexpected goroutines when the test exits.
+}</code></pre>
+        <p><strong>Verify</strong>: <code>go test -v ./...</code> — if a goroutine leaks, goleak prints the leaked
+            goroutine's stack trace and fails the test.</p>
+
+        <h3>2. Use goleak.VerifyTestMain for package-wide detection</h3>
+        <p>For parallel tests or package-wide coverage. [<a href="https://github.com/uber-go/goleak">src2</a>, <a
+                href="https://pkg.go.dev/go.uber.org/goleak">src5</a>]</p>
+        <pre><code class="language-go">package mypackage
+
+import (
+    "testing"
+    "go.uber.org/goleak"
+)
+
+func TestMain(m *testing.M) {
+    goleak.VerifyTestMain(m)
+}</code></pre>
+        <p><strong>Verify</strong>: <code>go test -v ./...</code> — all tests checked for leaks after the entire suite
+            finishes.</p>
+
+        <h3>3. Enable pprof for runtime detection</h3>
+        <p>For production or development environments. [<a
+                href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>, <a
+                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</p>
+        <pre><code class="language-go">import (
+    "net/http"
+    _ "net/http/pprof" // registers /debug/pprof/* handlers
+)
+
+func main() {
+    // Bind pprof to a separate internal port in production
+    go func() {
+        http.ListenAndServe("localhost:6060", nil)
+    }()
+    // ... rest of application
+}</code></pre>
+        <p><strong>Verify</strong>:
+            <code>curl http://localhost:6060/debug/pprof/goroutine?debug=2</code> — shows full stack traces. Look for
+            goroutines blocked on channel operations or select statements.</p>
+
+        <h3>4. Monitor runtime.NumGoroutine() over time</h3>
+        <p>For quick sanity checks and alerting. [<a
+                href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>, <a
+                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</p>
+        <pre><code class="language-go">import (
+    "log"
+    "runtime"
+    "time"
+)
+
+func monitorGoroutines(interval time.Duration) {
+    ticker := time.NewTicker(interval)
+    defer ticker.Stop()
+    baseline := runtime.NumGoroutine()
+    for range ticker.C {
+        current := runtime.NumGoroutine()
+        if current > baseline*2 {
+            log.Printf("WARNING: goroutine count %d exceeds 2x baseline %d",
+                current, baseline)
+        }
+    }
+}</code></pre>
+        <p><strong>Verify</strong>: Run under load, then idle. Goroutine count should return to baseline.</p>
+
+        <h3>5. Use synctest for built-in detection (Go 1.24+)</h3>
+        <p>No third-party dependencies needed. [<a
+                href="https://antonz.org/detecting-goroutine-leaks/">src3</a>]</p>
+        <pre><code class="language-go">package mypackage
+
+import (
+    "testing"
+    "testing/synctest"
+)
+
+func TestNoLeakSynctest(t *testing.T) {
+    synctest.Test(t, func(t *testing.T) {
+        // Test code with goroutines
+        synctest.Wait()
+    })
+    // Panics if blocked goroutines remain
+}</code></pre>
+        <p><strong>Verify</strong>: <code>GOEXPERIMENT=synctest go test -v ./...</code> (Go 1.24). In Go 1.25+, no
+            experiment flag needed.</p>
+
+        <h3>6. Analyze pprof goroutine dump to find the leak</h3>
+        <p>Identify the specific blocked stacks. [<a
+                href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>]</p>
+        <pre><code class="language-bash"># Full stack traces
+curl -s http://localhost:6060/debug/pprof/goroutine?debug=2
+
+# Grouped summary
+curl -s http://localhost:6060/debug/pprof/goroutine?debug=1
+
+# Interactive analysis
+go tool pprof http://localhost:6060/debug/pprof/goroutine
+# Commands: top10, list funcName, web</code></pre>
+        <p><strong>Verify</strong>: Blocked goroutines show stacks ending in <code>chan send</code>,
+            <code>chan receive</code>, <code>select</code>, or <code>sync.Mutex.Lock</code>.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Go: Fix forgotten sender with buffered channel</h3>
+        <pre><code class="language-go">// Input:  Function that spawns a goroutine to do work with a timeout
+// Output: Result or timeout error — no goroutine leak
+
+func fetchWithTimeout(ctx context.Context) (Result, error) {
+    ch := make(chan Result, 1) // buffered — sender never blocks
+
+    go func() {
+        time.Sleep(2 * time.Second)
+        ch &lt;- Result{Data: "success", Err: nil}
+        // Even if ctx cancelled, send completes into buffer
+    }()
+
+    select {
+    case res := &lt;-ch:
+        return res, res.Err
+    case &lt;-ctx.Done():
+        return Result{}, ctx.Err()
+    }
+}</code></pre>
+
+        <h3>Go: Fix early return with errgroup</h3>
+        <pre><code class="language-go">// Input:  Multiple concurrent tasks where failure cancels the rest
+// Output: First error encountered, all goroutines cleaned up
+
+func fetchAll(ctx context.Context, urls []string) error {
+    g, ctx := errgroup.WithContext(ctx)
+
+    for _, url := range urls {
+        g.Go(func() error {
+            req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+            if err != nil { return err }
+            resp, err := http.DefaultClient.Do(req)
+            if err != nil { return err } // cancels ctx for others
+            defer resp.Body.Close()
+            if resp.StatusCode != 200 {
+                return fmt.Errorf("%s returned %d", url, resp.StatusCode)
+            }
+            return nil
+        })
+    }
+    return g.Wait()
+}</code></pre>
+
+        <h3>Go: Worker pool preventing unbounded goroutines</h3>
+        <pre><code class="language-go">// Input:  Stream of jobs
+// Output: Processed results with bounded goroutine count
+
+func workerPool(ctx context.Context, jobs &lt;-chan int, n int) &lt;-chan string {
+    results := make(chan string, n)
+    var wg sync.WaitGroup
+
+    for i := 0; i &lt; n; i++ {
+        wg.Add(1)
+        go func(id int) {
+            defer wg.Done()
+            for {
+                select {
+                case job, ok := &lt;-jobs:
+                    if !ok { return } // channel closed
+                    results &lt;- fmt.Sprintf("worker %d: job %d", id, job)
+                case &lt;-ctx.Done():
+                    return // cancelled
+                }
+            }
+        }(i)
+    }
+
+    go func() { wg.Wait(); close(results) }()
+    return results
+}</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Unbuffered channel with early return</h3>
+        <pre><code class="language-go">// BAD — goroutine writing to ch2 leaks when ch1 returns error [src4]
+func fetchTwo() error {
+    ch1 := make(chan error)
+    ch2 := make(chan error)
+    go func() { ch1 &lt;- doWork1() }()
+    go func() { ch2 &lt;- doWork2() }()
+    if err := &lt;-ch1; err != nil {
+        return err // ch2 sender blocks forever — LEAKED
+    }
+    return &lt;-ch2
+}</code></pre>
+
+        <h3>Correct: Use errgroup to coordinate goroutines</h3>
+        <pre><code class="language-go">// GOOD — errgroup waits for all goroutines; no leak [src4]
+func fetchTwo() error {
+    var g errgroup.Group
+    g.Go(func() error { return doWork1() })
+    g.Go(func() error { return doWork2() })
+    return g.Wait() // waits for both; returns first error
+}</code></pre>
+
+        <h3>Wrong: Goroutine blocked after timeout</h3>
+        <pre><code class="language-go">// BAD — goroutine sending to ch blocks forever after timeout [src1]
+func fetchWithTimeout() (string, error) {
+    ch := make(chan string) // unbuffered!
+    go func() {
+        result := slowOperation()
+        ch &lt;- result // blocks forever if main timed out
+    }()
+    select {
+    case r := &lt;-ch:
+        return r, nil
+    case &lt;-time.After(1 * time.Second):
+        return "", fmt.Errorf("timeout") // goroutine LEAKED
+    }
+}</code></pre>
+
+        <h3>Correct: Buffer the channel</h3>
+        <pre><code class="language-go">// GOOD — buffered channel lets goroutine complete [src1]
+func fetchWithTimeout() (string, error) {
+    ch := make(chan string, 1) // buffered!
+    go func() {
+        result := slowOperation()
+        ch &lt;- result // always succeeds into buffer
+    }()
+    select {
+    case r := &lt;-ch:
+        return r, nil
+    case &lt;-time.After(1 * time.Second):
+        return "", fmt.Errorf("timeout") // goroutine exits cleanly
+    }
+}</code></pre>
+
+        <h3>Wrong: Range over channel with no close</h3>
+        <pre><code class="language-go">// BAD — consumer blocks forever because nobody closes ch [src3]
+func process(items []int) &lt;-chan int {
+    ch := make(chan int)
+    go func() {
+        for _, item := range items {
+            ch &lt;- item * 2
+        }
+        // BUG: forgot close(ch)
+    }()
+    return ch
+}
+// for result := range process(items) { ... } // blocks forever</code></pre>
+
+        <h3>Correct: Always close the channel when done</h3>
+        <pre><code class="language-go">// GOOD — close(ch) signals consumer to exit range loop [src3]
+func process(items []int) &lt;-chan int {
+    ch := make(chan int)
+    go func() {
+        defer close(ch) // always close when done sending
+        for _, item := range items {
+            ch &lt;- item * 2
+        }
+    }()
+    return ch
+}
+// for result := range process(items) { ... } // exits cleanly</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Forgetting to cancel derived contexts</strong>: Creating
+                <code>ctx, cancel := context.WithCancel(parentCtx)</code> and not calling <code>defer cancel()</code>
+                leaks the goroutine watching the context timer. Always defer cancel immediately. [<a
+                    href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</li>
+            <li><strong>Using <code>time.After</code> in a loop</strong>: Each call in a <code>select</code> inside a
+                loop creates a new timer goroutine that isn't collected until it fires. Use
+                <code>time.NewTimer</code>/<code>timer.Reset()</code> instead. [<a
+                    href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</li>
+            <li><strong>Ignoring goleak false positives</strong>: Some libraries (gRPC, database drivers) start
+                background goroutines. Use
+                <code>goleak.IgnoreTopFunction("google.golang.org/grpc...")</code> to whitelist known safe goroutines.
+                [<a href="https://github.com/uber-go/goleak">src2</a>, <a
+                    href="https://pkg.go.dev/go.uber.org/goleak">src5</a>]</li>
+            <li><strong><code>select{}</code> without a done channel</strong>: An empty <code>select{}</code> blocks the
+                goroutine forever. Always include <code>case &lt;-ctx.Done(): return</code>. [<a
+                    href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</li>
+            <li><strong>Not draining channels on cancellation</strong>: When a producer checks
+                <code>ctx.Done()</code> but the consumer returned, the producer's final send still blocks. Use
+                buffered channels or a drain goroutine. [<a
+                    href="https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html">src1</a>, <a
+                    href="https://rednafi.com/go/early-return-and-goroutine-leak/">src4</a>]</li>
+            <li><strong>Testing only the happy path</strong>: Goroutine leaks often occur in error and timeout paths.
+                Test these paths explicitly with <code>goleak.VerifyNone(t)</code>. [<a
+                    href="https://github.com/uber-go/goleak">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === pprof goroutine dump (full stack traces) ===
+curl -s http://localhost:6060/debug/pprof/goroutine?debug=2
+
+# === pprof goroutine summary (grouped by stack) ===
+curl -s http://localhost:6060/debug/pprof/goroutine?debug=1
+
+# === Interactive pprof analysis ===
+go tool pprof http://localhost:6060/debug/pprof/goroutine
+# Commands: top10, list funcName, web, traces
+
+# === Compare profiles (before/after load test) ===
+go tool pprof -base goroutine_before.pb.gz goroutine_after.pb.gz
+
+# === Run tests with goleak ===
+go test -v -run TestMyFunc ./...
+
+# === Check goroutine count in tests ===
+go test -v -count=1 ./... 2>&amp;1 | grep -i "goroutine\|leak"
+
+# === Go 1.24+ synctest ===
+GOEXPERIMENT=synctest go test -v ./...</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature / Tool</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>runtime.NumGoroutine()</code></td>
+                        <td>Go 1.0</td>
+                        <td>Built-in; includes runtime goroutines [<a
+                                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>net/http/pprof</code> goroutine profile</td>
+                        <td>Go 1.0</td>
+                        <td><code>debug=1</code> (summary), <code>debug=2</code> (full stacks) [<a
+                                href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>context.WithCancel</code> / <code>WithTimeout</code></td>
+                        <td>Go 1.7</td>
+                        <td>Standard cancellation pattern [<a
+                                href="https://hackernoon.com/how-to-find-and-fix-goroutine-leaks-in-go">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>golang.org/x/sync/errgroup</code></td>
+                        <td>Go 1.7 (module)</td>
+                        <td>Coordinated goroutine groups [<a
+                                href="https://rednafi.com/go/early-return-and-goroutine-leak/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>go.uber.org/goleak</code> v1.0</td>
+                        <td>2018</td>
+                        <td><code>VerifyNone</code>, <code>VerifyTestMain</code> [<a
+                                href="https://github.com/uber-go/goleak">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>goleak</code> v1.1.0 (<code>IgnoreCurrent</code>)</td>
+                        <td>2021</td>
+                        <td>Filter pre-existing goroutines [<a
+                                href="https://pkg.go.dev/go.uber.org/goleak">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>goleak</code> v1.3.0 (<code>IgnoreAnyFunction</code>)</td>
+                        <td>2024</td>
+                        <td>Match function anywhere in stack [<a
+                                href="https://pkg.go.dev/go.uber.org/goleak">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>testing/synctest</code></td>
+                        <td>Go 1.24 (2025-02)</td>
+                        <td>Built-in leak detection in tests [<a
+                                href="https://antonz.org/detecting-goroutine-leaks/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>runtime/pprof</code> goroutineleak profile</td>
+                        <td>Go 1.26 (experimental)</td>
+                        <td>GC-based leak detection [<a
+                                href="https://antonz.org/detecting-goroutine-leaks/">src3</a>, <a
+                                href="https://github.com/golang/go/issues/74609">src8</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Goroutine count grows during idle</td>
+                        <td>Memory grows but goroutine count stable</td>
+                        <td>Memory profiler (<code>pprof heap</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>Test occasionally hangs or times out</td>
+                        <td>Test fails deterministically with stack trace</td>
+                        <td>Standard debugging / <code>go vet</code></td>
+                    </tr>
+                    <tr>
+                        <td>pprof shows blocked goroutine stacks</td>
+                        <td>All goroutines are active (CPU-bound)</td>
+                        <td>CPU profiler (<code>pprof profile</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>Channel operations block indefinitely</td>
+                        <td>Mutex deadlock (all goroutines blocked)</td>
+                        <td>Deadlock detector (<code>go vet</code>, <code>-race</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>Need CI-integrated leak detection</td>
+                        <td>Production monitoring only</td>
+                        <td>Prometheus <code>go_goroutines</code> metric</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong><code>goleak</code> uses polling with exponential backoff</strong>: It checks up to 20 times
+                with delays from 1us to 100ms. Very fast goroutines that start and stop between checks may not be
+                caught. [<a href="https://github.com/uber-go/goleak">src2</a>]</li>
+            <li><strong><code>synctest</code> is still evolving</strong>: The API changed between Go 1.24 and 1.25. Pin
+                your Go version and check release notes before upgrading. [<a
+                    href="https://antonz.org/detecting-goroutine-leaks/">src3</a>]</li>
+            <li><strong>The experimental <code>goroutineleak</code> pprof profile (Go 1.26) uses GC marking</strong>: It
+                cannot detect goroutines blocked on reachable synchronization objects (e.g., a global channel). It only
+                catches goroutines blocked on unreachable objects. [<a
+                    href="https://antonz.org/detecting-goroutine-leaks/">src3</a>, <a
+                    href="https://github.com/golang/go/issues/74609">src8</a>]</li>
+            <li><strong><code>runtime.NumGoroutine()</code> baseline varies</strong>: HTTP servers, database connection
+                pools, and gRPC clients all maintain background goroutines. Establish a per-application baseline before
+                alerting. [<a href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>]</li>
+            <li><strong>Goroutine leaks compound</strong>: Each leaked goroutine holds its entire stack (2-8 KB initial,
+                can grow to 1 GB). In high-throughput services, 50,000 leaked goroutines can consume hundreds of MB of
+                RAM and thousands of file descriptors. [<a
+                    href="https://blog.min.io/debugging-go-routine-leaks/">src6</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/go-context-cancellation/2026"
+            data-relationship="related_to">Go Context Cancellation Patterns</a>
+        <a href="/software/debugging/go-race-condition/2026"
+            data-relationship="related_to">Go Race Condition Detection</a>
+        <a href="/software/debugging/go-deadlock/2026"
+            data-relationship="related_to">Go Deadlock Debugging</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

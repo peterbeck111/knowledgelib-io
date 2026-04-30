@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>API Gateway Patterns for ERP Integration: When to | knowledgelib.io</title>
+  <meta name="description" content="When to put an API gateway in front of ERP APIs vs direct API or iPaaS-only. Covers Kong, Apigee, AWS API Gateway, Azure APIM, SAP API Management with...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/api-gateway-patterns-erp/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="API Gateway Patterns for ERP Integration: When to | knowledgelib.io">
+  <meta property="og:description" content="When to put an API gateway in front of ERP APIs vs direct API or iPaaS-only. Covers Kong, Apigee, AWS API Gateway, Azure APIM, SAP API Management with per-ERP decision tree, rate limit coordination, circuit breaker config, and anti-patterns. 8 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/api-gateway-patterns-erp/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="API Gateway Patterns for ERP Integration: When to | knowledgelib.io">
+  <meta name="twitter:description" content="When to put an API gateway in front of ERP APIs vs direct API or iPaaS-only. Covers Kong, Apigee, AWS API Gateway, Azure APIM, SAP API Management with per-ERP decision tree, rate limit coordination, circuit breaker config, and anti-patterns. 8 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.85">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/api-gateway-patterns-erp">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="When should you put an API gateway in front of ERP APIs and when is it overkill?">
+  <meta name="ai:aliases" content="Do I need an API gateway for ERP integration?; API gateway vs iPaaS for ERP API management; Kong vs Apigee vs AWS API Gateway for ERP APIs; When is an API gateway overkill for ERP integrations?">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/api-gateway-patterns-erp/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-07">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Kong Gateway (3.x); Google Apigee (X); AWS API Gateway (v2); Azure API Management (2024-05-01); SAP API Management (IS 2024)">
+  <meta name="ai:inputs_needed" content="consumer_count,erp_systems,existing_middleware">
+  <meta name="ai:constraints" content="Gateway adds 5-50ms latency per request; Gateway rate limits stack with ERP-native rate limits; Gateway timeout must exceed ERP timeout; Single-gateway deployment is SPOF; Gateway cannot replace iPaaS transformation; SAP API Mgmt is OEM Apigee Edge; Two auth layers required">
+  <meta name="ai:skip_this_unit_if" content="Single iPaaS integration already handles concerns -> business/erp-integration/ipaas-platform-comparison/2026; Need ERP-specific API capabilities -> business/erp-integration/{system}-rest-api-capabilities/2026; Internal-only with no external consumers -> Direct ERP API calls">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "API Gateway Patterns for ERP Integration: When to Use and When It's Overkill",
+    "headline": "API Gateway Patterns for ERP Integration: When to Use and When It's Overkill",
+    "description": "Architecture pattern guide for placing API gateways in front of ERP APIs. Covers Kong, Apigee, AWS API Gateway, Azure APIM, SAP API Management with decision tree, rate limit coordination, circuit breaker configuration, anti-patterns, and per-ERP gateway considerations.",
+    "keywords": ["API gateway", "ERP integration", "Kong", "Apigee", "AWS API Gateway", "Azure APIM", "SAP API Management", "rate limiting", "circuit breaker", "iPaaS"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "API gateway product (Kong, Apigee, AWS, Azure APIM, or SAP API Management) and ERP system with REST/OData API",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "How to Choose the Right API Gateway for Your Platform",
+        "url": "https://www.moesif.com/blog/technical/api-gateways/How-to-Choose-The-Right-API-Gateway-For-Your-Platform-Comparison-Of-Kong-Tyk-Apigee-And-Alternatives/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "API Gateway: Why It Quietly Becomes the Single Point of Failure",
+        "url": "https://medium.com/@umutt.akbulut/api-gateway-why-it-quietly-becomes-the-single-point-of-failure-in-modern-enterprises-the-paradox-26332585b002"
+      },
+      {
+        "@type": "WebPage",
+        "name": "D365 F&O/Commerce Interfacing via Azure API Management: Best Practices",
+        "url": "https://patrickmouwen.com/d365-technical/my-best-practices-for-d365fo-d365commerce-interfacing-via-apim/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "iPaaS vs API Management: Why You Need Both",
+        "url": "https://www.workato.com/the-connector/api-management-integration-unified/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP API Management — Integration Suite",
+        "url": "https://help.sap.com/docs/integration-suite/sap-integration-suite/api-management-capability"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Changing Views on Integration — ESB to API Gateway, Serverless, and iPaaS",
+        "url": "https://technology.amis.nl/architecture/changing-views-on-integration-from-enterprise-service-bus-to-api-gateway-serverless-and-ipaas/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "API Rate Limiting at Scale: Patterns, Failures, and Control Strategies",
+        "url": "https://www.gravitee.io/blog/rate-limiting-apis-scale-patterns-strategies"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Throttle Requests to Your REST APIs for Better Throughput in API Gateway",
+        "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "API Gateway Patterns for ERP Integration: When to Use and When It's Overkill",
+    "description": "Architecture pattern reference for API gateways in ERP integration — gateway product comparison, per-ERP considerations, rate limit coordination, circuit breaker patterns, and decision tree",
+    "keywords": ["API gateway", "ERP integration", "Kong", "Apigee", "AWS API Gateway", "Azure APIM", "SAP API Management"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kong Inc."},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "SAP"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "API Gateway Patterns for ERP Integration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "When should you put an API gateway in front of ERP APIs and when is it overkill?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Put an API gateway in front of ERP APIs when you have 5+ consumers, need unified auth/rate limiting across multiple ERPs, or must expose ERP data to external parties. Skip it when your iPaaS already handles these concerns or you have a single point-to-point integration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need an API gateway for ERP integration?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Put an API gateway in front of ERP APIs when you have 5+ consumers, need unified auth/rate limiting across multiple ERPs, or must expose ERP data to external parties. Skip it when your iPaaS already handles these concerns or you have a single point-to-point integration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "API gateway vs iPaaS for ERP API management",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Put an API gateway in front of ERP APIs when you have 5+ consumers, need unified auth/rate limiting across multiple ERPs, or must expose ERP data to external parties. Skip it when your iPaaS already handles these concerns or you have a single point-to-point integration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kong vs Apigee vs AWS API Gateway for ERP APIs",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Put an API gateway in front of ERP APIs when you have 5+ consumers, need unified auth/rate limiting across multiple ERPs, or must expose ERP data to external parties. Skip it when your iPaaS already handles these concerns or you have a single point-to-point integration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When is an API gateway overkill for ERP integrations?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Put an API gateway in front of ERP APIs when you have 5+ consumers, need unified auth/rate limiting across multiple ERPs, or must expose ERP data to external parties. Skip it when your iPaaS already handles these concerns or you have a single point-to-point integration."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>API Gateway Patterns for ERP Integration: When to Use and When It's Overkill</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">When should you put an API gateway in front of ERP APIs and when is it overkill?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/api-gateway-patterns-erp/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-ERP (Architecture Pattern)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.85 out of 1">0.85</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> 2026-03-07</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Put an API gateway in front of ERP APIs when you have 5+ consumers, need unified auth/rate limiting across multiple ERPs, or must expose ERP data to external parties. Skip it when your iPaaS already handles these concerns or you have a single point-to-point integration.</li>
+    <li><strong>Key limit</strong>: Gateway adds 5-50ms latency per hop and introduces a single point of failure unless deployed in HA mode &mdash; for internal-only integrations this overhead often exceeds the benefit.</li>
+    <li><strong>Watch out for</strong>: Double rate limiting &mdash; gateway rate limits stack with ERP-native limits (e.g., Salesforce 100K/24h, D365 6,000/5min), and the stricter one silently wins, confusing debugging.</li>
+    <li><strong>Best for</strong>: Centralized API management when 6+ applications consume ERP APIs, external partner access to ERP data, or multi-ERP environments needing unified monitoring.</li>
+    <li><strong>Authentication</strong>: Gateway handles consumer-facing auth (API keys, OAuth client credentials) but must still authenticate to each ERP using ERP-native OAuth/TBA &mdash; two auth layers, not one.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers the architecture pattern of placing an API gateway between API consumers and ERP backend systems. It is system-agnostic and applies to any ERP (Salesforce, SAP S/4HANA, Oracle ERP Cloud, Dynamics 365, NetSuite, Workday) with any gateway product (Kong, Apigee, AWS API Gateway, Azure APIM, SAP API Management). The card does NOT cover iPaaS-specific API management features (MuleSoft API Manager, Boomi API Management) &mdash; those are covered in the iPaaS comparison card.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Gateway (Kong / Apigee / AWS / Azure APIM / SAP)</td><td>Proxy, auth, rate limiting, monitoring</td><td>REST, OData passthrough</td><td>Inbound from consumers</td></tr>
+      <tr><td>ERP System(s)</td><td>Backend data source / target</td><td>REST, OData, SOAP, Bulk</td><td>Outbound to consumers via gateway</td></tr>
+      <tr><td>iPaaS (optional)</td><td>Data transformation, orchestration</td><td>N/A</td><td>Between gateway and ERP</td></tr>
+      <tr><td>API Consumers</td><td>Applications, partners, agents</td><td>REST (via gateway)</td><td>Inbound</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>Comparison of what each gateway product offers for ERP API proxying.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Gateway</th><th scope="col">Deployment</th><th scope="col">Rate Limiting</th><th scope="col">Request Transform</th><th scope="col">Auth Methods</th><th scope="col">Circuit Breaker</th><th scope="col">Pricing Model</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Kong Gateway 3.x</td><td>Self-hosted, Konnect Cloud</td><td>Sliding window, fixed window</td><td>Headers, query, body (plugins)</td><td>OAuth 2.0, JWT, API key, mTLS</td><td>Yes (plugin)</td><td>OSS free; Enterprise ~$50K+/yr</td></tr>
+      <tr><td>Google Apigee X</td><td>Google Cloud managed</td><td>Spike arrest, quota, concurrent</td><td>AssignMessage, JavaScript, XSLT</td><td>OAuth 2.0, API key, SAML, JWT</td><td>Yes (target health)</td><td>Pay-per-use or committed</td></tr>
+      <tr><td>AWS API Gateway v2</td><td>AWS managed</td><td>10K RPS default, per-route</td><td>VTL mapping templates</td><td>IAM, Cognito, Lambda authorizer</td><td>No native</td><td>$1-3.50 per million requests</td></tr>
+      <tr><td>Azure API Management</td><td>Azure managed, self-hosted option</td><td>Per-key, per-IP, per-subscription</td><td>Liquid, XSLT policies</td><td>OAuth 2.0, certificates, managed identity</td><td>Yes (backend policy)</td><td>Dev free; Std ~$700/mo; Prem ~$2,800/mo</td></tr>
+      <tr><td>SAP API Management</td><td>SAP BTP managed (OEM Apigee Edge)</td><td>Spike arrest, quota</td><td>AssignMessage, JavaScript, KVM</td><td>OAuth 2.0, API key, principal propagation</td><td>Yes (target health)</td><td>Bundled with Integration Suite</td></tr>
+      <tr><td>MuleSoft API Manager</td><td>Anypoint Platform</td><td>Rate limit, spike control, SLA tiers</td><td>Full DataWeave (iPaaS-grade)</td><td>OAuth 2.0, client ID, JWT</td><td>Yes (built-in)</td><td>Bundled with Anypoint license</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Gateway vs ERP Rate Limits &mdash; The Coordination Problem</h3>
+  <p>Gateway rate limits and ERP-native rate limits operate independently. Configure gateway limits to be stricter than ERP limits, or consumers hit opaque ERP errors instead of clean gateway 429 responses.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Native Rate Limit</th><th scope="col">Window</th><th scope="col">Gateway Should Be Set To</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>100,000 API calls (Enterprise)</td><td>24h rolling</td><td>&lt; 90,000/24h (10% margin)</td></tr>
+      <tr><td>SAP S/4HANA Cloud</td><td>Fair-use throttling</td><td>Per-request</td><td>Monitor and adapt</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>Throttled at service level</td><td>Per-request</td><td>Start at 60 req/min</td></tr>
+      <tr><td>Dynamics 365 (Dataverse)</td><td>6,000 requests per 5 min per user</td><td>5 min rolling</td><td>&lt; 5,000/5min per user</td></tr>
+      <tr><td>NetSuite (SuiteTalk)</td><td>10 concurrent, governance units</td><td>Per-execution</td><td>&lt; 8 concurrent</td></tr>
+      <tr><td>Workday</td><td>No published hard limits</td><td>N/A</td><td>Start at 120 req/min</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Per-Request Limits at the Gateway</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Kong</th><th scope="col">Apigee</th><th scope="col">AWS API Gateway</th><th scope="col">Azure APIM</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max request body size</td><td>Configurable (default 8MB)</td><td>10 MB</td><td>10 MB</td><td>256 KB - 4 MB (by tier)</td></tr>
+      <tr><td>Request timeout</td><td>Configurable (default 60s)</td><td>55s (configurable)</td><td>29s (hard limit, REST API)</td><td>240s (configurable)</td></tr>
+      <tr><td>Max header size</td><td>64 KB</td><td>25 headers / 7 KB each</td><td>10,240 bytes</td><td>32 KB</td></tr>
+      <tr><td>WebSocket support</td><td>Yes (Enterprise)</td><td>No</td><td>Yes (HTTP API)</td><td>Yes (Premium tier)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <h3>Two-Layer Auth Model</h3>
+  <p>An API gateway creates a two-layer authentication architecture: the gateway authenticates the consumer; the gateway itself authenticates to the ERP.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Layer</th><th scope="col">Who Authenticates</th><th scope="col">Flow</th><th scope="col">Token Lifetime</th><th scope="col">Managed By</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Consumer-to-Gateway</td><td>API consumer (app, partner)</td><td>API key, OAuth 2.0 client credentials, JWT</td><td>Minutes to hours</td><td>Gateway admin</td></tr>
+      <tr><td>Gateway-to-ERP</td><td>Gateway service account</td><td>ERP-native OAuth 2.0, TBA, certificate</td><td>Session-based (hours)</td><td>ERP admin</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Per-ERP Gateway Authentication</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Recommended Auth</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>OAuth 2.0 JWT Bearer</td><td>Connected app digital certificate required; gateway must cache and refresh tokens</td></tr>
+      <tr><td>SAP S/4HANA</td><td>OAuth 2.0 client credentials via BTP</td><td>Principal propagation needed if ERP authorization is user-based</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>OAuth 2.0 client credentials</td><td>Token refresh endpoint differs from authorization endpoint</td></tr>
+      <tr><td>Dynamics 365</td><td>Azure AD client credentials (managed identity if Azure APIM)</td><td>Azure APIM + managed identity = zero-secret setup</td></tr>
+      <tr><td>NetSuite</td><td>Token-Based Authentication (TBA)</td><td>TBA tokens don't expire; Kong/Apigee need custom plugin for HMAC-SHA256</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Gateway API keys give a false sense of security &mdash; they protect the gateway, not the ERP. A leaked API key with cached ERP tokens = full ERP access. [<a href="https://www.moesif.com/blog/technical/api-gateways/How-to-Choose-The-Right-API-Gateway-For-Your-Platform-Comparison-Of-Kong-Tyk-Apigee-And-Alternatives/">src1</a>]</li>
+    <li>Azure APIM with managed identity to Dynamics 365 is the only zero-secret gateway-to-ERP pattern. All others require secret rotation. [<a href="https://patrickmouwen.com/d365-technical/my-best-practices-for-d365fo-d365commerce-interfacing-via-apim/">src3</a>]</li>
+    <li>SAP API Management uses principal propagation to forward user identity through the gateway to S/4HANA &mdash; third-party gateways cannot replicate this without custom SAML assertion injection. [<a href="https://help.sap.com/docs/integration-suite/sap-integration-suite/api-management-capability">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Gateway rate limits stack with ERP-native rate limits &mdash; set gateway limits below ERP limits or debugging becomes impossible</li>
+    <li>AWS API Gateway has a hard 29-second timeout on REST APIs &mdash; ERP bulk operations that take longer will be cut off (use HTTP API type or ALB)</li>
+    <li>Gateway cannot replace iPaaS transformation logic &mdash; it handles header/query rewriting but not multi-object data mapping between ERP schemas</li>
+    <li>SAP API Management is built on OEM Apigee Edge (not Apigee X) &mdash; policies may differ from current Apigee X documentation</li>
+    <li>Single-region gateway deployment means all ERP traffic routes through one region &mdash; adds latency for global ERP deployments</li>
+    <li>Gateway subscription keys + ERP OAuth = two auth layers, not one &mdash; consumers must manage both unless the gateway fully abstracts ERP auth</li>
+    <li>Gateway adds 5-50ms latency per request &mdash; for sub-100ms ERP API calls this can double response time</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START &mdash; Should I put an API gateway in front of my ERP APIs?
+&#x251C;&#x2500;&#x2500; How many applications/teams consume ERP APIs?
+&#x2502;   &#x251C;&#x2500;&#x2500; 1 (single integration)
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; Using iPaaS? YES &#x2192; SKIP GATEWAY (iPaaS handles concerns)
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; Using iPaaS? NO &#x2192; SKIP GATEWAY (direct API simpler)
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; External partner access? YES &#x2192; ADD GATEWAY (security boundary)
+&#x2502;   &#x251C;&#x2500;&#x2500; 2-5 consumers
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; All internal? YES &#x2192; MAYBE (unified monitoring/auth)
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; External partners? &#x2192; ADD GATEWAY (security + per-partner rate limiting)
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; iPaaS already managing? &#x2192; CHECK iPaaS API management first
+&#x2502;   &#x2514;&#x2500;&#x2500; 6+ consumers or external API program
+&#x2502;       &#x2514;&#x2500;&#x2500; ADD GATEWAY &mdash; this is the sweet spot
+&#x251C;&#x2500;&#x2500; Which ERP?
+&#x2502;   &#x251C;&#x2500;&#x2500; Salesforce &#x2192; Gateway for auth consolidation; rate limiting secondary
+&#x2502;   &#x251C;&#x2500;&#x2500; SAP S/4HANA on BTP &#x2192; USE SAP API MANAGEMENT (native, principal propagation)
+&#x2502;   &#x251C;&#x2500;&#x2500; SAP on-premise &#x2192; ADD GATEWAY (reverse proxy)
+&#x2502;   &#x251C;&#x2500;&#x2500; Dynamics 365 &#x2192; USE AZURE APIM (managed identity, zero-secret)
+&#x2502;   &#x251C;&#x2500;&#x2500; Oracle ERP Cloud &#x2192; ADD GATEWAY (no built-in API management)
+&#x2502;   &#x2514;&#x2500;&#x2500; NetSuite &#x2192; ADD GATEWAY only if &gt;5 consumers
+&#x2514;&#x2500;&#x2500; What does the gateway need to do?
+    &#x251C;&#x2500;&#x2500; Rate limiting only &#x2192; CHECK if ERP native limits sufficient
+    &#x251C;&#x2500;&#x2500; Auth consolidation &#x2192; ADD GATEWAY
+    &#x251C;&#x2500;&#x2500; Simple transform (header/query) &#x2192; Gateway OK
+    &#x251C;&#x2500;&#x2500; Complex transform (object mapping) &#x2192; USE iPaaS instead
+    &#x251C;&#x2500;&#x2500; Monitoring/analytics &#x2192; ADD GATEWAY
+    &#x251C;&#x2500;&#x2500; API versioning &#x2192; ADD GATEWAY
+    &#x2514;&#x2500;&#x2500; Caching &#x2192; ADD GATEWAY (reference data only)</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference: Gateway Product Decision Matrix</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Criterion</th><th scope="col">Kong</th><th scope="col">Apigee X</th><th scope="col">AWS API Gateway</th><th scope="col">Azure APIM</th><th scope="col">SAP API Mgmt</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Best for ERP</strong></td><td>Multi-cloud, on-prem SAP</td><td>Multi-ERP, analytics</td><td>AWS-native workloads</td><td>Dynamics 365</td><td>SAP S/4HANA on BTP</td></tr>
+      <tr><td><strong>Rate limiting</strong></td><td>Sliding/fixed, cluster-wide</td><td>Spike arrest + quota</td><td>Per-route, 10K RPS default</td><td>Per-key, per-IP, per-sub</td><td>Spike arrest + quota</td></tr>
+      <tr><td><strong>Circuit breaker</strong></td><td>Yes (plugin)</td><td>Via target health</td><td>No native</td><td>Via backend policy</td><td>Via target health</td></tr>
+      <tr><td><strong>Developer portal</strong></td><td>Yes (Enterprise)</td><td>Yes (built-in)</td><td>No</td><td>Yes (built-in)</td><td>Yes (API Business Hub)</td></tr>
+      <tr><td><strong>Multi-region</strong></td><td>Manual per region</td><td>Global (Anthos)</td><td>Per-region, via CloudFront</td><td>Premium tier</td><td>Single BTP region</td></tr>
+      <tr><td><strong>OSS option</strong></td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>ERP connectors</strong></td><td>No (generic proxy)</td><td>No (generic proxy)</td><td>No (generic proxy)</td><td>D365 via Logic Apps</td><td>SAP prebuilt adapters</td></tr>
+      <tr><td><strong>Typical cost</strong></td><td>OSS free; Ent $50K+/yr</td><td>$25K-$100K+/yr</td><td>$1-3.50/M requests</td><td>$700-$2,800/mo</td><td>Bundled w/ IS</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Assess whether a gateway is needed</h3>
+  <p>Audit your ERP API landscape: count consumers, map auth flows, check if your iPaaS already provides API management. [<a href="https://technology.amis.nl/architecture/changing-views-on-integration-from-enterprise-service-bus-to-api-gateway-serverless-and-ipaas/">src6</a>]</p>
+  <pre><code class="language-bash"># Audit checklist
+# 1. How many applications call ERP APIs? If &lt; 5 internal, gateway may be overkill
+# 2. Do external partners need ERP data? If yes, gateway is mandatory
+# 3. Does your iPaaS have API management? (MuleSoft API Manager, Boomi, SAP API Mgmt)
+# 4. Which ERP systems? D365 = Azure APIM; SAP BTP = SAP API Mgmt
+# 5. Timeout requirement? AWS API GW hard limit 29s (REST API type)</code></pre>
+  <p><strong>Verify</strong>: If &lt; 5 internal consumers and iPaaS handles auth/rate limiting &rarr; skip the gateway.</p>
+
+  <h3>2. Configure gateway-to-ERP authentication</h3>
+  <p>The gateway must authenticate to each ERP using ERP-native credentials. This is the most error-prone step. [<a href="https://patrickmouwen.com/d365-technical/my-best-practices-for-d365fo-d365commerce-interfacing-via-apim/">src3</a>]</p>
+  <pre><code class="language-yaml"># Kong declarative config &mdash; Salesforce OAuth 2.0 JWT Bearer
+services:
+  - name: salesforce-api
+    url: https://your-instance.salesforce.com
+    routes:
+      - name: salesforce-query
+        paths:
+          - /erp/salesforce
+    plugins:
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Authorization: Bearer $(cached_sf_token)"</code></pre>
+  <p><strong>Verify</strong>: <code>curl -H "apikey: KEY" https://gateway.example.com/erp/salesforce/services/data/v62.0/limits</code> &rarr; returns Salesforce API limits JSON.</p>
+
+  <h3>3. Set rate limits below ERP native limits</h3>
+  <p>Configure gateway rate limiting with 10-15% safety margin below ERP native limits. [<a href="https://www.gravitee.io/blog/rate-limiting-apis-scale-patterns-strategies">src7</a>]</p>
+  <pre><code class="language-yaml"># Kong rate-limiting plugin &mdash; Salesforce example
+plugins:
+  - name: rate-limiting
+    service: salesforce-api
+    config:
+      minute: 60
+      hour: 3500
+      day: 85000        # 85K vs Salesforce 100K = 15% margin
+      policy: cluster   # Cluster-wide counter, not per-node
+      hide_client_headers: false</code></pre>
+  <p><strong>Verify</strong>: Send 65 requests in 1 minute &rarr; requests 61-65 return HTTP 429 with <code>Retry-After</code> header.</p>
+
+  <h3>4. Configure circuit breaker for ERP backend</h3>
+  <p>ERP systems have maintenance windows. A circuit breaker at the gateway prevents cascading failures. [<a href="https://medium.com/@umutt.akbulut/api-gateway-why-it-quietly-becomes-the-single-point-of-failure-in-modern-enterprises-the-paradox-26332585b002">src2</a>]</p>
+  <pre><code class="language-yaml"># Kong upstream health checks (circuit breaker)
+upstreams:
+  - name: salesforce-upstream
+    healthchecks:
+      active:
+        healthy: { interval: 10, successes: 3 }
+        unhealthy: { interval: 5, tcp_failures: 3, timeouts: 3, http_failures: 3 }
+      passive:
+        unhealthy: { tcp_failures: 3, timeouts: 3, http_failures: 3 }</code></pre>
+  <p><strong>Verify</strong>: Simulate ERP downtime &rarr; gateway returns 503, stops sending requests, auto-recovers.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Rate limit coordination checker</h3>
+  <pre><code class="language-python"># Input:  ERP rate limit config, gateway rate limit config
+# Output: Validation &mdash; are gateway limits safely below ERP limits
+
+def validate_rate_limits(erp_limits: dict, gateway_limits: dict, margin: float = 0.15):
+    """Ensure gateway rate limits are below ERP native limits with safety margin."""
+    issues = []
+    for window, erp_limit in erp_limits.items():
+        gw_limit = gateway_limits.get(window)
+        if gw_limit is None:
+            issues.append(f"WARNING: No gateway {window} limit &mdash; ERP enforces at {erp_limit}")
+            continue
+        max_safe = int(erp_limit * (1 - margin))
+        if gw_limit &gt; max_safe:
+            issues.append(f"DANGER: Gateway {window} ({gw_limit}) exceeds safe ({max_safe})")
+        else:
+            issues.append(f"OK: Gateway {window} ({gw_limit}) safely below ERP ({erp_limit})")
+    return issues
+
+sf_limits = {"daily": 100_000, "hourly": 5_000}
+gw_limits = {"daily": 85_000, "hourly": 4_250}
+for line in validate_rate_limits(sf_limits, gw_limits):
+    print(line)</code></pre>
+
+  <h3>XML: Azure APIM policy for Dynamics 365</h3>
+  <pre><code class="language-xml">&lt;!-- Azure APIM inbound policy &mdash; Dynamics 365 Dataverse proxy --&gt;
+&lt;policies&gt;
+  &lt;inbound&gt;
+    &lt;rate-limit-by-key calls="5000" renewal-period="300"
+      counter-key="@(context.Subscription.Id)" /&gt;
+    &lt;authentication-managed-identity
+      resource="https://your-org.crm.dynamics.com" /&gt;
+    &lt;rewrite-uri template="/api/data/v9.2/{remaining}" /&gt;
+    &lt;set-header name="OData-MaxVersion" exists-action="override"&gt;
+      &lt;value&gt;4.0&lt;/value&gt;
+    &lt;/set-header&gt;
+  &lt;/inbound&gt;
+  &lt;backend&gt;
+    &lt;forward-request timeout="120" /&gt;
+  &lt;/backend&gt;
+  &lt;on-error&gt;
+    &lt;choose&gt;
+      &lt;when condition="@(context.Response.StatusCode == 429)"&gt;
+        &lt;return-response&gt;
+          &lt;set-status code="429" reason="Rate limit exceeded" /&gt;
+          &lt;set-header name="Retry-After" exists-action="override"&gt;
+            &lt;value&gt;60&lt;/value&gt;
+          &lt;/set-header&gt;
+        &lt;/return-response&gt;
+      &lt;/when&gt;
+    &lt;/choose&gt;
+  &lt;/on-error&gt;
+&lt;/policies&gt;</code></pre>
+
+  <h3>cURL: Test gateway-proxied ERP API</h3>
+  <pre><code class="language-bash"># Test Salesforce query through Kong gateway
+curl -s -w "\nHTTP Status: %{http_code}\nTime: %{time_total}s\n" \
+  -H "apikey: YOUR_GATEWAY_KEY" \
+  "https://gateway.example.com/erp/salesforce/services/data/v62.0/query?q=SELECT+Id,Name+FROM+Account+LIMIT+5"
+
+# Check rate limit headers
+curl -s -D - -o /dev/null \
+  -H "apikey: YOUR_GATEWAY_KEY" \
+  "https://gateway.example.com/erp/salesforce/limits" \
+  | grep -i "x-ratelimit"</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Gateway Responsibility vs iPaaS Responsibility</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Concern</th><th scope="col">Gateway Can Handle</th><th scope="col">iPaaS Should Handle</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Header injection (auth tokens)</td><td>Yes</td><td>Yes</td><td>Gateway is simpler</td></tr>
+      <tr><td>Query parameter rewriting</td><td>Yes</td><td>Yes</td><td>Gateway is simpler</td></tr>
+      <tr><td>URL path transformation</td><td>Yes</td><td>Yes</td><td>Gateway is simpler</td></tr>
+      <tr><td>JSON field renaming (flat)</td><td>Possible (with plugins)</td><td>Yes</td><td>Gateway is fragile</td></tr>
+      <tr><td>Object nesting/flattening</td><td>No</td><td>Yes</td><td>Beyond gateway scope</td></tr>
+      <tr><td>Multi-object JOIN across ERPs</td><td>No</td><td>Yes</td><td>iPaaS core capability</td></tr>
+      <tr><td>Error response normalization</td><td>Yes</td><td>Yes</td><td>Gateway is ideal</td></tr>
+      <tr><td>Response caching</td><td>Yes</td><td>Possible</td><td>Gateway is ideal</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Gateway caching of ERP responses can serve stale data &mdash; set <code>Cache-Control: max-age</code> based on data volatility (product catalog: 3600s, order status: 0s). [<a href="https://www.moesif.com/blog/technical/api-gateways/How-to-Choose-The-Right-API-Gateway-For-Your-Platform-Comparison-Of-Kong-Tyk-Apigee-And-Alternatives/">src1</a>]</li>
+    <li>Gateway body size limits (10MB on Apigee/AWS) may be smaller than ERP bulk API limits (150MB Salesforce Bulk API) &mdash; bulk operations must bypass the gateway. [<a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html">src8</a>]</li>
+    <li>SAP OData <code>$batch</code> requests are multipart MIME &mdash; some gateways parse these incorrectly, corrupting changeset boundaries. [<a href="https://help.sap.com/docs/integration-suite/sap-integration-suite/api-management-capability">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Source</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>429 (gateway)</td><td>Gateway</td><td>Consumer exceeded gateway rate limit</td><td>Too many requests</td><td>Wait for Retry-After header</td></tr>
+      <tr><td>429 (ERP)</td><td>ERP (passed through)</td><td>Exceeded ERP native limit</td><td>Gateway limit set too high</td><td>Reduce gateway rate limit</td></tr>
+      <tr><td>502</td><td>Gateway</td><td>ERP returned invalid response</td><td>ERP downtime, TLS mismatch</td><td>Check ERP health, verify TLS cert</td></tr>
+      <tr><td>503</td><td>Gateway</td><td>Circuit breaker open</td><td>Repeated ERP failures</td><td>Wait for half-open; check ERP</td></tr>
+      <tr><td>504</td><td>Gateway</td><td>ERP response exceeded timeout</td><td>ERP slow or maintenance</td><td>Increase gateway timeout</td></tr>
+      <tr><td>401 (gateway)</td><td>Gateway</td><td>Invalid consumer API key</td><td>Credential issue</td><td>Rotate consumer key</td></tr>
+      <tr><td>401 (ERP via 502)</td><td>ERP</td><td>Gateway ERP token expired</td><td>Token cache stale</td><td>Refresh ERP OAuth token</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Gateway timeout &lt; ERP timeout = orphaned transactions</strong>: Gateway times out at 30s, ERP completes write at 45s. Consumer sees 504 but ERP has the data. Fix: <code>Set gateway timeout = ERP timeout + 5s; use idempotency keys for writes</code>. [<a href="https://medium.com/@umutt.akbulut/api-gateway-why-it-quietly-becomes-the-single-point-of-failure-in-modern-enterprises-the-paradox-26332585b002">src2</a>]</li>
+    <li><strong>Circuit breaker false positive on ERP maintenance</strong>: Scheduled maintenance triggers circuit breaker that stays open. Fix: <code>Always configure active health checks alongside passive; set recovery interval to match maintenance window</code>. [<a href="https://medium.com/@umutt.akbulut/api-gateway-why-it-quietly-becomes-the-single-point-of-failure-in-modern-enterprises-the-paradox-26332585b002">src2</a>]</li>
+    <li><strong>TLS certificate rotation breaks gateway-to-ERP</strong>: ERP cert rotated, gateway trusts old cert. Fix: <code>Use CA-bundle trust, not certificate pinning; 30-day cert expiry alerts</code>. [<a href="https://patrickmouwen.com/d365-technical/my-best-practices-for-d365fo-d365commerce-interfacing-via-apim/">src3</a>]</li>
+    <li><strong>Stale cached tokens after ERP password reset</strong>: Admin resets integration user password; cached OAuth token still used. Fix: <code>Implement token refresh on 401; don't cache tokens &gt; 1 hour</code>. [<a href="https://patrickmouwen.com/d365-technical/my-best-practices-for-d365fo-d365commerce-interfacing-via-apim/">src3</a>]</li>
+    <li><strong>Session affinity conflicts with ERP load balancing</strong>: Gateway pins sessions to one ERP node. Fix: <code>Disable session affinity unless ERP requires it (e.g., SAP stateful RFC)</code>. [<a href="https://help.sap.com/docs/integration-suite/sap-integration-suite/api-management-capability">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using the API gateway as an integration platform</h3>
+  <pre><code class="language-yaml"># BAD &mdash; treating the gateway like an ESB/iPaaS
+# 200 lines of Lua/JavaScript doing: query SF, query SAP, join data,
+# transform schema, apply business rules
+# Result: unmaintainable, untestable, no error recovery</code></pre>
+
+  <h3>Correct: Gateway does routing and security; iPaaS does transformation</h3>
+  <pre><code class="language-yaml"># GOOD &mdash; gateway handles proxy, auth, rate limiting only
+services:
+  - name: order-integration-api
+    url: https://mulesoft.example.com/api/v1/orders  # Points to iPaaS
+    plugins:
+      - name: rate-limiting
+        config: { minute: 60 }
+      - name: key-auth
+        config: { key_names: ["apikey"] }</code></pre>
+
+  <h3>Wrong: Double rate limiting without coordination</h3>
+  <pre><code class="language-yaml"># BAD &mdash; gateway AND iPaaS AND ERP all enforce separate rate limits
+# Consumer gets inconsistent 429 errors from different layers
+# with different Retry-After values</code></pre>
+
+  <h3>Correct: Single rate limiting layer with ERP-aware limits</h3>
+  <pre><code class="language-yaml"># GOOD &mdash; gateway is the ONLY consumer-facing rate limiter
+# iPaaS rate limiting disabled; gateway limits set 15% below ERP
+plugins:
+  - name: rate-limiting
+    config:
+      day: 85000     # 15% below Salesforce 100K/24h
+      policy: cluster
+      hide_client_headers: false</code></pre>
+
+  <h3>Wrong: Gateway as single point of failure</h3>
+  <pre><code class="language-yaml"># BAD &mdash; single gateway instance, no failover
+# If this node dies, ALL ERP traffic stops</code></pre>
+
+  <h3>Correct: HA gateway with graceful degradation</h3>
+  <pre><code class="language-yaml"># GOOD &mdash; multi-node cluster behind LB with direct-to-ERP fallback
+upstreams:
+  - name: erp-backend
+    targets:
+      - target: erp-node-1:443
+      - target: erp-node-2:443
+    healthchecks:
+      active:
+        healthy: { interval: 5, successes: 2 }
+        unhealthy: { interval: 2, tcp_failures: 2 }</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Treating gateway timeout as ERP timeout</strong>: AWS 29s hard limit is independent of ERP operation. Bulk import at 60s succeeds on ERP but consumer gets 504. Fix: <code>Use async patterns (202 Accepted + polling) for long-running operations</code>. [<a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html">src8</a>]</li>
+    <li><strong>Adding gateway to a single iPaaS integration</strong>: If MuleSoft/Boomi handles auth, rate limiting, monitoring already, gateway doubles cost and adds latency for no benefit. Fix: <code>Use iPaaS built-in API management first</code>. [<a href="https://www.workato.com/the-connector/api-management-integration-unified/">src4</a>]</li>
+    <li><strong>Caching ERP write responses</strong>: Gateway caches POST response; subsequent identical requests get cached "success" without reaching ERP. Fix: <code>NEVER cache POST/PUT/PATCH/DELETE; only cache GET for reference data</code>. [<a href="https://www.moesif.com/blog/technical/api-gateways/How-to-Choose-The-Right-API-Gateway-For-Your-Platform-Comparison-Of-Kong-Tyk-Apigee-And-Alternatives/">src1</a>]</li>
+    <li><strong>Gateway logs contain ERP credentials</strong>: Request logging captures OAuth tokens in clear text. Fix: <code>Redact Authorization headers and token fields; use log masking policies</code>. [<a href="https://www.gravitee.io/blog/rate-limiting-apis-scale-patterns-strategies">src7</a>]</li>
+    <li><strong>Mixing SAP API Management with third-party gateway</strong>: Two competing API management layers with conflicting policies. Fix: <code>Pick one: SAP for SAP-centric landscapes, or third-party for multi-ERP</code>. [<a href="https://help.sap.com/docs/integration-suite/sap-integration-suite/api-management-capability">src5</a>]</li>
+    <li><strong>Not handling ERP pagination through gateway</strong>: Gateway rewrites URLs, breaking Salesforce nextRecordsUrl or D365 @odata.nextLink. Fix: <code>Preserve ERP pagination URLs in response rewriting rules</code>. [<a href="https://patrickmouwen.com/d365-technical/my-best-practices-for-d365fo-d365commerce-interfacing-via-apim/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check gateway health and upstream ERP status (Kong)
+curl -s http://localhost:8001/upstreams/salesforce-upstream/health | jq '.data[].health'
+
+# Check current rate limit counters (Kong)
+curl -s http://localhost:8001/plugins | jq '.data[] | select(.name=="rate-limiting") | .config'
+
+# Test gateway-to-ERP latency (difference = gateway overhead, should be &lt; 50ms)
+time curl -s -o /dev/null https://your-instance.salesforce.com/services/data/v62.0/limits
+time curl -s -o /dev/null -H "apikey: KEY" https://gateway.example.com/erp/salesforce/limits
+
+# Check Azure APIM metrics for D365 backend
+az apim api show --resource-group RG --service-name APIM --api-id dynamics365
+
+# Verify gateway TLS cert not expired
+echo | openssl s_client -connect gateway.example.com:443 2>/dev/null | openssl x509 -noout -dates</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Gateway</th><th scope="col">Latest Version</th><th scope="col">Release</th><th scope="col">Notable Changes</th><th scope="col">ERP Impact</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Kong 3.9</td><td>2025-12</td><td>Current</td><td>Improved WebSocket, new rate-limiting algo</td><td>Better event-driven ERP integrations</td></tr>
+      <tr><td>Apigee X</td><td>2025-Q4</td><td>Current</td><td>Advanced security analytics</td><td>Better ERP API abuse visibility</td></tr>
+      <tr><td>AWS API Gateway v2</td><td>2024-11</td><td>Current</td><td>HTTP API matured (30min timeout)</td><td>Higher timeout than REST API (29s)</td></tr>
+      <tr><td>Azure APIM</td><td>2024-05-01</td><td>Current</td><td>Self-hosted v2, managed identity improvements</td><td>Better D365 zero-secret auth</td></tr>
+      <tr><td>SAP API Mgmt</td><td>IS 2024</td><td>Current</td><td>Updated Apigee Edge, improved adapters</td><td>Tighter BTP + principal propagation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use API Gateway When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>6+ apps consume ERP APIs, need unified auth/monitoring</td><td>Single iPaaS integration handles auth, rate limiting, monitoring</td><td>iPaaS built-in API management</td></tr>
+      <tr><td>External partners need ERP data access</td><td>All consumers are internal with direct network</td><td>Direct API calls with retry logic</td></tr>
+      <tr><td>Multiple ERPs, need unified consumer experience</td><td>Single ERP with well-documented native API</td><td>ERP native API directly</td></tr>
+      <tr><td>Need API versioning (proxy old paths to new versions)</td><td>ERP API is stable with backward compatibility</td><td>ERP native versioning</td></tr>
+      <tr><td>Azure APIM + Dynamics 365 (managed identity, natural fit)</td><td>Adding Azure APIM just for non-Azure ERP</td><td>Kong or Apigee (cloud-agnostic)</td></tr>
+      <tr><td>SAP BTP landscape needing S/4HANA API management</td><td>Non-SAP landscape with no BTP investment</td><td>Third-party gateway</td></tr>
+      <tr><td>Need circuit breaker / retry at the edge</td><td>iPaaS already has circuit breaker and retry</td><td>iPaaS error handling</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison: API Gateway vs iPaaS API Management</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Standalone Gateway (Kong/Apigee/AWS)</th><th scope="col">iPaaS API Mgmt (MuleSoft/Boomi/SAP IS)</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Rate limiting</td><td>Full (sliding window, quota, spike arrest)</td><td>Basic to full (varies by platform)</td><td>Standalone more configurable</td></tr>
+      <tr><td>Auth consolidation</td><td>Full (OAuth, JWT, API key, mTLS)</td><td>Full</td><td>Feature parity</td></tr>
+      <tr><td>Request transformation</td><td>Simple (headers, query, URL rewrite)</td><td>Full (complex object mapping)</td><td>iPaaS wins for complex transforms</td></tr>
+      <tr><td>Response caching</td><td>Full</td><td>Limited</td><td>Gateway purpose-built</td></tr>
+      <tr><td>Circuit breaker</td><td>Full</td><td>Varies</td><td>Gateway more configurable</td></tr>
+      <tr><td>Developer portal</td><td>Full</td><td>Varies</td><td>Standalone gateways better</td></tr>
+      <tr><td>API analytics</td><td>Full</td><td>Basic to full</td><td>Apigee excels</td></tr>
+      <tr><td>Multi-ERP orchestration</td><td>No (single hop proxy)</td><td>Full (multi-step flows)</td><td>iPaaS core capability</td></tr>
+      <tr><td>Error recovery</td><td>Retry + circuit breaker</td><td>Full (DLQ, compensation)</td><td>iPaaS wins complex recovery</td></tr>
+      <tr><td>Deployment flexibility</td><td>Self-hosted, cloud, hybrid</td><td>Cloud-first</td><td>Kong wins on-premise</td></tr>
+      <tr><td>Cost (mid-scale)</td><td>$0-$50K/yr</td><td>$50K-$200K+/yr</td><td>Gateway cheaper standalone</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Gateway products evolve rapidly &mdash; Kong, Apigee, and Azure APIM release quarterly. Verify rate limit and transformation capabilities against current documentation.</li>
+    <li>Cost comparisons are approximate and depend heavily on request volume, deployment model, and support tier. Request vendor quotes for your specific throughput.</li>
+    <li>SAP API Management is built on OEM Apigee Edge (not Apigee X) &mdash; Apigee Edge documentation may not match SAP's implementation. Always reference SAP-specific docs.</li>
+    <li>AWS API Gateway REST API has a hard 29-second timeout that cannot be increased. Use HTTP API type (30-minute timeout) or ALB for synchronous bulk ERP operations.</li>
+    <li>The decision to add a gateway should be driven by consumer count and external access requirements, not by a checklist of gateway features. Many organizations add gateways for capabilities their iPaaS already provides.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/erp-rate-limits-comparison/2026" data-relationship="depends_on">ERP Rate Limits Comparison</a>
+    <a href="/business/erp-integration/ipaas-platform-comparison/2026" data-relationship="related_to">iPaaS Platform Comparison</a>
+    <a href="/business/erp-integration/erp-authentication-comparison/2026" data-relationship="related_to">ERP Authentication Comparison</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Error Handling &amp; Dead Letter Queues</a>
+    <a href="/business/erp-integration/sap-btp-integration-vs-standalone-ipaas/2026" data-relationship="alternative_to">SAP BTP Integration vs Standalone iPaaS</a>
+    <a href="/business/erp-integration/mulesoft-anypoint-capabilities/2026" data-relationship="often_confused_with">MuleSoft Anypoint Capabilities</a>
+    <a href="/business/erp-integration/batch-vs-realtime-integration/2026" data-relationship="related_to">Batch vs Real-time Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

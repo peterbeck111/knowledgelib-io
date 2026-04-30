@@ -1,0 +1,30 @@
+START
++-- Which database engine?
+|   +-- PostgreSQL
+|   |   +-- Version >= 15 and need DELETE capability?
+|   |   |   +-- YES --> Use MERGE (SQL:2003 standard syntax)
+|   |   |   +-- NO --> Use INSERT ... ON CONFLICT DO UPDATE
+|   |   +-- Need to handle multiple conflict targets?
+|   |       +-- YES --> Use ON CONFLICT ON CONSTRAINT constraint_name
+|   |       +-- NO --> Use ON CONFLICT (column_list) DO UPDATE
+|   +-- MySQL / MariaDB
+|   |   +-- Version >= 8.0.19?
+|   |   |   +-- YES --> Use INSERT ... ON DUPLICATE KEY UPDATE with AS alias
+|   |   |   +-- NO --> Use INSERT ... ON DUPLICATE KEY UPDATE with VALUES(col)
+|   |   +-- Table has multiple unique indexes?
+|   |       +-- YES --> CAUTION: all unique indexes are checked; consider restructuring
+|   |       +-- NO --> Safe to use ON DUPLICATE KEY UPDATE
+|   +-- SQL Server
+|   |   +-- Simple single-row upsert?
+|   |   |   +-- YES --> Consider IF EXISTS pattern with UPDLOCK, SERIALIZABLE hints
+|   |   |   +-- NO (bulk/multi-row) --> Use MERGE ... WHEN MATCHED/NOT MATCHED
+|   |   +-- Target table has indexed views?
+|   |       +-- YES --> DO NOT use MERGE -- use IF EXISTS pattern instead
+|   |       +-- NO --> MERGE is safe (avoid DELETE clause if possible)
+|   +-- SQLite
+|   |   +-- Version >= 3.24?
+|   |   |   +-- YES --> Use INSERT ... ON CONFLICT DO UPDATE (same as PostgreSQL)
+|   |   |   +-- NO --> Use INSERT OR REPLACE (loses non-specified column values)
+|   +-- Oracle
+|       +-- Use MERGE ... WHEN MATCHED/NOT MATCHED THEN
++-- END

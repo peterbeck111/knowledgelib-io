@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Insecure Deserialization Prevention Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete insecure deserialization prevention guide covering Java ObjectInputStream, Python pickle, PHP unserialize, .NET BinaryFormatter, Ruby Marshal,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/insecure-deserialization/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Insecure Deserialization Prevention Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete insecure deserialization prevention guide covering Java ObjectInputStream, Python pickle, PHP unserialize, .NET BinaryFormatter, Ruby Marshal, and Node.js. Safe alternatives, code examples, and anti-patterns for 6 languages. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/insecure-deserialization/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Insecure Deserialization Prevention Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete insecure deserialization prevention guide covering Java ObjectInputStream, Python pickle, PHP unserialize, .NET BinaryFormatter, Ruby Marshal, and Node.js. Safe alternatives, code examples, and anti-patterns for 6 languages. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/Insecure Deserialization">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I prevent insecure deserialization vulnerabilities?">
+  <meta name="ai:aliases" content="insecure deserialization prevention; CWE-502 deserialization of untrusted data; prevent deserialization attacks; Java ObjectInputStream vulnerability fix; Python pickle security; PHP unserialize object injection; .NET BinaryFormatter alternative; Ruby Marshal.load security">
+  <meta name="ai:raw" content="/api/v1/units/software/security/insecure-deserialization/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="language,data_source">
+  <meta name="ai:constraints" content="NEVER deserialize untrusted data using native serialization formats; Allowlist filtering is defense-in-depth only; NEVER use eval() or node-serialize on user input; Signing/HMAC does NOT prevent exploitation if key is compromised; Validation AFTER deserialization is too late">
+  <meta name="ai:skip_this_unit_if" content="Need XSS prevention -> software/security/xss-prevention/2026; Need SQL injection prevention -> software/security/sql-injection-prevention/2026; Need general input validation -> software/patterns/input-validation/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Insecure Deserialization Prevention Guide",
+    "headline": "Insecure Deserialization Prevention Guide",
+    "description": "Complete guide to preventing insecure deserialization vulnerabilities (CWE-502) across Java, Python, PHP, .NET, Ruby, and Node.js with safe alternatives, code examples, anti-patterns, and gadget chain defenses.",
+    "keywords": ["insecure deserialization", "CWE-502", "deserialization vulnerability", "Java ObjectInputStream", "Python pickle", "PHP unserialize", "BinaryFormatter", "Ruby Marshal", "ysoserial", "OWASP A08"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Jackson 2.15+, System.Text.Json, PyYAML 6.0+, XStream 1.4.17+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Deserialization Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-502: Deserialization of Untrusted Data",
+        "url": "https://cwe.mitre.org/data/definitions/502.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Insecure Deserialization",
+        "url": "https://portswigger.net/web-security/deserialization"
+      },
+      {
+        "@type": "WebPage",
+        "name": "ysoserial: Proof-of-concept tool for Java deserialization exploits",
+        "url": "https://github.com/frohoff/ysoserial"
+      },
+      {
+        "@type": "WebPage",
+        "name": "BinaryFormatter security guide",
+        "url": "https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Preventing insecure deserialization in Node.js",
+        "url": "https://snyk.io/blog/preventing-insecure-deserialization-node-js/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PHP Object Injection",
+        "url": "https://owasp.org/www-community/vulnerabilities/PHP_Object_Injection"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Insecure Deserialization Prevention Guide",
+    "description": "Structured knowledge unit on preventing insecure deserialization vulnerabilities (CWE-502) with language-specific threat/fix mappings for Java, Python, PHP, .NET, Ruby, and Node.js.",
+    "keywords": ["insecure deserialization", "CWE-502", "deserialization vulnerability", "Java ObjectInputStream", "Python pickle", "PHP unserialize", "BinaryFormatter", "Ruby Marshal", "ysoserial"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "PortSwigger"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Snyk"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "Insecure Deserialization Prevention" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I prevent insecure deserialization vulnerabilities?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "insecure deserialization prevention",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CWE-502 deserialization of untrusted data",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "prevent deserialization attacks",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Java ObjectInputStream vulnerability fix",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Python pickle security",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Insecure Deserialization Prevention Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I prevent insecure deserialization vulnerabilities?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/insecure-deserialization/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Never deserialize untrusted data using native serialization formats -- use data-only formats like JSON instead, and apply allowlist class filtering as defense-in-depth when native deserialization is unavoidable.</li>
+    <li><strong>Key tool/command</strong>: Replace <code>ObjectInputStream</code> (Java), <code>pickle.loads()</code> (Python), <code>unserialize()</code> (PHP), <code>BinaryFormatter</code> (.NET), <code>Marshal.load</code> (Ruby) with JSON-based alternatives.</li>
+    <li><strong>Watch out for</strong>: Validating data after deserialization is too late -- malicious code executes during the deserialization process itself, not after.</li>
+    <li><strong>Works with</strong>: All languages and frameworks. CWE-502 / OWASP A08:2021 (Software and Data Integrity Failures).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER deserialize data from untrusted sources using native serialization formats (Java ObjectInputStream, Python pickle, PHP unserialize, .NET BinaryFormatter, Ruby Marshal)</li>
+    <li>Allowlist-based class filtering is defense-in-depth only -- new gadget chains are discovered regularly and bypass denylists</li>
+    <li>NEVER use eval(), new Function(), or node-serialize on user-supplied input in any language</li>
+    <li>Signing/HMAC on serialized data prevents tampering but does NOT prevent exploitation if the signing key is compromised</li>
+    <li>Input validation AFTER deserialization is too late -- the attack executes during deserialization, not after</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Deserialization Threat/Fix Checklist by Language</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Language</th><th scope="col">Vulnerable API</th><th scope="col">Risk</th><th scope="col">Safe Alternative</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Java</td><td><code>ObjectInputStream.readObject()</code></td><td>Critical -- RCE via gadget chains (ysoserial)</td><td>JSON (Jackson/Gson), XML (JAXB), Protobuf</td><td>Override resolveClass() for allowlisting if unavoidable</td></tr>
+      <tr><td>2</td><td>Java</td><td><code>XMLDecoder</code> with user input</td><td>Critical -- arbitrary method invocation</td><td>JAXB, StAX, DOM parsers</td><td>Never use XMLDecoder with untrusted data</td></tr>
+      <tr><td>3</td><td>Java</td><td><code>XStream</code> &lt; 1.4.17</td><td>Critical -- RCE via type manipulation</td><td>XStream &gt;= 1.4.17 with allowlist, or Jackson</td><td>Set XStream.allowTypes() explicitly</td></tr>
+      <tr><td>4</td><td>Python</td><td><code>pickle.loads()</code> / <code>pickle.load()</code></td><td>Critical -- arbitrary code via __reduce__</td><td><code>json.loads()</code>, msgpack, protobuf</td><td>No safe way to use pickle with untrusted data</td></tr>
+      <tr><td>5</td><td>Python</td><td><code>yaml.load()</code> (PyYAML)</td><td>Critical -- code execution via !!python/object</td><td><code>yaml.safe_load()</code></td><td>PyYAML &gt;= 6.0 defaults to safe_load</td></tr>
+      <tr><td>6</td><td>PHP</td><td><code>unserialize()</code></td><td>Critical -- object injection via magic methods</td><td><code>json_decode()</code> / <code>json_encode()</code></td><td>POP chains exploit __wakeup, __destruct</td></tr>
+      <tr><td>7</td><td>.NET</td><td><code>BinaryFormatter.Deserialize()</code></td><td>Critical -- RCE, cannot be secured</td><td><code>System.Text.Json</code>, <code>DataContractSerializer</code></td><td>Removed entirely in .NET 9</td></tr>
+      <tr><td>8</td><td>.NET</td><td><code>TypeNameHandling != None</code> (JSON.Net)</td><td>High -- type confusion RCE</td><td>Set <code>TypeNameHandling.None</code></td><td>Default is None; never change for untrusted data</td></tr>
+      <tr><td>9</td><td>Ruby</td><td><code>Marshal.load()</code></td><td>Critical -- arbitrary object instantiation</td><td><code>JSON.parse()</code>, <code>Oj.safe_load</code></td><td>No safe configuration exists</td></tr>
+      <tr><td>10</td><td>Node.js</td><td><code>node-serialize</code> / <code>serialize-to-js</code></td><td>Critical -- RCE via IIFE injection</td><td><code>JSON.parse()</code> / <code>JSON.stringify()</code></td><td>Avoid any library that serializes functions</td></tr>
+      <tr><td>11</td><td>Any</td><td><code>eval()</code> on serialized strings</td><td>Critical -- direct code execution</td><td>Language-specific safe parsers</td><td>Never eval user input in any context</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Does your application deserialize data from untrusted sources?
+&#9500;&#9472;&#9472; NO &#8594; No insecure deserialization risk (verify trust boundaries)
+&#9500;&#9472;&#9472; YES
+    &#9500;&#9472;&#9472; Can you switch to a data-only format (JSON, XML, Protobuf)?
+    &#9474;   &#9500;&#9472;&#9472; YES &#8594; Replace native serialization with JSON/Protobuf (BEST option)
+    &#9474;   &#9492;&#9472;&#9472; NO
+    &#9474;       &#9500;&#9472;&#9472; Java? &#8594; Override resolveClass() with allowlist + use ObjectInputFilter (Java 9+)
+    &#9474;       &#9500;&#9472;&#9472; Python? &#8594; Replace pickle with json.loads(); use yaml.safe_load() for YAML
+    &#9474;       &#9500;&#9472;&#9472; .NET? &#8594; Migrate to System.Text.Json; BinaryFormatter removed in .NET 9
+    &#9474;       &#9500;&#9472;&#9472; PHP? &#8594; Replace unserialize() with json_decode()
+    &#9474;       &#9500;&#9472;&#9472; Ruby? &#8594; Replace Marshal.load with JSON.parse; use Oj.safe_load
+    &#9474;       &#9492;&#9472;&#9472; Node.js? &#8594; Use JSON.parse/JSON.stringify only; remove node-serialize
+    &#9492;&#9472;&#9472; Add defense-in-depth: HMAC signing, integrity checks, monitoring</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Audit your codebase for deserialization sinks</h3>
+  <p>Identify every location where untrusted data is deserialized. Use static analysis or grep for known dangerous patterns. [<a href="https://cwe.mitre.org/data/definitions/502.html">src2</a>]</p>
+  <pre><code class="language-bash"># Java: find ObjectInputStream usage
+grep -rn 'ObjectInputStream\|readObject\|XMLDecoder\|XStream' --include="*.java" .
+
+# Python: find pickle and unsafe YAML
+grep -rn 'pickle\.load\|pickle\.loads\|yaml\.load\|jsonpickle' --include="*.py" .
+
+# PHP: find unserialize calls
+grep -rn 'unserialize(' --include="*.php" .
+
+# .NET: find BinaryFormatter and unsafe TypeNameHandling
+grep -rn 'BinaryFormatter\|TypeNameHandling' --include="*.cs" .
+
+# Node.js: find node-serialize and eval-based deserialization
+grep -rn "node-serialize\|serialize-to-js\|eval(" --include="*.js" .</code></pre>
+  <p><strong>Verify</strong>: Count all findings -- each one is a potential RCE vulnerability.</p>
+
+  <h3>2. Replace native serialization with JSON</h3>
+  <p>Switch from native object serialization to data-only formats. JSON cannot represent executable code, eliminating the entire attack class. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python"># Python: BEFORE (vulnerable)
+import pickle
+data = pickle.loads(user_input)  # RCE vulnerability
+
+# Python: AFTER (safe)
+import json
+data = json.loads(user_input)  # Data only, no code execution</code></pre>
+  <p><strong>Verify</strong>: Run audit commands again -- dangerous patterns should be eliminated.</p>
+
+  <h3>3. Apply allowlist filtering when native deserialization is unavoidable</h3>
+  <p>Restrict which classes can be deserialized using built-in filtering mechanisms. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-java">// Java 9+: ObjectInputFilter (built-in)
+ObjectInputFilter filter = ObjectInputFilter.Config.createFilter(
+    "com.myapp.dto.*;!*"  // Allow only com.myapp.dto, deny all else
+);
+ObjectInputStream ois = new ObjectInputStream(inputStream);
+ois.setObjectInputFilter(filter);</code></pre>
+  <p><strong>Verify</strong>: Attempt to deserialize a non-allowlisted class -- should throw <code>InvalidClassException</code>.</p>
+
+  <h3>4. Sign serialized data with HMAC</h3>
+  <p>When you must serialize data that will be stored or transmitted, sign it to detect tampering. [<a href="https://portswigger.net/web-security/deserialization">src3</a>]</p>
+  <pre><code class="language-python">import hmac, hashlib, json
+SECRET_KEY = b'your-secret-key-from-env'
+
+def serialize_signed(data: dict) -&gt; str:
+    payload = json.dumps(data, sort_keys=True)
+    sig = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}|{sig}"
+
+def deserialize_verified(signed_data: str) -&gt; dict:
+    payload, sig = signed_data.rsplit('|', 1)
+    expected = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        raise ValueError("Tampered data detected")
+    return json.loads(payload)</code></pre>
+  <p><strong>Verify</strong>: Modify any byte in the signed payload -- should raise <code>ValueError</code>.</p>
+
+  <h3>5. Monitor and log deserialization events</h3>
+  <p>Add observability to detect exploitation attempts in production. [<a href="https://cwe.mitre.org/data/definitions/502.html">src2</a>]</p>
+  <pre><code class="language-java">ObjectInputFilter loggingFilter = filterInfo -&gt; {
+    Class&lt;?&gt; clazz = filterInfo.serialClass();
+    if (clazz != null) {
+        logger.info("Deserialization attempt: {}", clazz.getName());
+        if (!ALLOWED_CLASSES.contains(clazz.getName())) {
+            logger.warn("BLOCKED: {}", clazz.getName());
+            return ObjectInputFilter.Status.REJECTED;
+        }
+    }
+    return ObjectInputFilter.Status.ALLOWED;
+};</code></pre>
+  <p><strong>Verify</strong>: Check logs for <code>BLOCKED</code> entries after deploying the filter.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Safe Data Exchange with JSON</h3>
+  <pre><code class="language-python"># Input:  Untrusted user data (API request body, file upload)
+# Output: Validated Python dict
+
+import json
+from dataclasses import dataclass
+
+def deserialize_user_data(raw: str) -&gt; dict:
+    try:
+        data = json.loads(raw)  # Safe -- data only
+    except json.JSONDecodeError:
+        raise ValueError("Invalid JSON input")
+    if not isinstance(data, dict):
+        raise ValueError("Expected JSON object")
+    return data
+
+# UNSAFE -- NEVER use with untrusted data:
+# pickle.loads(raw)       -- arbitrary code execution
+# yaml.load(raw)          -- code exec via !!python/object
+# jsonpickle.decode(raw)  -- code exec via py/object</code></pre>
+
+  <h3>Java: Jackson with Strict Type Binding</h3>
+  <pre><code class="language-java">// Input:  Untrusted JSON string from HTTP request
+// Output: Validated DTO object
+
+import com.fasterxml.jackson.databind.ObjectMapper;  // 2.15+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+
+public class SafeDeserializer {
+    private static final ObjectMapper mapper = new ObjectMapper()
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        // CRITICAL: never enable default typing
+        // mapper.enableDefaultTyping() &lt;-- NEVER DO THIS
+
+    public static &lt;T&gt; T deserialize(String json, Class&lt;T&gt; type) {
+        try {
+            return mapper.readValue(json, type);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid input", e);
+        }
+    }
+}</code></pre>
+
+  <h3>Node.js: Safe JSON Parsing with Prototype Pollution Protection</h3>
+  <pre><code class="language-javascript">// Input:  Untrusted string from HTTP request body
+// Output: Validated JavaScript object
+
+function safeDeserialize(raw) {
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    throw new Error('Invalid JSON input');
+  }
+  // Protect against prototype pollution
+  if (parsed.__proto__ || parsed.constructor) {
+    delete parsed.__proto__;
+    delete parsed.constructor;
+  }
+  return parsed;
+}
+
+// UNSAFE -- NEVER use with untrusted data:
+// require('node-serialize').unserialize(raw)  -- IIFE RCE
+// eval('(' + raw + ')')                       -- direct RCE</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using pickle to deserialize user-uploaded files</h3>
+  <pre><code class="language-python"># BAD -- pickle executes arbitrary code during deserialization
+import pickle
+
+def load_user_config(uploaded_file):
+    return pickle.load(uploaded_file)
+# Attacker crafts payload with __reduce__ running os.system("rm -rf /")</code></pre>
+
+  <h3>Correct: Use JSON for user data exchange</h3>
+  <pre><code class="language-python"># GOOD -- JSON is data-only, no code execution possible
+import json
+
+def load_user_config(uploaded_file):
+    return json.load(uploaded_file)</code></pre>
+
+  <h3>Wrong: Java ObjectInputStream without class filtering</h3>
+  <pre><code class="language-java">// BAD -- any class on the classpath can be instantiated
+ObjectInputStream ois = new ObjectInputStream(request.getInputStream());
+Command cmd = (Command) ois.readObject();
+// ysoserial gadget chains execute before the cast is checked</code></pre>
+
+  <h3>Correct: Java ObjectInputFilter with strict allowlist</h3>
+  <pre><code class="language-java">// GOOD -- only explicitly allowed classes can deserialize
+ObjectInputStream ois = new ObjectInputStream(request.getInputStream());
+ois.setObjectInputFilter(ObjectInputFilter.Config.createFilter(
+    "com.myapp.dto.Command;!*"
+));
+Command cmd = (Command) ois.readObject();</code></pre>
+
+  <h3>Wrong: PHP unserialize on cookie data</h3>
+  <pre><code class="language-php">// BAD -- user controls cookie content, enabling object injection
+$preferences = unserialize($_COOKIE['prefs']);
+// Attacker sets cookie to exploit __wakeup() or __destruct()</code></pre>
+
+  <h3>Correct: PHP json_decode for cookie data</h3>
+  <pre><code class="language-php">// GOOD -- JSON cannot instantiate PHP objects
+$preferences = json_decode($_COOKIE['prefs'], true);
+if ($preferences === null &amp;&amp; json_last_error() !== JSON_ERROR_NONE) {
+    $preferences = [];
+}</code></pre>
+
+  <h3>Wrong: .NET BinaryFormatter for session state</h3>
+  <pre><code class="language-csharp">// BAD -- BinaryFormatter is inherently unsafe, removed in .NET 9
+BinaryFormatter formatter = new BinaryFormatter();
+object session = formatter.Deserialize(stream);
+// Microsoft: "equivalent to launching an executable"</code></pre>
+
+  <h3>Correct: .NET System.Text.Json for data exchange</h3>
+  <pre><code class="language-csharp">// GOOD -- System.Text.Json deserializes to known types only
+using System.Text.Json;
+var session = JsonSerializer.Deserialize&lt;SessionData&gt;(stream);</code></pre>
+
+  <h3>Wrong: Ruby Marshal.load on user input</h3>
+  <pre><code class="language-ruby"># BAD -- Marshal can instantiate any Ruby class
+data = Marshal.load(Base64.decode64(params[:data]))
+# Universal RCE gadget chain exists for Ruby 2.x+</code></pre>
+
+  <h3>Correct: Ruby JSON.parse for user data</h3>
+  <pre><code class="language-ruby"># GOOD -- JSON produces only primitive types
+require 'json'
+data = JSON.parse(params[:data])</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Trusting internal services blindly</strong>: Deserialization between microservices is still dangerous if any service is compromised. Fix: Use JSON/Protobuf even for internal communication; apply zero-trust principles. [<a href="https://portswigger.net/web-security/deserialization">src3</a>]</li>
+    <li><strong>Denylist-based class filtering</strong>: Blocking known gadget classes (e.g., <code>InvokerTransformer</code>) fails when new chains are discovered. Fix: Use strict allowlisting -- permit only the exact classes you need. [<a href="https://github.com/frohoff/ysoserial">src4</a>]</li>
+    <li><strong>Signing without encryption</strong>: HMAC prevents tampering but if the serialized format is native (pickle, Java serialization), a compromised key means full RCE. Fix: Sign JSON data, not native serialized objects. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>YAML safe_load misconception</strong>: <code>yaml.safe_load()</code> is safe, but <code>yaml.load(data, Loader=yaml.Loader)</code> is not. Fix: Always use <code>yaml.safe_load()</code> or <code>yaml.CSafeLoader</code>. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>JSON.Net TypeNameHandling</strong>: Setting <code>TypeNameHandling</code> to <code>All</code>, <code>Auto</code>, <code>Objects</code>, or <code>Arrays</code> enables type confusion attacks. Fix: Keep <code>TypeNameHandling.None</code> (the default). [<a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide">src5</a>]</li>
+    <li><strong>Django PickleSerializer for sessions</strong>: Deprecated in Django 4.1; allows RCE if session data is attacker-controlled. Fix: Use <code>JSONSerializer</code> (default since Django 1.6). [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>Node.js eval-based parsing</strong>: Using <code>eval('(' + data + ')')</code> to parse "JSON-like" strings enables arbitrary code execution. Fix: Always use <code>JSON.parse()</code>. [<a href="https://snyk.io/blog/preventing-insecure-deserialization-node-js/">src6</a>]</li>
+    <li><strong>Deserializing ML model files (pickle)</strong>: Loading <code>.pkl</code> model files from untrusted sources is a major supply chain risk. Fix: Use ONNX, SafeTensors, or PMML formats instead. [<a href="https://cwe.mitre.org/data/definitions/502.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Scan Java project for deserialization sinks
+grep -rn 'ObjectInputStream\|readObject\|XMLDecoder\|XStream' --include="*.java" .
+
+# Scan Python project for pickle and unsafe YAML
+grep -rn 'pickle\.\|yaml\.load\|yaml\.unsafe_load\|jsonpickle' --include="*.py" .
+
+# Scan PHP project for unserialize
+grep -rn 'unserialize(' --include="*.php" .
+
+# Scan .NET project for BinaryFormatter
+grep -rn 'BinaryFormatter\|TypeNameHandling' --include="*.cs" .
+
+# Scan Node.js project for dangerous patterns
+grep -rn "node-serialize\|serialize-to-js\|eval(" --include="*.js" .
+
+# Check Java dependencies for known gadget libraries
+mvn dependency:tree | grep -E 'commons-collections|spring-beans|groovy'
+
+# Run npm audit for deserialization vulnerabilities
+npm audit 2&gt;/dev/null | grep -i "deserializ\|prototype pollution"
+
+# Test with ysoserial (Java -- penetration testing only)
+java -jar ysoserial.jar CommonsCollections1 'id' | base64</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Tool</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OWASP Top 10</td><td>2021</td><td>Current</td><td>A08: Software and Data Integrity Failures</td></tr>
+      <tr><td>OWASP Top 10</td><td>2017</td><td>Previous</td><td>A8: Insecure Deserialization (dedicated category)</td></tr>
+      <tr><td>CWE-502</td><td>4.19</td><td>Current</td><td>Deserialization of Untrusted Data</td></tr>
+      <tr><td>.NET BinaryFormatter</td><td>.NET 9</td><td>Removed</td><td>Throws PlatformNotSupportedException</td></tr>
+      <tr><td>.NET BinaryFormatter</td><td>.NET 7-8</td><td>Obsolete</td><td>Warning on use; opt-in still available</td></tr>
+      <tr><td>Java ObjectInputFilter</td><td>Java 9+</td><td>Current</td><td>Built-in class allowlist/denylist</td></tr>
+      <tr><td>Java Module System</td><td>Java 17+</td><td>Current</td><td>Restricts reflection-based gadget chains</td></tr>
+      <tr><td>PyYAML</td><td>6.0+</td><td>Current</td><td>Defaults to safe_load behavior</td></tr>
+      <tr><td>XStream</td><td>1.4.17+</td><td>Current</td><td>Built-in allowlist via allowTypes()</td></tr>
+      <tr><td>Jackson</td><td>2.15+</td><td>Current</td><td>Polymorphic typing disabled by default</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Application accepts serialized objects from users (cookies, forms, APIs)</td><td>All data exchange uses JSON/XML/Protobuf exclusively</td><td>Standard input validation</td></tr>
+      <tr><td>Legacy system uses Java ObjectInputStream for RPC</td><td>Building a new service with modern frameworks</td><td>gRPC + Protobuf, REST + JSON</td></tr>
+      <tr><td>Session state stored in native serialization format</td><td>Sessions use signed JWTs or encrypted cookies</td><td>JWT/session library with JSON serializer</td></tr>
+      <tr><td>ML models are loaded from untrusted sources (pickle files)</td><td>Models from your own pipeline with integrity verification</td><td>SafeTensors, ONNX format</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Java ObjectInputFilter (Java 9+) is defense-in-depth, not a complete solution -- novel gadget chains can bypass filters if the allowlist is too broad</li>
+    <li>Python pickle has NO safe mode -- RestrictedUnpickler is trivially bypassable and should not be relied upon for security</li>
+    <li>.NET BinaryFormatter was removed in .NET 9 (Nov 2024) -- applications targeting .NET 9+ will get PlatformNotSupportedException at runtime</li>
+    <li>HMAC signing protects integrity but not confidentiality -- sensitive data in serialized payloads should also be encrypted</li>
+    <li>Even JSON is not immune to all attacks -- prototype pollution (JavaScript) and billion laughs (XML) require separate defenses</li>
+    <li>AI/ML model files in pickle format (.pkl, .pt) are a growing supply chain attack vector -- CVE-2024-37052 demonstrated RCE via malicious pickled model files</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/security/sql-injection-prevention/2026" data-relationship="often_confused_with">SQL Injection Prevention</a>
+    <a href="/software/security/csrf-prevention/2026" data-relationship="often_confused_with">CSRF Prevention</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

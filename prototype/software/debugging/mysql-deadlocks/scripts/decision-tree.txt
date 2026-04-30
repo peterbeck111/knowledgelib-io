@@ -1,0 +1,27 @@
+START — MySQL deadlock detected (ERROR 1213)
+├── Step 1: Capture the deadlock info
+│   ├── SHOW ENGINE INNODB STATUS\G → read LATEST DETECTED DEADLOCK section [src1]
+│   ├── Enable innodb_print_all_deadlocks = ON for persistent logging [src1, src6]
+│   └── Use pt-deadlock-logger for continuous monitoring [src7]
+│
+├── Step 2: Identify the conflict pattern
+│   ├── Two transactions locking rows in different order?
+│   │   └── Fix: Reorder operations to access tables/rows consistently [src2]
+│   ├── Gap lock or next-key lock conflict?
+│   │   └── Fix: Use READ COMMITTED isolation level or unique key lookups [src1, src3]
+│   ├── Large number of locked index records?
+│   │   └── Fix: Add better indexes to narrow lock scope [src2]
+│   ├── Long-running transaction holding locks?
+│   │   └── Fix: Shorten transactions; commit earlier [src2]
+│   └── SELECT ... FOR SHARE escalation to FOR UPDATE?
+│       └── Fix: Use FOR UPDATE from the start if you plan to modify [src4]
+│
+├── Step 3: Apply prevention
+│   ├── Consistent lock ordering across all code paths [src2]
+│   ├── Add indexes on columns in WHERE/JOIN of locking queries [src2]
+│   ├── Keep transactions short — minimize rows locked and lock duration [src2]
+│   └── Implement application retry logic with exponential backoff [src5]
+│
+└── Step 4: Verify
+    ├── Monitor deadlock frequency via error log or performance_schema [src6]
+    └── If deadlocks drop to near-zero → done; if not → iterate Step 2

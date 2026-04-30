@@ -1,0 +1,73 @@
+# .gitlab-ci.yml
+# Input:  Merge request or push to main
+# Output: Tested, scanned, built artifact deployed through environments
+
+stages:
+  - validate
+  - build
+  - test
+  - staging
+  - production
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+lint:
+  stage: validate
+  image: node:22-alpine
+  script:
+    - npm ci --cache .npm
+    - npm run lint
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths: [.npm]
+
+sast:
+  stage: validate
+  include:
+    - template: Security/SAST.gitlab-ci.yml
+
+build:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+unit-test:
+  stage: test
+  image: node:22-alpine
+  parallel: 4
+  script:
+    - npm ci
+    - npm test -- --shard=$CI_NODE_INDEX/$CI_NODE_TOTAL
+  artifacts:
+    reports:
+      junit: junit.xml
+
+deploy-staging:
+  stage: staging
+  environment:
+    name: staging
+    url: https://staging.myapp.example.com
+  script:
+    - kubectl set image deployment/myapp app=$IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-production:
+  stage: production
+  environment:
+    name: production
+    url: https://myapp.example.com
+  script:
+    - kubectl set image deployment/myapp app=$IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual  # manual gate for production
+  needs:
+    - deploy-staging

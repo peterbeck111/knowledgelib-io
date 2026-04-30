@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Design a Content Delivery Network (CDN) | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a CDN: 13-component architecture table, edge caching topology, cache invalidation patterns (surrogate keys,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/cdn-design/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Design a Content Delivery Network (CDN) | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a CDN: 13-component architecture table, edge caching topology, cache invalidation patterns (surrogate keys, TTL, versioned URLs), edge compute examples, and request coalescing. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/cdn-design/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Design a Content Delivery Network (CDN) | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a CDN: 13-component architecture table, edge caching topology, cache invalidation patterns (surrogate keys, TTL, versioned URLs), edge compute examples, and request coalescing. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/cdn_design">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a content delivery network (CDN)?">
+  <meta name="ai:aliases" content="CDN architecture design; content delivery network system design; design a CDN from scratch; CDN system design interview; edge caching architecture; CDN components and architecture; how does a CDN work internally; build a content delivery network; CDN caching strategy design; distributed content delivery system">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/cdn-design/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,content_type,edge_compute">
+  <meta name="ai:constraints" content="Cache invalidation must be explicit and bounded; Origin servers must handle thundering herd; TLS termination at edge requires distributing private keys or keyless SSL; Anycast routing assumes symmetric paths; Cache key design must account for Vary headers">
+  <meta name="ai:skip_this_unit_if" content="Looking for specific CDN product configuration &rarr; Consult vendor docs; Need to debug CDN cache miss issues &rarr; Check cache-control headers and cache key config; Designing P2P content distribution &rarr; P2P is fundamentally different from CDN edge caching">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Design a Content Delivery Network (CDN)",
+    "headline": "How to Design a Content Delivery Network (CDN)",
+    "description": "Complete system design guide for building a CDN covering edge network topology, cache invalidation strategies, request coalescing, edge compute patterns, and multi-CDN architecture with 13 component architecture rows and code examples in Python, TypeScript, Go, and Nginx.",
+    "keywords": ["CDN", "content delivery network", "system design", "edge caching", "cache invalidation", "anycast", "edge compute", "origin shield", "surrogate keys", "request coalescing"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "HTTP/HTTPS, DNS, TLS, Nginx/Varnish, Cloudflare/CloudFront/Fastly/Akamai",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Content Delivery Network (CDN) Reference Architecture",
+        "url": "https://developers.cloudflare.com/reference-architecture/architectures/cdn/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CDN guidance - Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/cdn"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Amazon CloudFront Developer Guide",
+        "url": "https://docs.aws.amazon.com/cloudfront/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cache Invalidation Overview - Cloud CDN",
+        "url": "https://docs.cloud.google.com/cdn/docs/cache-invalidation-overview"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Akamai CDN Architecture: From EdgeWorkers to Guardicore in 2025",
+        "url": "https://blog.blazingcdn.com/en-us/akamai-cdn-architecture-edgeworkers-guardicore-2025"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Edge Computing Platforms 2025: Complete Comparison Guide",
+        "url": "https://wavesandalgorithms.com/reviews/edge-computing-comparisons-review"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CDN Cache Invalidation Strategies",
+        "url": "https://systemdesignschool.io/fundamentals/cdn-cache-invalidation"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Design a Content Delivery Network (CDN)",
+    "description": "Structured knowledge unit covering CDN system design: 13-component architecture reference, cache invalidation strategies, edge network topology, request coalescing patterns, edge compute examples, anti-patterns, and diagnostic commands.",
+    "keywords": ["CDN", "content delivery network", "system design", "edge caching", "cache invalidation", "anycast routing", "origin shield", "edge compute"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Cloudflare"},
+      {"@type": "Organization", "name": "Microsoft Azure"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Akamai"},
+      {"@type": "Organization", "name": "Fastly"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Design a CDN" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a content delivery network (CDN)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CDN architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "content delivery network system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "design a CDN from scratch",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CDN system design interview",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "edge caching architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>How to Design a Content Delivery Network (CDN)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a content delivery network (CDN)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/cdn-design/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A CDN is a geographically distributed network of reverse-proxy servers that cache content at edge locations close to users, reducing latency from hundreds of milliseconds to single-digit milliseconds for cached content.</li>
+    <li><strong>Key tool/command</strong>: <code>Cache-Control: public, max-age=31536000, immutable</code> for versioned static assets; <code>Surrogate-Key</code> headers for tag-based cache invalidation.</li>
+    <li><strong>Watch out for</strong>: Cache stampede (thundering herd) when popular content expires simultaneously across all edge nodes — use request coalescing or stale-while-revalidate.</li>
+    <li><strong>Works with</strong>: Any HTTP/HTTPS origin (cloud, on-prem, object storage); all major providers (Cloudflare, CloudFront, Akamai, Fastly, Google Cloud CDN).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Cache invalidation must be explicit and bounded — never rely solely on TTL expiry for time-sensitive content; always implement a purge mechanism</li>
+    <li>Origin servers must handle thundering herd when popular content expires simultaneously — use request coalescing or stale-while-revalidate</li>
+    <li>TLS termination at the edge requires distributing private keys or using keyless SSL — never send private keys to third-party edge nodes without encryption at rest</li>
+    <li>Anycast routing assumes symmetric paths — measure real-user latency, not just geographic distance</li>
+    <li>Cache key design must account for <code>Vary</code> headers (<code>Accept-Encoding</code>, <code>Accept-Language</code>) — ignoring Vary serves wrong content to users with different capabilities</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table (SYSTEM DESIGN component architecture) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DNS Resolution</td><td>Routes users to nearest PoP via geographic or latency-based routing</td><td>Anycast DNS, GeoDNS, Route 53, Cloudflare DNS</td><td>Anycast distributes automatically; add more PoPs for coverage</td></tr>
+      <tr><td>Edge Server (PoP)</td><td>Caches content and serves requests from the network edge</td><td>Nginx, Varnish, HAProxy, Envoy, custom</td><td>Horizontal: add servers per PoP; add PoPs globally</td></tr>
+      <tr><td>Origin Shield / Mid-Tier Cache</td><td>Intermediate cache layer between edge and origin; reduces origin load</td><td>Cloudflare Tiered Cache, CloudFront Regional Edge Cache, Varnish</td><td>Single shield per region; multiple for multi-region</td></tr>
+      <tr><td>Origin Server</td><td>Serves authoritative content when cache misses occur</td><td>Any HTTP server, S3, GCS, Azure Blob Storage</td><td>Vertical + horizontal; auto-scaling groups</td></tr>
+      <tr><td>Cache Key Generator</td><td>Determines cache entry identity from URL, headers, cookies, query params</td><td>Custom logic per CDN; Vary header processing</td><td>Configure per content type; normalize query strings</td></tr>
+      <tr><td>TLS Termination</td><td>Decrypts HTTPS at the edge to enable caching and inspection</td><td>Let's Encrypt, ACM, Keyless SSL, custom certs</td><td>Automated cert provisioning; SNI for multi-tenant</td></tr>
+      <tr><td>Cache Invalidation Service</td><td>Purges stale content across all edge nodes</td><td>Surrogate-Key (Fastly), Cache-Tag (Cloudflare), API purge (CloudFront)</td><td>Event-driven purge via webhooks; tag-based for surgical invalidation</td></tr>
+      <tr><td>Load Balancer</td><td>Distributes traffic across origin servers and handles failover</td><td>AWS ALB/NLB, Cloudflare Load Balancing, HAProxy, Envoy</td><td>Health checks + weighted routing; active-passive for DR</td></tr>
+      <tr><td>Edge Compute Runtime</td><td>Executes custom logic at the edge (auth, A/B testing, personalization)</td><td>Cloudflare Workers, Lambda@Edge, Fastly Compute, Akamai EdgeWorkers</td><td>Stateless functions; scale with request volume; KV for state</td></tr>
+      <tr><td>Observability Stack</td><td>Monitors cache hit ratio, latency, error rates, origin health</td><td>Prometheus + Grafana, Datadog, Cloudflare Analytics, CloudWatch</td><td>Aggregate per-PoP metrics; alert on hit ratio drops</td></tr>
+      <tr><td>Request Coalescing</td><td>Collapses duplicate cache-miss requests to origin into single fetch</td><td>Varnish grace mode, Nginx proxy_cache_lock, Cloudflare built-in</td><td>Automatic per-PoP; tune lock timeout for origin response time</td></tr>
+      <tr><td>Content Compression</td><td>Reduces transfer size for text-based assets at the edge</td><td>Brotli, gzip, zstd; on-the-fly or pre-compress</td><td>Compress at edge for dynamic; pre-compress at origin for static</td></tr>
+      <tr><td>WAF / DDoS Protection</td><td>Filters malicious traffic before it reaches origin</td><td>Cloudflare WAF, AWS Shield, Akamai Kona, Fastly Signal Sciences</td><td>Anycast absorbs volumetric; WAF rules for app-layer</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Primarily serving static assets (images, CSS, JS, fonts)?
+│   ├── YES → Pull-based CDN with long TTLs + versioned URLs
+│   │   ├── &lt; 1K req/s → Single-provider CDN (Cloudflare free, CloudFront)
+│   │   └── &gt; 1K req/s → Add origin shield + tiered caching
+│   └── NO ↓
+├── Serving video or large file downloads?
+│   ├── YES → Specialized media CDN with range-request support
+│   │   ├── Live streaming → HLS/DASH with short-segment caching (2-6s TTL)
+│   │   └── VOD → Long TTLs + byte-range caching + pre-warming
+│   └── NO ↓
+├── Need dynamic/personalized content at the edge?
+│   ├── YES → Edge compute (Workers, Lambda@Edge, Fastly Compute)
+│   │   ├── &lt; 10 personalization dimensions → Cache variants with custom keys
+│   │   └── Highly dynamic → ESI or edge compute assembly
+│   └── NO ↓
+├── Need multi-cloud or avoid vendor lock-in?
+│   ├── YES → Multi-CDN with DNS-based traffic steering
+│   └── NO ↓
+└── DEFAULT → Pull-based CDN + origin shield + tag-based invalidation + stale-while-revalidate</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define your content taxonomy and caching strategy</h3>
+  <p>Classify all content into caching tiers based on mutability and personalization. This determines TTLs, cache keys, and invalidation strategies for each content type. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/cdn/">src1</a>]</p>
+  <pre><code class="language-yaml">content_tiers:
+  immutable_assets:
+    pattern: "*.{js,css,woff2,png,jpg,webp}"
+    cache_control: "public, max-age=31536000, immutable"
+    invalidation: "Deploy new filename (never purge)"
+  semi_static:
+    pattern: "*.html, /api/catalog"
+    cache_control: "public, max-age=300, stale-while-revalidate=86400"
+    invalidation: "Tag-based purge on publish"
+  personalized:
+    pattern: "/dashboard/*, /api/user/*"
+    cache_control: "private, no-store"
+  api_responses:
+    pattern: "/api/v1/*"
+    cache_control: "public, max-age=60, stale-if-error=300"
+    invalidation: "Short TTL + event-driven purge"</code></pre>
+  <p><strong>Verify</strong>: <code>curl -sI https://origin.example.com/assets/app.js | grep -i cache-control</code> &rarr; expected: <code>Cache-Control: public, max-age=31536000, immutable</code></p>
+
+  <h3>2. Design the edge network topology</h3>
+  <p>Choose between single-tier (edge-only) and multi-tier (edge + origin shield) based on your origin's capacity. For most production systems, a two-tier architecture is recommended. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/cdn/">src1</a>] [<a href="https://docs.aws.amazon.com/cloudfront/">src3</a>]</p>
+  <pre><code>         Client
+           │ DNS (Anycast)
+     Edge PoP (L1 Cache — hot content, small)
+           │ Cache MISS
+     Origin Shield (L2 Cache — warm content, large, collapses duplicate misses)
+           │ Cache MISS (collapsed)
+     Origin Server (authoritative source)</code></pre>
+  <p><strong>Verify</strong>: Check response headers for <code>CF-Cache-Status: HIT</code> or <code>X-Cache: Hit from cloudfront</code> to confirm multi-tier caching is active.</p>
+
+  <h3>3. Implement cache key normalization</h3>
+  <p>Poor cache key design is the #1 cause of low hit ratios. Normalize query parameters and strip tracking parameters. [<a href="https://learn.microsoft.com/en-us/azure/architecture/best-practices/cdn">src2</a>]</p>
+  <pre><code class="language-nginx"># Nginx: strip marketing query params, normalize cache key
+map $args $normalized_args {
+    default $args;
+    "~*^(.*)(?:&amp;|^)(utm_[^&amp;]*|fbclid[^&amp;]*|gclid[^&amp;]*)(.*)$" "$1$3";
+}
+proxy_cache_key "$scheme$request_method$host$uri$normalized_args";</code></pre>
+  <p><strong>Verify</strong>: Both <code>?b=2&amp;a=1</code> and <code>?a=1&amp;b=2</code> should produce the same cache key.</p>
+
+  <h3>4. Set up cache invalidation with surrogate keys</h3>
+  <p>Tag-based invalidation lets you surgically purge related content. Attach surrogate keys to every response from your origin. [<a href="https://docs.google.com/cdn/docs/cache-invalidation-overview">src4</a>] [<a href="https://systemdesignschool.io/fundamentals/cdn-cache-invalidation">src7</a>]</p>
+  <pre><code class="language-python"># FastAPI: Attach surrogate keys for tag-based purging
+@app.get("/products/{product_id}")
+async def get_product(product_id: str, response: Response):
+    product = await fetch_product(product_id)
+    response.headers["Surrogate-Key"] = (
+        f"product-{product_id} category-{product.category} all-products"
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=86400"
+    return product</code></pre>
+  <p><strong>Verify</strong>: <code>curl -sI https://cdn.example.com/products/123 | grep -i surrogate-key</code></p>
+
+  <h3>5. Implement request coalescing to prevent cache stampede</h3>
+  <p>When a popular cache entry expires, hundreds of requests can overwhelm the origin. Configure request coalescing so only one request goes to origin. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/cdn/">src1</a>]</p>
+  <pre><code class="language-nginx"># Nginx: Request coalescing with proxy_cache_lock
+proxy_cache_lock on;              # Only 1 request to origin per cache key
+proxy_cache_lock_timeout 5s;
+proxy_cache_use_stale error timeout updating http_500 http_502 http_503;
+proxy_cache_background_update on; # Refresh cache in background</code></pre>
+  <p><strong>Verify</strong>: Simulate concurrent requests with <code>ab -n 100 -c 50</code> and check origin logs &mdash; should see only 1 request.</p>
+
+  <h3>6. Configure edge compute for dynamic logic</h3>
+  <p>Edge compute lets you run auth, A/B testing, and header manipulation without round-tripping to origin. [<a href="https://blog.blazingcdn.com/en-us/akamai-cdn-architecture-edgeworkers-guardicore-2025">src5</a>] [<a href="https://wavesandalgorithms.com/reviews/edge-computing-comparisons-review">src6</a>]</p>
+  <pre><code class="language-javascript">// Cloudflare Workers: Edge A/B testing with sticky assignment
+export default {
+  async fetch(request, env) {
+    const cookies = request.headers.get("Cookie") || "";
+    const match = cookies.match(/ab_variant=([AB])/);
+    let variant = match ? match[1] : (Math.random() &lt; 0.5 ? "A" : "B");
+    const origins = { A: "https://origin-a.example.com", B: "https://origin-b.example.com" };
+    const response = await fetch(origins[variant] + new URL(request.url).pathname);
+    const newResponse = new Response(response.body, response);
+    if (!match) newResponse.headers.append("Set-Cookie", `ab_variant=${variant}; Path=/; Max-Age=86400; Secure; HttpOnly`);
+    return newResponse;
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: <code>curl -v https://cdn.example.com/test-page 2&gt;&amp;1 | grep -i 'set-cookie.*ab_variant'</code></p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Programmatic cache purge via Cloudflare API</h3>
+  <pre><code class="language-python"># Input:  List of URLs or cache tags to purge
+# Output: Purge confirmation from Cloudflare API
+import httpx  # httpx==0.27.0
+
+async def purge_by_tags(zone_id: str, api_token: str, tags: list[str]) -&gt; dict:
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache",
+            headers={"Authorization": f"Bearer {api_token}"},
+            json={"tags": tags},  # Up to 30 tags per request
+        )
+        resp.raise_for_status()
+        return resp.json()</code></pre>
+
+  <h3>TypeScript: CloudFront invalidation via AWS SDK</h3>
+  <pre><code class="language-typescript">// Input:  Array of path patterns to invalidate
+// Output: Invalidation ID for tracking
+import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
+
+const client = new CloudFrontClient({ region: "us-east-1" });
+async function invalidate(distId: string, paths: string[]): Promise&lt;string&gt; {
+  const cmd = new CreateInvalidationCommand({
+    DistributionId: distId,
+    InvalidationBatch: {
+      CallerReference: `inv-${Date.now()}`,
+      Paths: { Quantity: paths.length, Items: paths },
+    },
+  });
+  const resp = await client.send(cmd);
+  return resp.Invalidation?.Id ?? "unknown";
+}</code></pre>
+
+  <h3>Go: Request coalescing with singleflight</h3>
+  <pre><code class="language-go">// Input:  Concurrent requests for the same cache key
+// Output: Single origin fetch, result shared across all waiters
+import "golang.org/x/sync/singleflight" // v0.6.0
+
+var group singleflight.Group
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    result, err, shared := group.Do(r.URL.Path, func() (interface{}, error) {
+        resp, err := http.Get("http://origin:8080" + r.URL.RequestURI())
+        if err != nil { return nil, err }
+        defer resp.Body.Close()
+        return io.ReadAll(resp.Body)
+    })
+    if err != nil { http.Error(w, "Origin unavailable", 502); return }
+    if shared { w.Header().Set("X-Coalesced", "true") }
+    w.Write(result.([]byte))
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Purging entire cache on every deploy</h3>
+  <pre><code class="language-bash"># ❌ BAD — nuclear purge destroys all cached content globally
+curl -X POST ".../purge_cache" -d '{"purge_everything": true}'</code></pre>
+
+  <h3>Correct: Versioned filenames for assets, tag-based purge for HTML</h3>
+  <pre><code class="language-bash"># ✅ GOOD — only purge mutable content; assets use content-hash filenames
+curl -X POST ".../purge_cache" -d '{"tags": ["page-html", "api-catalog"]}'</code></pre>
+
+  <h3>Wrong: Same TTL for all content types</h3>
+  <pre><code class="language-nginx"># ❌ BAD — one TTL for everything
+location / { add_header Cache-Control "public, max-age=3600"; }</code></pre>
+
+  <h3>Correct: Tiered TTLs based on content mutability</h3>
+  <pre><code class="language-nginx"># ✅ GOOD — match TTL to content lifecycle
+location ~* \.(js|css|woff2|png)$ { add_header Cache-Control "public, max-age=31536000, immutable"; }
+location ~* \.html$              { add_header Cache-Control "public, max-age=300, stale-while-revalidate=86400"; }
+location /api/                   { add_header Cache-Control "public, max-age=60, stale-if-error=300"; }</code></pre>
+
+  <h3>Wrong: Caching responses with Set-Cookie</h3>
+  <pre><code class="language-python"># ❌ BAD — every user gets the same session cookie (session hijacking)
+response.headers["Cache-Control"] = "public, max-age=3600"
+response.set_cookie("session_id", generate_session())</code></pre>
+
+  <h3>Correct: Private/no-store for responses with cookies</h3>
+  <pre><code class="language-python"># ✅ GOOD — user-specific responses must not be cached publicly
+response.headers["Cache-Control"] = "private, no-store"
+response.set_cookie("session_id", generate_session())</code></pre>
+
+  <h3>Wrong: Query string cache busting without normalization</h3>
+  <pre><code class="language-html">&lt;!-- ❌ BAD — utm params create infinite cache variants --&gt;
+&lt;link rel="stylesheet" href="/style.css?v=1"&gt;</code></pre>
+
+  <h3>Correct: Content-hash filenames + strip tracking params</h3>
+  <pre><code class="language-html">&lt;!-- ✅ GOOD — content hash in filename; no query string needed --&gt;
+&lt;link rel="stylesheet" href="/style.d4e5f6.css"&gt;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Low cache hit ratio from excessive Vary headers</strong>: <code>Vary: *</code> or <code>Vary: Cookie</code> creates a separate entry per unique value, effectively disabling caching. Fix: <code>Strip unnecessary Vary headers; only vary on Accept-Encoding</code>. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/cdn/">src1</a>]</li>
+    <li><strong>Cache stampede after TTL expiry</strong>: Popular resource expires across all PoPs simultaneously, hundreds of requests hit origin. Fix: <code>stale-while-revalidate + proxy_cache_lock</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/best-practices/cdn">src2</a>]</li>
+    <li><strong>Mixed content after CDN adoption</strong>: Origin serves HTTP links while CDN terminates TLS. Fix: <code>Force HTTPS at origin; set Content-Security-Policy: upgrade-insecure-requests</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/best-practices/cdn">src2</a>]</li>
+    <li><strong>Cache poisoning via unkeyed headers</strong>: Cache key ignores a header that affects the response (e.g., X-Forwarded-Host). Fix: <code>Include all response-affecting headers in cache key or normalize at edge</code>. [<a href="https://developers.cloudflare.com/reference-architecture/architectures/cdn/">src1</a>]</li>
+    <li><strong>Stale content after origin update</strong>: CDN still serves old version because TTL has not expired. Fix: <code>Active cache invalidation via CI/CD pipeline; do not rely solely on TTL</code>. [<a href="https://docs.google.com/cdn/docs/cache-invalidation-overview">src4</a>]</li>
+    <li><strong>CORS failures on CDN-served assets</strong>: CDN strips or does not forward CORS headers. Fix: <code>Configure CDN to forward Access-Control-Allow-Origin from origin</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/best-practices/cdn">src2</a>]</li>
+    <li><strong>CloudFront invalidation cost surprise</strong>: $0.005/path after first 1,000 free/month. Fix: <code>Versioned filenames for assets; batch HTML invalidations with wildcards</code>. [<a href="https://docs.aws.amazon.com/cloudfront/">src3</a>]</li>
+    <li><strong>Edge compute cold starts</strong>: Lambda@Edge adds 100-500ms on cold starts. Fix: <code>Use isolate-based compute (Workers, Fastly Compute) for latency-sensitive paths</code>. [<a href="https://wavesandalgorithms.com/reviews/edge-computing-comparisons-review">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check cache status of a specific URL
+curl -sI https://cdn.example.com/page | grep -iE 'cache-control|x-cache|cf-cache-status|age|vary'
+
+# Test origin response without CDN (bypass cache)
+curl -sI https://cdn.example.com/page -H "Cache-Control: no-cache" -H "Pragma: no-cache"
+
+# Verify surrogate keys on origin response
+curl -sI https://origin.example.com/products/123 | grep -i surrogate-key
+
+# Check compression is active
+curl -sI https://cdn.example.com/style.css -H "Accept-Encoding: br,gzip" | grep -i content-encoding
+
+# Trace CDN routing (which PoP served the request)
+curl -sI https://cdn.example.com/ | grep -iE 'cf-ray|x-served-by|x-amz-cf-pop|server-timing'</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Serving static assets to a global audience</td><td>All users in same datacenter as origin</td><td>Local reverse proxy (Nginx/Varnish)</td></tr>
+      <tr><td>Reducing origin load during traffic spikes</td><td>Content is 100% personalized</td><td>Application-level caching (Redis) + SSR</td></tr>
+      <tr><td>Improving TTFB for geographically distributed users</td><td>Data sovereignty requires content in specific country</td><td>Regional deployment with geo-fencing</td></tr>
+      <tr><td>Protecting origin from DDoS via anycast</td><td>Real-time websocket or long-polling connections</td><td>Direct origin connection</td></tr>
+      <tr><td>Offloading TLS termination and cert management</td><td>Content changes on every request (no cacheability)</td><td>API gateway with rate limiting</td></tr>
+      <tr><td>Running lightweight edge logic (auth, redirects, A/B)</td><td>Complex SSR with database access at the edge</td><td>Edge-native DBs (D1, Turso) + full-stack edge framework</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>CDN cache hit ratios below 80% indicate a configuration problem — most common causes are excessive Vary headers, unstripped query parameters, and Set-Cookie on cacheable responses</li>
+    <li>Multi-CDN setups require careful DNS TTL management — if DNS TTL exceeds failover detection time, users continue hitting the failed CDN</li>
+    <li>Edge compute pricing varies dramatically — Cloudflare Workers per-request (included in plans), Lambda@Edge per-request + duration + memory, Fastly Compute per-request + compute time</li>
+    <li>Cache invalidation propagation is not instant — Cloudflare ~30s globally, CloudFront 5-15 minutes, some CDNs only guarantee best effort</li>
+    <li>Origin shield adds latency to cache misses (extra hop) but dramatically reduces origin load — enable when origin protection matters more than miss latency</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/debugging/browser-cors-errors/2026" data-relationship="related_to">Browser CORS Errors</a>
+    <a href="/software/debugging/ssl-tls-certificate-errors/2026" data-relationship="related_to">SSL/TLS Certificate Errors</a>
+    <a href="/software/debugging/nodejs-econnrefused/2026" data-relationship="solves">Node.js ECONNREFUSED</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

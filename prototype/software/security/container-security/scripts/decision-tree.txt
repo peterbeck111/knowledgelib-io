@@ -1,0 +1,35 @@
+START: What phase of the container lifecycle are you securing?
+|-- BUILD TIME (Dockerfile)?
+|   |-- Using a full OS base image (ubuntu, debian)?
+|   |   |-- YES -> Switch to alpine, distroless, or scratch (see Step 1)
+|   |   +-- NO -> Good. Verify image is pinned to specific version
+|   |-- Running as root (no USER directive)?
+|   |   |-- YES -> Add non-root user and USER directive (see Step 2)
+|   |   +-- NO -> Good. Verify user has minimal permissions
+|   |-- Secrets in Dockerfile (ENV, COPY .env)?
+|   |   |-- YES -> Use BuildKit --mount=type=secret or multi-stage builds (see Step 3)
+|   |   +-- NO -> Good. Verify with docker history
+|   +-- Using ADD instruction?
+|       |-- YES -> Replace with COPY unless extracting tar archives
+|       +-- NO -> Good
+|-- CI/CD PIPELINE?
+|   |-- Image scanning enabled?
+|   |   |-- YES -> Verify it blocks on CRITICAL/HIGH CVEs
+|   |   +-- NO -> Add Trivy or Snyk scan step (see Step 4)
+|   +-- Image signing enabled?
+|       |-- YES -> Verify with cosign verify
+|       +-- NO -> Add Cosign or Docker Content Trust (see Step 5)
+|-- RUNTIME (docker run / compose)?
+|   |-- Using --privileged?
+|   |   |-- YES -> REMOVE immediately. Use --cap-add for specific capabilities
+|   |   +-- NO -> Good. Add --cap-drop=ALL
+|   |-- Filesystem writable?
+|   |   |-- YES -> Add --read-only --tmpfs /tmp (see Step 6)
+|   |   +-- NO -> Good
+|   |-- Resource limits set?
+|   |   |-- YES -> Verify memory, CPU, PID limits
+|   |   +-- NO -> Add --memory, --cpus, --pids-limit
+|   +-- Docker socket mounted?
+|       |-- YES -> REMOVE unless absolutely required (monitoring tools)
+|       +-- NO -> Good
++-- DEFAULT -> Apply all controls; start with non-root user and image scanning

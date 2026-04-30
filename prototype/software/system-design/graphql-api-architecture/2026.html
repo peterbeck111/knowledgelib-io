@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>GraphQL API Architecture at Scale | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to architecting GraphQL APIs at scale: Apollo Federation v2, Netflix DGS, schema design patterns, DataLoader batching, query complexity...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/graphql-api-architecture/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="GraphQL API Architecture at Scale | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to architecting GraphQL APIs at scale: Apollo Federation v2, Netflix DGS, schema design, DataLoader, query complexity, security. Decision tree for monolith vs federation vs stitching. 7 sources, verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/graphql-api-architecture/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GraphQL API Architecture at Scale | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to architecting GraphQL APIs at scale: Apollo Federation v2, Netflix DGS, DataLoader, query complexity, security. 7 sources.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/graphql_api_architecture">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I architect a GraphQL API at scale?">
+  <meta name="ai:aliases" content="GraphQL API architecture design; scaling GraphQL API production; GraphQL federation vs schema stitching; GraphQL API design patterns at scale; how to design a scalable GraphQL API; GraphQL system design interview; GraphQL supergraph architecture; federated GraphQL microservices">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/graphql-api-architecture/2026.md">
+  <meta name="ai:token_estimate" content="6800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,team_structure,architecture_approach">
+  <meta name="ai:constraints" content="Always implement query depth limiting and complexity analysis in production; Never expose GraphQL introspection in production environments; DataLoader is mandatory for any resolver fetching from a database; Persisted queries or allowlist must be enforced in production; Federation gateway must be the only public entry point">
+  <meta name="ai:skip_this_unit_if" content="Simple internal API with <5 entity types and one team -> Use a single GraphQL monolith server; Need to migrate REST to GraphQL -> software/migrations/rest-to-graphql/2026; Debugging N+1 queries -> software/debugging/graphql-n-plus-1-dataloader/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "GraphQL API Architecture at Scale",
+    "headline": "GraphQL API Architecture at Scale",
+    "description": "Complete guide to architecting GraphQL APIs at scale using Apollo Federation v2, Netflix DGS, schema design patterns, DataLoader batching, query complexity analysis, persisted queries, and security hardening. Covers monolith vs federation vs schema stitching with decision tree, 6 step-by-step implementation guides, 4 anti-pattern pairs, and 8 common pitfalls.",
+    "keywords": ["GraphQL", "Apollo Federation", "API architecture", "schema design", "DataLoader", "Netflix DGS", "GraphQL security", "supergraph", "federated GraphQL", "query complexity", "persisted queries", "schema stitching"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "GraphQL Spec September 2025, Apollo Federation v2.5+, Apollo Router, Netflix DGS 9.x, graphql/dataloader 2.x",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Introduction to Apollo Federation",
+        "url": "https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Evolving the Federated GraphQL Platform at Netflix",
+        "url": "https://www.infoq.com/articles/federated-GraphQL-platform-Netflix/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Unifying Our GraphQL Design Patterns and Best Practices with Tutorials",
+        "url": "https://shopify.engineering/unifying-graphql-design-patterns-best-practices-tutorials"
+      },
+      {
+        "@type": "WebPage",
+        "name": "GraphQL Security Best Practices",
+        "url": "https://graphql.org/learn/security/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "GraphQL Specification - September 2025 Edition",
+        "url": "https://spec.graphql.org/September2025/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "GraphQL Schema Stitching vs Federation",
+        "url": "https://tyk.io/blog/graphql-schema-stitching-vs-federation/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "9 Ways To Secure Your GraphQL API",
+        "url": "https://www.apollographql.com/blog/9-ways-to-secure-your-graphql-api-security-checklist"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "GraphQL API Architecture at Scale",
+    "description": "Structured knowledge unit covering GraphQL API architecture patterns at scale: Apollo Federation v2, Netflix DGS, schema design, DataLoader batching, query complexity analysis, persisted queries, and security. Includes component architecture table, decision tree, 6-step implementation guide, and 4 anti-pattern pairs.",
+    "keywords": ["GraphQL", "Apollo Federation", "API architecture", "system design", "DataLoader", "Netflix DGS", "schema stitching"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Apollo GraphQL"},
+      {"@type": "Organization", "name": "Netflix Technology Blog"},
+      {"@type": "Organization", "name": "Shopify Engineering"},
+      {"@type": "Organization", "name": "GraphQL Foundation"},
+      {"@type": "Organization", "name": "Tyk API Gateway"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "GraphQL API Architecture at Scale" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I architect a GraphQL API at scale?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway — this gives teams independent deployability while clients see one unified API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL API architecture design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway — this gives teams independent deployability while clients see one unified API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "scaling GraphQL API production",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway — this gives teams independent deployability while clients see one unified API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL federation vs schema stitching",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway — this gives teams independent deployability while clients see one unified API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GraphQL API design patterns at scale",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway — this gives teams independent deployability while clients see one unified API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to design a scalable GraphQL API",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway — this gives teams independent deployability while clients see one unified API."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>GraphQL API Architecture at Scale</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I architect a GraphQL API at scale?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/graphql-api-architecture/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: At scale, use Apollo Federation v2 to compose a supergraph from domain-owned subgraphs behind a single gateway -- this gives teams independent deployability while clients see one unified API.</li>
+    <li><strong>Key tool/command</strong>: <code>rover supergraph compose --config supergraph.yaml</code></li>
+    <li><strong>Watch out for</strong>: N+1 queries in resolvers -- without DataLoader batching, a single nested GraphQL query can trigger hundreds of database calls.</li>
+    <li><strong>Works with</strong>: Apollo Federation v2 + Apollo Router, Netflix DGS (Java/Kotlin), GraphQL Mesh, any language with a GraphQL server library (graphql-js, graphql-java, gqlgen, Strawberry).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Always implement query depth limiting and complexity analysis in production -- unbounded GraphQL queries can cause exponential database load and denial-of-service</li>
+    <li>Never expose GraphQL introspection in production environments -- it reveals your entire schema to attackers and enables automated exploitation</li>
+    <li>DataLoader (or equivalent batching) is mandatory for any resolver that fetches from a database or external service -- without it, N+1 queries will destroy performance</li>
+    <li>Persisted queries or an allowlist of approved operations must be enforced in production to prevent arbitrary query injection and abuse</li>
+    <li>Federation gateway (Apollo Router / GraphQL Mesh) must be the only public entry point -- never expose subgraph endpoints directly to clients</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Gateway / Router</td><td>Schema composition, query planning, routing to subgraphs</td><td>Apollo Router (Rust), GraphQL Mesh, Cosmo Router</td><td>Horizontal -- stateless, deploy behind LB; cache query plans</td></tr>
+      <tr><td>Subgraph Services</td><td>Domain-owned partial schema + resolvers</td><td>Apollo Server, Netflix DGS, gqlgen (Go), Strawberry (Python)</td><td>Horizontal -- independent scaling per domain team</td></tr>
+      <tr><td>Schema Registry</td><td>Version control, composition validation, breaking change detection</td><td>Apollo GraphOS, Hive (open-source), Cosmo</td><td>Central -- single registry, CI/CD integration</td></tr>
+      <tr><td>DataLoader / Batching</td><td>Batch + cache data fetches within a single request</td><td>graphql/dataloader (JS), Spring BatchLoader (DGS), dataloaden (Go)</td><td>Per-request instance -- no cross-request caching</td></tr>
+      <tr><td>Query Complexity Analyzer</td><td>Reject queries exceeding cost threshold before execution</td><td>graphql-query-complexity, Apollo cost analysis plugin</td><td>Configured at gateway -- cost limits per client tier</td></tr>
+      <tr><td>Persisted Query Store</td><td>Map query hashes to approved operations</td><td>Redis, CDN edge, Apollo APQ, Relay Compiler</td><td>Cache at edge -- hash lookup is O(1)</td></tr>
+      <tr><td>Caching Layer</td><td>Response + entity caching to reduce resolver execution</td><td>CDN (Cloudflare, Fastly), Redis, Apollo cache hints</td><td>Cache-Control headers + entity-level cache invalidation</td></tr>
+      <tr><td>Observability</td><td>Distributed tracing across gateway + subgraphs</td><td>OpenTelemetry, Apollo Studio, Datadog, Jaeger</td><td>Trace context propagation via HTTP headers</td></tr>
+      <tr><td>Rate Limiter</td><td>Per-client query budget based on complexity cost</td><td>Apollo Router plugins, Cloudflare WAF, custom middleware</td><td>Token bucket per API key; cost-based budgets</td></tr>
+      <tr><td>Auth / AuthZ</td><td>Authentication at gateway, authorization at resolver level</td><td>JWT validation at gateway, directive-based @auth in subgraphs</td><td>Gateway validates tokens; subgraphs enforce field-level access</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Single team, &lt;5 entity types, &lt;1K QPS?
+│   ├── YES → Monolith GraphQL server (Apollo Server / graphql-yoga / gqlgen)
+│   └── NO ↓
+├── 2-5 teams, shared schema ownership?
+│   ├── YES → Schema stitching with GraphQL Mesh or modular monolith with schema modules
+│   └── NO ↓
+├── 6+ teams, each owns a domain (users, products, orders)?
+│   ├── YES → Apollo Federation v2 with subgraph-per-team
+│   └── NO ↓
+├── Java/Kotlin ecosystem, Spring Boot stack?
+│   ├── YES → Netflix DGS Framework with Federation support
+│   └── NO ↓
+├── &gt;50K QPS, need edge caching and query plan optimization?
+│   ├── YES → Apollo Router (Rust) + persisted queries + CDN caching + entity cache
+│   └── NO ↓
+├── Need to combine GraphQL + REST + gRPC backends?
+│   ├── YES → GraphQL Mesh as a unifying gateway layer
+│   └── NO ↓
+└── DEFAULT → Start with monolith GraphQL server, extract to federation when team count exceeds 3</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define your supergraph schema with domain boundaries</h3>
+  <p>Map your domain into bounded contexts. Each domain team owns a subgraph with its core types. Use the <code>@key</code> directive to declare entity identity, allowing other subgraphs to extend types across boundaries. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src1</a>]</p>
+  <pre><code class="language-graphql"># products subgraph -- owns Product type
+type Product @key(fields: "id") {
+  id: ID!
+  name: String!
+  price: Float!
+  category: Category!
+}
+
+type Category {
+  id: ID!
+  name: String!
+}
+
+type Query {
+  product(id: ID!): Product
+  products(first: Int = 10, after: String): ProductConnection!
+}</code></pre>
+  <p><strong>Verify</strong>: <code>rover subgraph check &lt;graph&gt;@&lt;variant&gt; --schema products.graphql --name products</code> → composition succeeds with no errors.</p>
+
+  <h3>2. Implement entity references across subgraphs</h3>
+  <p>When one subgraph needs data owned by another, use stub types with <code>@key</code> to declare a reference. The gateway resolves the full entity by calling the owning subgraph's <code>__resolveReference</code> function. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src1</a>]</p>
+  <pre><code class="language-graphql"># reviews subgraph -- references Product from products subgraph
+type Product @key(fields: "id") {
+  id: ID!
+  reviews: [Review!]!
+  averageRating: Float
+}
+
+type Review {
+  id: ID!
+  author: User!
+  body: String!
+  rating: Int!
+  createdAt: DateTime!
+}</code></pre>
+  <pre><code class="language-javascript">// reviews subgraph -- resolve Product references
+const resolvers = {
+  Product: {
+    __resolveReference(product) {
+      return { id: product.id };
+    },
+    reviews(product) {
+      return reviewsLoader.load(product.id);
+    },
+    averageRating(product) {
+      return ratingsLoader.load(product.id);
+    },
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: Query through gateway: <code>{ product(id: "1") { name reviews { body rating } } }</code> → returns product name from products subgraph and reviews from reviews subgraph in a single response.</p>
+
+  <h3>3. Set up the federation gateway with Apollo Router</h3>
+  <p>Deploy Apollo Router as the single client-facing endpoint. It composes subgraph schemas into a supergraph, builds query plans, and routes operations to the appropriate subgraphs. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src1</a>]</p>
+  <pre><code class="language-yaml"># supergraph.yaml -- Apollo Router configuration
+supergraph:
+  listen: 0.0.0.0:4000
+  introspection: false  # disabled in production
+subgraphs:
+  products:
+    routing_url: http://products-service:4001/graphql
+  reviews:
+    routing_url: http://reviews-service:4002/graphql
+  users:
+    routing_url: http://users-service:4003/graphql</code></pre>
+  <pre><code class="language-bash"># Compose and validate the supergraph
+rover supergraph compose --config supergraph.yaml > supergraph.graphql
+
+# Start the router
+./router --supergraph supergraph.graphql --config router.yaml</code></pre>
+  <p><strong>Verify</strong>: <code>curl -X POST http://localhost:4000/ -H "Content-Type: application/json" -d '{"query":"{ __typename }"}'</code> → returns <code>{"data":{"__typename":"Query"}}</code>.</p>
+
+  <h3>4. Implement DataLoader for N+1 prevention</h3>
+  <p>Create request-scoped DataLoader instances for every data source a resolver calls. DataLoader batches all <code>.load(key)</code> calls within a single tick into one batch function call. [<a href="https://www.infoq.com/articles/federated-GraphQL-platform-Netflix/">src2</a>]</p>
+  <pre><code class="language-javascript">// dataloaders.js -- Request-scoped DataLoader factory
+const DataLoader = require("dataloader");  // dataloader@2.2
+const db = require("./db");
+
+function createLoaders() {
+  return {
+    productLoader: new DataLoader(async (ids) => {
+      const products = await db.query(
+        "SELECT * FROM products WHERE id = ANY($1)", [ids]
+      );
+      const map = new Map(products.map(p => [p.id, p]));
+      return ids.map(id => map.get(id) || null);
+    }),
+  };
+}</code></pre>
+  <p><strong>Verify</strong>: Enable query logging on database → a query for 10 products with reviews produces exactly 2 SQL queries, not 11.</p>
+
+  <h3>5. Add query complexity analysis and depth limiting</h3>
+  <p>Configure the gateway to reject queries that exceed a maximum depth or complexity cost before execution. Assign cost weights to fields based on their resolver expense. [<a href="https://graphql.org/learn/security/">src4</a>]</p>
+  <pre><code class="language-javascript">// Apollo Server with query complexity plugin
+const { createComplexityLimitRule } = require("graphql-validation-complexity");
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [
+    createComplexityLimitRule(1000, {
+      scalarCost: 1,
+      objectCost: 2,
+      listFactor: 10,
+    }),
+  ],
+});</code></pre>
+  <p><strong>Verify</strong>: Send a deeply nested query (depth 15) → receive error. Send a wide query with many list fields → receive cost exceeded error.</p>
+
+  <h3>6. Implement persisted queries and client allowlisting</h3>
+  <p>Use Automatic Persisted Queries (APQ) for public clients or a compiled operation allowlist for trusted clients. [<a href="https://www.apollographql.com/blog/9-ways-to-secure-your-graphql-api-security-checklist">src7</a>]</p>
+  <pre><code class="language-javascript">const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    cache: new KeyvAdapter(new Keyv("redis://redis:6379")),
+    ttl: 86400,  // 24 hours
+  },
+});
+// Client sends hash first: { "extensions": { "persistedQuery": { "sha256Hash": "abc..." } } }</code></pre>
+  <p><strong>Verify</strong>: Send a query with only its SHA-256 hash → first returns <code>PersistedQueryNotFound</code>, second with full query registers it, third with hash returns cached result.</p>
+
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>TypeScript: Apollo Federation Subgraph with Authentication</h3>
+  <pre><code class="language-typescript">// products-subgraph/index.ts -- Complete federated subgraph
+// Input:  GraphQL queries routed from Apollo Router
+// Output: Product data with field-level authorization
+
+import { ApolloServer } from "@apollo/server";  // @apollo/server@4.11
+import { buildSubgraphSchema } from "@apollo/subgraph";  // @apollo/subgraph@2.9
+import { gql } from "graphql-tag";
+
+const typeDefs = gql`
+  extend schema @link(url: "https://specs.apollo.dev/federation/v2.5",
+    import: ["@key", "@shareable", "@requires", "@external"])
+
+  type Product @key(fields: "id") {
+    id: ID!
+    name: String!
+    price: Float!
+    internalCost: Float @auth(requires: ADMIN)
+  }
+
+  type Query {
+    product(id: ID!): Product
+    products(first: Int = 20, after: String): ProductConnection!
+  }
+`;
+
+const server = new ApolloServer({
+  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});</code></pre>
+
+  <h3>Go: gqlgen Subgraph with DataLoader</h3>
+  <pre><code class="language-go">// resolvers/product.go -- gqlgen resolver with dataloaden
+// Input:  GraphQL product queries
+// Output: Batched database responses
+
+package resolvers
+
+import (
+    "context"
+    "github.com/graph-gophers/dataloader/v7"
+)
+
+func (r *queryResolver) Product(ctx context.Context, id string) (*Product, error) {
+    thunk := r.Loaders.ProductLoader.Load(ctx, dataloader.StringKey(id))
+    result, err := thunk()
+    if err != nil {
+        return nil, err
+    }
+    return result.(*Product), nil
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Exposing database structure as GraphQL schema</h3>
+  <pre><code class="language-graphql">// BAD -- Schema mirrors database tables, not business domain
+type products_table {
+  product_id: Int!
+  product_name: String
+  category_fk: Int
+  created_at: String
+  is_deleted: Boolean
+}
+// Leaks implementation details, exposes internal IDs.</code></pre>
+
+  <h3>Correct: Design schema around business domain</h3>
+  <pre><code class="language-graphql">// GOOD -- Schema represents business concepts [src3]
+type Product @key(fields: "id") {
+  id: ID!
+  name: String!
+  price: Money!
+  category: Category!
+  availability: Availability!
+}
+// Clean business types, strong typing, no leaked internals.</code></pre>
+
+  <h3>Wrong: Resolvers without DataLoader (N+1 problem)</h3>
+  <pre><code class="language-javascript">// BAD -- Each product triggers a separate DB query
+const resolvers = {
+  Product: {
+    reviews(product) {
+      return db.query("SELECT * FROM reviews WHERE product_id = $1", [product.id]);
+    },
+  },
+};
+// 100 products = 101 database queries.</code></pre>
+
+  <h3>Correct: Batched resolvers with DataLoader</h3>
+  <pre><code class="language-javascript">// GOOD -- DataLoader batches all review fetches into 1 query [src2]
+const resolvers = {
+  Product: {
+    reviews(product, _, { loaders }) {
+      return loaders.reviewsByProductLoader.load(product.id);
+      // 100 products = 2 database queries total.
+    },
+  },
+};</code></pre>
+
+  <h3>Wrong: No query depth or complexity limits</h3>
+  <pre><code class="language-javascript">// BAD -- Accepts any query, no matter how expensive
+const server = new ApolloServer({ typeDefs, resolvers });
+// Attacker sends deeply nested query -> server runs out of memory.</code></pre>
+
+  <h3>Correct: Enforce depth + complexity limits at gateway</h3>
+  <pre><code class="language-javascript">// GOOD -- Reject expensive queries before execution [src4]
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [depthLimit(10), complexityLimit(1000)],
+  introspection: false,
+});</code></pre>
+
+  <h3>Wrong: Offset-based pagination</h3>
+  <pre><code class="language-graphql"># BAD -- Offset pagination degrades at scale
+type Query {
+  products(limit: Int, offset: Int): [Product]
+}
+# offset: 100000 -> database scans and skips 100K rows.</code></pre>
+
+  <h3>Correct: Cursor-based (Relay-style) pagination</h3>
+  <pre><code class="language-graphql"># GOOD -- Cursor pagination is stable and performant [src3]
+type Query {
+  products(first: Int!, after: String): ProductConnection!
+}
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+}
+# O(1) seek regardless of page position.</code></pre>
+
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>N+1 queries in nested resolvers</strong>: The most common GraphQL performance issue. Every resolver that accesses a data source must use DataLoader. Fix: Create per-request DataLoader instances for every data source. [<a href="https://www.infoq.com/articles/federated-GraphQL-platform-Netflix/">src2</a>]</li>
+    <li><strong>Federation composition failures in CI/CD</strong>: Subgraph schema changes that break composition are only caught when all subgraphs are composed together. Fix: Run <code>rover subgraph check</code> in CI for every PR. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src1</a>]</li>
+    <li><strong>Over-fetching via SELECT * in resolvers</strong>: Resolvers fetch all columns even when the client only requests 2 fields. Fix: Inspect <code>info.fieldNodes</code> to determine requested fields. [<a href="https://shopify.engineering/unifying-graphql-design-patterns-best-practices-tutorials">src3</a>]</li>
+    <li><strong>Missing error handling in __resolveReference</strong>: If a subgraph's reference resolver throws, the entire federated query fails. Fix: Return <code>null</code> with a partial error for missing entities. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src1</a>]</li>
+    <li><strong>Client-side caching issues with mutations</strong>: After a mutation, the client cache holds stale data. Fix: Return the mutated object in the mutation response; use <code>refetchQueries</code> for complex invalidation. [<a href="https://www.apollographql.com/blog/9-ways-to-secure-your-graphql-api-security-checklist">src7</a>]</li>
+    <li><strong>Unbounded list fields without pagination</strong>: A field like <code>reviews: [Review!]!</code> with no limit can return millions of rows. Fix: Always use connection-style pagination with a maximum <code>first</code> value. [<a href="https://graphql.org/learn/security/">src4</a>]</li>
+    <li><strong>Gateway timeout on slow subgraphs</strong>: One slow subgraph blocks the entire federated query. Fix: Set per-subgraph timeouts in router config; return partial data with errors. [<a href="https://www.infoq.com/articles/federated-GraphQL-platform-Netflix/">src2</a>]</li>
+    <li><strong>Schema drift between subgraph and gateway</strong>: Deploying a subgraph before updating the supergraph causes runtime errors. Fix: Use a CI/CD pipeline that composes, validates, and deploys atomically. [<a href="https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/federation">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Validate supergraph composition
+rover supergraph compose --config supergraph.yaml
+
+# Check a subgraph against the deployed supergraph
+rover subgraph check &lt;graph&gt;@&lt;variant&gt; --schema products.graphql --name products
+
+# Introspect a running subgraph (development only)
+rover subgraph introspect http://localhost:4001/graphql
+
+# Test query execution through the gateway
+curl -X POST http://localhost:4000/ \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ product(id: \"1\") { name price reviews { rating } } }"}'
+
+# Monitor Apollo Router metrics (Prometheus)
+curl http://localhost:9090/metrics | grep apollo_router
+
+# Trace query execution plan in Apollo Router
+APOLLO_ROUTER_LOG=apollo_router::query_planner=debug ./router --supergraph supergraph.graphql</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GraphQL Spec Sep 2025</td><td>Current</td><td>Schema Coordinates, OneOf inputs</td><td>First spec update since Oct 2021</td></tr>
+      <tr><td>Apollo Federation v2.5+</td><td>Current</td><td>None since v2.0</td><td>Requires @link directive</td></tr>
+      <tr><td>Apollo Federation v2.0</td><td>Stable</td><td>@key syntax changed from v1</td><td>Add @link import, replace @requires syntax</td></tr>
+      <tr><td>Apollo Federation v1</td><td>Deprecated</td><td>---</td><td>Upgrade to v2 for @shareable, @override</td></tr>
+      <tr><td>Netflix DGS 9.x</td><td>Current (Spring Boot 3.x)</td><td>Requires Java 17+</td><td>Aligns with Spring GraphQL</td></tr>
+      <tr><td>Netflix DGS 7.x</td><td>Maintenance</td><td>---</td><td>Upgrade to 9.x for Spring Boot 3</td></tr>
+      <tr><td>GraphQL Mesh v1.x</td><td>Current</td><td>---</td><td>Replaces 0.x with stable API</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multiple teams need to contribute to a unified API independently</td><td>Single team owns the entire API surface</td><td>Monolith GraphQL server (Apollo Server, graphql-yoga)</td></tr>
+      <tr><td>Clients need flexible, nested data fetching in a single request</td><td>Simple CRUD with flat resources and no nesting</td><td>REST API with OpenAPI spec</td></tr>
+      <tr><td>Mobile + web clients have very different data needs for the same screen</td><td>All clients need identical data shapes</td><td>REST with versioned endpoints</td></tr>
+      <tr><td>Need to compose multiple backend services into one API</td><td>Single backend database with no microservices</td><td>Direct GraphQL-to-database (Hasura, PostGraphile)</td></tr>
+      <tr><td>Schema evolution without breaking clients is critical</td><td>Strict API versioning is acceptable</td><td>REST with content negotiation</td></tr>
+      <tr><td>Need real-time subscriptions alongside queries</td><td>Only request-response needed, no real-time</td><td>REST API or gRPC for service-to-service</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Apollo Federation v2 is not backward-compatible with v1 schemas -- the <code>@link</code> directive and import syntax are required. Gradual migration is supported but requires updating all subgraphs.</li>
+    <li>Netflix runs 800+ DGS subgraphs in production with federation -- but they built extensive internal tooling. Do not assume the open-source DGS framework alone gives you Netflix-scale capabilities.</li>
+    <li>Shopify's GraphQL design tutorial recommends designing around business domain objects, not database tables -- this is the single most impactful architecture decision.</li>
+    <li>GraphQL over HTTP is not yet fully standardized (working draft as of 2025). Most implementations use POST with JSON body, but GET for persisted queries varies.</li>
+    <li>Federation adds latency per hop: a query touching 3 subgraphs makes 3 network calls from the gateway. For latency-sensitive paths, denormalize data into a single subgraph or use entity caching.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/rest-to-graphql/2026" data-relationship="depends_on">REST to GraphQL Migration</a>
+    <a href="/software/debugging/graphql-n-plus-1-dataloader/2026" data-relationship="related_to">GraphQL N+1 and DataLoader Debugging</a>
+    <a href="/software/system-design/e-commerce-platform/2026" data-relationship="related_to">E-Commerce Platform Architecture</a>
+    <a href="/software/system-design/api-gateway/2026" data-relationship="related_to">API Gateway Design Patterns</a>
+    <a href="/software/system-design/rest-api-architecture/2026" data-relationship="alternative_to">REST API Architecture at Scale</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

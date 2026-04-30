@@ -6,17 +6,22 @@ aliases:
   - "grid connection wait times"
   - "FERC interconnection queue delays"
   - "how long to connect to the grid"
-entity_type: situation_assessment
+entity_type: concept
+jurisdiction: US
 domain: energy > grid_infrastructure > interconnection
 region: US
 temporal_scope: 2024-2025
-last_verified: 2025-04-15
+last_verified: 2026-04-27
 confidence: 0.9
-freshness: quarterly
-version: 1.0
+temporal_validity:
+  status: stable
+  change_sensitivity: low
+  next_review: 2026-10-27
+  last_breaking_change: 2024-07-28
+version: 1.1
 first_published: 2025-03-01
 canonical_source: "https://knowledgelib.io/energy/us/interconnection-queue/status-2025"
-suggested_citation: "Source: knowledgelib.io — AI Knowledge Library (verified 2025-04-15)"
+suggested_citation: "Source: knowledgelib.io — AI Knowledge Library (verified 2026-04-27)"
 
 sources:
   - id: src1

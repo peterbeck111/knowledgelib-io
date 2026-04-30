@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Designing a File Storage System (Dropbox/S3 Clone) | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a file storage system like Dropbox or S3.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/file-storage-system/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Designing a File Storage System (Dropbox/S3 Clone) | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a file storage system like Dropbox or S3. Covers component architecture (14 components), chunking strategies, deduplication, presigned URLs, erasure coding vs replication, with Python and Node.js code examples. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/file-storage-system/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Designing a File Storage System (Dropbox/S3 Clone) | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a file storage system like Dropbox or S3. Covers component architecture (14 components), chunking strategies, deduplication, presigned URLs, erasure coding vs replication, with Python and Node.js code examples. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.91">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/file_storage_system">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a file storage system (Dropbox/S3 clone)?">
+  <meta name="ai:aliases" content="design cloud file storage; build a Dropbox clone architecture; S3-like object storage system design; distributed file storage architecture; cloud storage system design interview; file sync service design; object storage system design; design Google Drive backend">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/file-storage-system/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,sync_requirement,storage_type">
+  <meta name="ai:constraints" content="Never store file content and metadata in the same database; Always encrypt files at rest (AES-256) and in transit (TLS 1.2+); Chunk size selection is irreversible at scale; Presigned URLs must have short TTLs; Replication factor and erasure coding scheme determine durability and cost">
+  <meta name="ai:skip_this_unit_if" content="Need a CDN design -> CDN focuses on edge caching, not durable storage; Need a database design -> Database design focuses on query processing and indexing; Need only a simple file upload endpoint -> Use managed S3 directly with presigned URLs">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Designing a File Storage System (Dropbox/S3 Clone)",
+    "headline": "Designing a File Storage System (Dropbox/S3 Clone)",
+    "description": "Complete system design guide for building a distributed file storage system like Dropbox or AWS S3. Covers metadata service, blob storage, chunking, deduplication, presigned URLs, erasure coding, sync protocol, and security. Includes component architecture table with 14 components, decision tree for storage type and scale, Python chunked upload, Node.js presigned URL generation, 4 anti-pattern pairs, and 8 common pitfalls.",
+    "keywords": ["file storage system design", "Dropbox architecture", "S3 clone", "object storage", "chunking", "deduplication", "erasure coding", "presigned URLs", "distributed storage", "system design interview"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "AWS S3 / GCS / MinIO, PostgreSQL / DynamoDB, Python 3.10+, Node.js 18+, AWS SDK v3",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "S3 Architecture - The System Design Newsletter",
+        "url": "https://newsletter.systemdesign.one/p/s3-architecture"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A peek behind Colossus, Google's file system",
+        "url": "https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design a File Storage Service Like Dropbox",
+        "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Performance design patterns for Amazon S3",
+        "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance-design-patterns.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Generate a presigned URL in modular AWS SDK for JavaScript",
+        "url": "https://aws.amazon.com/blogs/developer/generate-presigned-url-modular-aws-sdk-javascript/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Erasure Coding vs. Replication for Fault Tolerant Systems",
+        "url": "https://www.geeksforgeeks.org/system-design/erasure-coding-vs-replication-for-fault-tolerant-systems/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "FastCDC: a Fast and Efficient Content-Defined Chunking Approach",
+        "url": "https://www.usenix.org/system/files/conference/atc16/atc16-paper-xia.pdf"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Designing a File Storage System (Dropbox/S3 Clone)",
+    "description": "System design reference for building distributed file storage systems. Component architecture, chunking strategies, deduplication, durability patterns, and implementation examples.",
+    "keywords": ["file storage", "system design", "Dropbox", "S3", "object storage", "distributed systems"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "AWS"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Hello Interview"},
+      {"@type": "Organization", "name": "USENIX"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Designing a File Storage System (Dropbox/S3 Clone)" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a file storage system (Dropbox/S3 clone)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "design cloud file storage",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "build a Dropbox clone architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "S3-like object storage system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "distributed file storage architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cloud storage system design interview",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Designing a File Storage System (Dropbox/S3 Clone)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a file storage system (Dropbox/S3 clone)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/file-storage-system/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A file storage system separates metadata (SQL/NoSQL DB) from blob storage (object store), uses chunking for large files, and requires careful choices around consistency, deduplication, and durability.</li>
+    <li><strong>Key tool/command</strong>: <code>aws s3api put-object</code> or presigned URLs for direct client-to-storage uploads bypassing your servers.</li>
+    <li><strong>Watch out for</strong>: Storing file content in your database -- always separate metadata from blob storage.</li>
+    <li><strong>Works with</strong>: Any cloud (AWS S3, GCS, Azure Blob) or self-hosted (MinIO, Ceph, SeaweedFS); language-agnostic architecture.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Never store file content and metadata in the same database -- metadata needs low-latency queries, blobs need throughput-optimized storage</li>
+    <li>Always encrypt files at rest (AES-256) and in transit (TLS 1.2+) -- regulatory requirement for any production file storage</li>
+    <li>Chunk size selection is irreversible at scale -- migrating billions of existing chunks to a new size requires a full rewrite pipeline</li>
+    <li>Presigned URLs must have short TTLs (5-15 min for uploads, 1-60 min for downloads) -- leaked URLs grant unauthenticated access</li>
+    <li>Replication factor and erasure coding scheme determine both durability and storage cost -- changing after deployment requires data migration</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Gateway</td><td>Route requests, auth, rate limiting</td><td>Nginx, Kong, AWS API Gateway</td><td>Horizontal + auto-scaling</td></tr>
+      <tr><td>Metadata Service</td><td>File/folder CRUD, permissions, versions</td><td>Custom service (Go/Java)</td><td>Horizontal with DB sharding</td></tr>
+      <tr><td>Metadata Database</td><td>Store file metadata, hierarchy, ACLs</td><td>PostgreSQL, MySQL, DynamoDB, CockroachDB</td><td>Shard by user_id or org_id</td></tr>
+      <tr><td>Blob Storage</td><td>Persist raw file chunks</td><td>AWS S3, GCS, MinIO, Ceph, SeaweedFS</td><td>Virtually unlimited (managed) or add nodes (self-hosted)</td></tr>
+      <tr><td>Chunk Service</td><td>Split files into chunks, compute hashes</td><td>Custom service (Go/Rust)</td><td>Horizontal, stateless workers</td></tr>
+      <tr><td>Deduplication Index</td><td>Map content hashes to stored chunks</td><td>Redis, DynamoDB, Cassandra</td><td>Partition by hash prefix</td></tr>
+      <tr><td>Upload/Download Service</td><td>Presigned URL generation, multipart orchestration</td><td>Custom + cloud SDK</td><td>Horizontal, stateless</td></tr>
+      <tr><td>Sync Service</td><td>Detect changes, push notifications to devices</td><td>WebSocket server + message queue</td><td>Horizontal + connection affinity</td></tr>
+      <tr><td>Message Queue</td><td>Async processing (thumbnails, virus scan, indexing)</td><td>Kafka, SQS, RabbitMQ</td><td>Partition by file_id or user_id</td></tr>
+      <tr><td>Notification Service</td><td>Push file change events to clients</td><td>WebSocket, SSE, long polling</td><td>Horizontal with pub/sub backend</td></tr>
+      <tr><td>CDN</td><td>Cache frequently accessed files at edge</td><td>CloudFront, Cloudflare, Fastly</td><td>Global PoPs, cache by object key</td></tr>
+      <tr><td>Thumbnail/Preview Service</td><td>Generate previews for images, docs, video</td><td>Lambda/Cloud Functions, dedicated workers</td><td>Horizontal, event-driven</td></tr>
+      <tr><td>Virus Scanner</td><td>Scan uploads before making files available</td><td>ClamAV, cloud-based (S3 Malware Protection)</td><td>Queue-based, horizontal workers</td></tr>
+      <tr><td>Encryption Service</td><td>Key management, envelope encryption</td><td>AWS KMS, HashiCorp Vault</td><td>Managed service or HA cluster</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Need real-time sync across devices?
+|   |-- YES --&gt; Full Dropbox-like architecture (sync service + notification service + chunking)
+|   +-- NO --&gt; Simpler S3-like store-and-retrieve architecture
+|
+|-- Storage semantics?
+|   |-- Object (flat, immutable) --&gt; Object storage (S3-compatible API, content-addressable)
+|   |-- File (hierarchical, mutable) --&gt; File storage with metadata DB + blob backend
+|   +-- Block (raw volumes) --&gt; Block storage (EBS-like, out of scope for this unit)
+|
+|-- Expected file sizes?
+|   |-- Mostly &lt;10MB --&gt; No chunking needed, direct upload to blob store
+|   |-- Mixed (10MB-5GB) --&gt; Fixed-size chunking (4-8MB chunks), multipart upload
+|   +-- Large files (&gt;5GB) --&gt; Content-defined chunking for dedup + parallel upload
+|
+|-- Durability requirement?
+|   |-- 99.999999999% (11 nines, S3-class) --&gt; Erasure coding (Reed-Solomon 10+4) across AZs
+|   |-- 99.9999% (6 nines) --&gt; 3x replication across data centers
+|   +-- 99.99% (4 nines) --&gt; 2x replication, single region
+|
+|-- Deduplication priority?
+|   |-- High (storage cost critical) --&gt; Content-defined chunking + per-chunk dedup index
+|   |-- Moderate --&gt; Fixed-size chunking + file-level dedup (hash full file)
+|   +-- Low (simplicity first) --&gt; No dedup, store every upload as-is</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define the data model for metadata</h3>
+  <p>Design your metadata schema to support files, folders, versions, and sharing. Keep metadata separate from blob storage. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox">src3</a>]</p>
+  <pre><code class="language-sql">-- Core metadata tables
+CREATE TABLE users (
+    user_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email       VARCHAR(255) UNIQUE NOT NULL,
+    storage_quota_bytes BIGINT DEFAULT 10737418240,  -- 10GB default
+    storage_used_bytes  BIGINT DEFAULT 0,
+    created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE files (
+    file_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(user_id),
+    parent_id   UUID REFERENCES files(file_id),  -- NULL = root
+    name        VARCHAR(1024) NOT NULL,
+    is_folder   BOOLEAN DEFAULT FALSE,
+    mime_type   VARCHAR(255),
+    size_bytes  BIGINT,
+    checksum    VARCHAR(64),  -- SHA-256 of full file
+    version     INTEGER DEFAULT 1,
+    status      VARCHAR(20) DEFAULT 'active',
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    updated_at  TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (user_id, parent_id, name)
+);
+
+CREATE TABLE file_chunks (
+    chunk_id    VARCHAR(64) PRIMARY KEY,  -- SHA-256 of chunk content
+    size_bytes  INTEGER NOT NULL,
+    ref_count   INTEGER DEFAULT 1,
+    storage_key VARCHAR(512) NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE file_chunk_map (
+    file_id     UUID REFERENCES files(file_id),
+    chunk_id    VARCHAR(64) REFERENCES file_chunks(chunk_id),
+    chunk_index INTEGER NOT NULL,
+    PRIMARY KEY (file_id, chunk_index)
+);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT count(*) FROM information_schema.tables WHERE table_name IN ('users','files','file_chunks','file_chunk_map');</code> &rarr; expected: <code>4</code></p>
+
+  <h3>2. Implement chunked file upload</h3>
+  <p>Split files into chunks on the client side, compute SHA-256 hashes, and upload only new chunks. This enables deduplication and resumable uploads. [<a href="https://newsletter.systemdesign.one/p/s3-architecture">src1</a>]</p>
+  <pre><code class="language-python"># chunk_upload.py -- Client-side chunked upload with dedup
+import hashlib
+import requests
+
+CHUNK_SIZE = 4 * 1024 * 1024  # 4MB chunks
+API_BASE = "https://api.filestorage.example.com"
+
+def upload_file(filepath: str, token: str) -&gt; dict:
+    """Upload a file in chunks with deduplication."""
+    chunks = []
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with open(filepath, "rb") as f:
+        index = 0
+        while True:
+            data = f.read(CHUNK_SIZE)
+            if not data:
+                break
+            chunk_hash = hashlib.sha256(data).hexdigest()
+            chunks.append({"index": index, "hash": chunk_hash, "size": len(data)})
+
+            # Check if chunk already exists (dedup)
+            check = requests.head(
+                f"{API_BASE}/chunks/{chunk_hash}",
+                headers=headers
+            )
+            if check.status_code == 404:
+                # Get presigned upload URL
+                resp = requests.post(
+                    f"{API_BASE}/chunks/upload-url",
+                    json={"chunk_hash": chunk_hash, "size": len(data)},
+                    headers=headers
+                )
+                presigned_url = resp.json()["upload_url"]
+                # Upload directly to blob store
+                requests.put(presigned_url, data=data)
+
+            index += 1
+
+    # Register the file with its chunk manifest
+    file_hash = hashlib.sha256(
+        "".join(c["hash"] for c in chunks).encode()
+    ).hexdigest()
+    resp = requests.post(
+        f"{API_BASE}/files",
+        json={
+            "name": filepath.split("/")[-1],
+            "checksum": file_hash,
+            "chunks": chunks,
+        },
+        headers=headers,
+    )
+    return resp.json()</code></pre>
+  <p><strong>Verify</strong>: Upload a 20MB file &rarr; should produce 5 chunks of 4MB each, server returns <code>201</code> with <code>file_id</code></p>
+
+  <h3>3. Generate presigned URLs for direct client-to-storage transfer</h3>
+  <p>Use presigned URLs so clients upload/download directly to/from blob storage, bypassing your servers. This is critical for scalability. [<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance-design-patterns.html">src4</a>] [<a href="https://aws.amazon.com/blogs/developer/generate-presigned-url-modular-aws-sdk-javascript/">src5</a>]</p>
+  <pre><code class="language-javascript">// presigned-urls.js -- Generate S3 presigned URLs (AWS SDK v3)
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3 = new S3Client({ region: "us-east-1" });
+const BUCKET = "user-files-prod";
+
+export async function getUploadUrl(chunkHash, sizeBytes) {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: `chunks/${chunkHash}`,
+    ContentLength: sizeBytes,
+    ServerSideEncryption: "aws:kms",
+  });
+  return getSignedUrl(s3, command, { expiresIn: 600 }); // 10 min
+}
+
+export async function getDownloadUrl(fileKey, filename) {
+  const command = new GetObjectCommand({
+    Bucket: BUCKET,
+    Key: fileKey,
+    ResponseContentDisposition: `attachment; filename="${filename}"`,
+  });
+  return getSignedUrl(s3, command, { expiresIn: 3600 }); // 60 min
+}</code></pre>
+  <p><strong>Verify</strong>: Call <code>getUploadUrl("abc123", 4194304)</code> &rarr; returns URL starting with <code>https://user-files-prod.s3.us-east-1.amazonaws.com/...</code></p>
+
+  <h3>4. Design the sync protocol for real-time file synchronization</h3>
+  <p>For Dropbox-like sync, implement a notification system where clients maintain a cursor (version vector) and receive push updates on file changes. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox">src3</a>]</p>
+  <pre><code>Client Sync Protocol:
+1. Client connects via WebSocket to /sync endpoint
+2. Client sends its last known cursor (monotonic version number)
+3. Server streams all changes since that cursor:
+   {action: "update", file_id: "...", version: 42, chunks: [...]}
+   {action: "delete", file_id: "...", version: 43}
+4. Client applies changes locally, updates cursor
+5. Server pushes new changes in real-time as they occur
+6. On conflict: last-writer-wins + save conflicted copy</code></pre>
+  <p><strong>Verify</strong>: Two clients connected &rarr; modify file on Client A &rarr; Client B receives change event within 2 seconds</p>
+
+  <h3>5. Configure durability with replication or erasure coding</h3>
+  <p>Choose between replication (simpler, faster reads) and erasure coding (cheaper storage, higher durability) based on your scale and budget. [<a href="https://www.geeksforgeeks.org/system-design/erasure-coding-vs-replication-for-fault-tolerant-systems/">src6</a>]</p>
+  <pre><code>Durability Comparison:
+                          3x Replication    Reed-Solomon (10,4)
+Storage overhead:         200%              40%
+Read latency:             Lowest            Slightly higher (decode)
+Write latency:            Low               Moderate (encode)
+Repair bandwidth:         Copy 1 replica    Read 10 chunks to reconstruct
+Durability (3 AZs):      ~99.9999%         ~99.999999999%
+Min nodes to survive:     1 of 3            10 of 14
+Best for:                 Hot data           Warm/cold data</code></pre>
+  <p><strong>Verify</strong>: Calculate: with 1PB raw data, 3x replication = 3PB total; erasure coding (10,4) = 1.4PB total &rarr; 53% storage savings</p>
+
+  <h3>6. Implement content-defined chunking for deduplication</h3>
+  <p>For systems that prioritize storage efficiency, use content-defined chunking (CDC) instead of fixed-size chunks. CDC produces stable chunk boundaries even when bytes are inserted or deleted. [<a href="https://www.usenix.org/system/files/conference/atc16/atc16-paper-xia.pdf">src7</a>]</p>
+  <pre><code class="language-python"># cdc_chunking.py -- Content-Defined Chunking using Rabin fingerprint
+import hashlib
+
+WINDOW_SIZE = 48
+MIN_CHUNK = 2 * 1024 * 1024    # 2MB minimum
+MAX_CHUNK = 8 * 1024 * 1024    # 8MB maximum
+TARGET_CHUNK = 4 * 1024 * 1024 # 4MB target
+MASK = (1 &lt;&lt; 22) - 1           # ~4MB average with 22-bit mask
+
+def chunk_file_cdc(filepath: str) -&gt; list[dict]:
+    """Split file using content-defined chunking."""
+    chunks = []
+    with open(filepath, "rb") as f:
+        buf = bytearray()
+        fingerprint = 0
+
+        while True:
+            byte = f.read(1)
+            if not byte:
+                if buf:
+                    h = hashlib.sha256(bytes(buf)).hexdigest()
+                    chunks.append({"hash": h, "size": len(buf)})
+                break
+
+            buf.append(byte[0])
+            if len(buf) &lt; MIN_CHUNK:
+                continue
+
+            fingerprint = ((fingerprint &lt;&lt; 1) + byte[0]) &amp; 0xFFFFFFFF
+
+            if (fingerprint &amp; MASK) == 0 or len(buf) &gt;= MAX_CHUNK:
+                h = hashlib.sha256(bytes(buf)).hexdigest()
+                chunks.append({"hash": h, "size": len(buf)})
+                buf = bytearray()
+                fingerprint = 0
+
+    return chunks</code></pre>
+  <p><strong>Verify</strong>: Chunk a 50MB file &rarr; expect 10-15 chunks; modify 1KB in the middle &rarr; only 1-2 chunks change</p>
+
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Chunked Upload with Retry Logic</h3>
+  <pre><code class="language-python"># Input:  filepath (str), api_base (str), token (str)
+# Output: dict with file_id and upload status
+
+import hashlib
+import requests
+from requests.adapters import HTTPAdapter, Retry
+
+CHUNK_SIZE = 4 * 1024 * 1024  # 4MB
+
+session = requests.Session()
+session.mount("https://", HTTPAdapter(
+    max_retries=Retry(total=3, backoff_factor=0.5,
+                      status_forcelist=[500, 502, 503])
+))
+
+def upload_chunked(filepath: str, api_base: str, token: str) -&gt; dict:
+    headers = {"Authorization": f"Bearer {token}"}
+    chunks = []
+    with open(filepath, "rb") as f:
+        idx = 0
+        while data := f.read(CHUNK_SIZE):
+            chunk_hash = hashlib.sha256(data).hexdigest()
+            if session.head(f"{api_base}/chunks/{chunk_hash}",
+                           headers=headers).status_code == 404:
+                url_resp = session.post(f"{api_base}/chunks/upload-url",
+                    json={"hash": chunk_hash, "size": len(data)},
+                    headers=headers)
+                session.put(url_resp.json()["url"], data=data,
+                           headers={"Content-Type": "application/octet-stream"})
+            chunks.append({"index": idx, "hash": chunk_hash, "size": len(data)})
+            idx += 1
+    return session.post(f"{api_base}/files",
+        json={"name": filepath.rsplit("/", 1)[-1], "chunks": chunks},
+        headers=headers).json()</code></pre>
+
+  <h3>Node.js: S3 Presigned URL Generation</h3>
+  <pre><code class="language-javascript">// Input:  objectKey (string), bucket (string)
+// Output: { uploadUrl, downloadUrl } with presigned URLs
+
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3 = new S3Client({ region: process.env.AWS_REGION || "us-east-1" });
+
+export async function generatePresignedUrls(objectKey, bucket) {
+  const uploadUrl = await getSignedUrl(s3,
+    new PutObjectCommand({ Bucket: bucket, Key: objectKey,
+      ServerSideEncryption: "aws:kms" }),
+    { expiresIn: 600 }
+  );
+  const downloadUrl = await getSignedUrl(s3,
+    new GetObjectCommand({ Bucket: bucket, Key: objectKey }),
+    { expiresIn: 3600 }
+  );
+  return { uploadUrl, downloadUrl };
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Streaming file content through your API servers</h3>
+  <pre><code class="language-python"># BAD -- File content passes through your server, creating a bottleneck
+@app.route("/upload", methods=["POST"])
+def upload():
+    file_data = request.files["file"].read()  # Entire file in server RAM
+    s3.put_object(Bucket="files", Key=key, Body=file_data)
+    return {"status": "ok"}</code></pre>
+
+  <h3>Correct: Use presigned URLs for direct client-to-storage transfer</h3>
+  <pre><code class="language-python"># GOOD -- Server only generates URL; client uploads directly to S3
+@app.route("/upload-url", methods=["POST"])
+def get_upload_url():
+    key = f"uploads/{uuid4()}/{request.json['filename']}"
+    url = s3.generate_presigned_url("put_object",
+        Params={"Bucket": "files", "Key": key}, ExpiresIn=600)
+    return {"upload_url": url, "key": key}</code></pre>
+
+  <h3>Wrong: Storing file content in the database</h3>
+  <pre><code class="language-python"># BAD -- Databases are not designed for large binary storage
+cursor.execute(
+    "INSERT INTO files (name, content) VALUES (%s, %s)",
+    (filename, file_bytes)  # Blows up DB size, kills query performance
+)</code></pre>
+
+  <h3>Correct: Store metadata in DB, content in object storage</h3>
+  <pre><code class="language-python"># GOOD -- Separate concerns: metadata in DB, blobs in S3
+s3.upload_fileobj(file_obj, "files-bucket", object_key)
+cursor.execute(
+    "INSERT INTO files (name, storage_key, size) VALUES (%s, %s, %s)",
+    (filename, object_key, file_size)
+)</code></pre>
+
+  <h3>Wrong: Uploading entire file on every edit</h3>
+  <pre><code class="language-python"># BAD -- Re-uploading 500MB file for a 1KB change
+def sync_file(filepath):
+    with open(filepath, "rb") as f:
+        s3.upload_fileobj(f, "bucket", filepath)  # Full re-upload every time</code></pre>
+
+  <h3>Correct: Upload only changed chunks (delta sync)</h3>
+  <pre><code class="language-python"># GOOD -- Only upload chunks whose hashes changed
+def sync_file(filepath, previous_chunks):
+    current_chunks = chunk_file(filepath)
+    for chunk in current_chunks:
+        if chunk["hash"] not in {c["hash"] for c in previous_chunks}:
+            upload_chunk(chunk)  # Only new/changed chunks
+    update_manifest(filepath, current_chunks)</code></pre>
+
+  <h3>Wrong: Single-region storage without replication</h3>
+  <pre><code class="language-python"># BAD -- One region failure = total data loss
+s3.create_bucket(Bucket="files", CreateBucketConfiguration={
+    "LocationConstraint": "us-east-1"
+})
+# No cross-region replication, no versioning</code></pre>
+
+  <h3>Correct: Cross-region replication with versioning</h3>
+  <pre><code class="language-python"># GOOD -- Enable versioning + cross-region replication
+s3.put_bucket_versioning(Bucket="files",
+    VersioningConfiguration={"Status": "Enabled"})
+s3.put_bucket_replication(Bucket="files", ReplicationConfiguration={
+    "Role": "arn:aws:iam::role/replication",
+    "Rules": [{"Status": "Enabled", "Destination": {
+        "Bucket": "arn:aws:s3:::files-replica-eu"}}]
+})</code></pre>
+
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>No multipart upload for large files</strong>: Files &gt;100MB uploaded as a single request will time out or fail on network interruption. Fix: Use multipart upload (S3 supports 5MB-5GB parts, up to 10,000 parts per upload). [<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance-design-patterns.html">src4</a>]</li>
+    <li><strong>Metadata hotspot on single DB</strong>: All users' file metadata in one database table leads to lock contention at scale. Fix: Shard metadata DB by <code>user_id</code> or <code>org_id</code>; use read replicas for listing operations. [<a href="https://newsletter.systemdesign.one/p/s3-architecture">src1</a>]</li>
+    <li><strong>No garbage collection for orphaned chunks</strong>: After file deletion, unreferenced chunks waste storage indefinitely. Fix: Implement reference counting on chunks; run periodic GC that deletes chunks with <code>ref_count=0</code>. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox">src3</a>]</li>
+    <li><strong>Ignoring eventual consistency in object stores</strong>: S3 now provides strong read-after-write consistency, but other stores may not. Fix: Implement a metadata-first approach -- only mark files as "available" after confirming upload completion. [<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance-design-patterns.html">src4</a>]</li>
+    <li><strong>Presigned URL leakage</strong>: Long-lived presigned URLs get cached in browser history and proxy logs. Fix: Keep upload URLs to 5-15 minutes; download URLs to 15-60 minutes. [<a href="https://aws.amazon.com/blogs/developer/generate-presigned-url-modular-aws-sdk-javascript/">src5</a>]</li>
+    <li><strong>No rate limiting on upload endpoints</strong>: Attackers can fill storage quotas or exhaust presigned URL generation. Fix: Rate limit upload-url generation per user and enforce storage quotas server-side. [<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance-design-patterns.html">src4</a>]</li>
+    <li><strong>Chunking without a manifest/recipe</strong>: Storing chunks without a file-to-chunk mapping makes reconstruction impossible. Fix: Always persist a file "recipe" (ordered list of chunk hashes) atomically with chunk uploads. [<a href="https://www.usenix.org/system/files/conference/atc16/atc16-paper-xia.pdf">src7</a>]</li>
+    <li><strong>No checksum verification on download</strong>: Silently serving corrupted data erodes trust. Fix: Store SHA-256 checksums at both chunk and file level; verify on download. [<a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance-design-patterns.html">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check S3 bucket replication status
+aws s3api get-bucket-replication --bucket my-files-bucket
+
+# Verify multipart uploads in progress (orphaned uploads waste storage)
+aws s3api list-multipart-uploads --bucket my-files-bucket
+
+# Check MinIO cluster health (self-hosted)
+mc admin info myminio
+
+# Verify data integrity with checksums
+aws s3api head-object --bucket my-files-bucket --key chunks/abc123 --checksum-mode ENABLED
+
+# Monitor storage usage per prefix
+aws s3api list-objects-v2 --bucket my-files-bucket --prefix chunks/ \
+  --query "sum(Contents[].Size)" --output text</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Storing user-uploaded files (documents, images, videos)</td><td>Storing structured/relational data needing queries</td><td>Relational database (PostgreSQL, MySQL)</td></tr>
+      <tr><td>Need &gt;99.999% durability for customer data</td><td>Need sub-millisecond latency for small key-value lookups</td><td>Redis, DynamoDB, or in-memory cache</td></tr>
+      <tr><td>Multi-device file sync (Dropbox-like)</td><td>Simple static asset serving (JS, CSS, images)</td><td>CDN with origin bucket</td></tr>
+      <tr><td>Files range from KB to multi-GB</td><td>All data is &lt;1KB (metadata-sized)</td><td>Key-value store (DynamoDB, Redis)</td></tr>
+      <tr><td>Need deduplication across users/files</td><td>Write-once archival with no dedup needs</td><td>S3 Glacier / cold storage directly</td></tr>
+      <tr><td>Compliance requires versioning and audit trails</td><td>Ephemeral/temporary data (cache, sessions)</td><td>Redis with TTL or temporary S3 with lifecycle rules</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>AWS S3 now provides strong read-after-write consistency (since Dec 2020), but other S3-compatible stores (MinIO, Ceph RADOS Gateway) may still be eventually consistent -- verify before assuming strong consistency.</li>
+    <li>Content-defined chunking (CDC) improves deduplication by 10-20% over fixed-size chunking, but adds CPU overhead and implementation complexity -- only worth it above ~100TB of stored data or when storage costs dominate.</li>
+    <li>Erasure coding reduces storage by ~53% vs 3x replication but increases read latency (must decode) and repair bandwidth -- use for warm/cold data, not hot paths.</li>
+    <li>Dropbox migrated from S3 to their own Magic Pocket system at exabyte scale to save costs -- for most systems under 1PB, managed object storage (S3, GCS) is the right choice.</li>
+    <li>Presigned URL security depends on AWS Signature Version 4 -- always use HTTPS, set minimal expiry, and consider S3 Access Points or VPC endpoints for internal traffic.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/url-shortener/2026" data-relationship="related_to">URL Shortener System Design</a>
+    <a href="/software/system-design/rate-limiter/2026" data-relationship="related_to">Rate Limiter System Design</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

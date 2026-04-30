@@ -1,0 +1,36 @@
+START: Choose your ingestion protocol
+├── Devices are battery-powered / bandwidth-constrained?
+│   ├── YES → Use MQTT 5.0 (2-byte header, minimal overhead) [src5]
+│   │         ├── Need QoS 2 (exactly-once delivery)?
+│   │         │   ├── YES → MQTT QoS 2 (higher latency, 4-packet handshake)
+│   │         │   └── NO → MQTT QoS 1 (at-least-once, best throughput)
+│   │         └── Continue to buffer selection below
+│   └── NO ↓
+├── Devices send < 1 msg/min and are on reliable networks?
+│   ├── YES → HTTP POST with batch payloads is acceptable
+│   └── NO ↓
+├── Need complex routing (exchanges, queues, priorities)?
+│   ├── YES → AMQP 1.0 (RabbitMQ) — enterprise messaging features [src5]
+│   └── NO ↓
+└── DEFAULT → MQTT 5.0 (industry standard for IoT) [src3]
+
+BUFFER SELECTION:
+├── > 100K messages/sec sustained throughput?
+│   ├── YES → Apache Kafka / Redpanda (partitioned log, replay) [src7]
+│   └── NO ↓
+├── Prefer managed service, < 100K msg/sec?
+│   ├── YES → Amazon Kinesis / Azure Event Hubs
+│   └── NO ↓
+└── DEFAULT → Kafka (most flexible, largest ecosystem)
+
+STORAGE SELECTION:
+├── Need SQL queries on time-series data?
+│   ├── YES → TimescaleDB (full PostgreSQL compatibility) [src4]
+│   └── NO ↓
+├── Need sub-second query latency on recent data?
+│   ├── YES → InfluxDB or QuestDB
+│   └── NO ↓
+├── AWS-native, serverless preferred?
+│   ├── YES → Amazon Timestream
+│   └── NO ↓
+└── DEFAULT → TimescaleDB (SQL + compression + ecosystem)

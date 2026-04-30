@@ -1,0 +1,32 @@
+// Input:  A repository needing both derived queries and custom JPQL
+// Output: Idiomatic Kotlin Spring Data repository
+
+interface OrderRepository : JpaRepository<Order, Long> {
+
+    // Derived query -- Spring generates SQL from method name
+    fun findByStatus(status: OrderStatus): List<Order>
+
+    // Nullable return for single-result queries
+    fun findByTrackingNumber(trackingNumber: String): Order?
+
+    // Custom JPQL with Kotlin-friendly parameter binding
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.createdAt > :since")
+    fun findRecentByStatus(
+        @Param("status") status: OrderStatus,
+        @Param("since") since: LocalDateTime
+    ): List<Order>
+
+    // Pagination support
+    fun findByCustomerId(customerId: Long, pageable: Pageable): Page<Order>
+
+    // Projection using Kotlin interface
+    @Query("SELECT o.id as id, o.product as product, o.status as status FROM Order o")
+    fun findAllSummaries(): List<OrderSummary>
+}
+
+// Kotlin projection interface
+interface OrderSummary {
+    val id: Long
+    val product: String
+    val status: OrderStatus
+}

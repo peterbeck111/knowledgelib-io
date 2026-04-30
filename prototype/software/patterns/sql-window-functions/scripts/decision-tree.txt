@@ -1,0 +1,30 @@
+START
+|-- Need to assign a position/number to each row?
+|   |-- YES: Need unique numbers (no ties)?
+|   |   |-- YES --> ROW_NUMBER()
+|   |   +-- NO: Need gaps after ties?
+|   |       |-- YES --> RANK()
+|   |       +-- NO --> DENSE_RANK()
+|   +-- NO |
+|-- Need to access a different row's value?
+|   |-- YES: Previous row?
+|   |   |-- YES --> LAG(col, offset, default)
+|   |   +-- NO: Next row?
+|   |       |-- YES --> LEAD(col, offset, default)
+|   |       +-- NO: First/last in partition?
+|   |           |-- FIRST --> FIRST_VALUE(col)
+|   |           +-- LAST --> LAST_VALUE(col) + explicit ROWS frame
+|   +-- NO |
+|-- Need a running/cumulative calculation?
+|   |-- YES: Running total?
+|   |   |-- YES --> SUM(col) OVER (ORDER BY ... ROWS UNBOUNDED PRECEDING)
+|   |   +-- NO: Sliding window (e.g., 3-row moving avg)?
+|   |       |-- YES --> AVG(col) OVER (ORDER BY ... ROWS BETWEEN N PRECEDING AND CURRENT ROW)
+|   |       +-- NO --> COUNT/MIN/MAX OVER (ORDER BY ... ROWS ...)
+|   +-- NO |
+|-- Need distribution/percentile analysis?
+|   |-- YES: Split into equal buckets?
+|   |   |-- YES --> NTILE(n)
+|   |   +-- NO --> PERCENT_RANK() or CUME_DIST()
+|   +-- NO |
++-- DEFAULT --> Check if GROUP BY with standard aggregates suffices

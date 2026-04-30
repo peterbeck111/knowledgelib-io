@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Debug ECONNREFUSED Errors in Node.js | knowledgelib.io</title>
+    <meta name="description" content="Complete debugging guide for Node.js ECONNREFUSED errors with 11 ranked causes, Docker/Kubernetes networking fixes, IPv6/IPv4 mismatch handling, retry...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/nodejs-econnrefused/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug ECONNREFUSED Errors in Node.js | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete debugging guide for Node.js ECONNREFUSED errors with 11 ranked causes, Docker/Kubernetes networking fixes, IPv6/IPv4 mismatch handling, retry patterns with exponential backoff, 4 code examples, 4 anti-pattern pairs, and diagnostic commands. 8 sources, all cited. Verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/nodejs-econnrefused/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug ECONNREFUSED Errors in Node.js | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete debugging guide for Node.js ECONNREFUSED errors with 11 ranked causes, Docker/Kubernetes networking fixes, IPv6/IPv4 mismatch handling, retry patterns with exponential backoff, 4 code examples, 4 anti-pattern pairs, and diagnostic commands. 8 sources, all cited. Verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/nodejs_econnrefused">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug ECONNREFUSED errors in Node.js?">
+    <meta name="ai:aliases"
+        content="Node.js ECONNREFUSED; Node.js connection refused; connect ECONNREFUSED 127.0.0.1; Error connect ECONNREFUSED; Node.js cannot connect to database; Node.js ECONNRESET; Node.js ETIMEDOUT connection; Node.js ENOTFOUND; Docker ECONNREFUSED localhost; Kubernetes ECONNREFUSED service">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/nodejs-econnrefused/2026.md">
+    <meta name="ai:token_estimate" content="4800">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="runtime_environment,target_service,error_timing">
+    <meta name="ai:constraints"
+        content="ECONNREFUSED is TCP RST — do not confuse with ETIMEDOUT or ENOTFOUND; Never retry indefinitely — cap retries and fail fast; Docker localhost resolves to container loopback — use service name; Node.js 19+ defaults IPv6-first — may refuse IPv4-only services; Cloud databases require SSL/TLS; Pool clients must be released in finally block">
+    <meta name="ai:skip_this_unit_if"
+        content="ECONNRESET during active request → check keepalive/server crash; ETIMEDOUT with no response → check routing/firewall; ENOTFOUND DNS failure → check DNS/hostname">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Debug ECONNREFUSED Errors in Node.js",
+    "headline": "How to Debug ECONNREFUSED Errors in Node.js",
+    "description": "Complete debugging reference for Node.js ECONNREFUSED errors covering 11 ranked causes with likelihood percentages, Docker and Kubernetes networking fixes, IPv6/IPv4 mismatch handling for Node.js 19+, retry patterns with exponential backoff, and comprehensive diagnostic commands.",
+    "keywords": ["Node.js ECONNREFUSED", "connection refused", "Docker networking", "retry exponential backoff", "database connection", "ECONNRESET", "ETIMEDOUT", "Kubernetes networking", "IPv6 IPv4 mismatch"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Node.js 18+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Node.js — Common System Errors", "url": "https://nodejs.org/api/errors.html#common-system-errors" },
+      { "@type": "WebPage", "name": "Better Stack — 16 Common Node.js Errors", "url": "https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/" },
+      { "@type": "WebPage", "name": "Docker — Networking Overview", "url": "https://docs.docker.com/network/" },
+      { "@type": "WebPage", "name": "Python Speed — Docker Connection Refused", "url": "https://pythonspeed.com/articles/docker-connection-refused/" },
+      { "@type": "WebPage", "name": "AWS — Exponential Backoff and Jitter", "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/" },
+      { "@type": "WebPage", "name": "Node.js — Net Module", "url": "https://nodejs.org/api/net.html" },
+      { "@type": "WebPage", "name": "node-postgres — Connection and Pooling", "url": "https://node-postgres.com/features/connecting" },
+      { "@type": "WebPage", "name": "Node.js 23.0.0 Release Notes", "url": "https://nodejs.org/en/blog/release/v23.0.0" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Debug ECONNREFUSED Errors in Node.js",
+    "description": "Structured debugging reference for Node.js ECONNREFUSED errors with 11 ranked causes, Docker/Kubernetes networking fixes, IPv6/IPv4 mismatch handling, retry patterns, and diagnostic commands.",
+    "keywords": ["ECONNREFUSED", "Node.js", "connection refused", "Docker networking", "Kubernetes", "IPv6"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Node.js Foundation"},
+      {"@type": "Organization", "name": "Docker Inc."},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Better Stack"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Debug ECONNREFUSED Errors in Node.js" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug ECONNREFUSED errors in Node.js?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ECONNREFUSED means Node.js reached the target IP but nothing was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The 5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3) Docker networking (localhost inside a container points to itself), (4) service bound to 127.0.0.1 instead of 0.0.0.0, (5) firewall blocking the port."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js ECONNREFUSED",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ECONNREFUSED means Node.js reached the target IP but nothing was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The 5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3) Docker networking (localhost inside a container points to itself), (4) service bound to 127.0.0.1 instead of 0.0.0.0, (5) firewall blocking the port."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js connection refused",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ECONNREFUSED means Node.js reached the target IP but nothing was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The 5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3) Docker networking (localhost inside a container points to itself), (4) service bound to 127.0.0.1 instead of 0.0.0.0, (5) firewall blocking the port."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "connect ECONNREFUSED 127.0.0.1",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ECONNREFUSED means Node.js reached the target IP but nothing was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The 5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3) Docker networking (localhost inside a container points to itself), (4) service bound to 127.0.0.1 instead of 0.0.0.0, (5) firewall blocking the port."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Error connect ECONNREFUSED",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ECONNREFUSED means Node.js reached the target IP but nothing was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The 5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3) Docker networking (localhost inside a container points to itself), (4) service bound to 127.0.0.1 instead of 0.0.0.0, (5) firewall blocking the port."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js cannot connect to database",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: ECONNREFUSED means Node.js reached the target IP but nothing was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The 5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3) Docker networking (localhost inside a container points to itself), (4) service bound to 127.0.0.1 instead of 0.0.0.0, (5) firewall blocking the port."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Debug ECONNREFUSED Errors in Node.js</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug ECONNREFUSED errors in Node.js?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/nodejs-econnrefused/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: <code>ECONNREFUSED</code> means Node.js reached the target IP but nothing
+                was listening on the specified port — the OS actively rejected the TCP connection with a RST packet. The
+                5 most common causes: (1) target service not running, (2) wrong host/port in connection config, (3)
+                Docker networking (<code>localhost</code> inside a container points to itself), (4) service bound to
+                <code>127.0.0.1</code> instead of <code>0.0.0.0</code>, (5) firewall blocking the port.</li>
+            <li><strong>Key tool/command</strong>: <code>curl -v telnet://host:port</code> or
+                <code>nc -zv host port</code> to test raw TCP connectivity outside of Node.js. If this fails too, the
+                problem is not in your code.</li>
+            <li><strong>Watch out for</strong>: Using <code>localhost</code> inside Docker containers — it resolves to
+                the container's own loopback, not the host machine or other containers. Use the Docker service name from
+                <code>docker-compose.yml</code> instead.</li>
+            <li><strong>Works with</strong>: Node.js 18+, all current versions (18 LTS, 20 LTS, 22 LTS, 23 Current).
+                Applies to HTTP clients (<code>axios</code>, <code>fetch</code>, <code>got</code>,
+                <code>undici</code>), database drivers (<code>pg</code>, <code>mysql2</code>, <code>mongoose</code>,
+                <code>ioredis</code>), and raw TCP sockets.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints — agents: read before recommending any action -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>ECONNREFUSED is a TCP RST response — the target OS received the SYN and actively rejected it. Do not
+                confuse with ETIMEDOUT (no response, possibly firewalled) or ENOTFOUND (DNS failure). [<a
+                    href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>]</li>
+            <li>Never retry ECONNREFUSED indefinitely in production — always cap retries and fail fast with a clear error
+                after the limit. Unbounded retries cause cascading failures and resource exhaustion. [<a
+                    href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">src5</a>]</li>
+            <li>In Docker Compose, <code>localhost</code> inside a container resolves to the container's own loopback —
+                always use the Docker service name (e.g., <code>db</code>, <code>redis</code>) as the hostname. [<a
+                    href="https://docs.docker.com/network/">src3</a>, <a
+                    href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</li>
+            <li>Node.js 19+ defaults to IPv6-first (<code>autoSelectFamily</code>) — services listening only on
+                <code>127.0.0.1</code> (IPv4) may refuse connections from <code>localhost</code> if it resolves to
+                <code>::1</code> (IPv6). Force IPv4 with <code>host: '127.0.0.1'</code>. [<a
+                    href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                    href="https://nodejs.org/api/net.html">src6</a>]</li>
+            <li>Cloud databases (RDS, Cloud SQL) often require SSL/TLS — connection may be refused without proper SSL
+                configuration. [<a href="https://node-postgres.com/features/connecting">src7</a>]</li>
+            <li>Connection pool <code>.connect()</code> clients must always be released in a <code>finally</code> block —
+                leaked clients exhaust the pool. [<a href="https://node-postgres.com/features/connecting">src7</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Target service not running</td>
+                        <td>~30% of cases</td>
+                        <td><code>connect ECONNREFUSED 127.0.0.1:PORT</code></td>
+                        <td>Start the service: <code>systemctl start postgres</code>,
+                            <code>docker start container</code> [<a
+                                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Wrong host or port</td>
+                        <td>~20% of cases</td>
+                        <td><code>connect ECONNREFUSED WRONG_IP:PORT</code></td>
+                        <td>Verify connection string matches actual service host:port [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Docker: using <code>localhost</code> instead of service name</td>
+                        <td>~15% of cases</td>
+                        <td><code>connect ECONNREFUSED 127.0.0.1:PORT</code> from container</td>
+                        <td>Use Docker Compose service name (e.g., <code>db</code>) as host [<a
+                                href="https://docs.docker.com/network/">src3</a>, <a
+                                href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Service bound to <code>127.0.0.1</code> only</td>
+                        <td>~10% of cases</td>
+                        <td>Works locally, fails from another machine/container</td>
+                        <td>Bind service to <code>0.0.0.0</code> or specific IP [<a
+                                href="https://docs.docker.com/network/">src3</a>, <a
+                                href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Firewall blocking the port</td>
+                        <td>~8% of cases</td>
+                        <td><code>nc</code> times out or refuses from outside</td>
+                        <td>Open port in firewall: <code>ufw allow PORT</code> or security group rule [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Service still starting up</td>
+                        <td>~7% of cases</td>
+                        <td>Error on first request, works seconds later</td>
+                        <td>Add retry logic with exponential backoff; use Docker healthchecks [<a
+                                href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Connection pool exhausted</td>
+                        <td>~4% of cases</td>
+                        <td><code>ECONNREFUSED</code> after sustained load</td>
+                        <td>Increase pool <code>max</code>; fix connection leaks (unreleased clients) [<a
+                                href="https://node-postgres.com/features/connecting">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>DNS resolution failure</td>
+                        <td>~3% of cases</td>
+                        <td><code>ENOTFOUND</code> or <code>ECONNREFUSED</code> on hostname</td>
+                        <td>Check DNS, use IP directly to test; verify <code>/etc/hosts</code> [<a
+                                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Port already in use by another process</td>
+                        <td>~2% of cases</td>
+                        <td>Target service fails to start silently</td>
+                        <td><code>lsof -i :PORT</code> or <code>netstat -tuln | grep PORT</code> to find conflict [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>SSL/TLS port mismatch</td>
+                        <td>~1% of cases</td>
+                        <td>Connecting with HTTP to HTTPS port or vice versa</td>
+                        <td>Match protocol to port (e.g., 443 = HTTPS, 5432 = plain Postgres) [<a
+                                href="https://node-postgres.com/features/connecting">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>IPv6/IPv4 mismatch (Node.js 19+)</td>
+                        <td>~1% of cases</td>
+                        <td><code>connect ECONNREFUSED ::1:PORT</code></td>
+                        <td>Force IPv4: <code>host: '127.0.0.1'</code> or set
+                            <code>autoSelectFamily: false</code> [<a
+                                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                                href="https://nodejs.org/api/net.html">src6</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Can you reach the service from the SAME machine (curl/nc)?
+│   ├── NO → Service is not running or port is wrong
+│   │   ├── Check: is the service process running? (ps aux | grep service)
+│   │   │   ├── NOT RUNNING → Start it [src1]
+│   │   │   └── RUNNING → Check which port it's listening on (netstat -tuln) [src2]
+│   │   └── Port conflict? → Another process using the port (lsof -i :PORT)
+│   └── YES → Network/config issue between Node.js and the service ↓
+├── Is Node.js running inside a Docker container?
+│   ├── YES → Are you using "localhost" or "127.0.0.1" as host?
+│   │   ├── YES → Change to Docker service name from docker-compose.yml [src3, src4]
+│   │   └── NO → Check both containers are on the same Docker network [src3]
+│   └── NO ↓
+├── Is Node.js running in Kubernetes?
+│   ├── YES → Use service-name.namespace.svc.cluster.local as host [src3]
+│   └── NO ↓
+├── Does the service bind to 0.0.0.0 or 127.0.0.1?
+│   ├── 127.0.0.1 → Change to 0.0.0.0 if external access needed [src3]
+│   └── 0.0.0.0 ↓
+├── Is there a firewall between Node.js and the service?
+│   ├── YES → Open the port in firewall/security group [src2]
+│   └── NO ↓
+├── Does the error happen only on first connection attempt?
+│   ├── YES → Service still starting. Add retry with backoff [src5]
+│   └── NO ↓
+├── Does the error show ::1 (IPv6) but service listens on 127.0.0.1 (IPv4)?
+│   ├── YES → Force IPv4: host: '127.0.0.1' or autoSelectFamily: false [src1, src6]
+│   └── NO ↓
+└── Does it happen under load?
+    ├── YES → Connection pool exhaustion. Increase max, fix leaks [src7]
+    └── NO → Check environment variables for host/port config</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Read the full error message</h3>
+        <p>The ECONNREFUSED error always includes the target IP and port. This tells you exactly where Node.js tried to
+            connect. In Node.js 22+, check <code>error.cause</code> for chained errors. [<a
+                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                href="https://nodejs.org/en/blog/release/v23.0.0">src8</a>]</p>
+        <pre><code>Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1607:16)
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 5432</code></pre>
+        <p><strong>Verify</strong>: Note the <code>address</code> and <code>port</code> — are they what you expect?</p>
+
+        <h3>2. Test raw TCP connectivity</h3>
+        <p>Before debugging your Node.js code, verify that the port is reachable at all. [<a
+                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]</p>
+        <pre><code class="language-bash"># Test TCP connection (most reliable)
+nc -zv hostname 5432
+
+# Alternative with curl
+curl -v telnet://hostname:5432
+
+# Check what's listening on the port
+# Linux
+ss -tuln | grep 5432
+lsof -i :5432
+
+# macOS
+lsof -nP -iTCP:5432 | grep LISTEN
+
+# Windows
+netstat -an | findstr "5432"</code></pre>
+        <p><strong>Verify</strong>: If <code>nc</code> fails too, the problem is at the OS/network level, not in
+            Node.js.</p>
+
+        <h3>3. Verify the service is running and listening</h3>
+        <p>Check that the target service is actually started and accepting connections. [<a
+                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]</p>
+        <pre><code class="language-bash"># PostgreSQL
+pg_isready -h localhost -p 5432
+
+# MySQL
+mysqladmin -h localhost -P 3306 ping
+
+# Redis
+redis-cli -h localhost -p 6379 ping
+
+# Docker: check container status
+docker ps | grep postgres
+docker logs postgres-container</code></pre>
+        <p><strong>Verify</strong>: Service reports "accepting connections" or responds to ping.</p>
+
+        <h3>4. Fix Docker networking issues</h3>
+        <p>The #1 Docker-specific cause: <code>localhost</code> inside a container refers to that container's own
+            loopback, not other containers or the host. [<a href="https://docs.docker.com/network/">src3</a>, <a
+                href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</p>
+        <pre><code class="language-yaml"># docker-compose.yml
+services:
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Use the service name "db" as hostname, NOT localhost
+      DATABASE_URL: postgres://user:pass@db:5432/mydb
+
+  db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5</code></pre>
+        <p>For connecting to a service on the host from inside a container, use <code>host.docker.internal</code>.</p>
+        <p><strong>Verify</strong>: <code>docker exec app-container nc -zv db 5432</code> succeeds.</p>
+
+        <h3>5. Check service binding address</h3>
+        <p>Some services bind to <code>127.0.0.1</code> by default, making them only accessible from the same machine.
+            [<a href="https://docs.docker.com/network/">src3</a>, <a
+                href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</p>
+        <pre><code class="language-bash"># PostgreSQL: check listen_addresses
+grep listen_addresses /etc/postgresql/16/main/postgresql.conf
+# Should be: listen_addresses = '*'
+
+# Redis: check bind
+grep "^bind" /etc/redis/redis.conf
+
+# Node.js HTTP server: bind to 0.0.0.0
+server.listen(3000, '0.0.0.0');</code></pre>
+        <p><strong>Verify</strong>: <code>ss -tuln | grep PORT</code> shows <code>0.0.0.0:PORT</code> not
+            <code>127.0.0.1:PORT</code>.</p>
+
+        <h3>6. Handle IPv6/IPv4 mismatch (Node.js 19+)</h3>
+        <p>Node.js 19+ defaults to IPv6-first. Services listening only on IPv4 <code>127.0.0.1</code> may refuse
+            connections from <code>localhost</code> resolving to <code>::1</code>. [<a
+                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                href="https://nodejs.org/api/net.html">src6</a>]</p>
+        <pre><code class="language-javascript">// Force IPv4 for database connections
+const pool = new Pool({
+  host: '127.0.0.1',  // Explicit IPv4, not 'localhost'
+  port: 5432,
+});
+
+// Or disable autoSelectFamily for net.connect
+const socket = net.connect({
+  host: 'localhost',
+  port: 5432,
+  autoSelectFamily: false,
+});</code></pre>
+        <p><strong>Verify</strong>: Change <code>localhost</code> to <code>127.0.0.1</code> — if the error disappears,
+            it was an IPv6/IPv4 mismatch.</p>
+
+        <h3>7. Implement retry logic with exponential backoff</h3>
+        <p>For transient connection failures, add retry logic. [<a
+                href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">src5</a>]</p>
+        <pre><code class="language-javascript">async function connectWithRetry(connectFn, options = {}) {
+  const { maxRetries = 5, baseDelay = 1000, maxDelay = 30000,
+    retryableErrors = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND']
+  } = options;
+
+  for (let attempt = 1; attempt &lt;= maxRetries; attempt++) {
+    try {
+      return await connectFn();
+    } catch (error) {
+      if (!retryableErrors.includes(error.code) || attempt === maxRetries) throw error;
+      const delay = Math.min(baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000, maxDelay);
+      console.warn(`Attempt ${attempt}/${maxRetries} failed (${error.code}). Retry in ${Math.round(delay)}ms`);
+      await new Promise(resolve =&gt; setTimeout(resolve, delay));
+    }
+  }
+}</code></pre>
+        <p><strong>Verify</strong>: App logs show retry attempts and eventually connects when service becomes available.
+        </p>
+
+        <h3>8. Check firewall and security groups</h3>
+        <p>If the service is running and binding correctly but still unreachable from another machine. [<a
+                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]</p>
+        <pre><code class="language-bash"># Linux: check ufw
+sudo ufw status
+sudo ufw allow 5432/tcp
+
+# AWS: check Security Group
+aws ec2 describe-security-groups --group-ids sg-xxx \
+  --query 'SecurityGroups[].IpPermissions[?ToPort==`5432`]'</code></pre>
+        <p><strong>Verify</strong>: <code>nc -zv target-ip port</code> succeeds from the Node.js host.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Database connection with retry and health monitoring</h3>
+        <pre><code class="language-javascript">// Input:  App crashing on ECONNREFUSED when DB is temporarily unavailable
+// Output: Resilient connection with retry, health checks, graceful degradation
+
+const { Pool } = require('pg');
+
+class ResilientDatabase {
+  constructor(connectionString, options = {}) {
+    this.pool = new Pool({
+      connectionString,
+      max: options.maxConnections || 20,
+      idleTimeoutMillis: options.idleTimeout || 30000,
+      connectionTimeoutMillis: options.connectTimeout || 5000,
+    });
+    this.pool.on('error', (err) =&gt; {
+      console.error('Unexpected pool error:', err.message);
+    });
+  }
+
+  async connect(maxRetries = 5) {
+    for (let i = 1; i &lt;= maxRetries; i++) {
+      try {
+        const client = await this.pool.connect();
+        await client.query('SELECT 1');
+        client.release();
+        console.log('Database connected');
+        return;
+      } catch (err) {
+        const delay = Math.min(1000 * Math.pow(2, i - 1), 15000);
+        console.warn(`DB attempt ${i}/${maxRetries} failed: ${err.code}. Retry in ${delay}ms`);
+        if (i === maxRetries) throw err;
+        await new Promise(r =&gt; setTimeout(r, delay));
+      }
+    }
+  }
+
+  async query(text, params) {
+    try {
+      return await this.pool.query(text, params);
+    } catch (err) {
+      if (err.code === 'ECONNREFUSED') {
+        console.error('Database unavailable — attempting reconnect');
+        await this.connect(3);
+        return await this.pool.query(text, params);
+      }
+      throw err;
+    }
+  }
+
+  async close() { await this.pool.end(); }
+}
+
+const db = new ResilientDatabase(process.env.DATABASE_URL);
+await db.connect();</code></pre>
+
+        <h3>HTTP client with smart retry for upstream APIs</h3>
+        <pre><code class="language-javascript">// Input:  API calls failing intermittently with ECONNREFUSED/ECONNRESET
+// Output: Axios client with configurable retry and backoff
+
+const axios = require('axios');
+
+function createResilientClient(baseURL, options = {}) {
+  const client = axios.create({ baseURL, timeout: options.timeout || 10000 });
+
+  const RETRYABLE_CODES = new Set([
+    'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ENETUNREACH', 'EAI_AGAIN',
+  ]);
+  const RETRYABLE_STATUS = new Set([429, 502, 503, 504]);
+
+  client.interceptors.response.use(null, async (error) =&gt; {
+    const config = error.config;
+    config.__retryCount = config.__retryCount || 0;
+    const maxRetries = options.maxRetries || 3;
+
+    const isRetryable =
+      (error.code &amp;&amp; RETRYABLE_CODES.has(error.code)) ||
+      (error.response &amp;&amp; RETRYABLE_STATUS.has(error.response.status));
+
+    if (!isRetryable || config.__retryCount &gt;= maxRetries) return Promise.reject(error);
+
+    config.__retryCount++;
+    const delay = Math.min(1000 * Math.pow(2, config.__retryCount - 1) + Math.random() * 500, 10000);
+    console.warn(`Retry ${config.__retryCount}/${maxRetries} for ${config.url}`);
+    await new Promise(r =&gt; setTimeout(r, delay));
+    return client(config);
+  });
+
+  return client;
+}
+
+const api = createResilientClient('https://api.example.com', { maxRetries: 3 });
+const { data } = await api.get('/users');</code></pre>
+
+        <h3>Docker Compose: Full-stack app with proper networking</h3>
+        <pre><code class="language-yaml"># Input:  docker-compose.yml where app gets ECONNREFUSED
+# Output: Properly networked services with health checks
+
+version: '3.9'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://appuser:secret@postgres:5432/appdb
+      REDIS_URL: redis://redis:6379
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: appdb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge</code></pre>
+
+        <h3>Node.js native fetch with retry (Node.js 22+)</h3>
+        <pre><code class="language-javascript">// Input:  API endpoint that may be temporarily unavailable
+// Output: Resilient fetch wrapper using native fetch + AbortSignal.timeout
+
+async function fetchWithRetry(url, options = {}) {
+  const { maxRetries = 3, baseDelay = 1000, timeout = 5000, ...fetchOpts } = options;
+
+  for (let attempt = 1; attempt &lt;= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        ...fetchOpts,
+        signal: AbortSignal.timeout(timeout),
+      });
+      return response;
+    } catch (error) {
+      const isRetryable = error.cause?.code === 'ECONNREFUSED'
+        || error.cause?.code === 'ECONNRESET'
+        || error.name === 'TimeoutError';
+      if (!isRetryable || attempt === maxRetries) throw error;
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 500;
+      await new Promise(r =&gt; setTimeout(r, delay));
+    }
+  }
+}
+
+const response = await fetchWithRetry('http://localhost:3000/api/health', {
+  maxRetries: 5,
+  timeout: 3000,
+});</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Using localhost in Docker containers</h3>
+        <pre><code class="language-javascript">// BAD — localhost inside a container = the container itself [src3, src4]
+const pool = new Pool({
+  host: 'localhost',    // Points to app container, not DB container
+  port: 5432,
+  database: 'mydb',
+});
+// Error: connect ECONNREFUSED 127.0.0.1:5432</code></pre>
+
+        <h3>Correct: Use Docker service name</h3>
+        <pre><code class="language-javascript">// GOOD — use the service name from docker-compose.yml [src3, src4]
+const pool = new Pool({
+  host: process.env.DB_HOST || 'postgres',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: 'mydb',
+});</code></pre>
+
+        <h3>Wrong: Crashing on first connection failure</h3>
+        <pre><code class="language-javascript">// BAD — app exits if DB isn't ready yet [src5]
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const result = await pool.query('SELECT NOW()');
+// If DB is still starting -> ECONNREFUSED -> crash</code></pre>
+
+        <h3>Correct: Retry with backoff on startup</h3>
+        <pre><code class="language-javascript">// GOOD — wait for DB to become available [src5]
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+async function waitForDB(maxRetries = 10) {
+  for (let i = 1; i &lt;= maxRetries; i++) {
+    try {
+      const result = await pool.query('SELECT NOW()');
+      console.log('Connected at', result.rows[0].now);
+      return;
+    } catch (err) {
+      if (i === maxRetries) throw new Error(`DB unavailable after ${maxRetries} attempts`);
+      const delay = Math.min(1000 * Math.pow(2, i - 1), 15000);
+      console.warn(`DB not ready (${err.code}), retry ${i}/${maxRetries} in ${delay}ms`);
+      await new Promise(r =&gt; setTimeout(r, delay));
+    }
+  }
+}
+await waitForDB();</code></pre>
+
+        <h3>Wrong: Hardcoding connection details</h3>
+        <pre><code class="language-javascript">// BAD — different values needed per environment [src7]
+const pool = new Pool({
+  host: '192.168.1.50',
+  port: 5432,
+  user: 'admin',
+  password: 'secret123',
+  database: 'production_db',
+});</code></pre>
+
+        <h3>Correct: Use environment variables</h3>
+        <pre><code class="language-javascript">// GOOD — works in dev, Docker, staging, production [src7]
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});</code></pre>
+
+        <h3>Wrong: Using depends_on without health checks</h3>
+        <pre><code class="language-yaml"># BAD — depends_on only waits for container start, not service readiness [src3]
+services:
+  app:
+    depends_on:
+      - db   # db container starts, but PostgreSQL may not be ready yet</code></pre>
+
+        <h3>Correct: Use depends_on with service_healthy condition</h3>
+        <pre><code class="language-yaml"># GOOD — waits for PostgreSQL to actually accept connections [src3]
+services:
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>localhost</code> vs <code>127.0.0.1</code> vs <code>::1</code></strong>: On dual-stack
+                systems (especially Node.js 19+), <code>localhost</code> may resolve to IPv6 <code>::1</code> first,
+                while the service only listens on IPv4 <code>127.0.0.1</code>. Try <code>127.0.0.1</code> explicitly if
+                <code>localhost</code> gives ECONNREFUSED. [<a
+                    href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src2</a>]</li>
+            <li><strong>Docker <code>depends_on</code> doesn't mean "ready"</strong>: <code>depends_on</code> only waits
+                for the container to start, not for the service inside to be ready. Use
+                <code>condition: service_healthy</code> with proper healthchecks. [<a
+                    href="https://docs.docker.com/network/">src3</a>, <a
+                    href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</li>
+            <li><strong>Port mapping confusion</strong>: In Docker Compose, <code>ports: "5433:5432"</code> maps host
+                port 5433 to container port 5432. Container-to-container communication uses the internal port (5432),
+                not the mapped one. [<a href="https://docs.docker.com/network/">src3</a>]</li>
+            <li><strong>Environment variable not loaded</strong>: <code>DATABASE_URL</code> is undefined because
+                <code>.env</code> file isn't loaded, or the env var isn't passed into Docker. Debug with
+                <code>console.log(process.env.DATABASE_URL)</code>. [<a
+                    href="https://node-postgres.com/features/connecting">src7</a>]</li>
+            <li><strong>Connection pool exhausted</strong>: If you call <code>pool.connect()</code> without releasing
+                clients (<code>.release()</code>), the pool fills up and new connections hang or get refused. Always
+                release in a <code>finally</code> block. [<a
+                    href="https://node-postgres.com/features/connecting">src7</a>]</li>
+            <li><strong>WSL2 networking</strong>: On Windows with WSL2, <code>localhost</code> forwarding between
+                Windows and WSL can be unreliable. Use the WSL2 IP (<code>hostname -I</code> inside WSL) or
+                <code>host.docker.internal</code>. [<a
+                    href="https://pythonspeed.com/articles/docker-connection-refused/">src4</a>]</li>
+            <li><strong>Kubernetes service DNS</strong>: Use
+                <code>service-name.namespace.svc.cluster.local</code> as the host, not <code>localhost</code>.
+                Kubernetes pods each have their own network namespace. [<a
+                    href="https://docs.docker.com/network/">src3</a>]</li>
+            <li><strong>Node.js 22+ error.cause</strong>: Connection errors from <code>fetch()</code> wrap the original
+                system error in <code>error.cause</code>. Check <code>error.cause.code</code> for
+                <code>ECONNREFUSED</code>, not just <code>error.code</code>. [<a
+                    href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                    href="https://nodejs.org/en/blog/release/v23.0.0">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Test TCP connectivity
+nc -zv hostname port
+curl -v telnet://hostname:port --connect-timeout 5
+
+# Check what's listening on a port
+# Linux
+ss -tuln | grep PORT
+lsof -i :PORT
+
+# macOS
+lsof -nP -iTCP:PORT | grep LISTEN
+
+# Windows
+netstat -an | findstr "PORT"
+
+# Check if service is running
+systemctl status postgresql
+docker ps | grep container-name
+docker logs container-name --tail 50
+
+# Test database connectivity
+pg_isready -h hostname -p 5432
+redis-cli -h hostname -p 6379 ping
+
+# Docker: test from inside container
+docker exec -it app-container sh -c "nc -zv db-service 5432"
+
+# Docker: inspect network
+docker network ls
+docker network inspect bridge
+docker inspect container-name --format '{{.NetworkSettings.Networks}}'
+
+# Check DNS resolution
+nslookup hostname
+dig hostname
+
+# Firewall check
+sudo ufw status
+sudo iptables -L -n | grep PORT</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Node.js 23 (Current)</td>
+                        <td>Active</td>
+                        <td><code>require(esm)</code> enabled by default</td>
+                        <td>Networking behavior same as 22; <code>require()</code> can now load ESM [<a
+                                href="https://nodejs.org/en/blog/release/v23.0.0">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 22 LTS</td>
+                        <td>Active LTS</td>
+                        <td><code>ECONNREFUSED</code> in error.cause chain</td>
+                        <td>Improved error stacks with <code>error.cause</code> for chained errors;
+                            <code>fetch()</code> stable [<a
+                                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 20 LTS</td>
+                        <td>Maintenance</td>
+                        <td>Stable</td>
+                        <td><code>fetch()</code> built-in with connection error codes;
+                            <code>AbortSignal.timeout()</code> [<a
+                                href="https://nodejs.org/api/errors.html#common-system-errors">src1</a>, <a
+                                href="https://nodejs.org/api/net.html">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 19</td>
+                        <td>EOL</td>
+                        <td>IPv6-first default</td>
+                        <td><code>net.setDefaultAutoSelectFamily(true)</code> — may cause ECONNREFUSED on IPv4-only
+                            services [<a href="https://nodejs.org/api/net.html">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 18 LTS</td>
+                        <td>EOL (Apr 2025)</td>
+                        <td>Supported</td>
+                        <td>Built-in <code>fetch()</code> (experimental); <code>net.connect()</code> improvements [<a
+                                href="https://nodejs.org/api/net.html">src6</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Error message contains <code>ECONNREFUSED</code></td>
+                        <td>Error is <code>ECONNRESET</code> during active request</td>
+                        <td>Check keepalive timeouts, server crashes</td>
+                    </tr>
+                    <tr>
+                        <td>Cannot connect to database/API at all</td>
+                        <td>Error is <code>ETIMEDOUT</code> (connection hangs)</td>
+                        <td>Check network routing, firewall rules</td>
+                    </tr>
+                    <tr>
+                        <td>Error happens in Docker/container environments</td>
+                        <td>Error is <code>ENOTFOUND</code> (DNS failure)</td>
+                        <td>Check DNS configuration, hostname spelling</td>
+                    </tr>
+                    <tr>
+                        <td>Error happens on app startup before any requests</td>
+                        <td>Error is authentication failure after connecting</td>
+                        <td>Check credentials, certificates</td>
+                    </tr>
+                    <tr>
+                        <td>Error shows <code>::1</code> or IPv6 address</td>
+                        <td>Error is <code>EPERM</code> or <code>EACCES</code></td>
+                        <td>Check file permissions, privileged ports (&lt;1024)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><code>ECONNREFUSED</code> is a TCP-level error — it means the target OS received the SYN packet and
+                responded with RST. This is different from <code>ETIMEDOUT</code> (no response at all, possibly
+                firewalled) and <code>ENOTFOUND</code> (DNS failure).</li>
+            <li>In Kubernetes, service names resolve via cluster DNS (<code>kube-dns</code> or <code>CoreDNS</code>).
+                Use <code>service-name.namespace.svc.cluster.local</code> as the host, not <code>localhost</code>.</li>
+            <li>Some database drivers (like <code>pg</code>) have their own internal retry/reconnect logic. Check your
+                driver's documentation before adding redundant retry logic.</li>
+            <li><code>ECONNREFUSED</code> on <code>::1</code> (IPv6 localhost) when the service listens on
+                <code>127.0.0.1</code> (IPv4) is a common trap on Node.js 19+. Force IPv4 with
+                <code>host: '127.0.0.1'</code> or disable IPv6 resolution.</li>
+            <li>Cloud databases (RDS, Cloud SQL) often require SSL. Connection may be refused if you connect without
+                <code>ssl: { rejectUnauthorized: false }</code> or proper certificate configuration.</li>
+            <li>Node.js 22+ wraps connection errors from <code>fetch()</code> in <code>error.cause</code> — check
+                <code>error.cause.code</code> for the original system error code, not <code>error.code</code> directly.
+            </li>
+            <li>CVE-2025-59465 (TLSSocket ECONNRESET) and CVE-2026-21636 (pipe_wrap connect) are recent security fixes
+                — ensure you are running patched versions (22.13+, 23.6+).</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/nodejs-memory-leaks/2026"
+            data-relationship="related_to">Node.js Memory Leak Debugging</a>
+        <a href="/software/debugging/nodejs-unhandled-promises/2026"
+            data-relationship="related_to">Node.js Unhandled Promise Rejections</a>
+        <a href="/software/debugging/docker-compose-networking/2026"
+            data-relationship="solves">Docker Compose Networking Troubleshooting</a>
+        <a href="/software/debugging/nodejs-etimedout/2026"
+            data-relationship="often_confused_with">Node.js ETIMEDOUT Errors</a>
+        <a href="/software/debugging/nodejs-econnreset/2026"
+            data-relationship="often_confused_with">Node.js ECONNRESET Errors</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

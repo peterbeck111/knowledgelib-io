@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SAP BAPIs and RFC Integration | knowledgelib.io</title>
+  <meta name="description" content="SAP BAPI and RFC integration guide — all 5 RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC), commit/rollback patterns, JCo/NCo/PyRFC connectors, common BAPIs,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/sap-bapi-rfc-integration/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SAP BAPIs and RFC Integration | knowledgelib.io">
+  <meta property="og:description" content="SAP BAPI and RFC integration guide — all 5 RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC), commit/rollback patterns, JCo/NCo/PyRFC connectors, common BAPIs, and decision tree. 8 sources, all cited. Verified 2026-03-01.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/sap-bapi-rfc-integration/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-01">
+  <meta property="article:modified_time" content="2026-03-01">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SAP BAPIs and RFC Integration | knowledgelib.io">
+  <meta name="twitter:description" content="SAP BAPI and RFC integration guide — all 5 RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC), commit/rollback patterns, JCo/NCo/PyRFC connectors, common BAPIs, and decision tree. 8 sources, all cited. Verified 2026-03-01.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-03-01">
+  <meta name="ai:domain" content="business/erp-integration/sap-bapi-rfc-integration">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are SAP BAPIs and RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC) and when to use each?">
+  <meta name="ai:aliases" content="SAP BAPI vs RFC function module differences; Which SAP RFC type should I use for integration — synchronous, transactional, or background?; How do SAP RFC connectors JCo NCo PyRFC work?; SAP BAPI commit and rollback patterns for external integration">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/sap-bapi-rfc-integration/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-01">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-01">
+  <meta name="ai:systems" content="SAP S/4HANA (2023/2024); SAP ECC 6.0 (EHP8)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction">
+  <meta name="ai:constraints" content="BAPI_TRANSACTION_COMMIT is mandatory — no auto-commit; tRFC and qRFC deprecated — use bgRFC; sRFC blocks caller and target work process; RFC SDK requires SAP license; ROLLBACK cannot undo prior COMMIT; No native webhook/push from RFC">
+  <meta name="ai:skip_this_unit_if" content="User needs SAP OData or REST API (S/4HANA Cloud) -> business/erp-integration/sap-odata-rest-api/2026; User needs IDoc-based EDI -> business/erp-integration/sap-idoc-integration/2026; User needs SAP Event Mesh -> business/erp-integration/sap-event-mesh/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SAP BAPIs and RFC Integration — sRFC, aRFC, tRFC, qRFC, bgRFC Guide",
+    "headline": "SAP BAPIs and RFC Integration — sRFC, aRFC, tRFC, qRFC, bgRFC Guide",
+    "description": "Comprehensive guide to SAP BAPI and RFC integration covering all 5 RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC), when to use each, commit/rollback patterns, JCo/NCo/PyRFC connectors, common BAPIs reference, authentication security, and migration from tRFC/qRFC to bgRFC.",
+    "keywords": ["SAP", "BAPI", "RFC", "sRFC", "tRFC", "qRFC", "bgRFC", "JCo", "NCo", "PyRFC", "ERP integration", "S/4HANA"],
+    "dateModified": "2026-03-01",
+    "datePublished": "2026-03-01",
+    "proficiencyLevel": "Expert",
+    "dependencies": "SAP S/4HANA 2023/2024 or SAP ECC 6.0 EHP8",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "RFC Variants — SAP Help Portal",
+        "url": "https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP Java Connector (JCo) — SAP Support Portal",
+        "url": "https://support.sap.com/en/product/connectors/jco.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SAP BAPI Transactions Walkthrough — Microsoft Tech Community",
+        "url": "https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148"
+      },
+      {
+        "@type": "WebPage",
+        "name": "BAPI_TRANSACTION_COMMIT versus COMMIT WORK — SAP Help",
+        "url": "https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Understanding Different Types of RFC Calls in SAP ABAP — SAP Community",
+        "url": "https://community.sap.com/t5/application-development-and-automation-blog-posts/understanding-different-types-of-rfc-calls-in-sap-abap/ba-p/13745585"
+      },
+      {
+        "@type": "WebPage",
+        "name": "bgRFC Advantages over tRFC and qRFC — SAP Community",
+        "url": "https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Technical Analysis of Optimizing tRFC and qRFC Using bgRFC — Oreate AI Blog",
+        "url": "https://www.oreateai.com/blog/technical-analysis-of-optimizing-trfc-and-qrfc-calls-in-sap-systems-using-bgrfc/b7ee54449025ac08b1eba9d65e5c1556"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practice — How to Analyze and Secure RFC Connections — SAP Wiki",
+        "url": "https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SAP BAPIs and RFC Integration — sRFC, aRFC, tRFC, qRFC, bgRFC Guide",
+    "description": "Structured reference for SAP BAPI and RFC integration — 5 RFC types, commit patterns, connector libraries, common BAPIs, authentication, and decision tree for choosing the right RFC variant.",
+    "keywords": ["SAP", "BAPI", "RFC", "sRFC", "tRFC", "qRFC", "bgRFC", "ERP integration"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-01",
+    "datePublished": "2026-03-01",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "SAP Community"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "SAP BAPIs and RFC Integration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are SAP BAPIs and RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC) and when to use each?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: BAPIs are SAP's stable, business-object-oriented API layer built on top of RFC. Use bgRFC for all new asynchronous/transactional integrations; sRFC only for real-time lookups requiring immediate response."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SAP BAPI vs RFC function module differences",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: BAPIs are SAP's stable, business-object-oriented API layer built on top of RFC. Use bgRFC for all new asynchronous/transactional integrations; sRFC only for real-time lookups requiring immediate response."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which SAP RFC type should I use for integration — synchronous, transactional, or background?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: BAPIs are SAP's stable, business-object-oriented API layer built on top of RFC. Use bgRFC for all new asynchronous/transactional integrations; sRFC only for real-time lookups requiring immediate response."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do SAP RFC connectors JCo NCo PyRFC work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: BAPIs are SAP's stable, business-object-oriented API layer built on top of RFC. Use bgRFC for all new asynchronous/transactional integrations; sRFC only for real-time lookups requiring immediate response."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SAP BAPI commit and rollback patterns for external integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: BAPIs are SAP's stable, business-object-oriented API layer built on top of RFC. Use bgRFC for all new asynchronous/transactional integrations; sRFC only for real-time lookups requiring immediate response."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>SAP BAPIs and RFC Integration</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are SAP BAPIs and RFC types (sRFC, aRFC, tRFC, qRFC, bgRFC) and when to use each?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/sap-bapi-rfc-integration/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> SAP S/4HANA (2023/2024) + SAP ECC 6.0 (EHP8)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-01</span></span>
+    <span><strong>Freshness:</strong> 2026-03-01</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: BAPIs are SAP's stable, business-object-oriented API layer built on top of RFC. Use bgRFC for all new asynchronous/transactional integrations; sRFC only for real-time lookups requiring immediate response.</li>
+    <li><strong>Key limit</strong>: sRFC blocks one dialog work process per call for the entire duration; tRFC/qRFC are deprecated — migrate to bgRFC which offers 40% better throughput via parallel queue scheduling. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>, <a href="https://www.oreateai.com/blog/technical-analysis-of-optimizing-trfc-and-qrfc-calls-in-sap-systems-using-bgrfc/b7ee54449025ac08b1eba9d65e5c1556">src7</a>]</li>
+    <li><strong>Watch out for</strong>: Forgetting to call BAPI_TRANSACTION_COMMIT after BAPI calls — without it, no data persists. BAPI_TRANSACTION_ROLLBACK cannot reverse a previous commit. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>, <a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</li>
+    <li><strong>Best for</strong>: System-to-system integration with SAP ECC or S/4HANA on-premise/private cloud where OData is not available or ABAP function modules are the primary interface.</li>
+    <li><strong>Authentication</strong>: RFC connections use SAP system user credentials (user/password or SNC certificate) via SM59 destination configuration; authorize with S_RFC object. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers SAP's Business Application Programming Interface (BAPI) and Remote Function Call (RFC) integration layer, applicable to both SAP ECC 6.0 (all EHP levels) and SAP S/4HANA on-premise/private cloud editions. BAPIs are methods of SAP Business Objects defined in the Business Object Repository (BOR, transaction BAPI/SWO1) that wrap RFC-enabled function modules with standardized interfaces, stable naming, and guaranteed backward compatibility. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>, <a href="https://community.sap.com/t5/application-development-and-automation-blog-posts/understanding-different-types-of-rfc-calls-in-sap-abap/ba-p/13745585">src5</a>]</p>
+  <p>RFC is the underlying transport protocol. Five variants exist: synchronous (sRFC), asynchronous (aRFC), transactional (tRFC), queued (qRFC), and background (bgRFC). This card does NOT cover SAP Cloud Integration Suite, SAP BTP destinations, or S/4HANA Cloud public edition APIs (which use OData/REST exclusively).</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Vendor</strong></td><td>SAP</td></tr>
+      <tr><td><strong>System</strong></td><td>SAP S/4HANA 2023/2024 + SAP ECC 6.0 EHP8</td></tr>
+      <tr><td><strong>API Surface</strong></td><td>RFC (sRFC, aRFC, tRFC, qRFC, bgRFC) + BAPIs</td></tr>
+      <tr><td><strong>Current API Version</strong></td><td>SAP NetWeaver RFC SDK 7.50+ / JCo 3.1 / NCo 3.1 / PyRFC 3.x</td></tr>
+      <tr><td><strong>Editions Covered</strong></td><td>All on-premise and private cloud editions</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>On-Premise / Private Cloud / Hybrid</td></tr>
+      <tr><td><strong>API Docs</strong></td><td><a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">SAP Help — RFC Variants</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>GA (bgRFC recommended; tRFC/qRFC maintenance-only)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>BAPIs are the application-level API; RFC variants are the transport-level protocol beneath them. Choosing the right RFC variant is critical. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>, <a href="https://community.sap.com/t5/application-development-and-automation-blog-posts/understanding-different-types-of-rfc-calls-in-sap-abap/ba-p/13745585">src5</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">RFC Variant</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Delivery Guarantee</th><th scope="col">Ordering</th><th scope="col">Real-time?</th><th scope="col">Target Required?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>sRFC</strong> (Synchronous)</td><td>RFC/CPIC or WebSocket</td><td>Real-time lookups, immediate-response operations</td><td>None (fails if target down)</td><td>N/A</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td><strong>aRFC</strong> (Asynchronous)</td><td>RFC/CPIC</td><td>Parallel processing, non-critical background calls</td><td>None (lost if unreachable)</td><td>No</td><td>Partial</td><td>Yes</td></tr>
+      <tr><td><strong>tRFC</strong> (Transactional)</td><td>RFC/CPIC</td><td>Exactly-once delivery (legacy)</td><td>Exactly-once via TID</td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>qRFC</strong> (Queued)</td><td>RFC/CPIC</td><td>Ordered exactly-once delivery (legacy)</td><td>Exactly-once + FIFO</td><td>Yes (per queue)</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>bgRFC</strong> (Background)</td><td>RFC/CPIC or WebSocket</td><td>All new async/transactional work</td><td>Exactly-once, optional FIFO</td><td>Configurable</td><td>No</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+  <p>RFC does not have API call quotas like REST APIs. Instead, limits are defined by system resources — dialog work processes, memory, and RFC connection parameters. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>]</p>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dialog work process time</td><td>600s default</td><td>sRFC calls</td><td>Parameter rdisp/max_wprun_time; exceeded = TIME_OUT dump</td></tr>
+      <tr><td>Max RFC connections</td><td>Configurable per destination</td><td>All RFC types</td><td>SM59 settings; varies by system sizing</td></tr>
+      <tr><td>Memory per work process</td><td>Extended memory allocation</td><td>sRFC, aRFC</td><td>Large payloads exhaust work process memory</td></tr>
+      <tr><td>tRFC/qRFC payload</td><td>Stored in ARFCSSTATE/ARFCSDATA</td><td>tRFC, qRFC</td><td>Large volumes bloat database; monitor with SM58</td></tr>
+      <tr><td>bgRFC unit size</td><td>Stored in BGRFC* tables</td><td>bgRFC</td><td>More efficient storage than tRFC tables</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>System Resource Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Configuration</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dialog work processes</td><td>Typically 10-40 per app server</td><td>Concurrent</td><td>rdisp/wp_no_dia; each sRFC occupies one</td></tr>
+      <tr><td>RFC connection pool</td><td>Configurable per destination</td><td>Concurrent</td><td>JCo: jco.destination.pool_capacity (default 1)</td></tr>
+      <tr><td>bgRFC scheduler threads</td><td>Configurable per app server</td><td>Per scheduler</td><td>SBGRFCCONF; multiple schedulers supported</td></tr>
+      <tr><td>SM58 stuck entries</td><td>N/A</td><td>Rolling</td><td>Entries stuck >24h indicate connectivity issues</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Transaction / Governor Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Per-Transaction Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dialog step timeout</td><td>600s (configurable)</td><td>sRFC runs within a dialog step — long-running calls hit this</td></tr>
+      <tr><td>Max internal tables size</td><td>Extended memory allocation</td><td>Large datasets cause STORAGE_PARAMETERS_WRONG_SET</td></tr>
+      <tr><td>Commit work frequency</td><td>1 per LUW</td><td>Multiple BAPIs in one LUW require single BAPI_TRANSACTION_COMMIT</td></tr>
+      <tr><td>RFC callback depth</td><td>No hard limit</td><td>Recursive RFC calls consume work processes — avoid circular patterns</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>RFC authentication is configured at the SAP system level via SM59 (RFC destination maintenance) and is fundamentally different from token-based REST authentication. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Method</th><th scope="col">Use When</th><th scope="col">Security Level</th><th scope="col">MFA Support</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>User/Password</strong></td><td>Development, testing</td><td>Low</td><td>No</td><td>Stored in SM59; visible to admins</td></tr>
+      <tr><td><strong>SNC (Secure Network Communication)</strong></td><td>Production — all environments</td><td>High</td><td>Via PKI</td><td>X.509 certificates; snc/only_encrypted_rfc=1</td></tr>
+      <tr><td><strong>Trusted RFC</strong></td><td>SAP-to-SAP communication</td><td>Medium-High</td><td>N/A</td><td>S_RFCACL required; avoid wildcard values</td></tr>
+      <tr><td><strong>SSO via Kerberos/SPNEGO</strong></td><td>Windows domain environments</td><td>High</td><td>Via domain</td><td>Requires SAP Secure Login Server</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li><strong>S_RFC wildcard authorization is a critical security risk</strong>: Many systems still have S_RFC = * which grants access to ALL remote-enabled function modules. Use UCON enforcement mode to whitelist only required FMs. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+    <li><strong>SNC certificate mismatch silently downgrades to unencrypted</strong>: If snc/only_encrypted_rfc is not set to 1, failed SNC negotiation falls back to plaintext. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+    <li><strong>Service user password expiration breaks integrations</strong>: Use system users (type B) for RFC connections — they don't expire. Dialog users (type A) have password policies that will break unattended integrations. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+    <li><strong>Trusted RFC (S_RFCACL) with wildcards enables privilege escalation</strong>: An attacker on a trusted system can impersonate any user. Define exact user mappings. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>BAPI_TRANSACTION_COMMIT is mandatory</strong>: No BAPI call persists data without an explicit commit. This is not auto-committed like REST APIs. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>, <a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</li>
+    <li><strong>tRFC and qRFC are deprecated</strong>: SAP recommends bgRFC for all new development since NetWeaver 7.0. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>, <a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>]</li>
+    <li><strong>sRFC blocks caller and target work process</strong>: Unsuitable for high-volume or high-latency scenarios. Each concurrent sRFC ties up one dialog work process on both sides. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>]</li>
+    <li><strong>RFC SDK licensing</strong>: JCo, NCo, PyRFC, and NW RFC SDK require a valid SAP license. Cannot be redistributed in open-source projects. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+    <li><strong>ROLLBACK cannot undo a prior COMMIT</strong>: If you commit after step 1 and rollback after step 2, step 1 remains committed. Structure all steps in a single LUW. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>, <a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</li>
+    <li><strong>No native webhook/push from RFC</strong>: RFC is pull-based. For event-driven patterns, combine with SAP Event Mesh, ALE/IDocs, or bgRFC with custom scheduling. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — User needs to integrate with SAP via BAPI/RFC
+|
++-- What's the integration pattern?
+|   |
+|   +-- Real-time (individual records, &lt;1s latency)
+|   |   +-- Need immediate response? --> sRFC: call BAPI, get RETURN
+|   |   +-- Fire-and-forget OK? --> bgRFC with high-priority queue
+|   |   +-- Write with confirmation? --> sRFC + check RETURN + COMMIT
+|   |
+|   +-- Batch/Bulk (scheduled, high volume)
+|   |   +-- &lt;1,000 records? --> sRFC loop with commit per batch
+|   |   +-- >1,000 records? --> bgRFC with parallel queues (40% faster)
+|   |   +-- Need ordering? --> bgRFC single named queue (FIFO)
+|   |
+|   +-- Event-driven
+|   |   +-- SAP triggers? --> bgRFC outbound to registered RFC server
+|   |   +-- Need exactly-once? --> bgRFC (replaces tRFC semantics)
+|   |   +-- Not native RFC --> use SAP Event Mesh or IDoc
+|   |
+|   +-- File-based --> Not RFC — use IDoc, FBDI, or BW extractors
+|
++-- Which connector?
+|   +-- Java --> SAP JCo 3.1
+|   +-- .NET --> SAP NCo 3.1
+|   +-- Python --> PyRFC 3.x (via SAP NW RFC SDK)
+|   +-- Node.js --> node-rfc or SAP Cloud SDK
+|   +-- Other --> SAP NW RFC SDK (C/C++)
+|
++-- Error tolerance?
+    +-- Zero-loss --> bgRFC + SBGRFCMON + dead letter handling
+    +-- Best-effort --> aRFC (fastest, no persistence)</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <h3>Common BAPIs for Integration</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">BAPI</th><th scope="col">Module</th><th scope="col">Operation</th><th scope="col">Key Parameters</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>BAPI_SALESORDER_CREATEFROMDAT2</td><td>SD</td><td>Create sales order</td><td>ORDER_HEADER_IN, ORDER_ITEMS_IN</td><td>Most-used SD BAPI; requires COMMIT</td></tr>
+      <tr><td>BAPI_PO_CREATE1</td><td>MM</td><td>Create purchase order</td><td>POHEADER, POITEM, POSCHEDULE</td><td>Supports all item categories</td></tr>
+      <tr><td>BAPI_MATERIAL_SAVEDATA</td><td>MM</td><td>Create/change material</td><td>HEADDATA, CLIENTDATA, PLANTDATA</td><td>Set CLIENTDATAX flags for changes</td></tr>
+      <tr><td>BAPI_CUSTOMER_CREATEFROMDATA1</td><td>SD/FI</td><td>Create customer</td><td>PI_PERSONALDATA, PI_COPYREFERENCE</td><td>Returns CUSTOMERNO on success</td></tr>
+      <tr><td>BAPI_GOODSMVT_CREATE</td><td>MM</td><td>Goods movement</td><td>GOODSMVT_HEADER, GOODSMVT_ITEM</td><td>GM_CODE determines movement type</td></tr>
+      <tr><td>BAPI_ACC_DOCUMENT_POST</td><td>FI</td><td>Post accounting doc</td><td>DOCUMENTHEADER, ACCOUNTGL</td><td>Replaces direct FB01 posting</td></tr>
+      <tr><td>BAPI_EMPLOYEE_GETDATA</td><td>HR</td><td>Read employee data</td><td>EMPLOYEE_ID, TIMEFRAME</td><td>Read-only; no commit needed</td></tr>
+      <tr><td>BAPI_TRANSACTION_COMMIT</td><td>Cross</td><td>Commit transaction</td><td>WAIT = 'X'</td><td>ALWAYS call after write BAPIs</td></tr>
+      <tr><td>BAPI_TRANSACTION_ROLLBACK</td><td>Cross</td><td>Rollback transaction</td><td>(none)</td><td>Only uncommitted changes in LUW</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>RFC Variant Quick Comparison</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">sRFC</th><th scope="col">aRFC</th><th scope="col">tRFC</th><th scope="col">qRFC</th><th scope="col">bgRFC</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Delivery guarantee</td><td>None</td><td>None</td><td>Exactly-once</td><td>Exactly-once + FIFO</td><td>Exactly-once, optional FIFO</td></tr>
+      <tr><td>Target must be online</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td>Caller blocked</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td>Data persisted</td><td>No</td><td>No</td><td>Yes (TID)</td><td>Yes (queue)</td><td>Yes (unit)</td></tr>
+      <tr><td>Ordering</td><td>N/A</td><td>No</td><td>No</td><td>Yes</td><td>Configurable</td></tr>
+      <tr><td>Recommended for new dev</td><td>Yes (reads)</td><td>Limited</td><td>No</td><td>No</td><td>Yes (all async)</td></tr>
+      <tr><td>Monitoring txn</td><td>SM58</td><td>SM58</td><td>SM58</td><td>SMQ1/SMQ2</td><td>SBGRFCMON</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Configure RFC Destination (SM59)</h3>
+  <p>Create an RFC destination in the SAP system to define connection parameters for external systems. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>]</p>
+  <pre><code>Transaction: SM59
+1. Create new destination: Type T (TCP/IP) for external, Type 3 for SAP-to-SAP
+2. Set Activation Type: "Registered Server Program"
+3. Set Program ID (must match external application)
+4. For SNC: Technical Settings tab, set SNC partner name and QoP
+5. Test connection: green light = success</code></pre>
+  <p><strong>Verify</strong>: SM59 &rarr; select destination &rarr; "Connection Test" &rarr; expected: green status, round-trip time displayed</p>
+
+  <h3>2. Call a BAPI via sRFC with JCo (Java)</h3>
+  <p>Use SAP JCo 3.1 to invoke a BAPI synchronously. JCo handles connection pooling, data type conversion, and RFC protocol details. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</p>
+  <pre><code class="language-java">// Get destination from properties file
+JCoDestination destination = JCoDestinationManager.getDestination("SAP_SYSTEM");
+
+// Get function template from SAP metadata
+JCoFunction function = destination.getRepository()
+    .getFunction("BAPI_COMPANYCODE_GETLIST");
+
+// Execute synchronous RFC call
+function.execute(destination);
+
+// Check RETURN for errors
+JCoStructure ret = function.getExportParameterList().getStructure("RETURN");
+if ("E".equals(ret.getString("TYPE")))
+    throw new RuntimeException("BAPI error: " + ret.getString("MESSAGE"));
+
+// Process results
+JCoTable codes = function.getTableParameterList().getTable("COMPANYCODE_LIST");
+for (int i = 0; i &lt; codes.getNumRows(); i++) {
+    codes.setRow(i);
+    System.out.println(codes.getString("COMP_CODE") + " - " + codes.getString("COMP_NAME"));
+}</code></pre>
+  <p><strong>Verify</strong>: Run application &rarr; expected: list of company codes printed; no exceptions</p>
+
+  <h3>3. Call a Write BAPI with Commit/Rollback Pattern</h3>
+  <p>Write BAPIs require explicit BAPI_TRANSACTION_COMMIT. Never call COMMIT WORK directly — it skips BAPI buffer refresh logic. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>, <a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</p>
+  <pre><code class="language-java">// Execute the write BAPI
+createSO.execute(dest);
+
+// Check ALL RETURN table entries for errors
+JCoTable returnTable = createSO.getTableParameterList().getTable("RETURN");
+boolean hasErrors = false;
+for (int i = 0; i &lt; returnTable.getNumRows(); i++) {
+    returnTable.setRow(i);
+    String msgType = returnTable.getString("TYPE");
+    if ("E".equals(msgType) || "A".equals(msgType)) {
+        hasErrors = true;
+    }
+}
+
+// Single commit or rollback for entire LUW
+if (!hasErrors) {
+    JCoFunction commit = dest.getRepository()
+        .getFunction("BAPI_TRANSACTION_COMMIT");
+    commit.getImportParameterList().setValue("WAIT", "X"); // Synchronous
+    commit.execute(dest);
+} else {
+    JCoFunction rollback = dest.getRepository()
+        .getFunction("BAPI_TRANSACTION_ROLLBACK");
+    rollback.execute(dest);
+}</code></pre>
+  <p><strong>Verify</strong>: SE16 &rarr; table VBAK &rarr; expected: new sales order with correct header data</p>
+
+  <h3>4. Implement bgRFC for Guaranteed Async Delivery</h3>
+  <p>bgRFC replaces tRFC and qRFC with better performance and monitoring. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>, <a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>]</p>
+  <pre><code class="language-abap">" Get bgRFC destination (configured in SBGRFCCONF)
+DATA(lo_dest) = cl_bgrfc_destination_outbound=>create( 'DESTINATION_NAME' ).
+
+" Create bgRFC unit (use create_qrfc_unit for ordered delivery)
+DATA(lo_unit) = lo_dest->create_trfc_unit( ).
+
+" Call function module within bgRFC unit
+CALL FUNCTION 'BAPI_SALESORDER_CREATEFROMDAT2'
+  IN BACKGROUND UNIT lo_unit
+  EXPORTING order_header_in = ls_header
+  TABLES order_items_in = lt_items return = lt_return.
+
+" Unit persisted to DB on COMMIT WORK
+COMMIT WORK.
+" bgRFC scheduler delivers when target is available</code></pre>
+  <p><strong>Verify</strong>: SBGRFCMON &rarr; expected: unit ID visible with status "Executed" or "Waiting"</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Read Material Master via PyRFC</h3>
+  <pre><code class="language-python"># Input:  SAP connection parameters, material number
+# Output: Material description and base unit of measure
+# Requires: pyrfc>=3.3 + SAP NW RFC SDK installed
+
+from pyrfc import Connection
+
+conn = Connection(
+    ashost='sap-server.example.com', sysnr='00',
+    client='100', user='RFC_USER', passwd='secure_password', lang='EN'
+)
+
+result = conn.call('BAPI_MATERIAL_GETDETAIL', MATERIAL='MAT-001', PLANT='1000')
+
+ret = result.get('RETURN', {})
+if ret.get('TYPE') == 'E':
+    raise RuntimeError(f"BAPI error: {ret['MESSAGE']}")
+
+mat_desc = result['MATERIAL_GENERAL_DATA']['MATL_DESC']
+print(f"Material: {mat_desc}")
+conn.close()</code></pre>
+
+  <h3>JavaScript/Node.js: Call BAPI via node-rfc</h3>
+  <pre><code class="language-javascript">// Input:  SAP connection parameters
+// Output: List of company codes
+// Requires: node-rfc@3.x + SAP NW RFC SDK
+
+const noderfc = require('node-rfc');
+const client = new noderfc.Client({
+    ashost: 'sap-server.example.com', sysnr: '00',
+    client: '100', user: 'RFC_USER', passwd: 'secure_password'
+});
+
+async function getCompanyCodes() {
+    await client.open();
+    const result = await client.call('BAPI_COMPANYCODE_GETLIST', {});
+    if (result.RETURN?.TYPE === 'E')
+        throw new Error(`BAPI error: ${result.RETURN.MESSAGE}`);
+    for (const cc of result.COMPANYCODE_LIST)
+        console.log(`${cc.COMP_CODE} - ${cc.COMP_NAME}`);
+    await client.close();
+}
+getCompanyCodes().catch(console.error);</code></pre>
+
+  <h3>cURL: N/A — RFC Is Not HTTP-Based</h3>
+  <pre><code class="language-bash"># RFC is a binary protocol, not HTTP. Cannot use cURL directly.
+# For HTTP-based SAP integration, use:
+# - SAP API Business Hub (api.sap.com) with OData/REST
+# - SAP Cloud Connector + BTP for RFC-over-HTTP tunneling
+# - SAP Gateway (SEGW) to expose BAPIs as OData services</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>BAPI Parameter Structure Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter Type</th><th scope="col">ABAP Type</th><th scope="col">Direction</th><th scope="col">Example</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>IMPORT</td><td>Scalar/Structure</td><td>In</td><td>ORDER_HEADER_IN</td><td>Single values or flat structures</td></tr>
+      <tr><td>EXPORT</td><td>Scalar/Structure</td><td>Out</td><td>SALESDOCUMENT</td><td>Return values from BAPI</td></tr>
+      <tr><td>TABLES</td><td>Internal Table</td><td>In/Out</td><td>ORDER_ITEMS_IN, RETURN</td><td>Tabular data; RETURN has error messages</td></tr>
+      <tr><td>CHANGING</td><td>Structure</td><td>In/Out</td><td>(rare in BAPIs)</td><td>Modified by BAPI and returned</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>BAPI RETURN Structure (BAPIRET2)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Values</th><th scope="col">Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>TYPE</td><td>CHAR 1</td><td>S=Success, E=Error, W=Warning, I=Info, A=Abort</td><td>Message severity</td></tr>
+      <tr><td>ID</td><td>CHAR 20</td><td>Message class (e.g., 'V1')</td><td>For lookup in SE91</td></tr>
+      <tr><td>NUMBER</td><td>NUMC 3</td><td>Message number</td><td>Combined with ID for unique identification</td></tr>
+      <tr><td>MESSAGE</td><td>CHAR 220</td><td>Human-readable text</td><td>The actual error/success message</td></tr>
+      <tr><td>LOG_NO</td><td>CHAR 20</td><td>Application log number</td><td>For detailed investigation via SLG1</td></tr>
+      <tr><td>MESSAGE_V1-V4</td><td>CHAR 50</td><td>Variable replacements</td><td>Dynamic parts of message text</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li><strong>SAP dates are CHAR 8 (YYYYMMDD), not ISO 8601</strong>: Convert '20260301' to '2026-03-01'. Empty date = '00000000', not null. [<a href="https://community.sap.com/t5/application-development-and-automation-blog-posts/understanding-different-types-of-rfc-calls-in-sap-abap/ba-p/13745585">src5</a>]</li>
+    <li><strong>SAP amounts may lack decimal places</strong>: Check CURRENCY field to determine positioning. JPY has 0 decimals; USD has 2. Use BAPI_CURRENCY_CONV_TO_EXTERNAL. [<a href="https://community.sap.com/t5/application-development-and-automation-blog-posts/understanding-different-types-of-rfc-calls-in-sap-abap/ba-p/13745585">src5</a>]</li>
+    <li><strong>Leading zeros in SAP IDs</strong>: Material, customer, and vendor numbers have leading zeros (e.g., '0000001000'). Use CONVERSION_EXIT_ALPHA_INPUT/OUTPUT. [<a href="https://community.sap.com/t5/application-development-and-automation-blog-posts/understanding-different-types-of-rfc-calls-in-sap-abap/ba-p/13745585">src5</a>]</li>
+    <li><strong>Character encoding on older systems</strong>: Verify target code page (SM21). JCo/NCo handle conversion; raw RFC SDK requires manual handling. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Error</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>COMMUNICATION_FAILURE</td><td>Cannot reach SAP</td><td>Network issue, SAP down</td><td>Check SM59 connection test; verify network</td></tr>
+      <tr><td>SYSTEM_FAILURE</td><td>ABAP runtime error</td><td>Short dump on target</td><td>Check ST22 for dump details</td></tr>
+      <tr><td>RFC_ERROR_LOGON_FAILURE</td><td>Auth failed</td><td>Wrong credentials, locked user</td><td>Check SU01 user status; use type B users</td></tr>
+      <tr><td>TABLE_ENTRIES_EXCEED_LIMIT</td><td>Too much data</td><td>Query returns too many rows</td><td>Add filter parameters; paginate</td></tr>
+      <tr><td>RETURN TYPE='E'</td><td>Business logic error</td><td>Invalid data, missing fields</td><td>Read MESSAGE; check SU53 for auths</td></tr>
+      <tr><td>RFC_ERROR_SYSTEM_NOT_AVAILABLE</td><td>Target unreachable</td><td>System down during tRFC/bgRFC</td><td>Entries in queue; auto-retry; check SBGRFCMON</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Missing BAPI_TRANSACTION_COMMIT</strong>: Data appears to save but disappears after dialog step ends. Fix: <code>Always call BAPI_TRANSACTION_COMMIT with WAIT='X' after checking RETURN</code>. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>, <a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</li>
+    <li><strong>tRFC queue buildup (SM58)</strong>: Thousands of stuck entries consume DB space. Fix: <code>Migrate to bgRFC; parallel schedulers + efficient storage</code>. [<a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>, <a href="https://www.oreateai.com/blog/technical-analysis-of-optimizing-trfc-and-qrfc-calls-in-sap-systems-using-bgrfc/b7ee54449025ac08b1eba9d65e5c1556">src7</a>]</li>
+    <li><strong>JCo connection pool exhaustion</strong>: Under load, all connections used. Fix: <code>Set jco.destination.peak_limit > pool_capacity; set expiration_time</code>. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+    <li><strong>SNC certificate expiration</strong>: Integration stops silently. Fix: <code>Monitor with STRUST; set reminders 30 days before expiry</code>. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+    <li><strong>Partial commit in multi-BAPI transactions</strong>: Earlier commits cannot be rolled back. Fix: <code>Call ALL BAPIs first, check ALL RETURNs, then single COMMIT/ROLLBACK</code>. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>]</li>
+    <li><strong>aRFC data loss</strong>: Calls to unreachable systems silently lost. Fix: <code>Use bgRFC for guaranteed delivery; never aRFC for business-critical data</code>. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: COMMIT WORK Instead of BAPI_TRANSACTION_COMMIT</h3>
+  <pre><code class="language-abap">" BAD — COMMIT WORK skips BAPI buffer refresh logic
+CALL FUNCTION 'BAPI_SALESORDER_CREATEFROMDAT2' ...
+COMMIT WORK.  " Missing BUFFER_REFRESH_ALL, stale buffers</code></pre>
+
+  <h3>Correct: Always Use BAPI_TRANSACTION_COMMIT</h3>
+  <pre><code class="language-abap">" GOOD — calls BUFFER_REFRESH_ALL internally
+CALL FUNCTION 'BAPI_SALESORDER_CREATEFROMDAT2' ...
+CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+  EXPORTING WAIT = 'X'.  " Synchronous — waits for DB commit</code></pre>
+  <p>[<a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</p>
+
+  <h3>Wrong: Committing Inside a Loop</h3>
+  <pre><code class="language-java">// BAD — each iteration is a separate LUW; cannot rollback later
+for (Item item : items) {
+    function.execute(destination);
+    commitFunction.execute(destination); // COMMIT per item -- WRONG
+}</code></pre>
+
+  <h3>Correct: Batch All Calls, Single Commit at End</h3>
+  <pre><code class="language-java">// GOOD — all items in one LUW; single commit/rollback
+boolean hasErrors = false;
+for (Item item : items) {
+    function.execute(destination);
+    if (checkReturnForErrors(function)) { hasErrors = true; break; }
+}
+if (!hasErrors) commitFunction.execute(destination);
+else rollbackFunction.execute(destination);</code></pre>
+  <p>[<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>, <a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</p>
+
+  <h3>Wrong: Using tRFC for New Projects</h3>
+  <pre><code class="language-abap">" BAD — tRFC deprecated; single scheduler, poor performance
+CALL FUNCTION 'Z_SEND_ORDER'
+  IN BACKGROUND TASK DESTINATION 'TARGET_SYSTEM' ...
+COMMIT WORK.</code></pre>
+
+  <h3>Correct: Use bgRFC for All New Async Work</h3>
+  <pre><code class="language-abap">" GOOD — multiple schedulers, parallel queues, 40% better throughput
+DATA(lo_dest) = cl_bgrfc_destination_outbound=>create( 'TARGET_SYSTEM' ).
+DATA(lo_unit) = lo_dest->create_trfc_unit( ).
+CALL FUNCTION 'Z_SEND_ORDER'
+  IN BACKGROUND UNIT lo_unit DESTINATION 'TARGET_SYSTEM' ...
+COMMIT WORK.</code></pre>
+  <p>[<a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>, <a href="https://www.oreateai.com/blog/technical-analysis-of-optimizing-trfc-and-qrfc-calls-in-sap-systems-using-bgrfc/b7ee54449025ac08b1eba9d65e5c1556">src7</a>]</p>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Forgetting WAIT='X' on BAPI_TRANSACTION_COMMIT</strong>: Without it, commit is async — next read may return stale data. Fix: <code>Always pass WAIT='X' for integrations reading back after writing</code>. [<a href="https://help.sap.com/docs/SUPPORT_CONTENT/abap/3353526184.html">src4</a>]</li>
+    <li><strong>Not handling the full RETURN table</strong>: Checking only RETURN structure misses errors in RETURN[] table. Fix: <code>Iterate the RETURN table, not just the export structure</code>. [<a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/sap-bapi-transactions-walkthrough/1772148">src3</a>]</li>
+    <li><strong>Dialog users for RFC accounts</strong>: Password expiration breaks unattended integrations. Fix: <code>Use system users (type B) in SU01</code>. [<a href="https://wiki.scn.sap.com/wiki/display/Security/Best+Practice+-+How+to+analyze+and+secure+RFC+connections">src8</a>]</li>
+    <li><strong>JCo pool_capacity=1 default</strong>: Serializes all requests under load. Fix: <code>Set pool_capacity to expected concurrency; peak_limit 2-3x pool_capacity</code>. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+    <li><strong>Ignoring SM58/SBGRFCMON monitoring</strong>: Stuck entries silently accumulate. Fix: <code>Periodic monitoring jobs; alert on entries stuck >1h</code>. [<a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>, <a href="https://www.oreateai.com/blog/technical-analysis-of-optimizing-trfc-and-qrfc-calls-in-sap-systems-using-bgrfc/b7ee54449025ac08b1eba9d65e5c1556">src7</a>]</li>
+    <li><strong>Hardcoding SAP field lengths</strong>: Material number extended to 40 chars in S/4HANA. Fix: <code>Use JCo/NCo metadata APIs for dynamic field lengths</code>. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># SAP transaction codes for RFC diagnostics
+
+# Check RFC destination connectivity
+SM59 -> select destination -> "Connection Test"
+
+# Monitor stuck tRFC entries (legacy)
+SM58 -> filter by date/destination
+
+# Monitor bgRFC units and queues
+SBGRFCMON -> filter by destination/status
+
+# bgRFC history and performance
+SBGRFCHIST (history) / SBGRFCPERFMON (throughput)
+
+# Short dumps from failed RFC calls
+ST22 -> filter by date/user
+
+# RFC work process usage
+SM66 (running processes) / SM04 (active sessions)
+
+# Authorization failure diagnosis
+SU53 -> shows last auth failure
+
+# External: Check JCo version
+java -cp sapjco3.jar com.sap.conn.jco.JCo
+
+# External: Check PyRFC version
+python -c "import pyrfc; print(pyrfc.__version__)"
+
+# External: Test RFC connection from Python
+python -c "
+from pyrfc import Connection
+c = Connection(ashost='host', sysnr='00', client='100', user='USER', passwd='PASS')
+print('Connected:', c.get_connection_attributes())
+c.close()
+"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>bgRFC</td><td>NetWeaver 7.0+</td><td>Current, recommended</td><td>Replaces tRFC/qRFC</td><td>Use for all new async development</td></tr>
+      <tr><td>tRFC</td><td>All NW versions</td><td>Deprecated (functional)</td><td>Original async exactly-once</td><td>Migrate to bgRFC</td></tr>
+      <tr><td>qRFC</td><td>NetWeaver 6.20+</td><td>Deprecated (functional)</td><td>FIFO ordering on tRFC</td><td>Migrate to bgRFC create_qrfc_unit()</td></tr>
+      <tr><td>sRFC</td><td>All versions</td><td>Current</td><td>Synchronous — unchanged</td><td>Still correct for real-time lookups</td></tr>
+      <tr><td>aRFC</td><td>All versions</td><td>Current (limited)</td><td>No delivery guarantee</td><td>Non-critical parallel calls only</td></tr>
+      <tr><td>JCo 3.1</td><td>3.1.x (2025)</td><td>Current</td><td>WebSocket RFC, bgRFC</td><td>Min Java 8</td></tr>
+      <tr><td>NCo 3.1</td><td>3.1.x (2025)</td><td>Current</td><td>.NET 6+, WebSocket RFC</td><td>Replaces NCo 3.0</td></tr>
+      <tr><td>PyRFC</td><td>3.3+ (2024)</td><td>Current</td><td>Python 3.8+ required</td><td>Archived but functional</td></tr>
+      <tr><td>NW RFC SDK</td><td>7.50+</td><td>Current</td><td>Required by all connectors</td><td>S-user required for download</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Deprecation policy</strong>: SAP does not formally sunset tRFC/qRFC — they remain functional indefinitely. However, all new documentation and features target bgRFC exclusively. SAP Note 1889823 recommends bgRFC migration. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>, <a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>]</p>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Integrating with SAP ECC or S/4HANA on-premise/private cloud</td><td>Using S/4HANA Cloud public edition</td><td>OData V4 APIs via SAP API Business Hub</td></tr>
+      <tr><td>Calling existing ABAP function modules or BAPIs</td><td>Building new APIs from scratch on S/4HANA</td><td>RAP (RESTful ABAP Programming) + OData</td></tr>
+      <tr><td>Need exactly-once async delivery (bgRFC)</td><td>Need real-time event streaming/webhooks</td><td>SAP Event Mesh or ALE/IDocs</td></tr>
+      <tr><td>Using Java, .NET, Python, or C/C++ clients</td><td>Browser-based or mobile integration</td><td>SAP Gateway OData services</td></tr>
+      <tr><td>Batch processing with guaranteed ordering</td><td>High-frequency, low-latency microservices</td><td>SAP Cloud SDK + API Management</td></tr>
+      <tr><td>Landscape without SAP BTP</td><td>Full cloud-native on SAP BTP</td><td>SAP Integration Suite + Cloud Connector</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>tRFC/qRFC are deprecated but not removed</strong>: They will continue to work, but SAP invests zero effort in performance improvements. Plan bgRFC migration for any system on NetWeaver 7.0+. [<a href="https://community.sap.com/t5/application-development-and-automation-discussions/bgrfc-advantages-over-trfc-and-qrfc/m-p/10574954">src6</a>]</li>
+    <li><strong>RFC SDK licensing is strict</strong>: JCo, NCo, PyRFC, and NW RFC SDK cannot be bundled in commercial products without SAP licensing agreement. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+    <li><strong>S/4HANA Cloud public edition does NOT support RFC</strong>: Only OData, REST, and SOAP APIs available. This card is irrelevant for public cloud customers.</li>
+    <li><strong>Performance varies by network latency</strong>: sRFC round-trip directly affected by WAN latency. Consider SAP Cloud Connector for cross-region integrations. [<a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/99b53cee2b73e7e10000000a42189b/content.htm">src1</a>]</li>
+    <li><strong>BAPI behavior differs between ECC and S/4HANA</strong>: Some BAPIs have changed parameters (e.g., material number extended to 40 chars). Always test against target version. [<a href="https://support.sap.com/en/product/connectors/jco.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/sap-odata-rest-api/2026" data-relationship="alternative_to">SAP OData and REST API for S/4HANA Cloud</a>
+    <a href="/business/erp-integration/sap-idoc-integration/2026" data-relationship="related_to">SAP IDoc-based EDI Integration</a>
+    <a href="/business/erp-integration/sap-event-mesh/2026" data-relationship="related_to">SAP Event Mesh Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about.html">About</a> &middot; <a href="/methodology.html">Methodology</a> &middot; <a href="/api.html">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api.html">API</a> or <a href="/api.html#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology.html">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

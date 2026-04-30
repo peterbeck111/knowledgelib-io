@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Fixing Common Rust Borrow Checker Errors | knowledgelib.io</title>
+  <meta name="description" content="Complete debugging guide for Rust borrow checker errors (E0382, E0499, E0502, E0505, E0515, E0597, E0716) with ranked diagnostic table, decision tree,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/debugging/rust-borrow-checker/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Fixing Common Rust Borrow Checker Errors | knowledgelib.io">
+  <meta property="og:description" content="Complete debugging guide for Rust borrow checker errors (E0382, E0499, E0502, E0505, E0515, E0597, E0716) with ranked diagnostic table, decision tree, code examples, and anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/debugging/rust-borrow-checker/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fixing Common Rust Borrow Checker Errors | knowledgelib.io">
+  <meta name="twitter:description" content="Complete debugging guide for Rust borrow checker errors (E0382, E0499, E0502, E0505, E0515, E0597, E0716) with ranked diagnostic table, decision tree, code examples, and anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/debugging/rust_borrow_checker">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I fix common Rust borrow checker errors?">
+  <meta name="ai:aliases" content="Rust borrow checker errors and fixes; How to resolve Rust ownership and borrowing errors; Rust E0382 E0502 E0505 E0597 fix guide; Fighting the Rust borrow checker">
+  <meta name="ai:raw" content="/api/v1/units/software/debugging/rust-borrow-checker/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="error_code,context">
+  <meta name="ai:constraints" content="Either one &amp;mut T OR any number of &amp;T at a time; References must not outlive data; Values cannot be used after move; Never use unsafe to fix borrow errors">
+  <meta name="ai:skip_this_unit_if" content="Lifetime annotation issue (E0106, E0621) -> Rust lifetime annotations guide; Async/Pin/Future error (E0277) -> Rust async ownership guide; Trait object safety (E0038) -> Rust trait objects guide">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Fixing Common Rust Borrow Checker Errors",
+    "headline": "Fixing Common Rust Borrow Checker Errors",
+    "description": "Complete debugging guide for Rust borrow checker errors including E0382, E0499, E0502, E0505, E0515, E0597, and E0716 with ranked diagnostic table, decision tree, step-by-step fixes, code examples, and anti-patterns.",
+    "keywords": ["Rust", "borrow checker", "ownership", "borrowing", "E0382", "E0502", "E0505", "E0597", "debugging", "compiler errors"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Rust 1.31+ (NLL), Rust 1.63+ (NLL all editions), cargo, rustc",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "References and Borrowing — The Rust Programming Language",
+        "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Fixing Ownership Errors — The Rust Programming Language (Brown University Edition)",
+        "url": "https://rust-book.cs.brown.edu/ch04-03-fixing-ownership-errors.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Validating References with Lifetimes — The Rust Programming Language",
+        "url": "https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Item 15: Understand the borrow checker — Effective Rust",
+        "url": "https://www.lurklurk.org/effective-rust/borrows.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Rust Error Codes Index — E0382",
+        "url": "https://doc.rust-lang.org/error_codes/E0382.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Non-lexical lifetimes (NLL) fully stable — Rust Blog",
+        "url": "https://blog.rust-lang.org/2022/08/05/nll-by-default/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Tips and tricks for dealing with the borrow-checker",
+        "url": "https://gist.github.com/jyn514/638ab0bcf2924c8286e78f38a7f5bdee"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Fixing Common Rust Borrow Checker Errors",
+    "description": "Structured debugging reference for Rust borrow checker errors (E0382, E0499, E0502, E0505, E0515, E0597, E0716) with ranked diagnostic table, decision tree, code examples, and anti-patterns.",
+    "keywords": ["Rust", "borrow checker", "ownership", "borrowing", "compiler errors", "debugging"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "The Rust Project"},
+      {"@type": "Organization", "name": "Brown University"},
+      {"@type": "Organization", "name": "Effective Rust"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "Fixing Common Rust Borrow Checker Errors" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I fix common Rust borrow checker errors?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most borrow checker errors fall into 7 patterns (E0382, E0499, E0502, E0505, E0515, E0597, E0716) — each has a specific fix involving cloning, borrowing, restructuring scopes, or returning owned values."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Rust borrow checker errors and fixes",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most borrow checker errors fall into 7 patterns (E0382, E0499, E0502, E0505, E0515, E0597, E0716) — each has a specific fix involving cloning, borrowing, restructuring scopes, or returning owned values."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to resolve Rust ownership and borrowing errors",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most borrow checker errors fall into 7 patterns (E0382, E0499, E0502, E0505, E0515, E0597, E0716) — each has a specific fix involving cloning, borrowing, restructuring scopes, or returning owned values."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Rust E0382 E0502 E0505 E0597 fix guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most borrow checker errors fall into 7 patterns (E0382, E0499, E0502, E0505, E0515, E0597, E0716) — each has a specific fix involving cloning, borrowing, restructuring scopes, or returning owned values."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Fighting the Rust borrow checker",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Most borrow checker errors fall into 7 patterns (E0382, E0499, E0502, E0505, E0515, E0597, E0716) — each has a specific fix involving cloning, borrowing, restructuring scopes, or returning owned values."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Fixing Common Rust Borrow Checker Errors</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I fix common Rust borrow checker errors?</h2>
+
+  <aside class="unit-meta" data-card-id="software/debugging/rust-borrow-checker/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Most borrow checker errors fall into 7 patterns (E0382, E0499, E0502, E0505, E0515, E0597, E0716) &mdash; each has a specific fix involving cloning, borrowing, restructuring scopes, or returning owned values.</li>
+    <li><strong>Key tool/command</strong>: <code>cargo check</code> (fast compile check) and <code>rustc --explain E0XXX</code></li>
+    <li><strong>Watch out for</strong>: Reaching for <code>.clone()</code> on everything &mdash; it compiles but hides design problems; prefer restructuring borrows first.</li>
+    <li><strong>Works with</strong>: Rust 1.31+ (NLL on 2018 edition), Rust 1.63+ (NLL on all editions). Stable through Rust 1.85 (Feb 2026).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>You can have EITHER one <code>&amp;mut T</code> OR any number of <code>&amp;T</code> to the same data at a time &mdash; never both simultaneously</li>
+    <li>A value cannot be used after its ownership moves to another variable or function call</li>
+    <li>References must not outlive the data they point to &mdash; the compiler enforces this at every function boundary</li>
+    <li><code>unsafe</code> blocks can bypass the borrow checker but shift responsibility for memory safety to the programmer &mdash; never suggest <code>unsafe</code> as a fix for borrow checker errors</li>
+    <li>Interior mutability types (<code>Cell</code>, <code>RefCell</code>, <code>Mutex</code>) move borrow checking to runtime &mdash; panics replace compile errors if misused</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core diagnostic table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Error Code</th><th scope="col">Cause</th><th scope="col">Likelihood</th><th scope="col">Signature</th><th scope="col">Fix</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>E0382</td><td>Use of moved value</td><td>~30%</td><td><code>value used here after move</code></td><td>Use <code>&amp;val</code> (borrow), <code>.clone()</code>, or restructure to avoid the move</td></tr>
+      <tr><td>2</td><td>E0502</td><td>Mutable borrow while immutable borrow active</td><td>~20%</td><td><code>cannot borrow as mutable because it is also borrowed as immutable</code></td><td>End the immutable borrow before mutating; use a separate scope or reorder statements</td></tr>
+      <tr><td>3</td><td>E0505</td><td>Move out of borrowed value</td><td>~12%</td><td><code>cannot move out of because it is borrowed</code></td><td>Clone the value, or drop the borrow first</td></tr>
+      <tr><td>4</td><td>E0597</td><td>Value does not live long enough</td><td>~12%</td><td><code>does not live long enough</code></td><td>Extend the value's scope, return owned data, or add lifetime annotations</td></tr>
+      <tr><td>5</td><td>E0499</td><td>Multiple mutable borrows</td><td>~10%</td><td><code>cannot borrow as mutable more than once at a time</code></td><td>Use <code>split_at_mut()</code>, separate scopes, or <code>Cell</code>/<code>RefCell</code></td></tr>
+      <tr><td>6</td><td>E0515</td><td>Return reference to local variable</td><td>~6%</td><td><code>cannot return reference to local variable</code></td><td>Return the owned value instead of a reference</td></tr>
+      <tr><td>7</td><td>E0716</td><td>Temporary value dropped while borrowed</td><td>~5%</td><td><code>temporary value dropped while borrowed</code></td><td>Bind the temporary to a named variable with <code>let</code></td></tr>
+      <tr><td>8</td><td>E0507</td><td>Cannot move out of borrowed content</td><td>~3%</td><td><code>cannot move out of behind a shared reference</code></td><td>Use <code>.clone()</code>, <code>std::mem::replace()</code>, or match on <code>ref</code></td></tr>
+      <tr><td>9</td><td>E0596</td><td>Cannot borrow immutable as mutable</td><td>~2%</td><td><code>cannot borrow as mutable, as it is not declared as mutable</code></td><td>Add <code>mut</code> to the binding: <code>let mut x = ...</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START &mdash; What does the error message say?
+&#9500;&#9472;&#9472; "value used here after move" (E0382)?
+&#9474;   &#9500;&#9472;&#9472; Value is Copy type (i32, f64, bool, char) &rarr; Check for shadowing.
+&#9474;   &#9500;&#9472;&#9472; Value used once after move &rarr; Borrow with &amp; instead of moving.
+&#9474;   &#9500;&#9472;&#9472; Value used in loop &rarr; Clone before the loop or use &amp;val in iteration.
+&#9474;   &#9492;&#9472;&#9472; Value moved into closure &rarr; Use move || or clone before closure.
+&#9500;&#9472;&#9472; "cannot borrow as mutable because also borrowed as immutable" (E0502)?
+&#9474;   &#9500;&#9472;&#9472; Immutable ref used after mutation &rarr; Reorder: finish using &amp;ref, then &amp;mut.
+&#9474;   &#9500;&#9472;&#9472; Both refs in same expression &rarr; Extract immutable read into a let binding.
+&#9474;   &#9492;&#9472;&#9472; In a loop &rarr; Collect reads first, then mutate separately.
+&#9500;&#9472;&#9472; "cannot borrow as mutable more than once" (E0499)?
+&#9474;   &#9500;&#9472;&#9472; Two &amp;mut to same struct fields &rarr; Use split borrows or destructuring.
+&#9474;   &#9500;&#9472;&#9472; In a loop &rarr; Use indices or split_at_mut().
+&#9474;   &#9492;&#9472;&#9472; Across function calls &rarr; Pass individual fields, not the whole struct.
+&#9500;&#9472;&#9472; "cannot move out of ... because it is borrowed" (E0505)?
+&#9474;   &#9500;&#9472;&#9472; Drop the borrow before the move (limit scope with { }).
+&#9474;   &#9492;&#9472;&#9472; Clone the data before moving.
+&#9500;&#9472;&#9472; "does not live long enough" (E0597)?
+&#9474;   &#9500;&#9472;&#9472; Returning reference to local &rarr; Return owned value.
+&#9474;   &#9500;&#9472;&#9472; Storing reference in struct &rarr; Add lifetime parameter or use owned data.
+&#9474;   &#9492;&#9472;&#9472; Temporary in let binding &rarr; Bind temp to a longer-lived variable.
+&#9500;&#9472;&#9472; "cannot return reference to local variable" (E0515)?
+&#9474;   &#9492;&#9472;&#9472; Return the owned value: String instead of &amp;str, Vec&lt;T&gt; instead of &amp;[T].
+&#9500;&#9472;&#9472; "temporary value dropped while borrowed" (E0716)?
+&#9474;   &#9492;&#9472;&#9472; Assign the temporary to a named let binding before borrowing.
+&#9492;&#9472;&#9472; NONE OF THE ABOVE &rarr; Run rustc --explain EXXXX for the specific error code.</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Read the full error message</h3>
+  <p>Rust's compiler errors are among the best in any language. Read the entire output &mdash; it often includes a suggested fix. [<a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">src1</a>]</p>
+  <pre><code class="language-bash"># Run a quick compile check (no codegen — faster than cargo build)
+cargo check 2&gt;&amp;1</code></pre>
+  <p><strong>Verify</strong>: Look for lines starting with <code>help:</code> in the compiler output &mdash; these contain suggested fixes.</p>
+
+  <h3>2. Identify the error code and look it up</h3>
+  <p>Every borrow checker error has an error code (E0XXX). Use the built-in explain command to understand it. [<a href="https://doc.rust-lang.org/error_codes/E0382.html">src5</a>]</p>
+  <pre><code class="language-bash"># Get a detailed explanation with examples
+rustc --explain E0382</code></pre>
+  <p><strong>Verify</strong>: The explanation includes a minimal example of what triggers the error and how to fix it.</p>
+
+  <h3>3. Locate the conflicting borrows or moves</h3>
+  <p>The compiler highlights the exact lines involved. Look for the "first borrow/move occurs here" and "second borrow/use occurs here" annotations. [<a href="https://rust-book.cs.brown.edu/ch04-03-fixing-ownership-errors.html">src2</a>]</p>
+  <pre><code class="language-rust">// Example: the compiler shows exactly where the conflict is
+fn main() {
+    let mut data = vec![1, 2, 3];
+    let first = &amp;data[0];   // -- immutable borrow occurs here
+    data.push(4);            // -- mutable borrow occurs here
+    println!("{}", first);   // -- immutable borrow later used here
+}
+// Fix: finish using `first` before calling data.push()</code></pre>
+  <p><strong>Verify</strong>: <code>cargo check</code> compiles without errors after restructuring.</p>
+
+  <h3>4. Apply the appropriate fix pattern</h3>
+  <p>Based on the error code, apply the correct fix from the Quick Reference table. [<a href="https://www.lurklurk.org/effective-rust/borrows.html">src4</a>]</p>
+  <pre><code class="language-rust">// Fix pattern: Reorder to end borrow before mutation
+fn main() {
+    let mut data = vec![1, 2, 3];
+    let first = data[0];     // Copy the value (i32 is Copy)
+    data.push(4);             // Now safe: no outstanding borrows
+    println!("{}", first);    // Uses the copied value
+}</code></pre>
+  <p><strong>Verify</strong>: <code>cargo check</code> &rarr; no errors. Then <code>cargo test</code> to confirm behavior.</p>
+
+  <h3>5. Run Clippy for additional suggestions</h3>
+  <p>Clippy catches patterns that compile but are suboptimal (e.g., unnecessary clones). [<a href="https://gist.github.com/jyn514/638ab0bcf2924c8286e78f38a7f5bdee">src7</a>]</p>
+  <pre><code class="language-bash"># Run Clippy for lint-level suggestions
+cargo clippy -- -W clippy::all</code></pre>
+  <p><strong>Verify</strong>: <code>cargo clippy</code> returns no warnings related to borrowing or cloning.</p>
+  </section>
+
+  <!-- Code Examples — Rust-specific, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Rust: Fixing E0382 &mdash; Use of Moved Value</h3>
+  <pre><code class="language-rust">// Input:  Code that moves a String then tries to use it
+// Output: Compiling code using borrowing instead of moving
+
+fn greet(name: &amp;str) {
+    println!("Hello, {}!", name);
+}
+
+fn main() {
+    let user = String::from("Alice");
+    greet(&amp;user);                      // Borrow: user is not moved
+    println!("Goodbye, {}!", user);    // OK: user is still owned here
+}</code></pre>
+
+  <h3>Rust: Fixing E0502 &mdash; Immutable and Mutable Borrow Conflict</h3>
+  <pre><code class="language-rust">// Input:  Code that reads and writes to a Vec simultaneously
+// Output: Compiling code with borrows properly sequenced
+
+fn main() {
+    let mut scores = vec![90, 85, 78, 92];
+    let highest = *scores.iter().max().unwrap(); // Copy the i32 value
+    scores.push(95);
+    println!("Was: {}", highest); // Uses the copied value, not a borrow
+}</code></pre>
+
+  <h3>Rust: Fixing E0505 &mdash; Cannot Move While Borrowed</h3>
+  <pre><code class="language-rust">// Input:  Code that tries to move a value while a reference exists
+// Output: Compiling code with the borrow scoped correctly
+
+fn main() {
+    let mut data = String::from("hello");
+    {
+        let r = &amp;data;
+        println!("{}", r);   // Borrow used and dropped here
+    }
+    let moved = data;         // Move is now safe
+    println!("{}", moved);
+}</code></pre>
+
+  <h3>Rust: Fixing E0597 &mdash; Value Does Not Live Long Enough</h3>
+  <pre><code class="language-rust">// Input:  Function returning a reference to a local value
+// Output: Function returning an owned value instead
+
+fn make_greeting(name: &amp;str) -&gt; String {
+    format!("Hello, {}!", name)  // Ownership transfers to caller
+}
+
+fn main() {
+    let msg = make_greeting("Alice");
+    println!("{}", msg);
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Cloning everything to silence the borrow checker</h3>
+  <pre><code class="language-rust">// BAD — .clone() compiles but wastes memory and hides design issues
+fn process(items: &amp;Vec&lt;String&gt;) {
+    let owned_copy = items.clone();
+    for item in owned_copy.iter() {
+        println!("{}", item);
+    }
+}</code></pre>
+
+  <h3>Correct: Borrow instead of clone</h3>
+  <pre><code class="language-rust">// GOOD — zero-cost borrow, no allocation
+fn process(items: &amp;[String]) {
+    for item in items.iter() {
+        println!("{}", item);
+    }
+}</code></pre>
+
+  <h3>Wrong: Using indices to avoid borrow checker instead of split borrows</h3>
+  <pre><code class="language-rust">// BAD — bypasses borrow checker with indices, prone to out-of-bounds bugs
+fn swap_first_last(v: &amp;mut Vec&lt;i32&gt;) {
+    let first = v[0];
+    let last = v[v.len() - 1];
+    v[0] = last;
+    v[v.len() - 1] = first;
+}</code></pre>
+
+  <h3>Correct: Use the standard library's safe swap</h3>
+  <pre><code class="language-rust">// GOOD — safe, idiomatic, handles edge cases
+fn swap_first_last(v: &amp;mut Vec&lt;i32&gt;) {
+    let len = v.len();
+    if len &gt;= 2 {
+        v.swap(0, len - 1);
+    }
+}</code></pre>
+
+  <h3>Wrong: Using RefCell everywhere to avoid compile-time borrow checking</h3>
+  <pre><code class="language-rust">// BAD — moves borrow checking to runtime; panics if rules violated
+use std::cell::RefCell;
+
+fn main() {
+    let data = RefCell::new(vec![1, 2, 3]);
+    let borrow1 = data.borrow();
+    let borrow2 = data.borrow_mut(); // PANIC at runtime!
+}</code></pre>
+
+  <h3>Correct: Restructure code for compile-time safety</h3>
+  <pre><code class="language-rust">// GOOD — compile-time guarantee, no runtime panics
+fn main() {
+    let mut data = vec![1, 2, 3];
+    let sum: i32 = data.iter().sum();
+    println!("Sum: {}", sum);
+    data.push(4);
+    println!("{:?}", data);
+}</code></pre>
+
+  <h3>Wrong: Using unsafe to bypass the borrow checker</h3>
+  <pre><code class="language-rust">// BAD — undefined behavior waiting to happen
+fn get_two_mut(v: &amp;mut Vec&lt;i32&gt;, i: usize, j: usize) -&gt; (&amp;mut i32, &amp;mut i32) {
+    unsafe {
+        let ptr = v.as_mut_ptr();
+        (&amp;mut *ptr.add(i), &amp;mut *ptr.add(j)) // UB if i == j
+    }
+}</code></pre>
+
+  <h3>Correct: Use split_at_mut for safe disjoint mutable borrows</h3>
+  <pre><code class="language-rust">// GOOD — safe, panics on overlapping indices instead of UB
+fn get_two_mut(v: &amp;mut [i32], i: usize, j: usize) -&gt; (&amp;mut i32, &amp;mut i32) {
+    assert!(i != j, "indices must be different");
+    if i &lt; j {
+        let (left, right) = v.split_at_mut(j);
+        (&amp;mut left[i], &amp;mut right[0])
+    } else {
+        let (left, right) = v.split_at_mut(i);
+        (&amp;mut right[0], &amp;mut left[j])
+    }
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Borrowing through a method call hides the borrow</strong>: Calling <code>self.field.method()</code> borrows all of <code>self</code>, not just <code>field</code>. Fix: extract the field into a local variable first &mdash; <code>let f = &amp;mut self.field; f.method();</code>. [<a href="https://www.lurklurk.org/effective-rust/borrows.html">src4</a>]</li>
+    <li><strong>Iterating and mutating the same collection</strong>: <code>for item in &amp;vec { vec.push(...) }</code> borrows <code>vec</code> immutably for the entire loop. Fix: collect indices or values first, then mutate in a separate pass. [<a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">src1</a>]</li>
+    <li><strong>Returning references to local variables</strong>: Functions cannot return references to stack-allocated locals. Fix: return owned types (<code>String</code>, <code>Vec&lt;T&gt;</code>, <code>Box&lt;T&gt;</code>) or tie return references to input references via lifetimes. [<a href="https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html">src3</a>]</li>
+    <li><strong>Closures capture more than expected</strong>: A closure that uses <code>self.field</code> captures all of <code>self</code>. Fix: bind <code>let field = &amp;self.field;</code> before the closure. [<a href="https://gist.github.com/jyn514/638ab0bcf2924c8286e78f38a7f5bdee">src7</a>]</li>
+    <li><strong>Temporary values dropped too early</strong>: <code>let r = &amp;some_fn().field;</code> &mdash; the temporary is dropped at the semicolon. Fix: <code>let tmp = some_fn(); let r = &amp;tmp.field;</code>. [<a href="https://rust-book.cs.brown.edu/ch04-03-fixing-ownership-errors.html">src2</a>]</li>
+    <li><strong>Confusing moves with copies</strong>: Types not implementing <code>Copy</code> (like <code>String</code>, <code>Vec</code>) are moved by default. Fix: use <code>.clone()</code> when you genuinely need a copy, or borrow with <code>&amp;</code>. [<a href="https://doc.rust-lang.org/error_codes/E0382.html">src5</a>]</li>
+    <li><strong>HashMap entry API ignored</strong>: <code>if !map.contains_key(&amp;k) { map.insert(k, v); }</code> borrows <code>map</code> twice. Fix: use <code>map.entry(k).or_insert(v);</code> &mdash; a single borrow. [<a href="https://www.lurklurk.org/effective-rust/borrows.html">src4</a>]</li>
+    <li><strong>String vs &amp;str confusion</strong>: Passing <code>String</code> where <code>&amp;str</code> suffices triggers unnecessary moves. Fix: accept <code>&amp;str</code> in function signatures; Rust auto-derefs <code>&amp;String</code> to <code>&amp;str</code>. [<a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Quick compile check (no codegen — fastest feedback loop)
+cargo check
+
+# Detailed explanation for any error code
+rustc --explain E0382
+
+# Run Clippy lints (catches unnecessary clones, borrow issues)
+cargo clippy -- -W clippy::all
+
+# Run Clippy with pedantic lints for deeper analysis
+cargo clippy -- -W clippy::pedantic
+
+# Show full error output with backtrace
+RUST_BACKTRACE=1 cargo check
+
+# Check specific file without full project build
+rustc --edition 2021 --crate-type lib src/module.rs 2&gt;&amp;1
+
+# Use cargo expand to see macro-generated code (borrow issues in macros)
+cargo expand --lib module_name
+
+# Test with Miri for undefined behavior (nightly only)
+cargo +nightly miri test</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Rust 1.85 (Feb 2026)</td><td>Current stable</td><td>None for borrowck</td><td>&mdash;</td></tr>
+      <tr><td>Rust 1.82 (2024 Edition)</td><td>Stable</td><td>Temporary lifetime changes in tail expressions</td><td>Some patterns with temporaries in match arms may need <code>let</code> bindings</td></tr>
+      <tr><td>Rust 1.63 (Aug 2022)</td><td>NLL default all editions</td><td>NLL enabled for 2015 edition</td><td>Rare: some unsound code that compiled before now rejected</td></tr>
+      <tr><td>Rust 1.36 (Jul 2019)</td><td>NLL for 2018 edition</td><td>Non-lexical lifetimes enabled</td><td>References end at last use &mdash; strictly more permissive</td></tr>
+      <tr><td>Rust 1.31 (Dec 2018)</td><td>2018 Edition</td><td>NLL introduced (2018 edition only)</td><td>Opt-in via <code>edition = "2018"</code></td></tr>
+      <tr><td>Polonius (nightly)</td><td>Experimental</td><td>More permissive borrow checking</td><td><code>-Zpolonius</code> flag; resolves some false positives</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>You get any E0382/E0499/E0502/E0505/E0597/E0515/E0716 error</td><td>The error is about trait bounds (E0277)</td><td>Rust trait bounds / generics guide</td></tr>
+      <tr><td>You need to restructure code to satisfy ownership rules</td><td>The error is about lifetime annotations on function signatures</td><td>Rust lifetime annotations guide</td></tr>
+      <tr><td>You want to understand why Rust rejects your code</td><td>You are writing <code>unsafe</code> code intentionally</td><td>Rustonomicon (unsafe Rust reference)</td></tr>
+      <tr><td>You need to share data across threads</td><td>You need async-specific patterns (Pin, Future)</td><td>Rust async/await ownership guide</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>NLL (non-lexical lifetimes) is standard since Rust 1.63 for all editions, but older blog posts and Stack Overflow answers may reference pre-NLL behavior &mdash; those fixes may be unnecessarily restrictive</li>
+    <li>Polonius (next-gen borrow checker) is experimental on nightly (<code>-Zpolonius</code>) and resolves some false positives, particularly conditional borrows in loops &mdash; it is not yet stable</li>
+    <li>The 2024 edition (Rust 1.82+) changes temporary lifetime rules in tail expressions, which may introduce new E0716 errors in code that compiled on 2021 edition</li>
+    <li><code>RefCell&lt;T&gt;</code> and <code>Mutex&lt;T&gt;</code> defer borrow checking to runtime &mdash; they are valid tools but should not be the first resort for every borrow checker error</li>
+    <li>IDE borrow checker analysis (rust-analyzer) may occasionally lag behind the actual compiler; always verify with <code>cargo check</code></li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="#" data-relationship="related_to">Rust lifetime annotations guide (planned)</a>
+    <a href="#" data-relationship="related_to">Rust async ownership patterns (planned)</a>
+    <a href="#" data-relationship="related_to">Rust smart pointers (Box, Rc, Arc) guide (planned)</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Debugging<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

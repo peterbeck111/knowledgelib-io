@@ -1,0 +1,27 @@
+START
+├── Is /actuator/health returning DOWN?
+│   ├── YES → Which health indicator is DOWN?
+│   │   ├── db → Database connection issue [src1]
+│   │   │   └── FIX: Check DB connectivity, increase pool size
+│   │   ├── diskSpace → Disk full [src1]
+│   │   │   └── FIX: Free disk, adjust threshold
+│   │   ├── custom → Application-specific health check [src1]
+│   │   │   └── FIX: Debug the custom HealthIndicator
+│   │   └── readinessState → App not ready [src4]
+│   │       └── FIX: Check startup dependencies
+│   └── NO → Health is UP but still getting 503?
+│       ├── Check load balancer health check path
+│       └── Check if 503 comes from reverse proxy (nginx/ALB)
+├── Are logs showing connection pool errors?
+│   ├── YES → HikariCP exhausted [src3]
+│   │   └── FIX: spring.datasource.hikari.maximum-pool-size=30
+│   └── NO ↓
+├── Are logs showing thread rejection?
+│   ├── YES → Tomcat threads saturated [src5]
+│   │   └── FIX: server.tomcat.threads.max=400
+│   └── NO ↓
+├── Are downstream calls timing out?
+│   ├── YES → Cascading failure [src6]
+│   │   └── FIX: Add RestTemplate/WebClient timeouts + circuit breaker
+│   └── NO → Check JVM metrics (GC pauses, heap usage)
+└── DEFAULT → Enable actuator + micrometer metrics for diagnosis

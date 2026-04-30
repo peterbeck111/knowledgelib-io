@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Rate Limit Management Strategies for ERP APIs | knowledgelib.io</title>
+  <meta name="description" content="How to implement token bucket, sliding window, and exponential backoff with jitter for ERP APIs — per-ERP rate limit reference for Salesforce, NetSuite,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/rate-limit-management-strategies/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Rate Limit Management Strategies for ERP APIs | knowledgelib.io">
+  <meta property="og:description" content="How to implement token bucket, sliding window, and exponential backoff with jitter for ERP APIs — per-ERP rate limit reference for Salesforce, NetSuite, SAP, Dynamics 365, Oracle. 7 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/rate-limit-management-strategies/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rate Limit Management Strategies for ERP APIs | knowledgelib.io">
+  <meta name="twitter:description" content="How to implement token bucket, sliding window, and exponential backoff with jitter for ERP APIs — per-ERP rate limit reference for Salesforce, NetSuite, SAP, Dynamics 365, Oracle. 7 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.88">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/rate-limit-management-strategies">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you implement token bucket, sliding window, and backoff strategies for ERP APIs?">
+  <meta name="ai:aliases" content="Rate limit management strategies for ERP API integrations; Token bucket vs sliding window rate limiting for enterprise APIs; Exponential backoff with jitter for ERP API rate limits; How to handle HTTP 429 throttling across Salesforce NetSuite SAP Dynamics 365">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/rate-limit-management-strategies/2026.md">
+  <meta name="ai:token_estimate" content="4500">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="volatile">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Salesforce (API v62.0); NetSuite (2024.1+); SAP S/4HANA (2024+); Dynamics 365 F&O (10.0.36+); Oracle ERP Cloud (Current GA)">
+  <meta name="ai:inputs_needed" content="traffic_pattern,deployment_model,target_erp">
+  <meta name="ai:constraints" content="Salesforce enforces 100K API calls/24h rolling (Enterprise); NetSuite uses concurrency-based governance: 15 concurrent default; D365 F&O resource-based throttling is non-configurable; Client-side strategies cannot override server-side limits">
+  <meta name="ai:skip_this_unit_if" content="User needs vendor-specific rate limit numbers only -> business/erp-integration/erp-rate-limits-comparison/2026; User needs error handling and DLQ architecture -> business/erp-integration/error-handling-dead-letter-queues/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Rate Limit Management Strategies for ERP APIs: Token Bucket, Sliding Window, Backoff",
+    "headline": "Rate Limit Management Strategies for ERP APIs: Token Bucket, Sliding Window, Backoff",
+    "description": "How to implement token bucket, sliding window, and exponential backoff with jitter strategies for ERP API rate limits across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365 F&O, and Oracle ERP Cloud. Includes per-ERP detection, code examples, iPaaS integration, and anti-patterns.",
+    "keywords": ["rate limiting", "token bucket", "sliding window", "exponential backoff", "jitter", "ERP API", "HTTP 429", "API throttling", "Salesforce", "NetSuite", "Dynamics 365", "SAP"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce, NetSuite, SAP S/4HANA, Dynamics 365 F&O, or Oracle ERP Cloud",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Timeouts, Retries, and Backoff with Jitter",
+        "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Salesforce API Request Limits and Allocations",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite Concurrency Limits",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_164095787873.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Service Protection API Limits - Finance & Operations",
+        "url": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits"
+      },
+      {
+        "@type": "WebPage",
+        "name": "From Token Bucket to Sliding Window: Rate Limiting Algorithms",
+        "url": "https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MuleSoft Rate Limiting Policy",
+        "url": "https://docs.mulesoft.com/gateway/latest/policies-included-rate-limiting"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Boomi Flow Control Shape",
+        "url": "https://help.boomi.com/docs/Atomsphere/Integration/Process%20building/r-atm-Flow_Control_shape_91fdf4a1-c765-4d4b-a0c0-c8159222ee32"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Rate Limit Management Strategies for ERP APIs",
+    "description": "Comprehensive reference for implementing token bucket, sliding window, and exponential backoff rate limiting strategies across major ERP API platforms including Salesforce, NetSuite, SAP, Dynamics 365, and Oracle ERP Cloud.",
+    "keywords": ["rate limiting", "token bucket", "sliding window", "exponential backoff", "ERP API", "API throttling"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Amazon Web Services"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Rate Limit Management Strategies" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you implement token bucket, sliding window, and backoff strategies for ERP APIs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use token bucket for bursty traffic (Salesforce, Oracle ERP Cloud), sliding window for sustained throughput (batch ETL), and exponential backoff with jitter as the universal retry mechanism when any ERP returns HTTP 429 or equivalent."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Rate limit management strategies for ERP API integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use token bucket for bursty traffic (Salesforce, Oracle ERP Cloud), sliding window for sustained throughput (batch ETL), and exponential backoff with jitter as the universal retry mechanism when any ERP returns HTTP 429 or equivalent."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Token bucket vs sliding window rate limiting for enterprise APIs",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use token bucket for bursty traffic (Salesforce, Oracle ERP Cloud), sliding window for sustained throughput (batch ETL), and exponential backoff with jitter as the universal retry mechanism when any ERP returns HTTP 429 or equivalent."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Exponential backoff with jitter for ERP API rate limits",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use token bucket for bursty traffic (Salesforce, Oracle ERP Cloud), sliding window for sustained throughput (batch ETL), and exponential backoff with jitter as the universal retry mechanism when any ERP returns HTTP 429 or equivalent."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to handle HTTP 429 throttling across Salesforce NetSuite SAP Dynamics 365",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use token bucket for bursty traffic (Salesforce, Oracle ERP Cloud), sliding window for sustained throughput (batch ETL), and exponential backoff with jitter as the universal retry mechanism when any ERP returns HTTP 429 or equivalent."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Rate Limit Management Strategies for ERP APIs</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you implement token bucket, sliding window, and backoff strategies for ERP APIs?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/rate-limit-management-strategies/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-Platform (Salesforce, NetSuite, SAP, D365, Oracle)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.88 out of 1">0.88</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> volatile</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use token bucket for bursty traffic (Salesforce, Oracle ERP Cloud), sliding window for sustained throughput (batch ETL), and exponential backoff with jitter as the universal retry mechanism when any ERP returns HTTP 429 or equivalent.</li>
+    <li><strong>Key limit</strong>: Every ERP enforces different limits — Salesforce uses 24h rolling quotas (100K calls), NetSuite uses concurrent request caps (15 default), D365 F&O uses resource-based throttling with 5-minute sliding windows, and SAP uses fair-use throttling.</li>
+    <li><strong>Watch out for</strong>: Fixed sleep intervals between retries — without jitter, parallel workers retry simultaneously and create thundering herd effects that amplify the original rate limit problem.</li>
+    <li><strong>Best for</strong>: Any integration that must sustain high throughput against ERP APIs without triggering throttling or losing data.</li>
+    <li><strong>Authentication</strong>: Rate limits are per-org (Salesforce), per-account (NetSuite), or per-user-per-server (D365) — your auth identity determines which quota pool you consume from.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers client-side rate limit management strategies applicable to all major ERP APIs. It addresses three complementary approaches: token bucket (proactive pacing), sliding window (quota tracking), and exponential backoff with jitter (reactive retry). These are client-side patterns your integration code implements — they do not override or bypass server-side ERP limits.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Rate Limit Model</th><th scope="col">Detection Signal</th><th scope="col">Retry-After Header?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Salesforce</strong></td><td>24h rolling quota (100K Enterprise)</td><td>HTTP 429 + <code>Sforce-Limit-Info</code> header</td><td>No standard Retry-After; use <code>Sforce-Limit-Info</code></td></tr>
+      <tr><td><strong>NetSuite</strong></td><td>Concurrency-based (15 default)</td><td>HTTP 429 (REST) / <code>SSS_REQUEST_LIMIT_EXCEEDED</code> (SOAP)</td><td>No</td></tr>
+      <tr><td><strong>SAP S/4HANA</strong></td><td>Fair-use throttling via API Management</td><td>HTTP 429</td><td>Yes (when via SAP API Management)</td></tr>
+      <tr><td><strong>Dynamics 365 F&amp;O</strong></td><td>Resource-based + optional user-based (5-min window)</td><td>HTTP 429 + <code>Retry-After</code> header</td><td>Yes</td></tr>
+      <tr><td><strong>Oracle ERP Cloud</strong></td><td>Per-service configurable via API Gateway</td><td>HTTP 429</td><td>Depends on gateway config</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Strategy</th><th scope="col">Type</th><th scope="col">Best For</th><th scope="col">Complexity</th><th scope="col">State Required</th><th scope="col">Distributed?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Token Bucket</td><td>Proactive pacing</td><td>Bursty traffic, single-worker</td><td>Low</td><td>Token count + last refill timestamp</td><td>Needs shared store (Redis)</td></tr>
+      <tr><td>Sliding Window</td><td>Quota tracking</td><td>Sustained throughput, daily quota tracking</td><td>Medium</td><td>Request timestamps or weighted counters</td><td>Needs shared store</td></tr>
+      <tr><td>Exponential Backoff + Jitter</td><td>Reactive retry</td><td>All scenarios, universal fallback</td><td>Low</td><td>Per-request retry count</td><td>Stateless per request</td></tr>
+      <tr><td>Leaky Bucket</td><td>Smoothing</td><td>Constant-rate output, streaming</td><td>Low</td><td>Queue depth</td><td>Single process only</td></tr>
+      <tr><td>Adaptive Rate Control</td><td>Hybrid</td><td>Multi-tenant, variable load</td><td>High</td><td>Latency percentiles, error rates</td><td>Needs shared metrics</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-ERP Rate Limit Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition/Tier Variance</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Daily API calls</td><td>100,000 base + 1,000/user license</td><td>24h rolling</td><td>Enterprise: 100K, Unlimited: 5M, Developer: 15K</td></tr>
+      <tr><td>Salesforce</td><td>Bulk API batches</td><td>15,000</td><td>24h rolling</td><td>Shared across editions</td></tr>
+      <tr><td>Salesforce</td><td>Concurrent long-running</td><td>25</td><td>Per org</td><td>Production only</td></tr>
+      <tr><td>NetSuite</td><td>Concurrent requests</td><td>15 (default)</td><td>Instantaneous</td><td>+10 per SuiteCloud Plus license, max 55 (Tier 5)</td></tr>
+      <tr><td>NetSuite</td><td>Governance units</td><td>10,000 (scheduled) / 1,000 (user event)</td><td>Per script execution</td><td>SuiteScript 2.x</td></tr>
+      <tr><td>D365 F&amp;O</td><td>Request count</td><td>6,000</td><td>5-min sliding window</td><td>Per user, per app ID, per web server</td></tr>
+      <tr><td>D365 F&amp;O</td><td>Execution time</td><td>1,200 seconds combined</td><td>5-min sliding window</td><td>Per user, per app ID, per web server</td></tr>
+      <tr><td>D365 F&amp;O</td><td>Concurrent requests</td><td>52</td><td>Instantaneous</td><td>Per user, per app ID, per web server</td></tr>
+      <tr><td>SAP S/4HANA</td><td>Fair-use throttling</td><td>Configurable via API Management</td><td>Configurable</td><td>Spike Arrest + Quota policies</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>Per-service limits</td><td>Configurable per tenant</td><td>Configurable</td><td>Varies by service subscription</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>How Each ERP Signals Rate Limiting</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">HTTP Code</th><th scope="col">Error Body / Header</th><th scope="col">What It Tells You</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>429</td><td><code>Sforce-Limit-Info: api-usage=99500/100000</code></td><td>Remaining quota in rolling window</td></tr>
+      <tr><td>Salesforce</td><td>403</td><td><code>REQUEST_LIMIT_EXCEEDED</code></td><td>Hard limit hit, no more calls allowed</td></tr>
+      <tr><td>NetSuite REST</td><td>429</td><td><code>{"type":"ERR_RATE_LIMITED"}</code></td><td>Concurrency cap reached, retry immediately</td></tr>
+      <tr><td>NetSuite SOAP</td><td>N/A</td><td><code>SSS_REQUEST_LIMIT_EXCEEDED</code> fault</td><td>Same as REST 429 — concurrency exceeded</td></tr>
+      <tr><td>D365 F&amp;O</td><td>429</td><td><code>Retry-After: {seconds}</code> header</td><td>Exact seconds to wait before retry</td></tr>
+      <tr><td>SAP (via APIM)</td><td>429</td><td><code>Retry-After</code> header</td><td>Wait time from Spike Arrest policy</td></tr>
+      <tr><td>SAP (direct)</td><td>503</td><td>Service Unavailable</td><td>Fair-use limit, no structured retry info</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>429</td><td>Varies by service</td><td>Check response body for throttle details</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Client-side only</strong>: Token bucket and sliding window are client-side patterns — they pace your outbound requests but cannot increase server-side limits. If the ERP rejects a request, you must still handle the 429.</li>
+    <li><strong>Shared state for distributed workers</strong>: Token bucket and sliding window require a shared counter store (Redis, database) when running multiple integration workers. Without shared state, each worker maintains independent counters and collectively exceeds the limit.</li>
+    <li><strong>NetSuite concurrency is account-wide</strong>: NetSuite's 15-concurrent-request limit is shared across all integrations, all users, and all API surfaces (REST, SOAP, RESTlet). One greedy integration can block all others.</li>
+    <li><strong>D365 limits are per-web-server</strong>: Dynamics 365 F&amp;O tracks limits per user, per app ID, per web server. Your actual capacity is N web servers x 6,000 requests/5min, but you cannot control which web server handles your request.</li>
+    <li><strong>Salesforce soft limits</strong>: Salesforce's daily API limit is a soft limit — temporary bursts above 100K may succeed but sustained overuse triggers hard blocking. Do not plan normal operations above the stated limit.</li>
+    <li><strong>Retry-After is not universal</strong>: Only D365 F&amp;O and SAP (via API Management) reliably return <code>Retry-After</code> headers. For Salesforce and NetSuite, you must implement your own backoff timing.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — Integration hitting rate limits or needs proactive pacing
+|
++-- What's your traffic pattern?
+|   |
+|   +-- Bursty (spikes followed by idle)
+|   |   +-- Single worker?
+|   |   |   +-- YES -> Token Bucket (simple, handles bursts naturally)
+|   |   |   +-- NO -> Token Bucket + Redis (shared token store)
+|   |   +-- ERP has daily rolling quota? (Salesforce)
+|   |       +-- YES -> Token Bucket + Sliding Window for quota tracking
+|   |       +-- NO -> Token Bucket alone is sufficient
+|   |
+|   +-- Sustained (steady high throughput)
+|   |   +-- ERP has concurrency limit? (NetSuite)
+|   |   |   +-- YES -> Sliding Window with concurrency semaphore
+|   |   |   +-- NO -> Sliding Window for quota pacing
+|   |   +-- Approaching daily quota?
+|   |       +-- YES -> Calculate requests/second budget from remaining quota
+|   |       +-- NO -> Process at full speed, monitor consumption
+|   |
+|   +-- Mixed (batch windows + real-time trickle)
+|       +-- Prioritize real-time requests
+|       +-- Batch jobs use token bucket with lower refill rate
+|       +-- Reserve 20% of quota for real-time operations
+|
++-- How do you handle 429 responses?
+|   |
+|   +-- Retry-After header present? (D365, SAP APIM)
+|   |   +-- YES -> Wait exact Retry-After seconds + small jitter (0-500ms)
+|   |   +-- NO -> Exponential backoff with full jitter
+|   |
+|   +-- Is the request idempotent?
+|   |   +-- YES -> Safe to retry with backoff
+|   |   +-- NO -> Queue to dead letter, do NOT auto-retry
+|   |
+|   +-- Max retries exceeded?
+|       +-- YES -> Route to dead letter queue
+|       +-- NO -> Retry with backoff
+|
++-- Multi-tenant integration?
+    +-- YES -> Per-tenant token buckets with tenant-level quotas
+    +-- NO -> Single bucket per ERP connection</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Recommended Strategy</th><th scope="col">Configuration</th><th scope="col">Why</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce REST API (Enterprise)</td><td>Token Bucket + quota monitor</td><td>Rate: 1.15 req/sec, burst: 50</td><td>Rolling 24h window, soft-limit tolerant of bursts</td></tr>
+      <tr><td>Salesforce Bulk API</td><td>Sliding Window</td><td>Track batches/24h, max 15K</td><td>Batch jobs are long-running, need quota pacing</td></tr>
+      <tr><td>NetSuite SuiteTalk/REST</td><td>Concurrency semaphore + backoff</td><td>Max 15 concurrent, exponential backoff on 429</td><td>Concurrency-based, not quota-based</td></tr>
+      <tr><td>D365 F&amp;O OData</td><td>Backoff with Retry-After</td><td>Honor Retry-After header, max 6K/5min</td><td>Resource-based, Retry-After header is reliable</td></tr>
+      <tr><td>SAP S/4HANA OData</td><td>Token Bucket + Spike Arrest</td><td>Match API Management policy rate</td><td>Fair-use, configurable per API product</td></tr>
+      <tr><td>Oracle ERP Cloud REST</td><td>Token Bucket</td><td>Match gateway-configured limits</td><td>Per-tenant configurable limits</td></tr>
+      <tr><td>Multi-ERP integration</td><td>Per-ERP token buckets</td><td>Separate bucket per target ERP</td><td>Each ERP has different limit models</td></tr>
+      <tr><td>iPaaS (MuleSoft)</td><td>Gateway Rate Limiting policy</td><td>Configure in API Manager, &gt;1 min windows</td><td>Built-in, cluster-aware, 429 auto-response</td></tr>
+      <tr><td>iPaaS (Boomi)</td><td>Flow Control shape</td><td>Limit parallel threads to ERP concurrency</td><td>Thread count maps to ERP concurrency cap</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Identify Your ERP's Rate Limit Model</h3>
+  <p>Before writing any code, determine how your target ERP enforces limits. Check the rate limit reference table above and the ERP's official documentation. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_164095787873.html">src3</a>, <a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src4</a>]</p>
+  <pre><code class="language-bash"># Salesforce: Check current API usage
+curl -s -H "Authorization: Bearer $SF_TOKEN" \
+  "https://yourorg.my.salesforce.com/services/data/v62.0/limits" \
+  | jq '{DailyApiRequests: .DailyApiRequests}'
+# Expected: {"DailyApiRequests": {"Max": 100000, "Remaining": 95000}}</code></pre>
+  <p><strong>Verify</strong>: <code>DailyApiRequests.Remaining</code> shows current available quota.</p>
+
+  <h3>2. Implement Token Bucket for Proactive Pacing</h3>
+  <p>The token bucket allows controlled bursts while enforcing an average rate. Tokens refill at a constant rate; each API call consumes one token. [<a href="https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices">src5</a>]</p>
+  <pre><code class="language-python">import time, threading
+
+class TokenBucket:
+    def __init__(self, rate: float, capacity: int):
+        self.rate = rate          # tokens per second
+        self.capacity = capacity  # max burst size
+        self.tokens = capacity
+        self.last_refill = time.monotonic()
+        self.lock = threading.Lock()
+
+    def acquire(self, timeout: float = 30.0) -> bool:
+        deadline = time.monotonic() + timeout
+        while True:
+            with self.lock:
+                self._refill()
+                if self.tokens >= 1:
+                    self.tokens -= 1
+                    return True
+            wait = (1.0 - self.tokens) / self.rate
+            if time.monotonic() + wait > deadline:
+                return False
+            time.sleep(min(wait, 0.1))
+
+    def _refill(self):
+        now = time.monotonic()
+        self.tokens = min(self.capacity,
+                         self.tokens + (now - self.last_refill) * self.rate)
+        self.last_refill = now
+
+# Salesforce Enterprise: 100K/86400s = ~1.15 req/sec
+sf_bucket = TokenBucket(rate=1.15, capacity=50)</code></pre>
+  <p><strong>Verify</strong>: Under sustained load, calls average 1.15/sec with bursts up to 50.</p>
+
+  <h3>3. Implement Sliding Window for Quota Tracking</h3>
+  <p>The sliding window tracks API consumption over a rolling time period using Redis for distributed state. [<a href="https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices">src5</a>]</p>
+  <pre><code class="language-javascript">const Redis = require('ioredis');
+const redis = new Redis(process.env.REDIS_URL);
+
+class SlidingWindowLimiter {
+  constructor(key, maxRequests, windowMs) {
+    this.key = `ratelimit:${key}`;
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+  }
+
+  async tryAcquire() {
+    const now = Date.now();
+    const pipeline = redis.pipeline();
+    pipeline.zremrangebyscore(this.key, 0, now - this.windowMs);
+    pipeline.zcard(this.key);
+    const results = await pipeline.exec();
+    const currentCount = results[1][1];
+    if (currentCount >= this.maxRequests) {
+      return { allowed: false, remaining: 0 };
+    }
+    await redis.zadd(this.key, now, `${now}:${Math.random()}`);
+    await redis.expire(this.key, Math.ceil(this.windowMs / 1000));
+    return { allowed: true, remaining: this.maxRequests - currentCount - 1 };
+  }
+}
+
+// Salesforce 24h rolling window
+const sfLimiter = new SlidingWindowLimiter('sf:prod', 100000, 86400000);</code></pre>
+  <p><strong>Verify</strong>: <code>sfLimiter.tryAcquire()</code> returns <code>{ allowed: true, remaining: N }</code>.</p>
+
+  <h3>4. Implement Exponential Backoff with Jitter</h3>
+  <p>Universal retry strategy for 429 responses. Three jitter variants: full (best for most cases), equal, decorrelated. [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src1</a>]</p>
+  <pre><code class="language-python">import random, time, requests
+
+def backoff_with_jitter(request_fn, max_retries=5, base=1.0, cap=60.0):
+    for attempt in range(max_retries + 1):
+        response = request_fn()
+        if response.status_code != 429:
+            return response
+        if attempt == max_retries:
+            raise Exception(f"Rate limited after {max_retries} retries")
+        # Honor Retry-After if present (D365, SAP)
+        retry_after = response.headers.get('Retry-After')
+        if retry_after:
+            sleep_time = float(retry_after) + random.uniform(0, 0.5)
+        else:
+            # Full jitter: random(0, min(cap, base * 2^attempt))
+            sleep_time = random.uniform(0, min(cap, base * (2 ** attempt)))
+        time.sleep(sleep_time)
+    raise Exception("Max retries exceeded")</code></pre>
+  <p><strong>Verify</strong>: On 429 responses, retries are spaced at randomized increasing intervals.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Concurrency Semaphore for NetSuite</h3>
+  <pre><code class="language-python"># Input:  NetSuite REST API calls from multiple async workers
+# Output: Responses throttled to account concurrency limit
+
+import asyncio, aiohttp, random
+
+class NetSuiteConcurrencyLimiter:
+    def __init__(self, max_concurrent: int = 12):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def call(self, session, method, url, **kwargs):
+        async with self.semaphore:
+            async with session.request(method, url, **kwargs) as resp:
+                if resp.status == 429:
+                    await asyncio.sleep(0.5 + random.uniform(0, 0.5))
+                    async with session.request(method, url, **kwargs) as retry:
+                        return await retry.json()
+                return await resp.json()
+
+# Leave 3 slots for other integrations (15 - 12 = 3)
+limiter = NetSuiteConcurrencyLimiter(max_concurrent=12)</code></pre>
+
+  <h3>JavaScript/Node.js: Adaptive Rate Controller</h3>
+  <pre><code class="language-javascript">// Input:  Stream of API calls to any ERP
+// Output: Dynamically adjusted call rate based on 429 frequency
+
+class AdaptiveRateController {
+  constructor({ initialRate = 10, minRate = 1, maxRate = 100 }) {
+    this.currentRate = initialRate;
+    this.minRate = minRate;
+    this.maxRate = maxRate;
+    this.successCount = 0;
+    this.throttleCount = 0;
+    setInterval(() => this._adjust(), 10000);
+  }
+
+  _adjust() {
+    const total = this.successCount + this.throttleCount;
+    if (total === 0) return;
+    const throttleRate = this.throttleCount / total;
+    if (throttleRate > 0.05) {
+      this.currentRate = Math.max(this.minRate, this.currentRate * 0.5);
+    } else if (throttleRate === 0 && this.successCount > 10) {
+      this.currentRate = Math.min(this.maxRate, this.currentRate * 1.1);
+    }
+    this.successCount = 0;
+    this.throttleCount = 0;
+  }
+
+  recordSuccess() { this.successCount++; }
+  recordThrottle() { this.throttleCount++; }
+  getDelayMs() { return 1000 / this.currentRate; }
+}</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Rate Limit Header Mapping Across ERPs</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Rate Limit Header</th><th scope="col">Remaining Header</th><th scope="col">Reset Header</th><th scope="col">Detection Method</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td><code>Sforce-Limit-Info: api-usage=X/Y</code></td><td>Parse X and Y</td><td>None (24h rolling)</td><td>Parse header on every response</td></tr>
+      <tr><td>NetSuite</td><td>None</td><td>None</td><td>None</td><td>Catch 429 or <code>SSS_REQUEST_LIMIT_EXCEEDED</code></td></tr>
+      <tr><td>D365 F&amp;O</td><td>N/A</td><td>N/A</td><td><code>Retry-After: N</code> (seconds)</td><td>429 status code</td></tr>
+      <tr><td>SAP (APIM)</td><td><code>X-RateLimit-Limit</code></td><td><code>X-RateLimit-Remaining</code></td><td><code>Retry-After</code></td><td>Standard headers</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>Varies</td><td>Varies</td><td>Varies</td><td>Check gateway docs per service</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Salesforce's <code>Sforce-Limit-Info</code> header format is <code>api-usage=&lt;used&gt;/&lt;total&gt;</code> — parse both numbers. The header is only present on successful responses, not on 429 responses. [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li>D365 F&amp;O <code>Retry-After</code> is in seconds (integer), not milliseconds. Verify your HTTP client handles it correctly. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src4</a>]</li>
+    <li>NetSuite SOAP faults use <code>SSS_REQUEST_LIMIT_EXCEEDED</code> as a status code string, not a numeric HTTP code. Your error handler must check both HTTP status and SOAP fault codes. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_164095787873.html">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">ERP</th><th scope="col">Meaning</th><th scope="col">Retryable?</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HTTP 429</td><td>All</td><td>Rate limit exceeded</td><td>Yes</td><td>Exponential backoff with jitter</td></tr>
+      <tr><td>HTTP 403 + <code>REQUEST_LIMIT_EXCEEDED</code></td><td>Salesforce</td><td>Daily quota exhausted</td><td>No (wait 24h)</td><td>Reduce volume or purchase more API calls</td></tr>
+      <tr><td><code>SSS_REQUEST_LIMIT_EXCEEDED</code></td><td>NetSuite</td><td>Concurrency cap reached</td><td>Yes (immediately)</td><td>Brief pause (0.5-1s) then retry</td></tr>
+      <tr><td>HTTP 429 + <code>Retry-After</code></td><td>D365 F&amp;O</td><td>User or resource limit</td><td>Yes</td><td>Wait exactly Retry-After seconds</td></tr>
+      <tr><td>HTTP 503</td><td>SAP</td><td>Service overloaded</td><td>Yes</td><td>Backoff with increasing delays</td></tr>
+      <tr><td>HTTP 429</td><td>Oracle ERP Cloud</td><td>Gateway throttle</td><td>Yes</td><td>Backoff, check gateway config</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Thundering herd after outage recovery</strong>: All queued workers retry simultaneously when ERP comes back online. Fix: <code>Add full jitter to initial retry; stagger worker start times by random 0-30s offset.</code> [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src1</a>]</li>
+    <li><strong>Quota exhaustion mid-batch</strong>: Salesforce 24h rolling quota resets gradually, not all at once. Fix: <code>Check remaining quota before batch; delay if remaining &lt; batch_size * 1.2.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li><strong>NetSuite concurrency consumed by UI users</strong>: 15-slot pool is shared with logged-in users. Fix: <code>Limit integration to 10-12 slots; schedule heavy batch jobs outside business hours.</code> [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_164095787873.html">src3</a>]</li>
+    <li><strong>D365 per-web-server tracking mismatch</strong>: Cannot control which server handles requests. Fix: <code>Target 80% of single-server capacity (4,800 req/5min).</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src4</a>]</li>
+    <li><strong>Redis failure breaks distributed rate limiter</strong>: Workers lose shared state. Fix: <code>Fall back to per-worker in-memory bucket at 1/N of total rate; implement Redis health check.</code> [<a href="https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Fixed Sleep Between Retries</h3>
+  <pre><code class="language-python"># BAD -- fixed 5-second sleep, all workers retry together
+for attempt in range(5):
+    response = call_erp_api()
+    if response.status_code == 429:
+        time.sleep(5)  # Thundering herd
+        continue
+    return response</code></pre>
+
+  <h3>Correct: Exponential Backoff with Full Jitter</h3>
+  <pre><code class="language-python"># GOOD -- randomized increasing delays prevent thundering herd
+for attempt in range(5):
+    response = call_erp_api()
+    if response.status_code == 429:
+        max_delay = min(60, 2 ** attempt)
+        time.sleep(random.uniform(0, max_delay))
+        continue
+    return response</code></pre>
+
+  <h3>Wrong: Ignoring Retry-After Header</h3>
+  <pre><code class="language-javascript">// BAD -- calculating own backoff when server tells you when to retry
+if (response.status === 429) {
+  await sleep(2000 * Math.pow(2, attempt));  // Ignores Retry-After
+}</code></pre>
+
+  <h3>Correct: Honoring Retry-After with Small Jitter</h3>
+  <pre><code class="language-javascript">// GOOD -- respect server's Retry-After, add small jitter
+if (response.status === 429) {
+  const retryAfter = parseInt(response.headers['retry-after'] || '5', 10);
+  await sleep(retryAfter * 1000 + Math.random() * 500);
+}</code></pre>
+
+  <h3>Wrong: No Quota Monitoring Until Failure</h3>
+  <pre><code class="language-python"># BAD -- blindly sending until 403 hard block
+for record in all_100k_records:
+    salesforce_api.update(record)  # Hits 403 at record 95,001</code></pre>
+
+  <h3>Correct: Pre-flight Quota Check with Early Warning</h3>
+  <pre><code class="language-python"># GOOD -- check quota before batch, abort early if insufficient
+limits = salesforce_api.get_limits()
+remaining = limits['DailyApiRequests']['Remaining']
+if remaining < len(records) * 1.1:
+    raise QuotaInsufficientError(f"Need {len(records)} calls, {remaining} remaining")
+for record in records:
+    sf_bucket.acquire()
+    salesforce_api.update(record)</code></pre>
+
+  <h3>Wrong: Unlimited Concurrency Against NetSuite</h3>
+  <pre><code class="language-javascript">// BAD -- 50 parallel requests against 15-slot cap
+const results = await Promise.all(
+  records.map(r => netsuiteApi.upsert(r))  // 35 get 429'd
+);</code></pre>
+
+  <h3>Correct: Semaphore-Limited Concurrency</h3>
+  <pre><code class="language-javascript">// GOOD -- limit to 12 concurrent (3 slots for other integrations)
+const { Semaphore } = require('async-mutex');
+const sem = new Semaphore(12);
+const results = await Promise.all(
+  records.map(async (r) => {
+    const [, release] = await sem.acquire();
+    try { return await netsuiteApi.upsert(r); }
+    finally { release(); }
+  })
+);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Testing in sandbox with different limits</strong>: Salesforce sandbox has fewer user licenses, resulting in lower total quota. D365 sandbox may have fewer web servers. Fix: <code>Load-test against sandbox with production-equivalent user license count.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li><strong>Using deprecated user-based limits in D365</strong>: D365 F&amp;O deprecated user-based limits in v10.0.36 — only resource-based limits remain. Fix: <code>Update to handle resource-based throttling; remove per-user quota assumptions.</code> [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/service-protection-api-limits">src4</a>]</li>
+    <li><strong>Not accounting for other integrations</strong>: Your integration is not the only quota consumer. ISV packages, other integrations, and UI calls all share the pool. Fix: <code>Budget 60-70% of total quota for your integration.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm">src2</a>]</li>
+    <li><strong>Token bucket rate miscalculation</strong>: 100K / 86,400s = 1.15 req/sec but doesn't account for other consumers. Fix: <code>Set rate to 0.7-0.8x theoretical max; use burst capacity for spikes only.</code> [<a href="https://api7.ai/blog/rate-limiting-guide-algorithms-best-practices">src5</a>]</li>
+    <li><strong>Backoff without max cap</strong>: Exponential backoff at attempt 10 = 1024 seconds. Fix: <code>Cap at 30s for user-facing, 60s for batch, 5 min absolute max.</code> [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src1</a>]</li>
+    <li><strong>Jitter range too small</strong>: 100ms jitter with 50 workers is insufficient. Fix: <code>Use full jitter (random 0 to max_delay) — simplest and most effective.</code> [<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Salesforce: Check current API usage
+curl -s -H "Authorization: Bearer $SF_TOKEN" \
+  "$SF_URL/services/data/v62.0/limits" | jq '.DailyApiRequests'
+# Expected: {"Max": 100000, "Remaining": 85000}
+
+# Salesforce: Check limit info from response header
+curl -sI -H "Authorization: Bearer $SF_TOKEN" \
+  "$SF_URL/services/data/v62.0/sobjects" | grep -i sforce-limit
+# Expected: Sforce-Limit-Info: api-usage=15000/100000
+
+# D365 F&amp;O: Check if throttled
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Bearer $D365_TOKEN" \
+  "$D365_URL/data/SystemUsers?\$top=1"
+# Expected: 200 (or 429 if throttled)
+
+# Redis: Check distributed token bucket state
+redis-cli GET ratelimit:salesforce:prod:tokens
+redis-cli TTL ratelimit:salesforce:prod:tokens
+
+# Application logs: Count 429 responses
+grep -c "status.*429" /var/log/integration/erp-api.log</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Change</th><th scope="col">Date</th><th scope="col">Impact</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>D365 F&amp;O removed mandatory user-based limits</td><td>v10.0.36 (2024-07)</td><td>Reduced</td><td>Only resource-based limits apply</td></tr>
+      <tr><td>Salesforce soft-limit enforcement change</td><td>API v60.0 (2024-02)</td><td>Medium</td><td>Bursts above limit may temporarily succeed</td></tr>
+      <tr><td>NetSuite concurrency tier restructuring</td><td>2024.1</td><td>Medium</td><td>Tier 1-5 based on license level</td></tr>
+      <tr><td>SAP API Management rate limiting GA</td><td>2024</td><td>New</td><td>Spike Arrest + Quota policies</td></tr>
+      <tr><td>MuleSoft rate limiting policy v1.4</td><td>2025-03</td><td>Low</td><td>Improved cluster synchronization</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Integration sustains >50% of ERP's daily API quota</td><td>Integration makes &lt; 100 API calls/day</td><td>Simple try/catch with fixed 5s retry</td></tr>
+      <tr><td>Multiple workers/processes call the same ERP</td><td>Single-threaded, sequential API calls</td><td>Basic exponential backoff without distributed state</td></tr>
+      <tr><td>Batch jobs approach daily quota limits</td><td>Real-time calls with &lt;1s latency SLA</td><td>Circuit breaker with fast-fail</td></tr>
+      <tr><td>Multi-tenant integration serves multiple ERP orgs</td><td>Single-tenant with dedicated ERP instance</td><td>Per-tenant quotas without shared rate limiting</td></tr>
+      <tr><td>Integration runs during business hours alongside UI users</td><td>Off-hours batch window with exclusive API access</td><td>Maximum throughput without client-side limiting</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">NetSuite</th><th scope="col">D365 F&amp;O</th><th scope="col">SAP S/4HANA</th><th scope="col">Oracle ERP Cloud</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Limit Model</strong></td><td>Rolling daily quota</td><td>Concurrency-based</td><td>Resource-based</td><td>Fair-use / configurable</td><td>Per-tenant configurable</td></tr>
+      <tr><td><strong>Primary Limit</strong></td><td>100K calls/24h</td><td>15 concurrent</td><td>6K req/5min/user/server</td><td>Via API Mgmt policy</td><td>Via API Gateway</td></tr>
+      <tr><td><strong>429 Response</strong></td><td>Yes</td><td>Yes (REST)</td><td>Yes + Retry-After</td><td>Yes (via APIM)</td><td>Yes</td></tr>
+      <tr><td><strong>Retry-After</strong></td><td>No</td><td>No</td><td>Yes</td><td>Yes (via APIM)</td><td>Varies</td></tr>
+      <tr><td><strong>Quota Visibility</strong></td><td>Yes (<code>/limits</code>)</td><td>Limited</td><td>No direct endpoint</td><td>APIM dashboard</td><td>OCI monitoring</td></tr>
+      <tr><td><strong>Best Strategy</strong></td><td>Token bucket + quota</td><td>Concurrency semaphore</td><td>Honor Retry-After</td><td>Match APIM policy</td><td>Match gateway config</td></tr>
+      <tr><td><strong>Multi-Worker Concern</strong></td><td>All share org quota</td><td>All share account slots</td><td>Per-user per server</td><td>Shared API product</td><td>Shared tenant quota</td></tr>
+      <tr><td><strong>Burst Tolerance</strong></td><td>Soft limit (temporary OK)</td><td>None (hard cap)</td><td>Resource-dependent</td><td>Policy-dependent</td><td>Gateway-dependent</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Rate limit numbers change with ERP releases and edition upgrades — verify against official documentation before each integration deployment cycle. Numbers verified as of March 2026.</li>
+    <li>Client-side rate limiting is a best-effort strategy — the ERP server is the ultimate arbiter. Always implement 429 handling even when using proactive pacing.</li>
+    <li>Sandbox environments may have different rate limits than production. Salesforce sandboxes use the same formula but typically have fewer user licenses.</li>
+    <li>Token bucket and sliding window require shared state (Redis or similar) for multi-worker deployments. Without shared state, workers operate independently and collectively exceed limits.</li>
+    <li>The "right" strategy depends on your traffic pattern, not the ERP. Token bucket for bursty, sliding window for sustained, backoff for reactive — most production integrations need all three.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/erp-rate-limits-comparison/2026" data-relationship="depends_on">ERP Rate Limits Comparison</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Error Handling and Dead Letter Queues</a>
+    <a href="/business/erp-integration/error-handling-retry-comparison/2026" data-relationship="related_to">Error Handling and Retry Comparison</a>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="related_to">Idempotency Patterns for ERP Integrations</a>
+    <a href="/business/erp-integration/batch-vs-realtime-integration/2026" data-relationship="solves">Batch vs Real-Time Integration</a>
+    <a href="/business/erp-integration/pagination-patterns-comparison/2026" data-relationship="alternative_to">Pagination Patterns Comparison</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

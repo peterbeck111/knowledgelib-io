@@ -1,0 +1,108 @@
+{
+  "id": "business/erp-integration/duplicate-detection-natural-keys/2026",
+  "category": "business",
+  "subcategory": "erp-integration",
+  "topic": "duplicate-detection-natural-keys",
+  "version_tag": "2026",
+  "canonical_question": "How do duplicate detection and natural key management differ across ERPs?",
+  "aliases": [
+    "Cross-ERP duplicate prevention strategies and ExternalId patterns",
+    "Natural key vs surrogate key for ERP integration deduplication",
+    "How to prevent duplicate records when syncing between ERPs",
+    "ID mapping table design for multi-system ERP integration"
+  ],
+  "entity_type": "erp_integration",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.87,
+  "token_estimate": 4800,
+  "source_count": 8,
+  "md_path": "/business/erp-integration/duplicate-detection-natural-keys/2026.md",
+  "html_path": "/business/erp-integration/duplicate-detection-natural-keys/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "evolving",
+    "last_breaking_change": "2025-06 — NetSuite 2024.2 tightened external ID uniqueness enforcement across shared record types",
+    "next_review": "2026-06-07",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Salesforce allows max 7 External ID fields per object — plan field allocation carefully for multi-system integrations",
+    "NetSuite external IDs are case-insensitive — 'ORD-001' and 'ord-001' collide and return 400 Bad Request",
+    "NetSuite external ID is single-valued per record — only one integrated application can own external IDs per record type",
+    "SAP S/4HANA has no native external ID field — duplicate detection relies on fuzzy matching (ICM) or custom Z-fields",
+    "Dynamics 365 alternate keys support max 5 fields per key and max 10 keys per entity — field types restricted to text, number, datetime, lookup, option set",
+    "Oracle ERP Cloud OrigSystemReference allows multiple source system references per record but requires explicit source system registration",
+    "Alternate key special characters in D365 (/,<,>,*,%,&,:,\\,?,+) break retrieve/update/upsert operations"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "User needs idempotency patterns (retry safety, at-least-once processing)",
+      "use_instead": "business/erp-integration/idempotency-erp-integrations/2026"
+    },
+    {
+      "condition": "User needs single-system API reference (endpoints, rate limits, auth)",
+      "use_instead": "business/erp-integration/{system}-rest-api-capabilities/2026"
+    },
+    {
+      "condition": "User needs master data management strategy (golden record, data stewardship)",
+      "use_instead": "business/erp-integration/master-data-management-erp/2026"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [
+      {
+        "id": "business/erp-integration/idempotency-erp-integrations/2026",
+        "label": "Idempotency patterns — complementary to duplicate detection (retry safety vs record uniqueness)"
+      }
+    ],
+    "related_to": [
+      {
+        "id": "business/erp-integration/master-data-management-erp/2026",
+        "label": "Master Data Management — golden record strategy builds on duplicate detection"
+      },
+      {
+        "id": "business/erp-integration/field-mapping-data-type-comparison/2026",
+        "label": "Field mapping — natural key fields must survive data type transformations"
+      }
+    ],
+    "solves": [
+      {
+        "id": "business/erp-integration/salesforce-netsuite-integration/2026",
+        "label": "Salesforce-NetSuite sync requires cross-system ID mapping for dedup"
+      },
+      {
+        "id": "business/erp-integration/salesforce-sap-integration/2026",
+        "label": "Salesforce-SAP sync requires external ID strategy for bidirectional dedup"
+      }
+    ],
+    "alternative_to": [],
+    "often_confused_with": [
+      {
+        "id": "business/erp-integration/idempotency-erp-integrations/2026",
+        "label": "Idempotency is about safe retries; duplicate detection is about record uniqueness — related but different problems"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "erp_systems",
+      "question": "Which ERP systems are you integrating?",
+      "type": "choice",
+      "options": ["Salesforce", "SAP S/4HANA", "Oracle NetSuite", "Microsoft Dynamics 365", "Oracle ERP Cloud", "Multiple / cross-system"]
+    },
+    {
+      "key": "record_types",
+      "question": "What record types need deduplication?",
+      "type": "choice",
+      "options": ["Customer/Account records", "Product/Item records", "Order/Transaction records", "Invoice/Financial records", "Mixed — multiple object types"]
+    },
+    {
+      "key": "id_strategy",
+      "question": "Do you already have a cross-system ID strategy?",
+      "type": "choice",
+      "options": ["No — need to design one", "Yes — using native ExternalId/alternate key", "Yes — using a custom cross-reference mapping table", "Yes — using natural business keys (PO number, SKU, etc.)"]
+    }
+  ]
+}

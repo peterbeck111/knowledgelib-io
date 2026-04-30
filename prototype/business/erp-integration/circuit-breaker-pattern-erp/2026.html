@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Circuit Breaker Pattern for ERP API Integrations | knowledgelib.io</title>
+  <meta name="description" content="Circuit breaker pattern for ERP API integrations — states (Closed, Open, Half-Open), per-ERP error code mapping, implementation in Python, Java, C#,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/circuit-breaker-pattern-erp/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Circuit Breaker Pattern for ERP API Integrations | knowledgelib.io">
+  <meta property="og:description" content="Circuit breaker pattern for ERP API integrations — states (Closed, Open, Half-Open), per-ERP error code mapping, implementation in Python, Java, C#, Node.js, iPaaS configuration (MuleSoft, Boomi). 8 sources, all cited. Verified 2026-03-07.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/circuit-breaker-pattern-erp/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Circuit Breaker Pattern for ERP API Integrations | knowledgelib.io">
+  <meta name="twitter:description" content="Circuit breaker pattern for ERP API integrations — states (Closed, Open, Half-Open), per-ERP error code mapping, implementation in Python, Java, C#, Node.js, iPaaS configuration (MuleSoft, Boomi). 8 sources, all cited. Verified 2026-03-07.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.88">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/circuit-breaker-pattern-erp">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you implement the circuit breaker pattern for ERP API integrations?">
+  <meta name="ai:aliases" content="Circuit breaker for ERP API calls; How to prevent cascading failures in ERP integrations; ERP API circuit breaker configuration — thresholds, states, fallbacks; When should I use circuit breaker vs retry vs bulkhead for ERP APIs?">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/circuit-breaker-pattern-erp/2026.md">
+  <meta name="ai:token_estimate" content="5200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Cross-ERP (Pattern-level); Polly (.NET) (8.x); Resilience4j (Java) (2.x); Opossum (Node.js) (8.x)">
+  <meta name="ai:inputs_needed" content="integration_pattern,language_platform,failure_mode">
+  <meta name="ai:constraints" content="Circuit breaker does NOT replace retry — combine both; One breaker per ERP endpoint not per ERP system; State is per-process unless externalized to Redis; Open circuit must have fallback strategy; ERP maintenance windows will repeatedly trip breakers; Half-open probes must be idempotent">
+  <meta name="ai:skip_this_unit_if" content="Need retry with exponential backoff only -> error-handling-retry-comparison/2026; Need distributed transaction coordination -> saga-pattern-erp-transactions/2026; Need rate limiting not failure detection -> erp-rate-limits-comparison/2026; Need dead letter queue patterns -> error-handling-dead-letter-queues/2026">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Circuit Breaker Pattern for ERP API Integrations",
+    "headline": "Circuit Breaker Pattern for ERP API Integrations",
+    "description": "Architecture pattern reference for implementing circuit breaker pattern across ERP API integrations. Covers three states (Closed, Open, Half-Open), per-ERP error code mapping (SAP, Salesforce, Oracle, NetSuite, Dynamics 365), implementation in Python, Java (Resilience4j), C# (Polly), Node.js (Opossum), and iPaaS configuration (MuleSoft, Boomi).",
+    "keywords": ["circuit breaker", "ERP integration", "API resilience", "Polly", "Resilience4j", "Opossum", "fault tolerance", "cascading failures"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Cross-ERP — pattern applicable to all ERP REST/SOAP/OData APIs",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Circuit Breaker Pattern — Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Circuit Breaker Resilience Strategy — Polly Documentation",
+        "url": "https://www.pollydocs.org/strategies/circuit-breaker.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pattern: Circuit Breaker — Microservices.io",
+        "url": "https://microservices.io/patterns/reliability/circuit-breaker.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Implementing the Circuit Breaker Pattern — .NET Microservices Architecture",
+        "url": "https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-circuit-breaker-pattern"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Opossum — Node.js Circuit Breaker",
+        "url": "https://github.com/nodeshift/opossum"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Circuit Breaker Policy — MuleSoft Gateway Documentation",
+        "url": "https://docs.mulesoft.com/gateway/latest/policies-outbound-circuit-breaker"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Building Resilient Systems: Circuit Breakers and Retry Patterns",
+        "url": "https://dasroot.net/posts/2026/01/building-resilient-systems-circuit-breakers-retry-patterns/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Resilience4j Getting Started",
+        "url": "https://resilience4j.readme.io/docs/getting-started-3"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Circuit Breaker Pattern for ERP API Integrations",
+    "description": "Architecture pattern reference for circuit breaker implementation across ERP API integrations — states, thresholds, per-ERP error codes, code examples in Python, Java, C#, Node.js, and iPaaS configuration",
+    "keywords": ["circuit breaker", "ERP integration", "API resilience", "fault tolerance", "Polly", "Resilience4j", "Opossum"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "App-vNext (Polly)"},
+      {"@type": "Organization", "name": "Resilience4j"},
+      {"@type": "Organization", "name": "Nodeshift (Opossum)"},
+      {"@type": "Organization", "name": "MuleSoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Circuit Breaker Pattern for ERP API Integrations" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you implement the circuit breaker pattern for ERP API integrations?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every outbound ERP API call in a circuit breaker that trips after a configurable failure threshold, fails fast while the ERP recovers, and probes with limited half-open requests before restoring full traffic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Circuit breaker for ERP API calls",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every outbound ERP API call in a circuit breaker that trips after a configurable failure threshold, fails fast while the ERP recovers, and probes with limited half-open requests before restoring full traffic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to prevent cascading failures in ERP integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every outbound ERP API call in a circuit breaker that trips after a configurable failure threshold, fails fast while the ERP recovers, and probes with limited half-open requests before restoring full traffic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ERP API circuit breaker configuration — thresholds, states, fallbacks",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every outbound ERP API call in a circuit breaker that trips after a configurable failure threshold, fails fast while the ERP recovers, and probes with limited half-open requests before restoring full traffic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When should I use circuit breaker vs retry vs bulkhead for ERP APIs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Wrap every outbound ERP API call in a circuit breaker that trips after a configurable failure threshold, fails fast while the ERP recovers, and probes with limited half-open requests before restoring full traffic."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Circuit Breaker Pattern for ERP API Integrations</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you implement the circuit breaker pattern for ERP API integrations?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/circuit-breaker-pattern-erp/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-ERP (Pattern-level)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.88 out of 1">0.88</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Wrap every outbound ERP API call in a circuit breaker that trips after a configurable failure threshold, fails fast while the ERP recovers, and probes with limited half-open requests before restoring full traffic.</li>
+    <li><strong>Key limit</strong>: Circuit breaker is per-process state by default — horizontal scaling requires shared state (Redis) or per-instance breakers with coordinated thresholds.</li>
+    <li><strong>Watch out for</strong>: Setting thresholds too sensitive (trips on 2 failures) causes false opens during normal ERP latency spikes; too tolerant (50 failures) defeats the purpose. Start at 50% failure rate over 10-second windows with minimum 8 requests sampled.</li>
+    <li><strong>Best for</strong>: Real-time ERP API integrations where downstream unavailability (SAP maintenance, Salesforce governor limits, Oracle Cloud outages) would cascade into thread exhaustion, connection pool starvation, or saga timeout failures.</li>
+    <li><strong>Libraries</strong>: Python (custom or pybreaker), Java (Resilience4j 2.x), C# (Polly 8.x), Node.js (Opossum 8.x), iPaaS (MuleSoft gateway policy, Boomi custom scripting).</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This card covers the circuit breaker pattern as applied to ERP API integrations across all major ERP systems. It is platform-agnostic but provides concrete implementations for the four major integration languages (Python, Java, C#, Node.js) and two leading iPaaS platforms (MuleSoft, Boomi). The pattern applies identically whether calling SAP S/4HANA OData, Salesforce REST, Oracle ERP Cloud REST, NetSuite SuiteTalk, or Dynamics 365 Web API.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Pattern</strong></td><td>Circuit Breaker (client-side resilience)</td></tr>
+      <tr><td><strong>Applies To</strong></td><td>All ERP REST/SOAP/OData API calls</td></tr>
+      <tr><td><strong>Granularity</strong></td><td>One breaker per ERP endpoint or API surface</td></tr>
+      <tr><td><strong>States</strong></td><td>Closed (normal) &rarr; Open (failing fast) &rarr; Half-Open (probing recovery)</td></tr>
+      <tr><td><strong>Implementations</strong></td><td>Polly 8.x (.NET), Resilience4j 2.x (Java), Opossum 8.x (Node.js), Custom (Python)</td></tr>
+      <tr><td><strong>iPaaS</strong></td><td>MuleSoft (gateway policy), Boomi (custom scripting), Workato (custom connector)</td></tr>
+      <tr><td><strong>Reference</strong></td><td><a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">Azure Architecture Center</a></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>Circuit breakers protect calls to ERP API surfaces. Different API surfaces exhibit different failure modes and require different breaker configurations. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP API Surface</th><th scope="col">Typical Failure Mode</th><th scope="col">Recommended Breaker Config</th><th scope="col">Recovery Time</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SAP S/4HANA OData</td><td>503 during planned downtime, timeouts on complex queries</td><td>5 failures / 30s window, 120s break</td><td>5-30 min (planned), 1-4h (incident)</td></tr>
+      <tr><td>Salesforce REST API</td><td>429 rate limit, REQUEST_LIMIT_EXCEEDED, 503</td><td>3 consecutive 429s, 60s break</td><td>60s (rate limit), 5-15 min (incident)</td></tr>
+      <tr><td>Oracle ERP Cloud REST</td><td>500/503 during patching, FBDI timeouts</td><td>5 failures / 60s window, 180s break</td><td>15-60 min (patching), 1-2h (incident)</td></tr>
+      <tr><td>NetSuite SuiteTalk/REST</td><td>SSS_REQUEST_LIMIT_EXCEEDED, concurrency cap</td><td>3 failures / 20s, 30s break</td><td>30-60s (concurrency), 10-30 min (incident)</td></tr>
+      <tr><td>Dynamics 365 OData</td><td>429 with Retry-After header, 503 during updates</td><td>Honor Retry-After header, 5 failures / 30s</td><td>Per Retry-After value, 5-30 min (updates)</td></tr>
+      <tr><td>Workday REST/SOAP</td><td>503 during tenant maintenance, auth token expiry</td><td>5 failures / 60s, 120s break</td><td>30-120 min (maintenance)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Circuit Breaker Configuration Parameters</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Description</th><th scope="col">Recommended Default</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Failure threshold</strong></td><td>Percentage or count of failures that trips the breaker</td><td>50% failure rate OR 5 consecutive failures</td><td>Percentage-based is more robust than count-based</td></tr>
+      <tr><td><strong>Sampling window</strong></td><td>Time period over which failures are counted</td><td>10-30 seconds</td><td>Too short = noise triggers opens; too long = slow detection</td></tr>
+      <tr><td><strong>Minimum throughput</strong></td><td>Minimum requests in window before threshold is evaluated</td><td>8-10 requests</td><td>Prevents tripping on 1 failure out of 2 requests</td></tr>
+      <tr><td><strong>Break duration</strong></td><td>How long the circuit stays open before half-open probe</td><td>30-120 seconds</td><td>Match to ERP typical recovery time</td></tr>
+      <tr><td><strong>Half-open probe count</strong></td><td>Number of test requests allowed in half-open state</td><td>1-3 requests</td><td>Too many probes can re-overload a recovering service</td></tr>
+      <tr><td><strong>Success threshold</strong></td><td>Consecutive successes in half-open to close circuit</td><td>3-5 successes</td><td>Ensures recovery is stable</td></tr>
+      <tr><td><strong>Timeout</strong></td><td>Per-request timeout that counts as failure</td><td>30-60 seconds for ERP APIs</td><td>ERP APIs are slower than typical microservices</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Per-ERP Error Codes That Should Trip the Breaker</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Trip On (Open Circuit)</th><th scope="col">Do NOT Trip On (Retry Instead)</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Salesforce</strong></td><td>503, REQUEST_LIMIT_EXCEEDED, SERVER_UNAVAILABLE</td><td>400, INVALID_FIELD, DUPLICATE_VALUE</td><td>429 — trip after 3 consecutive, not on first</td></tr>
+      <tr><td><strong>SAP S/4HANA</strong></td><td>503, 504, CX_SY_RESOURCE_EXHAUSTION</td><td>400, /IWBEP/CM_MGW_RT (OData validation)</td><td>504 indicates SAP app server overload</td></tr>
+      <tr><td><strong>Oracle ERP Cloud</strong></td><td>503, 500 (repeated), FBDI import timeout</td><td>400, ORA-00001, validation errors</td><td>Distinguish transient 500 from persistent logic errors</td></tr>
+      <tr><td><strong>NetSuite</strong></td><td>SSS_REQUEST_LIMIT_EXCEEDED, SSS_CONCURRENT_LIMIT, 503</td><td>USER_ERROR, INVALID_FLD_VALUE</td><td>Governance errors are transient; validation permanent</td></tr>
+      <tr><td><strong>Dynamics 365</strong></td><td>429 (with Retry-After), 503, 502</td><td>400, 403, 404, -2147204784</td><td>Always honor Retry-After header</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>Authentication failures interact with circuit breakers in specific ways. Token expiry should NOT trip the circuit. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Should Trip Breaker?</th><th scope="col">Correct Handling</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth token expired (401)</td><td>No</td><td>Refresh token, retry once, then trip if refresh fails</td></tr>
+      <tr><td>API key invalid (403)</td><td>No</td><td>Alert immediately — config error, not transient</td></tr>
+      <tr><td>Auth server unreachable</td><td>Yes</td><td>Trip breaker on auth endpoint separately</td></tr>
+      <tr><td>MFA challenge required</td><td>No</td><td>Alert — cannot be automated; wrong auth flow</td></tr>
+      <tr><td>Rate limit on auth endpoint</td><td>Yes</td><td>Trip breaker; queue data requests until auth recovers</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>Circuit breaker does NOT replace retry</strong> — Use retry for transient errors (first 2-3 attempts), then circuit breaker trips to prevent retry storms. Retry inside breaker, not breaker inside retry.</li>
+    <li><strong>Per-endpoint granularity</strong> — One breaker per ERP API surface. A single breaker for all Salesforce APIs means a Bulk API timeout opens the circuit for REST operations.</li>
+    <li><strong>State isolation</strong> — Circuit breaker state is in-memory by default. In Kubernetes with 10 pods, each pod has its own breaker. Externalize to Redis for shared state if needed.</li>
+    <li><strong>Idempotency required for half-open probes</strong> — Half-open probe requests may be duplicates of previously failed requests. Without idempotency keys, you risk duplicate records.</li>
+    <li><strong>Break duration must match ERP recovery</strong> — SAP maintenance: 30-120 min. Salesforce rate limit: 60s. A 5-second break is useless for a 30-minute maintenance window.</li>
+    <li><strong>Cannot circuit-break fire-and-forget</strong> — Async message queues act as natural buffers. Use circuit breaker between queue consumer and ERP API, not on the queue itself.</li>
+  </ul>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — Should I use a circuit breaker for this ERP integration?
+|
++-- Is the integration synchronous (real-time API call)?
+|   +-- YES --&gt; Circuit breaker is strongly recommended
+|   |   +-- Is the ERP API call idempotent?
+|   |   |   +-- YES --&gt; Standard circuit breaker + retry
+|   |   |   +-- NO --&gt; Circuit breaker + idempotency key + DLQ
+|   |   +-- Are you calling multiple ERP endpoints?
+|   |       +-- YES --&gt; Separate breaker per endpoint
+|   |       +-- NO --&gt; Single breaker sufficient
+|   +-- NO (async / message-based)
+|
++-- Is there a synchronous ERP API call within the async flow?
+|   +-- YES --&gt; Circuit breaker on the API call, not the queue consumer
+|   +-- NO --&gt; Circuit breaker adds no value; use DLQ + retry instead
+|
++-- Which resilience pattern do I need?
+    +-- Transient errors (network blip, 1-2 failures) --&gt; Retry with backoff
+    +-- Sustained outage (ERP down for minutes) --&gt; Circuit breaker
+    +-- Protecting shared resources (thread pools) --&gt; Bulkhead
+    +-- Server-side request throttling --&gt; Rate limiter
+    +-- Combining all four --&gt; Retry -&gt; Circuit Breaker -&gt; Bulkhead -&gt; Timeout</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Purpose</th><th scope="col">When to Use</th><th scope="col">Library</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Circuit Breaker</strong></td><td>Stop calling failing service, fail fast, auto-recover</td><td>ERP down or degraded for &gt;30s</td><td>Polly, Resilience4j, Opossum</td></tr>
+      <tr><td><strong>Retry</strong></td><td>Retry transient failures with backoff</td><td>Network blip, single 500, rate limit</td><td>Polly, Resilience4j, tenacity</td></tr>
+      <tr><td><strong>Bulkhead</strong></td><td>Isolate resource pools per dependency</td><td>Multiple ERP integrations sharing thread pool</td><td>Polly, Resilience4j</td></tr>
+      <tr><td><strong>Rate Limiter</strong></td><td>Client-side request throttling</td><td>Stay under ERP API quota</td><td>Polly, Resilience4j, bottleneck</td></tr>
+      <tr><td><strong>Timeout</strong></td><td>Fail slow calls before thread exhaustion</td><td>ERP queries that can hang &gt;60s</td><td>Built into all HTTP clients</td></tr>
+      <tr><td><strong>Fallback</strong></td><td>Return cached/default value when circuit open</td><td>Non-critical reads (product catalog)</td><td>Application logic</td></tr>
+      <tr><td><strong>Dead Letter Queue</strong></td><td>Capture failed writes for later replay</td><td>Write operations that must not be lost</td><td>Kafka DLQ, SQS DLQ, Azure Service Bus</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Circuit Breaker States</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">State</th><th scope="col">Behavior</th><th scope="col">Transitions To</th><th scope="col">Trigger</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Closed</strong></td><td>All requests pass through; failures counted</td><td>Open</td><td>Failure rate exceeds threshold in sampling window</td></tr>
+      <tr><td><strong>Open</strong></td><td>All requests fail immediately (BrokenCircuitException)</td><td>Half-Open</td><td>Break duration timer expires</td></tr>
+      <tr><td><strong>Half-Open</strong></td><td>Limited probe requests allowed</td><td>Closed OR Open</td><td>Probe succeeds (&rarr; Closed) or fails (&rarr; Open)</td></tr>
+      <tr><td><strong>Isolated</strong></td><td>Manually held open via API (Polly only)</td><td>Closed</td><td>Manual reset via ManualControl.CloseAsync()</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Determine the correct granularity for your circuit breakers</h3>
+  <p>Map your ERP API calls to circuit breaker instances. Each distinct endpoint or API surface gets its own breaker. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>, <a href="https://microservices.io/patterns/reliability/circuit-breaker.html">src3</a>]</p>
+  <pre><code>ERP Integration Architecture:
+  +-- Salesforce
+  |   +-- CB: sf-rest      (REST API)
+  |   +-- CB: sf-bulk       (Bulk API 2.0)
+  |   +-- CB: sf-streaming  (Platform Events)
+  +-- SAP S/4HANA
+  |   +-- CB: sap-odata     (OData v4)
+  |   +-- CB: sap-soap      (SOAP — legacy BAPIs)
+  +-- Oracle ERP Cloud
+      +-- CB: oracle-rest   (REST API)
+      +-- CB: oracle-fbdi   (FBDI — file imports)</code></pre>
+  <p><strong>Verify</strong>: Each breaker should have independent state. Tripping <code>sf-bulk</code> should NOT affect <code>sf-rest</code>.</p>
+
+  <h3>2. Configure thresholds based on ERP behavior</h3>
+  <p>Start with conservative defaults, tune based on production telemetry. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>, <a href="https://www.pollydocs.org/strategies/circuit-breaker.html">src2</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Conservative Start</th><th scope="col">Tuned After 30 Days</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Failure rate threshold</td><td>50%</td><td>Adjust based on baseline error rate</td></tr>
+      <tr><td>Sampling window</td><td>30 seconds</td><td>Match to ERP API response time P99</td></tr>
+      <tr><td>Minimum throughput</td><td>10</td><td>Match to actual request volume</td></tr>
+      <tr><td>Break duration</td><td>60 seconds</td><td>Match to ERP typical recovery time</td></tr>
+      <tr><td>Half-open probes</td><td>3</td><td>Increase if recovery is gradual</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Verify</strong>: Monitor circuit state transitions for 7 days. If breaker trips &gt;5x/day on a healthy ERP, thresholds are too sensitive.</p>
+
+  <h3>3. Implement the circuit breaker in your language</h3>
+  <p>See Code Examples section below for complete implementations in Python, Java, C#, and Node.js. [<a href="https://www.pollydocs.org/strategies/circuit-breaker.html">src2</a>, <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-circuit-breaker-pattern">src4</a>, <a href="https://github.com/nodeshift/opossum">src5</a>, <a href="https://resilience4j.readme.io/docs/getting-started-3">src8</a>]</p>
+
+  <h3>4. Wire the fallback strategy for open circuit</h3>
+  <p>When the circuit is open, the application must do something useful instead of throwing an exception. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</p>
+  <pre><code>Circuit Open — What to do with the request:
+  +-- Is the operation a READ?
+  |   +-- Return cached data (if fresh enough)
+  |   +-- Return degraded response ("ERP data temporarily unavailable")
+  |   +-- Route to secondary ERP instance (if available)
+  +-- Is the operation a WRITE?
+  |   +-- Queue to dead letter queue for later replay
+  |   +-- Write to local staging table + reconcile later
+  |   +-- Return 503 + Retry-After header to upstream caller
+  +-- ALWAYS:
+      +-- Log circuit state change
+      +-- Fire alert if circuit open &gt;5 minutes
+      +-- Increment circuit-open counter in metrics</code></pre>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Circuit Breaker for ERP API Calls</h3>
+  <pre><code class="language-python"># Input:  ERP API endpoint URL, authentication headers
+# Output: API response or fallback value when circuit is open
+# Requires: requests&gt;=2.31.0
+
+import time, threading, requests
+from enum import Enum
+from dataclasses import dataclass, field
+
+class CircuitState(Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+@dataclass
+class CircuitBreaker:
+    failure_threshold: int = 5
+    recovery_timeout: float = 60.0
+    half_open_max_calls: int = 3
+    success_threshold: int = 3
+    erp_timeout: float = 30.0
+    TRIP_STATUS_CODES = {429, 500, 502, 503, 504}
+
+    # ... (see .md for full implementation)
+
+# Usage: one breaker per ERP endpoint
+sf_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=60)
+sap_breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=120)
+
+response = sf_breaker.call(
+    "GET", "https://myorg.my.salesforce.com/services/data/v62.0/query",
+    params={"q": "SELECT Id, Name FROM Account LIMIT 10"},
+    headers={"Authorization": "Bearer &lt;token&gt;"},
+    fallback=lambda: {"records": [], "note": "Salesforce unavailable"}
+)</code></pre>
+
+  <h3>Java: Resilience4j Circuit Breaker for ERP APIs</h3>
+  <pre><code class="language-java">// Input:  ERP API endpoint, authentication config
+// Output: API response or fallback when circuit is open
+// Requires: io.github.resilience4j:resilience4j-circuitbreaker:2.2.0
+
+CircuitBreakerConfig sapConfig = CircuitBreakerConfig.custom()
+    .failureRateThreshold(50)
+    .slidingWindowType(SlidingWindowType.TIME_BASED)
+    .slidingWindowSize(30)
+    .minimumNumberOfCalls(8)
+    .waitDurationInOpenState(Duration.ofSeconds(120))
+    .permittedNumberOfCallsInHalfOpenState(3)
+    .recordExceptions(ConnectException.class, HttpTimeoutException.class)
+    .build();
+
+CircuitBreaker sapBreaker = CircuitBreakerRegistry.of(sapConfig)
+    .circuitBreaker("sap-odata", sapConfig);</code></pre>
+
+  <h3>C#: Polly 8.x Circuit Breaker for ERP APIs</h3>
+  <pre><code class="language-csharp">// Requires: Microsoft.Extensions.Http.Resilience 8.x, Polly 8.x
+
+services.AddHttpClient("SapOData", client =&gt;
+{
+    client.BaseAddress = new Uri("https://my-sap.s4hana.cloud/sap/opu/odata4/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+})
+.AddResilienceHandler("sap-pipeline", builder =&gt;
+{
+    builder.AddCircuitBreaker(new CircuitBreakerStrategyOptions&lt;HttpResponseMessage&gt;
+    {
+        FailureRatio = 0.5,
+        SamplingDuration = TimeSpan.FromSeconds(30),
+        MinimumThroughput = 8,
+        BreakDuration = TimeSpan.FromSeconds(120),
+        ShouldHandle = new PredicateBuilder&lt;HttpResponseMessage&gt;()
+            .HandleResult(r =&gt; r.StatusCode == HttpStatusCode.TooManyRequests
+                            || r.StatusCode &gt;= HttpStatusCode.InternalServerError)
+            .Handle&lt;HttpRequestException&gt;()
+    });
+});</code></pre>
+
+  <h3>Node.js: Opossum Circuit Breaker for ERP APIs</h3>
+  <pre><code class="language-javascript">// Requires: opossum@8.1.3, node-fetch@3.3.2
+
+import CircuitBreaker from "opossum";
+
+async function callSalesforceApi(endpoint, options) {
+  const response = await fetch(
+    `https://myorg.my.salesforce.com/services/data/v62.0/${endpoint}`,
+    { ...options, signal: AbortSignal.timeout(30000) }
+  );
+  if (response.status === 429 || response.status &gt;= 500) {
+    throw new Error(`Salesforce API error: ${response.status}`);
+  }
+  return response.json();
+}
+
+const sfBreaker = new CircuitBreaker(callSalesforceApi, {
+  timeout: 30000,
+  errorThresholdPercentage: 50,
+  resetTimeout: 60000,
+  volumeThreshold: 5,
+});
+
+sfBreaker.fallback(() =&gt; ({ records: [], _circuitOpen: true }));
+sfBreaker.on("open", () =&gt; console.warn("[CIRCUIT OPEN] Salesforce"));
+sfBreaker.on("close", () =&gt; console.info("[CIRCUIT CLOSED] Salesforce"));</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Configuration Mapping Across Libraries</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Polly 8.x (C#)</th><th scope="col">Resilience4j 2.x (Java)</th><th scope="col">Opossum 8.x (Node.js)</th><th scope="col">Python (Custom)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Failure rate</td><td><code>FailureRatio</code> (0.0-1.0)</td><td><code>failureRateThreshold</code> (0-100%)</td><td><code>errorThresholdPercentage</code> (0-100)</td><td><code>failure_threshold</code> (count)</td></tr>
+      <tr><td>Sampling window</td><td><code>SamplingDuration</code> (TimeSpan)</td><td><code>slidingWindowSize</code> (int seconds)</td><td><code>rollingCountTimeout</code> (ms)</td><td>Custom (time.time())</td></tr>
+      <tr><td>Minimum throughput</td><td><code>MinimumThroughput</code> (int)</td><td><code>minimumNumberOfCalls</code> (int)</td><td><code>volumeThreshold</code> (int)</td><td><code>failure_threshold</code> (implicit)</td></tr>
+      <tr><td>Break duration</td><td><code>BreakDuration</code> (TimeSpan)</td><td><code>waitDurationInOpenState</code> (Duration)</td><td><code>resetTimeout</code> (ms)</td><td><code>recovery_timeout</code> (float s)</td></tr>
+      <tr><td>Manual control</td><td><code>ManualControl.IsolateAsync()</code></td><td><code>transitionToForcedOpenState()</code></td><td><code>breaker.open()</code></td><td>Direct state mutation</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li><strong>Polly uses ratio (0.0-1.0), Resilience4j uses percentage (0-100)</strong> — a <code>FailureRatio</code> of 0.5 in Polly equals <code>failureRateThreshold(50)</code> in Resilience4j. Mixing these up means 50x more or less sensitive. [<a href="https://www.pollydocs.org/strategies/circuit-breaker.html">src2</a>, <a href="https://resilience4j.readme.io/docs/getting-started-3">src8</a>]</li>
+    <li><strong>Opossum rollingCountTimeout is in milliseconds, Resilience4j slidingWindowSize is in seconds</strong> — <code>10000</code> in Opossum equals <code>10</code> in Resilience4j. Off by 1000x if you port config. [<a href="https://github.com/nodeshift/opossum">src5</a>, <a href="https://resilience4j.readme.io/docs/getting-started-3">src8</a>]</li>
+    <li><strong>Polly 8.x SamplingDuration replaced Polly 7.x durationOfBreak semantics</strong> — entire config model changed in the migration. [<a href="https://www.pollydocs.org/strategies/circuit-breaker.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Should Trip Breaker?</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>429</td><td>Rate limit exceeded</td><td>Yes (after 3 consecutive)</td><td>Backoff, respect Retry-After, align break to rate limit window</td></tr>
+      <tr><td>500</td><td>Internal Server Error</td><td>Yes (if repeated)</td><td>Trip after 3-5 in window; single 500 could be transient</td></tr>
+      <tr><td>502</td><td>Bad Gateway</td><td>Yes</td><td>Proxy/LB failure; ERP app server likely down</td></tr>
+      <tr><td>503</td><td>Service Unavailable</td><td>Yes (immediately)</td><td>ERP explicitly saying stop; trip immediately</td></tr>
+      <tr><td>504</td><td>Gateway Timeout</td><td>Yes</td><td>ERP app server overloaded</td></tr>
+      <tr><td>400</td><td>Bad Request</td><td>No</td><td>Fix the request payload — code bug, not outage</td></tr>
+      <tr><td>401</td><td>Unauthorized</td><td>No</td><td>Refresh auth token; trip only if refresh also fails</td></tr>
+      <tr><td>403</td><td>Forbidden</td><td>No</td><td>Permission issue; alert, don't trip</td></tr>
+      <tr><td>404</td><td>Not Found</td><td>No</td><td>Wrong endpoint; fix code</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>False opens during ERP maintenance windows</strong>: SAP has scheduled downtime (02:00-04:00 UTC). Circuit trips, alerts fire. Fix: <code>Implement maintenance window suppression — skip alerting during scheduled windows</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</li>
+    <li><strong>Token expiry cascade</strong>: OAuth token expires, all requests get 401, breaker trips. Fix: <code>Exclude 401 from circuit breaker; implement separate token refresh circuit</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>, <a href="https://microservices.io/patterns/reliability/circuit-breaker.html">src3</a>]</li>
+    <li><strong>Half-open probe creates duplicate record</strong>: Probe retries write without idempotency key. Fix: <code>Every ERP write must include idempotency key (externalId in NetSuite, External_ID__c in Salesforce)</code>. [<a href="https://microservices.io/patterns/reliability/circuit-breaker.html">src3</a>]</li>
+    <li><strong>Break duration too short for Oracle patching</strong>: 15-60 min patching, 30s break cycles 120 times. Fix: <code>Implement exponential break duration — 30s, 60s, 120s, 240s, max 600s</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</li>
+    <li><strong>Thread exhaustion before circuit trips</strong>: 30s timeout x 5 failures = 150s of blocked threads. Fix: <code>Set aggressive per-request timeout (10-15s) + bulkhead to limit concurrent ERP calls</code>. [<a href="https://dasroot.net/posts/2026/01/building-resilient-systems-circuit-breakers-retry-patterns/">src7</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Circuit breaker on writes without DLQ</h3>
+  <pre><code class="language-python"># BAD — writes are silently dropped when circuit opens
+try:
+    breaker.call("POST", f"{erp_url}/invoices", json=invoice_data)
+except CircuitOpenError:
+    logger.warning("Circuit open — invoice not created")
+    # Invoice is LOST. No retry. No queue. Gone forever.</code></pre>
+
+  <h3>Correct: Circuit breaker with dead letter queue for writes</h3>
+  <pre><code class="language-python"># GOOD — failed writes are queued for later replay
+try:
+    breaker.call("POST", f"{erp_url}/invoices", json=invoice_data)
+except CircuitOpenError:
+    dlq.send({
+        "endpoint": f"{erp_url}/invoices",
+        "payload": invoice_data,
+        "idempotency_key": invoice_data["externalId"],
+    })</code></pre>
+
+  <h3>Wrong: Single circuit breaker for all ERP endpoints</h3>
+  <pre><code class="language-javascript">// BAD — Bulk API timeout trips the breaker for REST API too
+const erpBreaker = new CircuitBreaker(callAnyErpApi, { timeout: 30000 });
+await erpBreaker.fire("bulk/import", bulkPayload);  // hangs 60s, trips
+await erpBreaker.fire("query/accounts", {});         // BLOCKED!</code></pre>
+
+  <h3>Correct: Separate circuit breaker per API surface</h3>
+  <pre><code class="language-javascript">// GOOD — each API surface has its own breaker
+const sfRestBreaker = new CircuitBreaker(callSfRest, { timeout: 15000 });
+const sfBulkBreaker = new CircuitBreaker(callSfBulk, { timeout: 300000 });
+// Bulk timeout does NOT affect REST operations</code></pre>
+
+  <h3>Wrong: Too-sensitive threshold on high-latency ERP APIs</h3>
+  <pre><code class="language-yaml"># BAD — ERP APIs are NOT microservices
+resilience4j.circuitbreaker.instances.sap-odata:
+  failureRateThreshold: 20    # too sensitive
+  slidingWindowSize: 5         # too short
+  minimumNumberOfCalls: 2      # too few
+  waitDurationInOpenState: 5s  # too short</code></pre>
+
+  <h3>Correct: Thresholds calibrated for ERP latency profiles</h3>
+  <pre><code class="language-yaml"># GOOD — tuned for real ERP behavior
+resilience4j.circuitbreaker.instances.sap-odata:
+  failureRateThreshold: 50
+  slidingWindowSize: 30
+  minimumNumberOfCalls: 8
+  waitDurationInOpenState: 120s
+  permittedNumberOfCallsInHalfOpenState: 3</code></pre>
+  </section>
+
+  <!-- Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Treating 401 as a circuit-tripping failure</strong>: Token expiry causes 401, breaker trips, all ERP calls blocked. Fix: <code>Exclude 401 from breaker; handle auth separately with refresh logic</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</li>
+    <li><strong>Using microservice-scale timeouts for ERP APIs</strong>: A 3-second timeout causes false timeouts on ERP APIs that routinely take 5-15s. Fix: <code>Set ERP-specific timeouts: 30s for REST, 60s for bulk, 120s for file imports</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>, <a href="https://dasroot.net/posts/2026/01/building-resilient-systems-circuit-breakers-retry-patterns/">src7</a>]</li>
+    <li><strong>Not implementing exponential break duration</strong>: Fixed 30s break during 2h SAP outage = 240 unnecessary probes. Fix: <code>Exponential backoff on break duration: 30s, 60s, 120s, 240s, capped at 600s</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</li>
+    <li><strong>Circuit breaker without monitoring</strong>: Breaker trips and nobody knows. Fix: <code>Log every state transition, expose as health check, alert for circuits open &gt;5 min</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>, <a href="https://dasroot.net/posts/2026/01/building-resilient-systems-circuit-breakers-retry-patterns/">src7</a>]</li>
+    <li><strong>Applying circuit breaker to queue consumers</strong>: Consumer stops but messages keep arriving, filling the partition. Fix: <code>Apply breaker between consumer and ERP API, not on consumer itself</code>. [<a href="https://microservices.io/patterns/reliability/circuit-breaker.html">src3</a>]</li>
+    <li><strong>Sharing state across instances without coordination</strong>: One instance's network blip trips shared Redis-backed circuit for all. Fix: <code>Use local breakers with shared metrics; trip global circuit via feature flag if &gt;50% report failures</code>. [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Resilience4j circuit breaker state (Spring Boot Actuator)
+curl -s http://localhost:8080/actuator/circuitbreakers | jq '.circuitBreakers'
+# Expected: {"sap-odata":{"state":"CLOSED","failureRate":-1.0}}
+
+# Check Resilience4j circuit breaker events
+curl -s http://localhost:8080/actuator/circuitbreakerevents | jq '.circuitBreakerEvents[-5:]'
+
+# Check Polly circuit state via custom health endpoint
+curl -s http://localhost:5000/health/circuits | jq
+# Expected: {"sap-odata":"Closed","sf-rest":"Closed","oracle-rest":"HalfOpen"}
+
+# Test ERP API health directly (bypassing circuit breaker)
+# Salesforce
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Bearer $SF_TOKEN" \
+  "https://myorg.my.salesforce.com/services/data/v62.0/limits"
+
+# SAP S/4HANA
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Bearer $SAP_TOKEN" \
+  "https://my-sap.s4hana.cloud/sap/opu/odata4/sap/api_business_partner/\$metadata"
+
+# Check if ERP is in maintenance (manual probe)
+curl -s -w "\n%{http_code} %{time_total}s" \
+  -H "Authorization: Bearer $TOKEN" \
+  "$ERP_API_URL/health" 2>&1
+# 503 = maintenance; 200 with &gt;10s = degraded; 200 with &lt;2s = healthy</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Library</th><th scope="col">Version</th><th scope="col">Release</th><th scope="col">Breaking Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Polly</td><td>8.x</td><td>2023-07</td><td>Complete API rewrite — Policy replaced by ResiliencePipeline</td><td>Cannot mix v7 and v8</td></tr>
+      <tr><td>Polly</td><td>7.x</td><td>2019-06</td><td>Legacy — maintenance only</td><td>Still widely used; plan migration</td></tr>
+      <tr><td>Resilience4j</td><td>2.2.0</td><td>2024-03</td><td>Minor — TIME_BASED sliding window improvements</td><td>Recommended for new Java projects</td></tr>
+      <tr><td>Resilience4j</td><td>1.x</td><td>2020-01</td><td>EOL</td><td>Migrate to 2.x</td></tr>
+      <tr><td>Opossum</td><td>8.1.3</td><td>2025-01</td><td>Minor — improved TypeScript types</td><td>Stable; primary Node.js option</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>iPaaS Circuit Breaker Support</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Built-in?</th><th scope="col">Config Level</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>MuleSoft</strong></td><td>Yes — gateway policy</td><td>API Gateway (Envoy)</td><td>maxConnections, maxPendingRequests, maxRequests</td></tr>
+      <tr><td><strong>Boomi</strong></td><td>No — custom scripting</td><td>Process level</td><td>Implement in Data Process shape with Groovy</td></tr>
+      <tr><td><strong>Workato</strong></td><td>No — custom connector</td><td>Connector SDK</td><td>Build in custom connector actions</td></tr>
+      <tr><td><strong>SAP Integration Suite</strong></td><td>Partial — retry + timeout</td><td>iFlow level</td><td>No native breaker; use Groovy + JCache</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Synchronous ERP API calls that can cascade failures</td><td>Async message-based integration (Kafka, SQS)</td><td>Dead letter queue + retry policy</td></tr>
+      <tr><td>ERP has known maintenance windows causing extended downtime</td><td>Single transient error that resolves on retry</td><td>Simple retry with exponential backoff</td></tr>
+      <tr><td>Multiple downstream ERP endpoints with independent failure modes</td><td>All calls go through a single gateway handling resilience</td><td>Gateway-level circuit breaker (MuleSoft policy)</td></tr>
+      <tr><td>Long-lived service processing continuous requests</td><td>One-time batch job that runs once and exits</td><td>Retry + error log</td></tr>
+      <tr><td>Saga pattern with multiple ERP steps needing protection</td><td>Simple two-system point-to-point integration</td><td>Retry + DLQ (circuit breaker is overkill)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+
+  <h3>Library Comparison for Custom Implementations</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Polly 8.x</th><th scope="col">Resilience4j 2.x</th><th scope="col">Opossum 8.x</th><th scope="col">pybreaker 1.x</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Language</strong></td><td>C# / .NET</td><td>Java / Kotlin</td><td>Node.js / TypeScript</td><td>Python</td></tr>
+      <tr><td><strong>Circuit states</strong></td><td>4 (incl. Isolated)</td><td>3</td><td>3</td><td>3</td></tr>
+      <tr><td><strong>Sliding window</strong></td><td>Time-based</td><td>Time or Count</td><td>Time-based (rolling)</td><td>Count-based</td></tr>
+      <tr><td><strong>Dynamic break</strong></td><td>BreakDurationGenerator</td><td>Custom (extend)</td><td>Not built-in</td><td>Custom (extend)</td></tr>
+      <tr><td><strong>HttpClient integration</strong></td><td>Native (IHttpClientFactory)</td><td>Spring WebClient</td><td>Manual wrap</td><td>Manual wrap</td></tr>
+      <tr><td><strong>Monitoring</strong></td><td>Built-in telemetry</td><td>Actuator + Micrometer</td><td>Events + Prometheus</td><td>Custom events</td></tr>
+      <tr><td><strong>Bulkhead</strong></td><td>Yes (same pipeline)</td><td>Yes (separate)</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>Rate limiter</strong></td><td>Yes (same pipeline)</td><td>Yes (separate)</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>Maturity</strong></td><td>Very high</td><td>Very high</td><td>High</td><td>Moderate</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>ERP APIs have fundamentally different latency profiles than microservices (5-15s P95 vs 100ms P95) — do not use microservice-default configurations</li>
+    <li>Circuit breaker state is lost on process restart — if your service restarts while the ERP is still down, the circuit starts Closed and must re-learn the failure state</li>
+    <li>Different ERP editions have different rate limits (Salesforce Enterprise: 100K/24h vs Developer: 15K/24h) — breaker thresholds should account for edition-specific limits</li>
+    <li>In multi-tenant iPaaS deployments, circuit breaker state for one tenant's ERP should not affect another tenant's circuit — tenant isolation is critical</li>
+    <li>Library versions change configuration APIs significantly (Polly 7 vs 8 is a complete rewrite) — pin library versions and test after upgrades</li>
+    <li>This card covers implementations as of March 2026. ERP API error codes, rate limits, and maintenance schedules are subject to change with each ERP release</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/error-handling-retry-comparison/2026" data-relationship="depends_on">Error Handling &amp; Retry Patterns Comparison</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Dead Letter Queue Patterns for ERP Integration</a>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="related_to">Idempotency in ERP Integrations</a>
+    <a href="/business/erp-integration/erp-rate-limits-comparison/2026" data-relationship="related_to">ERP Rate Limits Comparison</a>
+    <a href="/business/erp-integration/saga-pattern-erp-transactions/2026" data-relationship="solves">Saga Pattern for Distributed Transactions Across ERPs</a>
+    <a href="/business/erp-integration/batch-vs-realtime-integration/2026" data-relationship="alternative_to">Batch vs Real-time Integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Secure CI/CD Pipeline: Hardening Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete CI/CD pipeline security guide covering OWASP Top 10 CI/CD risks, OIDC federation, artifact signing with Cosign/SLSA, SAST/DAST/SCA scanning,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/secure-cicd-pipeline/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Secure CI/CD Pipeline: Hardening Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete CI/CD pipeline security guide covering OWASP Top 10 CI/CD risks, OIDC federation, artifact signing with Cosign/SLSA, SAST/DAST/SCA scanning, RBAC, and audit logging for GitHub Actions and GitLab CI. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/secure-cicd-pipeline/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Secure CI/CD Pipeline: Hardening Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete CI/CD pipeline security guide covering OWASP Top 10 CI/CD risks, OIDC federation, artifact signing with Cosign/SLSA, SAST/DAST/SCA scanning, RBAC, and audit logging for GitHub Actions and GitLab CI. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/security/Secure CI/CD Pipeline">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I secure a CI/CD pipeline?">
+  <meta name="ai:aliases" content="CI/CD pipeline security best practices; secure continuous integration continuous delivery; harden CI/CD pipeline; DevSecOps pipeline security; GitHub Actions security hardening; GitLab CI security configuration; OWASP CI/CD top 10 risks; supply chain security CI/CD">
+  <meta name="ai:raw" content="/api/v1/units/software/security/secure-cicd-pipeline/2026.md">
+  <meta name="ai:token_estimate" content="4000">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="ci_platform,cloud_provider,maturity_level">
+  <meta name="ai:constraints" content="NEVER store long-lived credentials in pipeline config; NEVER run build steps with root privileges; NEVER use mutable tags to pin actions; NEVER skip artifact integrity verification; Self-hosted runners MUST NOT be used for public repos without ephemeral config">
+  <meta name="ai:skip_this_unit_if" content="Need web app vulnerability prevention → software/security/xss-prevention/2026; Need container runtime security → software/security/container-runtime-security/2026; Need Kubernetes hardening → software/security/kubernetes-security/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Secure CI/CD Pipeline: Hardening Guide",
+    "headline": "Secure CI/CD Pipeline: Hardening Guide",
+    "description": "Complete guide to securing CI/CD pipelines covering OWASP Top 10 CI/CD risks, OIDC federation, secrets management, artifact signing with Sigstore Cosign and SLSA provenance, security scanning (SAST/DAST/SCA), RBAC, environment isolation, and audit logging for GitHub Actions and GitLab CI.",
+    "keywords": ["CI/CD security", "pipeline security", "DevSecOps", "OWASP CI/CD", "GitHub Actions security", "GitLab CI security", "SLSA", "Sigstore", "Cosign", "OIDC", "supply chain security"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Sigstore Cosign v2.x, SLSA v1.0, Trivy v0.50+, GitHub Actions OIDC, GitLab OIDC",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Top 10 CI/CD Security Risks",
+        "url": "https://owasp.org/www-project-top-10-ci-cd-security-risks/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CI/CD Security Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Secure Use Reference - GitHub Actions",
+        "url": "https://docs.github.com/en/actions/reference/security/secure-use"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pipeline Security - GitLab CI/CD",
+        "url": "https://docs.gitlab.com/ci/pipeline_security/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SLSA - Supply-chain Levels for Software Artifacts",
+        "url": "https://slsa.dev/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Defending CI/CD Environments",
+        "url": "https://media.defense.gov/2023/Jun/28/2003249466/-1/-1/0/CSI_DEFENDING_CI_CD_ENVIRONMENTS.PDF"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Software Supply Chain Best Practices v2",
+        "url": "https://tag-security.cncf.io/community/working-groups/supply-chain-security/supply-chain-security-paper-v2/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Secure CI/CD Pipeline: Hardening Guide",
+    "description": "Structured knowledge unit on securing CI/CD pipelines with OWASP Top 10 CI/CD risk mappings, OIDC federation examples, Sigstore Cosign artifact signing, SLSA provenance, security scanning integration, and platform-specific configurations for GitHub Actions and GitLab CI.",
+    "keywords": ["CI/CD security", "pipeline security", "DevSecOps", "OWASP CI/CD", "SLSA", "Sigstore", "supply chain security"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "GitHub"},
+      {"@type": "Organization", "name": "GitLab"},
+      {"@type": "Organization", "name": "OpenSSF / SLSA"},
+      {"@type": "Organization", "name": "NSA / CISA"},
+      {"@type": "Organization", "name": "CNCF TAG Security"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "Secure CI/CD Pipeline" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I secure a CI/CD pipeline?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "CI/CD pipeline security best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "secure continuous integration continuous delivery",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "harden CI/CD pipeline",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "DevSecOps pipeline security",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GitHub Actions security hardening",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Secure CI/CD Pipeline: Hardening Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I secure a CI/CD pipeline?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/secure-cicd-pipeline/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A secure CI/CD pipeline requires layered controls across six domains -- secrets management, access control (RBAC), artifact integrity (signing + SLSA provenance), security scanning (SAST/DAST/SCA), environment isolation, and audit logging.</li>
+    <li><strong>Key tool/command</strong>: <code>cosign sign --yes $IMAGE</code> for keyless artifact signing with Sigstore; OIDC federation for eliminating long-lived secrets.</li>
+    <li><strong>Watch out for</strong>: Storing secrets directly in pipeline config files or environment variables -- use OIDC federation or a dedicated secrets manager instead.</li>
+    <li><strong>Works with</strong>: GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure DevOps, and any CI/CD platform supporting OIDC and webhook integrations.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER store long-lived credentials (API keys, passwords) directly in pipeline configuration files or environment variables -- use a secrets manager (Vault, AWS Secrets Manager, OIDC federation)</li>
+    <li>NEVER run CI/CD build steps with root/admin privileges -- use least-privilege service accounts with scoped permissions</li>
+    <li>NEVER use mutable tags (latest, v1) to pin third-party actions or images -- pin to full-length commit SHA or verified digest</li>
+    <li>NEVER skip artifact integrity verification before deployment -- sign artifacts at build time and verify signatures before deploy</li>
+    <li>Self-hosted runners MUST NOT be used for public repositories without ephemeral/JIT configuration -- any fork can execute arbitrary code on the runner</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>OWASP Top 10 CI/CD Security Risks</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Risk</th><th scope="col">Threat</th><th scope="col">Impact</th><th scope="col">Key Control</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Insufficient Flow Control</td><td>No required reviews, direct push to production</td><td>Unreviewed malicious code deployed</td><td>Branch protection + mandatory PR reviews</td></tr>
+      <tr><td>2</td><td>Inadequate Identity &amp; Access Management</td><td>Shared accounts, over-privileged tokens</td><td>Lateral movement, privilege escalation</td><td>RBAC + MFA + centralized IdP</td></tr>
+      <tr><td>3</td><td>Dependency Chain Abuse</td><td>Typosquatting, dependency confusion, hijacked packages</td><td>Malicious code in builds</td><td>Pin versions + lock files + SCA scanning</td></tr>
+      <tr><td>4</td><td>Poisoned Pipeline Execution (PPE)</td><td>Attacker modifies pipeline config via PR</td><td>Arbitrary code execution in CI</td><td>Restrict pipeline config changes + CODEOWNERS</td></tr>
+      <tr><td>5</td><td>Insufficient PBAC</td><td>Pipeline has admin-level cloud access</td><td>Full cloud account compromise</td><td>Scoped OIDC roles per pipeline/environment</td></tr>
+      <tr><td>6</td><td>Insufficient Credential Hygiene</td><td>Hardcoded secrets, stale API keys</td><td>Credential theft, unauthorized access</td><td>Secrets manager + rotation + OIDC</td></tr>
+      <tr><td>7</td><td>Insecure System Configuration</td><td>Default configs, unpatched runners</td><td>Runner compromise, crypto mining</td><td>Harden runners + ephemeral instances</td></tr>
+      <tr><td>8</td><td>Ungoverned 3rd Party Services</td><td>Unvetted integrations with broad access</td><td>Data exfiltration via OAuth apps</td><td>Audit integrations + minimal scopes</td></tr>
+      <tr><td>9</td><td>Improper Artifact Integrity</td><td>Unsigned images, unverified provenance</td><td>Tampered artifacts deployed to production</td><td>Cosign signing + SLSA provenance</td></tr>
+      <tr><td>10</td><td>Insufficient Logging &amp; Visibility</td><td>No audit trail for pipeline changes</td><td>Cannot detect or investigate breaches</td><td>Centralized logging + SIEM alerts</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Security Control Checklist</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Control Domain</th><th scope="col">Control</th><th scope="col">Tool/Approach</th><th scope="col">Priority</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Secrets</td><td>Use OIDC federation instead of static secrets</td><td>GitHub OIDC, GitLab OIDC, AWS STS</td><td>Critical</td></tr>
+      <tr><td>2</td><td>Secrets</td><td>Rotate remaining secrets automatically</td><td>HashiCorp Vault, AWS Secrets Manager</td><td>Critical</td></tr>
+      <tr><td>3</td><td>Secrets</td><td>Scan for leaked secrets in commits</td><td>git-secrets, GitGuardian, Gitleaks</td><td>Critical</td></tr>
+      <tr><td>4</td><td>Access</td><td>Enforce RBAC with least-privilege</td><td>Platform-native RBAC + IdP</td><td>Critical</td></tr>
+      <tr><td>5</td><td>Access</td><td>Require MFA for all CI/CD accounts</td><td>SSO + TOTP/WebAuthn</td><td>Critical</td></tr>
+      <tr><td>6</td><td>Access</td><td>Protect branches + require PR reviews</td><td>Branch protection rules</td><td>High</td></tr>
+      <tr><td>7</td><td>Scanning</td><td>SAST in every PR</td><td>Semgrep, SonarQube, CodeQL</td><td>High</td></tr>
+      <tr><td>8</td><td>Scanning</td><td>Dependency/SCA scanning</td><td>Dependabot, Snyk, Trivy, Renovate</td><td>High</td></tr>
+      <tr><td>9</td><td>Scanning</td><td>Container image scanning</td><td>Trivy, Grype, Snyk Container</td><td>High</td></tr>
+      <tr><td>10</td><td>Scanning</td><td>DAST against staging</td><td>OWASP ZAP, Nuclei</td><td>Medium</td></tr>
+      <tr><td>11</td><td>Artifacts</td><td>Sign images with Cosign (keyless)</td><td>Sigstore Cosign + Fulcio + Rekor</td><td>High</td></tr>
+      <tr><td>12</td><td>Artifacts</td><td>Generate SLSA provenance</td><td>slsa-github-generator, in-toto</td><td>High</td></tr>
+      <tr><td>13</td><td>Artifacts</td><td>Verify signatures before deploy</td><td>Cosign verify, Kyverno, OPA</td><td>High</td></tr>
+      <tr><td>14</td><td>Isolation</td><td>Use ephemeral runners</td><td>GitHub-hosted, GitLab SaaS runners</td><td>High</td></tr>
+      <tr><td>15</td><td>Isolation</td><td>Network-segment build environments</td><td>VPC isolation, firewall rules</td><td>Medium</td></tr>
+      <tr><td>16</td><td>Logging</td><td>Centralize pipeline audit logs</td><td>SIEM (Splunk, Elastic, Datadog)</td><td>High</td></tr>
+      <tr><td>17</td><td>Logging</td><td>Alert on anomalous pipeline activity</td><td>SIEM rules + PagerDuty</td><td>Medium</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What is your most critical CI/CD security gap?
+&#9500;&#9472;&#9472; Secrets stored in plaintext or pipeline env vars?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Implement OIDC federation (Step 1) + secrets manager (Step 2)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; No security scanning in the pipeline?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Add SAST + SCA + container scanning (Step 4)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Third-party actions/plugins not pinned or audited?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Pin actions to SHA + audit integrations (Step 3)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; No artifact signing or provenance?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Implement Cosign signing + SLSA provenance (Step 5)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Using self-hosted runners for public repos?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Switch to ephemeral/JIT runners immediately (Step 6)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; No audit logging or monitoring?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Deploy centralized logging + SIEM integration (Step 7)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Review OWASP CI/CD Top 10 risks checklist above and address remaining gaps</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Eliminate long-lived secrets with OIDC federation</h3>
+  <p>OIDC lets your CI/CD platform authenticate directly with cloud providers using short-lived tokens instead of storing static API keys. [<a href="https://docs.github.com/en/actions/reference/security/secure-use">src3</a>]</p>
+  <pre><code class="language-yaml"># GitHub Actions with AWS OIDC
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read
+
+steps:
+  - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502  # v4.0.2
+    with:
+      role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsDeployRole
+      aws-region: us-east-1
+      # No AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY needed!</code></pre>
+  <p><strong>Verify</strong>: <code>aws sts get-caller-identity</code> in the workflow should return the assumed role ARN, not a static IAM user.</p>
+
+  <h3>2. Configure secrets management for remaining credentials</h3>
+  <p>Some secrets cannot use OIDC (database passwords, third-party API keys). Store these in a dedicated secrets manager, never in pipeline config. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html">src2</a>]</p>
+  <pre><code class="language-yaml"># GitHub Actions: use encrypted secrets
+steps:
+  - name: Deploy
+    env:
+      DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
+    run: ./deploy.sh --db-password "$DB_PASSWORD"</code></pre>
+  <p><strong>Verify</strong>: <code>grep -rn 'password\|secret\|api_key\|token' .github/ .gitlab-ci.yml</code> should return zero hardcoded values.</p>
+
+  <h3>3. Pin third-party actions and dependencies</h3>
+  <p>Mutable tags (v1, latest) can be silently replaced with malicious code. Pin all actions to their full commit SHA. [<a href="https://docs.github.com/en/actions/reference/security/secure-use">src3</a>]</p>
+  <pre><code class="language-yaml"># GOOD: pinned to specific commit SHA (immutable)
+- uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2</code></pre>
+  <p><strong>Verify</strong>: <code>grep -rn 'uses:.*@v[0-9]' .github/workflows/</code> should return zero results.</p>
+
+  <h3>4. Integrate security scanning into every pipeline</h3>
+  <p>Add SAST, SCA, and container scanning as required checks that block deployment on critical findings. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html">src2</a>]</p>
+  <pre><code class="language-yaml"># Trivy vulnerability scanner in GitHub Actions
+- name: Run Trivy vulnerability scanner
+  uses: aquasecurity/trivy-action@18f2510ee396bbf400402947e795f2d45e7f9929  # v0.28.0
+  with:
+    scan-type: 'fs'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'  # Fail the build on findings</code></pre>
+  <p><strong>Verify</strong>: Open a PR with a known vulnerable dependency -- the security check should block merge.</p>
+
+  <h3>5. Sign artifacts and generate SLSA provenance</h3>
+  <p>Use Sigstore Cosign for keyless signing tied to your CI/CD identity. [<a href="https://slsa.dev/">src5</a>]</p>
+  <pre><code class="language-yaml"># Sign image (keyless via OIDC)
+- uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da  # v3.7.0
+- name: Sign image
+  run: cosign sign --yes ghcr.io/${{ github.repository }}@$DIGEST</code></pre>
+  <p><strong>Verify</strong>: <code>cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com IMAGE@DIGEST</code> should show a valid signature.</p>
+
+  <h3>6. Harden runner infrastructure</h3>
+  <p>Use ephemeral runners that are destroyed after each job. For self-hosted runners, use JIT registration. [<a href="https://media.defense.gov/2023/Jun/28/2003249466/-1/-1/0/CSI_DEFENDING_CI_CD_ENVIRONMENTS.PDF">src6</a>]</p>
+  <pre><code class="language-yaml"># Prefer GitHub-hosted runners (ephemeral by default)
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Ephemeral VM, fresh for every job</code></pre>
+  <p><strong>Verify</strong>: Check runner job history -- each job should show a different runner instance ID.</p>
+
+  <h3>7. Implement audit logging and monitoring</h3>
+  <p>Centralize pipeline logs and set alerts for anomalous activity. [<a href="https://media.defense.gov/2023/Jun/28/2003249466/-1/-1/0/CSI_DEFENDING_CI_CD_ENVIRONMENTS.PDF">src6</a>]</p>
+  <p>Key events to monitor: pipeline config changes, new secrets created/accessed, branch protection rule changes, runner registration, failed deployments, fork PR runs, OAuth app installations.</p>
+  <p><strong>Verify</strong>: Modify a workflow file and check your SIEM -- the change should appear as an audit event within minutes.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>GitHub Actions: Complete Hardened Workflow</h3>
+  <pre><code class="language-yaml"># .github/workflows/secure-deploy.yml
+name: Secure Deploy Pipeline
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a  # v4.2.0
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts  # Prevent post-install script attacks
+      - run: npm test
+
+  deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Scoped to this job only
+    environment: production  # Requires manual approval
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/DeployRole
+          aws-region: us-east-1
+      - run: ./deploy.sh</code></pre>
+
+  <h3>GitLab CI: Hardened Pipeline Configuration</h3>
+  <pre><code class="language-yaml"># .gitlab-ci.yml
+stages:
+  - test
+  - scan
+  - build
+  - deploy
+
+secret_detection:
+  stage: test
+
+sast:
+  stage: scan
+
+dependency_scanning:
+  stage: scan
+
+container_scanning:
+  stage: build
+  variables:
+    CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  needs: ["build"]
+
+build:
+  stage: build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy_production:
+  stage: deploy
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual  # Require manual approval
+  script:
+    - cosign verify --certificate-oidc-issuer https://gitlab.com $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - ./deploy.sh</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Storing secrets in pipeline config</h3>
+  <pre><code class="language-yaml"># BAD -- secrets visible in version control and logs
+env:
+  AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+  AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY</code></pre>
+
+  <h3>Correct: Use OIDC federation or encrypted secrets</h3>
+  <pre><code class="language-yaml"># GOOD -- no long-lived credentials, OIDC provides short-lived tokens
+permissions:
+  id-token: write
+steps:
+  - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+    with:
+      role-to-assume: arn:aws:iam::123456789012:role/DeployRole
+      aws-region: us-east-1</code></pre>
+
+  <h3>Wrong: Using mutable action tags</h3>
+  <pre><code class="language-yaml"># BAD -- tag can be moved to point at malicious code
+- uses: actions/checkout@v4
+- uses: some-org/some-action@main</code></pre>
+
+  <h3>Correct: Pin actions to full commit SHA</h3>
+  <pre><code class="language-yaml"># GOOD -- SHA is immutable, cannot be silently replaced
+- uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2</code></pre>
+
+  <h3>Wrong: Over-privileged pipeline permissions</h3>
+  <pre><code class="language-yaml"># BAD -- grants all permissions to every job
+permissions: write-all
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm test  # Test job does NOT need write-all</code></pre>
+
+  <h3>Correct: Least-privilege permissions per job</h3>
+  <pre><code class="language-yaml"># GOOD -- minimal global permissions, escalate per job
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm test
+  deploy:
+    permissions:
+      id-token: write  # Only this job needs OIDC</code></pre>
+
+  <h3>Wrong: Running npm install without protections</h3>
+  <pre><code class="language-bash"># BAD -- post-install scripts execute arbitrary code
+npm install</code></pre>
+
+  <h3>Correct: Use --ignore-scripts and audit</h3>
+  <pre><code class="language-bash"># GOOD -- prevent malicious post-install scripts
+npm ci --ignore-scripts
+npm audit --audit-level=high</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Poisoned Pipeline Execution (PPE)</strong>: Attacker submits PR that modifies pipeline config to exfiltrate secrets. Fix: Use <code>pull_request</code> trigger (not <code>pull_request_target</code>) and restrict changes with CODEOWNERS. [<a href="https://owasp.org/www-project-top-10-ci-cd-security-risks/">src1</a>]</li>
+    <li><strong>Dependency confusion attacks</strong>: Internal package name matches public registry package, CI installs the malicious public version. Fix: Use scoped packages (<code>@your-org/package</code>), configure <code>.npmrc</code>, and use lock files. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html">src2</a>]</li>
+    <li><strong>Secret sprawl across environments</strong>: Same production secret shared across dev/staging/prod pipelines. Fix: Use environment-specific secrets and protect variables to specific branches. [<a href="https://docs.gitlab.com/ci/pipeline_security/">src4</a>]</li>
+    <li><strong>Docker build cache poisoning</strong>: Attacker pushes a malicious layer to a shared Docker cache. Fix: Use <code>--no-cache</code> for production builds or sign and verify base images. [<a href="https://media.defense.gov/2023/Jun/28/2003249466/-1/-1/0/CSI_DEFENDING_CI_CD_ENVIRONMENTS.PDF">src6</a>]</li>
+    <li><strong>Insufficient fork protection</strong>: Public repo allows fork PRs to run workflows with access to repo secrets. Fix: Require approval for fork PR workflows and never expose secrets to fork events. [<a href="https://docs.github.com/en/actions/reference/security/secure-use">src3</a>]</li>
+    <li><strong>Stale secrets never rotated</strong>: API keys created years ago still active. Fix: Enforce automatic rotation (90 days max) via Vault or cloud provider secret rotation. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html">src2</a>]</li>
+    <li><strong>Skipping signature verification at deploy</strong>: Artifacts signed but nobody checks before deployment. Fix: Add mandatory <code>cosign verify</code> step that fails if verification fails. [<a href="https://slsa.dev/">src5</a>]</li>
+    <li><strong>Security scans without failing the build</strong>: Tools report findings but pipeline continues. Fix: Set <code>exit-code: 1</code> to block deployment on critical/high findings. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Scan for hardcoded secrets in your repository
+gitleaks detect --source . --verbose
+
+# Check GitHub Actions workflows for security issues
+actionlint .github/workflows/*.yml
+
+# Verify a container image signature with Cosign
+cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/your-org/your-image@sha256:abc123
+
+# Scan a container image for vulnerabilities
+trivy image --severity CRITICAL,HIGH myapp:latest
+
+# Check for unpinned GitHub Actions in workflows
+grep -rn 'uses:.*@v[0-9]' .github/workflows/
+
+# Audit npm dependencies for known vulnerabilities
+npm audit --audit-level=high
+
+# Validate SLSA provenance of an artifact
+slsa-verifier verify-artifact myapp-binary \
+  --provenance-path provenance.intoto.jsonl \
+  --source-uri github.com/your-org/your-repo</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Framework/Tool</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SLSA</td><td>v1.0</td><td>Current</td><td>Build provenance levels (L1-L4)</td></tr>
+      <tr><td>Sigstore Cosign</td><td>v2.x</td><td>Current</td><td>Keyless signing default, OIDC identity</td></tr>
+      <tr><td>GitHub Actions OIDC</td><td>GA</td><td>Current</td><td>AWS, GCP, Azure federation</td></tr>
+      <tr><td>GitLab OIDC</td><td>GA (15.7+)</td><td>Current</td><td>JWT-based cloud auth</td></tr>
+      <tr><td>in-toto</td><td>CNCF Graduated (2025)</td><td>Current</td><td>Supply chain attestation framework</td></tr>
+      <tr><td>Trivy</td><td>v0.50+</td><td>Current</td><td>All-in-one scanner (image, fs, IaC, SBOM)</td></tr>
+      <tr><td>OWASP ZAP</td><td>v2.15+</td><td>Current</td><td>DAST with CI/CD integration</td></tr>
+      <tr><td>CodeQL</td><td>v2.x</td><td>Current</td><td>GitHub-native SAST</td></tr>
+      <tr><td>Dependabot</td><td>v2</td><td>Current</td><td>Dependency + actions update automation</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Any organization running automated build/deploy pipelines</td><td>Manual deployments with no CI/CD automation</td><td>Manual deployment security checklist</td></tr>
+      <tr><td>Deploying to production or any environment with customer data</td><td>Local development-only builds with no deployment</td><td>Development environment security guide</td></tr>
+      <tr><td>Using third-party actions, plugins, or dependencies in pipelines</td><td>Fully air-gapped build environment with no external dependencies</td><td>Internal build system hardening guide</td></tr>
+      <tr><td>Regulatory compliance requires audit trails (SOC 2, ISO 27001, FedRAMP)</td><td>Personal hobby project with no sensitive data</td><td>Basic CI/CD setup guide</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>OIDC federation eliminates static secrets for cloud providers but does not protect against compromised pipeline definitions -- you still need branch protection and CODEOWNERS</li>
+    <li>Cosign keyless signing ties identity to CI/CD platform OIDC tokens -- if the platform is compromised, signatures are also compromised; consider offline key signing for critical releases</li>
+    <li>Security scanning (SAST/DAST/SCA) finds known vulnerability patterns but cannot detect novel zero-day exploits or business logic flaws -- manual security review is still necessary for high-risk changes</li>
+    <li>SLSA provenance proves where and how an artifact was built, but does not guarantee the source code is free of vulnerabilities -- it proves integrity, not quality</li>
+    <li>Self-hosted runners provide more control but require you to manage patching, isolation, and credential security -- GitHub/GitLab SaaS runners handle this automatically</li>
+    <li>Pipeline security controls add latency to builds -- prioritize critical scans in PR checks and run comprehensive scans asynchronously to balance speed and security</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/xss-prevention/2026" data-relationship="related_to">XSS Prevention Guide</a>
+    <a href="/software/security/container-runtime-security/2026" data-relationship="related_to">Container Runtime Security</a>
+    <a href="/software/security/kubernetes-security/2026" data-relationship="often_confused_with">Kubernetes Security Hardening</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>XSS Prevention: Cross-Site Scripting Defense Guide | knowledgelib.io</title>
+  <meta name="description" content="Complete XSS prevention guide covering output encoding for 5 contexts, CSP deployment, DOMPurify sanitization, and framework-specific defenses for...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/security/xss-prevention/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="XSS Prevention: Cross-Site Scripting Defense Guide | knowledgelib.io">
+  <meta property="og:description" content="Complete XSS prevention guide covering output encoding for 5 contexts, CSP deployment, DOMPurify sanitization, and framework-specific defenses for React, Django, Go, and Node.js. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/security/xss-prevention/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="XSS Prevention: Cross-Site Scripting Defense Guide | knowledgelib.io">
+  <meta name="twitter:description" content="Complete XSS prevention guide covering output encoding for 5 contexts, CSP deployment, DOMPurify sanitization, and framework-specific defenses for React, Django, Go, and Node.js. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.95">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/security/XSS Prevention">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I prevent Cross-Site Scripting (XSS) attacks?">
+  <meta name="ai:aliases" content="XSS prevention best practices; cross-site scripting mitigation; protect against XSS attacks; output encoding for XSS; Content Security Policy XSS; DOMPurify sanitization; CWE-79 prevention; how to stop XSS in React Angular Django">
+  <meta name="ai:raw" content="/api/v1/units/software/security/xss-prevention/2026.md">
+  <meta name="ai:token_estimate" content="3600">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="evergreen">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="framework,xss_context">
+  <meta name="ai:constraints" content="NEVER trust user input in any HTML context; Output encoding MUST match the insertion context; NEVER use innerHTML/dangerouslySetInnerHTML/v-html with unsanitized data; CSP is defense-in-depth NOT a replacement for encoding; Blacklist filtering is insufficient; Keep DOMPurify updated">
+  <meta name="ai:skip_this_unit_if" content="Need SQL injection prevention → software/security/sql-injection-prevention/2026; Need CSRF protection → software/security/csrf-prevention/2026; Need session security → software/patterns/session-management/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "XSS Prevention: Cross-Site Scripting Defense Guide",
+    "headline": "XSS Prevention: Cross-Site Scripting Defense Guide",
+    "description": "Complete guide to preventing Cross-Site Scripting (XSS) attacks with context-aware output encoding, Content Security Policy, DOMPurify sanitization, and framework-specific defenses for React, Django, Go, and Node.js.",
+    "keywords": ["XSS prevention", "cross-site scripting", "output encoding", "Content Security Policy", "CSP", "DOMPurify", "CWE-79", "web security"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "DOMPurify 3.x, Helmet 7.x, CSP Level 3",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Cross Site Scripting Prevention Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to prevent XSS",
+        "url": "https://portswigger.net/web-security/cross-site-scripting/preventing"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Content Security Policy (CSP)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"
+      },
+      {
+        "@type": "WebPage",
+        "name": "CWE-79: Improper Neutralization of Input During Web Page Generation",
+        "url": "https://cwe.mitre.org/data/definitions/79.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DOMPurify - DOM-only XSS Sanitizer",
+        "url": "https://github.com/cure53/DOMPurify"
+      },
+      {
+        "@type": "WebPage",
+        "name": "DOM based XSS Prevention Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Mitigate XSS with a Strict Content Security Policy",
+        "url": "https://web.dev/articles/strict-csp"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "XSS Prevention: Cross-Site Scripting Defense Guide",
+    "description": "Structured knowledge unit on preventing Cross-Site Scripting (XSS) attacks with output encoding rules, CSP configuration, DOMPurify usage, and framework-specific code examples.",
+    "keywords": ["XSS prevention", "cross-site scripting", "output encoding", "CSP", "DOMPurify", "CWE-79", "web security"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "OWASP Foundation"},
+      {"@type": "Organization", "name": "PortSwigger"},
+      {"@type": "Organization", "name": "MDN Web Docs"},
+      {"@type": "Organization", "name": "MITRE"},
+      {"@type": "Organization", "name": "Cure53"},
+      {"@type": "Organization", "name": "Google Web Dev"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Security", "item": "https://knowledgelib.io/software/security/" },
+      { "@type": "ListItem", "position": 4, "name": "XSS Prevention" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I prevent Cross-Site Scripting (XSS) attacks?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "XSS prevention best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "cross-site scripting mitigation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "protect against XSS attacks",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "output encoding for XSS",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Content Security Policy XSS",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>XSS Prevention: Cross-Site Scripting Defense Guide</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I prevent Cross-Site Scripting (XSS) attacks?</h2>
+
+  <aside class="unit-meta" data-card-id="software/security/xss-prevention/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Context-aware output encoding combined with Content Security Policy (CSP) provides layered XSS defense -- no single technique is sufficient alone.</li>
+    <li><strong>Key tool/command</strong>: <code>DOMPurify.sanitize(userInput)</code> for client-side HTML sanitization; framework auto-escaping (React JSX, Django templates, Go html/template) for server-side.</li>
+    <li><strong>Watch out for</strong>: <code>dangerouslySetInnerHTML</code> (React), <code>v-html</code> (Vue), <code>[innerHTML]</code> (Angular), and raw <code>innerHTML</code> bypass framework auto-escaping and reintroduce XSS risk.</li>
+    <li><strong>Works with</strong>: All modern web frameworks and browsers. CSP Level 3 supported in Chrome 59+, Firefox 58+, Safari 15.4+, Edge 79+.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NEVER trust user input in any HTML context -- always encode or sanitize before rendering</li>
+    <li>Output encoding MUST match the insertion context (HTML body, attribute, JavaScript, URL, CSS)</li>
+    <li>NEVER use innerHTML, dangerouslySetInnerHTML, v-html, or [innerHTML] with unsanitized user data</li>
+    <li>CSP is defense-in-depth, NOT a replacement for output encoding</li>
+    <li>Blacklist/regex-based XSS filtering is insufficient -- use allowlist validation and context-aware encoding</li>
+    <li>Keep HTML sanitization libraries (DOMPurify) updated -- bypasses are discovered regularly</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>XSS Attack Types</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">XSS Type</th><th scope="col">Vector</th><th scope="col">Impact</th><th scope="col">Prevention</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Reflected XSS</td><td>Malicious URL parameter reflected in page response</td><td>Session hijacking, phishing</td><td>HTML-encode all reflected output; validate input on arrival</td></tr>
+      <tr><td>2</td><td>Stored XSS</td><td>Malicious payload saved to DB and rendered to other users</td><td>Account takeover, worm propagation</td><td>Encode on output; sanitize HTML if rich text needed</td></tr>
+      <tr><td>3</td><td>DOM-based XSS</td><td>Client-side JS reads attacker-controlled source and passes to dangerous sink</td><td>Full client-side compromise</td><td>Avoid dangerous sinks; use textContent; use DOMPurify</td></tr>
+      <tr><td>4</td><td>Mutation XSS (mXSS)</td><td>Browser HTML parser mutates sanitized markup into executable form</td><td>Bypasses sanitizers</td><td>Keep DOMPurify updated; use Trusted Types API</td></tr>
+      <tr><td>5</td><td>Blind XSS</td><td>Stored payload executes in admin panel or internal tool</td><td>Internal system compromise</td><td>Encode all output in admin views; monitor with XSS Hunter</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Output Encoding by Context</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">#</th><th scope="col">Output Context</th><th scope="col">Encoding Rule</th><th scope="col">Safe Function</th><th scope="col">Dangerous Pattern</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>HTML body</td><td>HTML entity encode &amp; &lt; &gt; " '</td><td><code>textContent</code>, framework auto-escape</td><td><code>innerHTML = userInput</code></td></tr>
+      <tr><td>2</td><td>HTML attribute</td><td>HTML entity encode; always quote attributes</td><td><code>setAttribute(name, val)</code></td><td><code>&lt;div title=</code> + userInput + <code>&gt;</code></td></tr>
+      <tr><td>3</td><td>JavaScript string</td><td>Unicode-escape \uXXXX or \xHH format</td><td><code>JSON.stringify()</code> into script context</td><td><code>var x = '</code> + userInput + <code>'</code></td></tr>
+      <tr><td>4</td><td>URL parameter</td><td>Percent-encode %HH</td><td><code>encodeURIComponent()</code></td><td><code>href="</code> + userInput + <code>"</code></td></tr>
+      <tr><td>5</td><td>URL scheme</td><td>Allowlist http/https only</td><td>Validate protocol before use</td><td><code>href=</code> + userInput (allows <code>javascript:</code>)</td></tr>
+      <tr><td>6</td><td>CSS value</td><td>CSS hex encode \XX; allowlist values</td><td>CSS custom properties with validated input</td><td><code>style="color:</code> + userInput + <code>"</code></td></tr>
+      <tr><td>7</td><td>JSON in HTML</td><td>JSON.stringify + HTML entity encode</td><td>Django <code>|json_script</code>, Jinja2 <code>|tojson</code></td><td><code>&lt;script&gt;var x = ${userInput}&lt;/script&gt;</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Where does user input appear in your output?
+&#9500;&#9472;&#9472; HTML body text?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use framework auto-escaping (React JSX, Django {{ }}, Go html/template)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; HTML attribute value?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; HTML-encode value AND always quote the attribute
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Inside &lt;script&gt; tag or JavaScript string?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use JSON.stringify() + HTML entity encode, or pass via data attributes
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Inside a URL (href, src)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Validate protocol is http/https, then encodeURIComponent() for params
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Inside CSS (style attribute)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Allowlist valid CSS values; never interpolate user input directly
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; User needs to submit rich HTML content?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Sanitize with DOMPurify server-side AND client-side before rendering
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; HTML-encode all output + deploy strict CSP as defense-in-depth</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Deploy a strict Content Security Policy</h3>
+  <p>CSP prevents inline script execution even if an XSS payload bypasses encoding. Use nonce-based CSP for the strongest protection. [<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">src3</a>]</p>
+  <pre><code class="language-http">Content-Security-Policy:
+  default-src 'self';
+  script-src 'nonce-{random}' 'strict-dynamic';
+  style-src 'self' 'nonce-{random}';
+  object-src 'none';
+  base-uri 'none';
+  frame-ancestors 'none';</code></pre>
+  <p><strong>Verify</strong>: Open browser DevTools &gt; Console -- CSP violations appear as errors. Check <code>report-uri</code> endpoint for reports.</p>
+
+  <h3>2. Implement server-side output encoding</h3>
+  <p>Use your framework's built-in auto-escaping. Every major framework escapes by default when used correctly. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">src1</a>]</p>
+  <pre><code class="language-jsx">// React: JSX auto-escapes by default
+function UserGreeting({ name }) {
+  return &lt;h1&gt;Hello, {name}&lt;/h1&gt;;
+}</code></pre>
+  <p><strong>Verify</strong>: Inject <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> as user input -- it should render as visible text, not execute.</p>
+
+  <h3>3. Sanitize user-supplied HTML</h3>
+  <p>When you must accept HTML from users (comments, WYSIWYG editors), sanitize with DOMPurify. [<a href="https://github.com/cure53/DOMPurify">src5</a>]</p>
+  <pre><code class="language-javascript">import DOMPurify from 'dompurify';  // v3.x
+
+const cleanHTML = DOMPurify.sanitize(userInput, {
+  ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'ul', 'ol', 'li'],
+  ALLOWED_ATTR: ['href', 'title'],
+  ALLOW_DATA_ATTR: false
+});</code></pre>
+  <p><strong>Verify</strong>: Test with payload <code>&lt;img src=x onerror=alert(1)&gt;</code> -- should be stripped.</p>
+
+  <h3>4. Validate and encode URL schemes</h3>
+  <p>Prevent <code>javascript:</code> and <code>data:</code> URL injection in href and src attributes. [<a href="https://portswigger.net/web-security/cross-site-scripting/preventing">src2</a>]</p>
+  <pre><code class="language-javascript">function isSafeUrl(url) {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return ['http:', 'https:', 'mailto:'].includes(parsed.protocol);
+  } catch { return false; }
+}</code></pre>
+  <p><strong>Verify</strong>: Test with <code>javascript:alert(1)</code> -- should be rejected.</p>
+
+  <h3>5. Enable Trusted Types (modern browsers)</h3>
+  <p>Trusted Types prevent DOM XSS by requiring typed objects for dangerous sinks. [<a href="https://web.dev/articles/strict-csp">src7</a>]</p>
+  <pre><code class="language-http">Content-Security-Policy: require-trusted-types-for 'script'</code></pre>
+  <p><strong>Verify</strong>: Setting <code>innerHTML</code> with a raw string will throw a TypeError when Trusted Types is enforced.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>React/JSX: Safe Dynamic Content Rendering</h3>
+  <pre><code class="language-jsx">import DOMPurify from 'dompurify';  // ^3.0.0
+
+// SAFE: React auto-escapes expressions in JSX
+function Comment({ author, text }) {
+  return (
+    &lt;div className="comment"&gt;
+      &lt;strong&gt;{author}&lt;/strong&gt;
+      &lt;p&gt;{text}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+// When rich HTML is required, sanitize first
+function RichComment({ htmlContent }) {
+  const clean = DOMPurify.sanitize(htmlContent);
+  return &lt;div dangerouslySetInnerHTML={{ __html: clean }} /&gt;;
+}</code></pre>
+
+  <h3>Node.js/Express: Helmet CSP + Output Encoding</h3>
+  <pre><code class="language-javascript">const express = require('express');  // ^4.18.0
+const helmet = require('helmet');    // ^7.1.0
+const crypto = require('crypto');
+const app = express();
+
+app.use((req, res, next) =&gt; {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [(req, res) =&gt; `'nonce-${res.locals.cspNonce}'`],
+      objectSrc: ["'none'"],
+      baseUri: ["'none'"]
+    }
+  }
+}));</code></pre>
+
+  <h3>Python/Django: Template Auto-Escaping</h3>
+  <pre><code class="language-python"># Django auto-escapes all template variables by default
+from django.utils.html import escape
+
+def profile(request, username):
+    return render(request, 'profile.html', {'username': username})
+    # {{ username }} is auto-escaped in the template
+
+# DANGEROUS: {{ user_input|safe }} -- NEVER use with untrusted data
+# For JSON in templates: {{ data|json_script:"user-data" }}</code></pre>
+
+  <h3>Go: html/template Context-Aware Escaping</h3>
+  <pre><code class="language-go">package main
+
+import (
+    "html/template"  // NOT text/template
+    "net/http"
+)
+
+var tmpl = template.Must(template.New("page").Parse(`
+&lt;h1&gt;Hello, {{.Name}}&lt;/h1&gt;
+&lt;a href="{{.URL}}"&gt;Profile&lt;/a&gt;
+`))
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    data := struct{ Name, URL string }{
+        Name: r.URL.Query().Get("name"),
+        URL:  "/users/" + r.URL.Query().Get("id"),
+    }
+    tmpl.Execute(w, data)
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Blacklist-based XSS filtering</h3>
+  <pre><code class="language-javascript">// BAD -- blacklist filtering is trivially bypassed
+function sanitize(input) {
+  return input
+    .replace(/&lt;script&gt;/gi, '')
+    .replace(/onerror/gi, '');
+}
+// Bypass: &lt;scr&lt;script&gt;ipt&gt;, &lt;img src=x OnError=alert(1)&gt;</code></pre>
+
+  <h3>Correct: Context-aware output encoding</h3>
+  <pre><code class="language-javascript">// GOOD -- encode based on output context
+function escapeHtml(str) {
+  const map = {'&amp;':'&amp;amp;','&lt;':'&amp;lt;','&gt;':'&amp;gt;','"':'&amp;quot;',"'":'&amp;#x27;'};
+  return String(str).replace(/[&amp;&lt;&gt;"']/g, c =&gt; map[c]);
+}</code></pre>
+
+  <h3>Wrong: Encoding in the wrong context</h3>
+  <pre><code class="language-html">&lt;!-- BAD -- HTML encoding inside a JavaScript context does NOT prevent XSS --&gt;
+&lt;script&gt;
+  var name = '{{html_escaped_user_input}}';
+&lt;/script&gt;</code></pre>
+
+  <h3>Correct: JavaScript context encoding</h3>
+  <pre><code class="language-html">&lt;!-- GOOD -- use data attributes instead --&gt;
+&lt;div id="user" data-name="{{html_escaped_user_input}}"&gt;&lt;/div&gt;
+&lt;script&gt;
+  var name = document.getElementById('user').dataset.name;
+&lt;/script&gt;</code></pre>
+
+  <h3>Wrong: CSP with unsafe-inline</h3>
+  <pre><code class="language-http"># BAD -- unsafe-inline defeats CSP's XSS protection
+Content-Security-Policy: script-src 'self' 'unsafe-inline'</code></pre>
+
+  <h3>Correct: Nonce-based CSP</h3>
+  <pre><code class="language-http"># GOOD -- nonce-based CSP blocks injected inline scripts
+Content-Security-Policy: script-src 'nonce-abc123' 'strict-dynamic'</code></pre>
+
+  <h3>Wrong: innerHTML with user data</h3>
+  <pre><code class="language-javascript">// BAD -- direct DOM injection of user input
+document.getElementById('output').innerHTML = userInput;</code></pre>
+
+  <h3>Correct: textContent or DOMPurify</h3>
+  <pre><code class="language-javascript">// GOOD -- textContent for plain text
+document.getElementById('output').textContent = userInput;
+
+// GOOD -- DOMPurify when HTML rendering is required
+import DOMPurify from 'dompurify';
+document.getElementById('output').innerHTML = DOMPurify.sanitize(userInput);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>JSON data in script tags</strong>: Inserting JSON into <code>&lt;script&gt;</code> blocks without escaping allows <code>&lt;/script&gt;</code> injection. Fix: Use <code>JSON.stringify()</code> and replace <code>&lt;/</code> with <code>&lt;\/</code>, or use Django's <code>|json_script</code> filter. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>URL scheme injection</strong>: <code>&lt;a href="{{user_url}}"&gt;</code> allows <code>javascript:alert(1)</code> even with HTML encoding. Fix: Validate URL protocol is <code>http:</code> or <code>https:</code> before use. [<a href="https://portswigger.net/web-security/cross-site-scripting/preventing">src2</a>]</li>
+    <li><strong>SVG XSS</strong>: SVGs can contain <code>&lt;script&gt;</code> tags and event handlers. Fix: Sanitize SVGs with DOMPurify (supports SVG mode) or serve with restrictive CSP. [<a href="https://github.com/cure53/DOMPurify">src5</a>]</li>
+    <li><strong>Template literal injection</strong>: Using <code>eval(`Hello ${name}`)</code> enables code execution. Fix: Never use <code>eval()</code>, <code>new Function()</code>, or <code>setTimeout(string)</code> with user data. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html">src6</a>]</li>
+    <li><strong>Markdown rendering XSS</strong>: Markdown parsers that output raw HTML can introduce XSS. Fix: Use a sanitizing Markdown renderer or pipe output through DOMPurify. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">src1</a>]</li>
+    <li><strong>postMessage without origin check</strong>: DOM XSS via <code>window.addEventListener('message', handler)</code> without verifying <code>event.origin</code>. Fix: Always check <code>event.origin</code> against an allowlist. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html">src6</a>]</li>
+    <li><strong>React dangerouslySetInnerHTML from API</strong>: Backend returns HTML that frontend renders without sanitization. Fix: Sanitize with DOMPurify even for "trusted" backend data. [<a href="https://github.com/cure53/DOMPurify">src5</a>]</li>
+    <li><strong>Double encoding</strong>: Encoding output twice shows <code>&amp;amp;lt;</code> instead of <code>&lt;</code>. Fix: Encode exactly once, at the point of output. [<a href="https://portswigger.net/web-security/cross-site-scripting/preventing">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check current CSP headers of a site
+curl -sI https://your-site.com | grep -i content-security-policy
+
+# Scan for XSS with OWASP ZAP (Docker)
+docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+  -t https://your-site.com -r report.html
+
+# Find dangerous sinks in JavaScript codebase
+grep -rn 'innerHTML\|outerHTML\|document\.write\|eval(' --include="*.js" .
+
+# Find React dangerouslySetInnerHTML usage
+grep -rn 'dangerouslySetInnerHTML' --include="*.jsx" --include="*.tsx" .
+
+# Find Vue v-html usage
+grep -rn 'v-html' --include="*.vue" .
+
+# Validate CSP: visit https://csp-evaluator.withgoogle.com/</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard/Tool</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Feature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CSP Level 3</td><td>W3C CR</td><td>Current</td><td>strict-dynamic, nonce-based policies</td></tr>
+      <tr><td>CSP Level 2</td><td>W3C Rec</td><td>Supported</td><td>script-src, style-src, report-uri</td></tr>
+      <tr><td>Trusted Types</td><td>Draft</td><td>Chrome 83+, Firefox behind flag</td><td>DOM sink protection</td></tr>
+      <tr><td>DOMPurify</td><td>3.x</td><td>Current</td><td>Trusted Types support, ES module</td></tr>
+      <tr><td>DOMPurify</td><td>2.x</td><td>Maintained</td><td>CommonJS, UMD bundles</td></tr>
+      <tr><td>Sanitizer API</td><td>Draft</td><td>Chrome 105+ (origin trial)</td><td>Native browser HTML sanitization</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Any web app renders user input in HTML</td><td>Static site with zero user input</td><td>No XSS prevention needed</td></tr>
+      <tr><td>Building WYSIWYG editor or comment system with rich text</td><td>You can use plain text only (no HTML rendering)</td><td>textContent + framework auto-escaping only</td></tr>
+      <tr><td>CSP is your only server-level control</td><td>You assume WAF blocks all XSS</td><td>Output encoding at the application level</td></tr>
+      <tr><td>Third-party content is embedded (ads, widgets)</td><td>Content from fully trusted internal sources only</td><td>Minimal CSP + auto-escaping may suffice</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Framework auto-escaping only protects the contexts the framework manages -- manual DOM manipulation, eval(), and dynamic script creation are not covered</li>
+    <li>CSP strict-dynamic trusts any script loaded by an already-trusted script, so a trusted script with a gadget (e.g., Angular, jQuery) can be exploited</li>
+    <li>DOMPurify and all client-side sanitizers can be bypassed if the attacker controls the page before the sanitizer runs -- server-side sanitization is the primary defense</li>
+    <li>The Sanitizer API (browser-native) is still in draft and not production-ready as of 2026</li>
+    <li>SVG and MathML contexts have different parsing rules than HTML -- test sanitization specifically for these content types</li>
+    <li>HTTP-only cookies prevent session theft via XSS but do not prevent other XSS impacts (defacement, keylogging, phishing)</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/session-management/2026" data-relationship="related_to">Session Management Patterns</a>
+    <a href="/software/patterns/jwt-implementation/2026" data-relationship="related_to">JWT Implementation Guide</a>
+    <a href="/software/security/sql-injection-prevention/2026" data-relationship="often_confused_with">SQL Injection Prevention</a>
+    <a href="/software/security/csrf-prevention/2026" data-relationship="often_confused_with">CSRF Prevention</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Security<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Detect and Fix N+1 Query Problems in Django | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to Django N+1 query detection and fixes: select_related, prefetch_related, Prefetch objects, annotate, django-debug-toolbar, nplusone,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/django-n-plus-1/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Detect and Fix N+1 Query Problems in Django | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to Django N+1 query detection and fixes: select_related, prefetch_related, Prefetch objects, annotate, django-debug-toolbar, nplusone, django-auto-prefetch, DRF optimization, 3 code examples, 4 anti-pattern pairs, 8 pitfalls. 10 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/django-n-plus-1/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Detect and Fix N+1 Query Problems in Django | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to Django N+1 query detection and fixes: select_related, prefetch_related, Prefetch objects, annotate, django-debug-toolbar, nplusone, django-auto-prefetch, DRF optimization, 3 code examples, 4 anti-pattern pairs, 8 pitfalls. 10 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.94">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/django_n_plus_1">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I detect and fix N+1 query problems in Django?">
+    <meta name="ai:aliases"
+        content="Django N+1 query; Django too many queries; Django select_related; Django prefetch_related; Django ORM slow queries; Django lazy loading performance; Django database query optimization; Django Prefetch object; Django auto-prefetch; Django query count middleware">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/django-n-plus-1/2026.md">
+    <meta name="ai:token_estimate" content="5200">
+    <meta name="ai:source_count" content="10">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="relationship_type,context,django_version">
+    <meta name="ai:constraints"
+        content="select_related() works ONLY with ForeignKey and OneToOneField; Calling .filter() on prefetched relationship re-queries the database; Never call select_related() without explicit field names in production; Django 4.2+ async variants must not be mixed with sync code; Prefetch() with to_attr returns a list not a QuerySet; assertNumQueries() counts vary by Django version and backend">
+    <meta name="ai:skip_this_unit_if"
+        content="Slow queries caused by missing database indexes -> software/debugging/django-slow-queries/2026; Performance issue is in raw SQL not ORM lazy loading -> software/debugging/django-raw-sql-optimization/2026; Using SQLAlchemy instead of Django ORM -> software/debugging/sqlalchemy-n-plus-1/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Detect and Fix N+1 Query Problems in Django",
+    "headline": "How to Detect and Fix N+1 Query Problems in Django",
+    "description": "Complete guide to Django N+1 query detection and fixes covering select_related, prefetch_related, Prefetch objects, annotate, django-auto-prefetch, DRF serializer optimization, admin list views, and production monitoring with 10 cited sources.",
+    "keywords": ["Django N+1", "select_related", "prefetch_related", "Prefetch object", "Django ORM", "query optimization", "django-debug-toolbar", "django-auto-prefetch", "nplusone", "django-zen-queries"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Django 2.0+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Django — select_related and prefetch_related", "url": "https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related" },
+      { "@type": "WebPage", "name": "Django — Prefetch object", "url": "https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects" },
+      { "@type": "WebPage", "name": "Django — Database optimization", "url": "https://docs.djangoproject.com/en/5.2/topics/db/optimization/" },
+      { "@type": "WebPage", "name": "Sentry — N+1 Query Detection", "url": "https://docs.sentry.io/product/issues/issue-details/performance-issues/n-one-queries/" },
+      { "@type": "WebPage", "name": "Scout APM — Django N+1 Queries", "url": "https://scoutapm.com/blog/django-n-1-queries" },
+      { "@type": "WebPage", "name": "django-debug-toolbar", "url": "https://django-debug-toolbar.readthedocs.io/" },
+      { "@type": "WebPage", "name": "nplusone — Auto-detecting N+1", "url": "https://github.com/jmcarp/nplusone" },
+      { "@type": "WebPage", "name": "Haki Benita — Prefetching in Django", "url": "https://hakibenita.com/all-you-need-to-know-about-prefetching-in-django" },
+      { "@type": "WebPage", "name": "django-auto-prefetch", "url": "https://pypi.org/project/django-auto-prefetch/" },
+      { "@type": "WebPage", "name": "django-zen-queries", "url": "https://github.com/dabapps/django-zen-queries" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Detect and Fix N+1 Query Problems in Django",
+    "description": "Structured reference for Django N+1 query detection and fixes with ranked patterns, ORM optimization techniques, third-party tool integration, and testing strategies.",
+    "keywords": ["Django", "N+1 query", "ORM optimization", "select_related", "prefetch_related", "django-auto-prefetch"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Django Software Foundation"},
+      {"@type": "Organization", "name": "Sentry"},
+      {"@type": "Organization", "name": "Scout APM"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Detect and Fix N+1 Query Problems in Django" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I detect and fix N+1 query problems in Django?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An N+1 query happens when your code executes 1 query to fetch N objects, then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2. In Django, this occurs because the ORM lazy-loads related objects by default. Fix with select_related() (ForeignKey/OneToOne — SQL JOIN) or prefetch_related() (ManyToMany/reverse FK — separate query + Python join)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Django N+1 query",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An N+1 query happens when your code executes 1 query to fetch N objects, then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2. In Django, this occurs because the ORM lazy-loads related objects by default. Fix with select_related() (ForeignKey/OneToOne — SQL JOIN) or prefetch_related() (ManyToMany/reverse FK — separate query + Python join)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Django too many queries",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An N+1 query happens when your code executes 1 query to fetch N objects, then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2. In Django, this occurs because the ORM lazy-loads related objects by default. Fix with select_related() (ForeignKey/OneToOne — SQL JOIN) or prefetch_related() (ManyToMany/reverse FK — separate query + Python join)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Django select_related",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An N+1 query happens when your code executes 1 query to fetch N objects, then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2. In Django, this occurs because the ORM lazy-loads related objects by default. Fix with select_related() (ForeignKey/OneToOne — SQL JOIN) or prefetch_related() (ManyToMany/reverse FK — separate query + Python join)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Django prefetch_related",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An N+1 query happens when your code executes 1 query to fetch N objects, then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2. In Django, this occurs because the ORM lazy-loads related objects by default. Fix with select_related() (ForeignKey/OneToOne — SQL JOIN) or prefetch_related() (ManyToMany/reverse FK — separate query + Python join)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Django ORM slow queries",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An N+1 query happens when your code executes 1 query to fetch N objects, then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2. In Django, this occurs because the ORM lazy-loads related objects by default. Fix with select_related() (ForeignKey/OneToOne — SQL JOIN) or prefetch_related() (ManyToMany/reverse FK — separate query + Python join)."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Detect and Fix N+1 Query Problems in Django</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I detect and fix N+1 query problems in Django?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/django-n-plus-1/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+        <span><strong>Sources:</strong> 10</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: An N+1 query happens when your code executes 1 query to fetch N objects,
+                then N additional queries to fetch related data for each — resulting in N+1 total queries instead of 2.
+                In Django, this occurs because the ORM lazy-loads related objects by default. Fix with
+                <code>select_related()</code> (ForeignKey/OneToOne — SQL JOIN) or <code>prefetch_related()</code>
+                (ManyToMany/reverse FK — separate query + Python join).</li>
+            <li><strong>Key tool/command</strong>: <code>django-debug-toolbar</code> shows all SQL queries per request
+                with timing. For automated detection: <code>nplusone</code> library logs warnings when N+1 patterns are
+                detected. For zero-config fix: <code>django-auto-prefetch</code> automatically prefetches ForeignKey
+                values as needed. For tests: <code>self.assertNumQueries(N)</code>.</li>
+            <li><strong>Watch out for</strong>: Serializers (DRF) and templates that access related fields — they
+                trigger lazy loads invisibly. A template loop like
+                <code>{% for book in books %}{{ book.author.name }}{% endfor %}</code> fires N author queries. Also:
+                calling <code>.filter()</code> on a prefetched relation invalidates the cache.</li>
+            <li><strong>Works with</strong>: Django 2.0+ (all features stable). Django 5.2 LTS and 6.0 recommended for
+                latest ORM optimizations including async prefetch support.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><code>select_related()</code> works ONLY with ForeignKey and OneToOneField — using it on ManyToMany or
+                reverse FK silently falls back to lazy loading [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]</li>
+            <li>Calling <code>.filter()</code>, <code>.all()</code>, or <code>.exclude()</code> on a prefetched
+                relationship creates a new queryset and re-queries the database, ignoring the prefetch cache [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>, <a
+                    href="https://hakibenita.com/all-you-need-to-know-about-prefetching-in-django">src8</a>]</li>
+            <li>Never call <code>select_related()</code> without explicit field names in production — the bare form
+                follows ALL FK chains and can produce massive JOINs [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>, <a
+                    href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</li>
+            <li>Django 4.2+ async ORM variants (<code>aselect_related</code>, <code>aprefetch_related</code>) are
+                awaitable and must not be mixed with synchronous code [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]</li>
+            <li><code>Prefetch()</code> with <code>to_attr</code> returns a Python list, not a QuerySet — calling
+                <code>.filter()</code> on the result raises <code>AttributeError</code> [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>]</li>
+            <li><code>assertNumQueries()</code> counts vary by Django version, database backend, and middleware — always
+                calibrate expected counts for your specific stack [<a
+                    href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Pattern</th>
+                        <th scope="col">Queries</th>
+                        <th scope="col">Fix</th>
+                        <th scope="col">Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Loop accessing ForeignKey</td>
+                        <td>1 + N</td>
+                        <td><code>select_related('fk_field')</code></td>
+                        <td>1 query (SQL JOIN) [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Loop accessing reverse FK</td>
+                        <td>1 + N</td>
+                        <td><code>prefetch_related('related_set')</code></td>
+                        <td>2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Loop accessing ManyToMany</td>
+                        <td>1 + N</td>
+                        <td><code>prefetch_related('m2m_field')</code></td>
+                        <td>2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Nested relationship (FK &rarr; FK)</td>
+                        <td>1 + N + N&sup2;</td>
+                        <td><code>select_related('fk__nested_fk')</code></td>
+                        <td>1 query [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>FK + filtered reverse set</td>
+                        <td>1 + N</td>
+                        <td><code>Prefetch('related_set', queryset=...)</code></td>
+                        <td>2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Aggregate per related object</td>
+                        <td>1 + N</td>
+                        <td><code>annotate(count=Count('related'))</code></td>
+                        <td>1 query [<a href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Serializer accessing FK</td>
+                        <td>1 + N</td>
+                        <td>Override <code>get_queryset()</code> with <code>select_related</code></td>
+                        <td>1-2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>,
+                            <a
+                                href="https://docs.sentry.io/product/issues/issue-details/performance-issues/n-one-queries/">src4</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Template accessing FK in loop</td>
+                        <td>1 + N</td>
+                        <td>Pass optimized queryset to template context</td>
+                        <td>1-2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>,
+                            <a href="https://scoutapm.com/blog/django-n-1-queries">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Admin list_display with FK</td>
+                        <td>1 + N</td>
+                        <td>Override <code>get_queryset()</code> in ModelAdmin</td>
+                        <td>1-2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Bulk create/update in loop</td>
+                        <td>N inserts/updates</td>
+                        <td><code>bulk_create()</code> / <code>bulk_update()</code></td>
+                        <td>1 query [<a href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Generic relation access</td>
+                        <td>1 + N</td>
+                        <td><code>prefetch_related()</code> with <code>GenericPrefetch</code></td>
+                        <td>2 queries [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Entire model with many FKs</td>
+                        <td>1 + N per FK</td>
+                        <td><code>django-auto-prefetch</code> model base class</td>
+                        <td>2 queries per FK (automatic) [<a
+                                href="https://pypi.org/project/django-auto-prefetch/">src9</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── What relationship type causes the extra queries?
+│   ├── ForeignKey or OneToOneField (forward) → select_related() [src1]
+│   ├── ManyToManyField → prefetch_related() [src1]
+│   ├── Reverse ForeignKey (related_set) → prefetch_related() [src1]
+│   └── Generic relation → prefetch_related() with GenericPrefetch [src2]
+├── Do you need to filter/order the related objects?
+│   ├── YES → Use Prefetch() object with custom queryset [src2]
+│   └── NO → Use plain select_related() or prefetch_related()
+├── Do you need an aggregate (count, sum, avg)?
+│   ├── YES → Use annotate() instead of fetching objects [src3]
+│   └── NO ↓
+├── Is it in DRF serializer?
+│   ├── YES → Override get_queryset() in ViewSet/APIView [src4]
+│   └── NO ↓
+├── Is it in a template?
+│   ├── YES → Optimize queryset in view before passing to context [src5]
+│   └── NO ↓
+├── Is it in Django admin?
+│   ├── YES → Override get_queryset(), add list_select_related [src3]
+│   └── NO ↓
+├── Is it bulk create/update?
+│   ├── YES → Use bulk_create() / bulk_update() [src3]
+│   └── NO ↓
+├── Want zero-config automatic prefetching?
+│   ├── YES → Use django-auto-prefetch model base class [src9]
+│   └── NO ↓
+├── Want to prevent any lazy queries in specific code blocks?
+│   ├── YES → Use django-zen-queries context manager [src10]
+│   └── NO ↓
+└── Profile with django-debug-toolbar or nplusone [src6, src7]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Detect the N+1 problem</h3>
+        <p>Install detection tools to find N+1 queries before they hit production. [<a
+                href="https://scoutapm.com/blog/django-n-1-queries">src5</a>, <a
+                href="https://django-debug-toolbar.readthedocs.io/">src6</a>, <a
+                href="https://github.com/jmcarp/nplusone">src7</a>]</p>
+        <pre><code class="language-bash"># Install detection tools
+pip install django-debug-toolbar nplusone
+# Optional: zero-config prevention
+pip install django-auto-prefetch
+# Optional: explicit query control
+pip install django-zen-queries</code></pre>
+        <pre><code class="language-python"># settings.py — Enable debug toolbar and nplusone
+INSTALLED_APPS = [..., 'debug_toolbar', 'nplusone.ext.django']
+MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'nplusone.ext.django.NPlusOneMiddleware',
+    ...
+]
+INTERNAL_IPS = ['127.0.0.1']
+NPLUSONE_RAISE = True  # Raise in development</code></pre>
+        <p><strong>Verify</strong>: Open django-debug-toolbar SQL panel — if you see N similar queries that differ only
+            by ID, you have an N+1 problem.</p>
+
+        <h3>2. Use select_related() for ForeignKey / OneToOne</h3>
+        <p><code>select_related()</code> performs a SQL JOIN to fetch related objects in the same query. [<a
+                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]</p>
+        <pre><code class="language-python"># BAD — N+1: 1 + N queries
+books = Book.objects.all()
+for book in books:
+    print(book.author.name)  # Each triggers a query!
+
+# GOOD — FIX: 1 query (SQL JOIN)
+books = Book.objects.select_related('author').all()
+for book in books:
+    print(book.author.name)  # Already loaded
+
+# Chain for nested relationships
+books = Book.objects.select_related('author__publisher').all()</code></pre>
+        <p><strong>Verify</strong>: SQL panel shows 1 query with JOIN instead of N+1.</p>
+
+        <h3>3. Use prefetch_related() for ManyToMany / reverse FK</h3>
+        <p><code>prefetch_related()</code> executes a separate query and joins in Python. [<a
+                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]</p>
+        <pre><code class="language-python"># GOOD — FIX: 2 queries total
+books = Book.objects.prefetch_related('tags').all()
+for book in books:
+    print(book.tags.all())  # Already prefetched
+
+# Reverse FK
+authors = Author.objects.prefetch_related('book_set').all()</code></pre>
+        <p><strong>Verify</strong>: Debug toolbar shows exactly 2 queries instead of N+1.</p>
+
+        <h3>4. Use Prefetch() for filtered/custom querysets</h3>
+        <p>The <code>Prefetch</code> object allows filtering, ordering, or annotating prefetched items. [<a
+                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>, <a
+                href="https://hakibenita.com/all-you-need-to-know-about-prefetching-in-django">src8</a>]</p>
+        <pre><code class="language-python">from django.db.models import Prefetch
+
+authors = Author.objects.prefetch_related(
+    Prefetch(
+        'book_set',
+        queryset=Book.objects.filter(published=True).order_by('-pub_date')[:5],
+        to_attr='recent_books'  # Access via author.recent_books (list)
+    )
+)</code></pre>
+        <p><strong>Verify</strong>: 2-3 queries total regardless of data size.</p>
+
+        <h3>5. Use annotate() for aggregates</h3>
+        <p>Don't fetch all related objects just to count them. [<a
+                href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</p>
+        <pre><code class="language-python">from django.db.models import Count, Avg, Q
+
+authors = Author.objects.annotate(
+    book_count=Count('book'),
+    published_count=Count('book', filter=Q(book__published=True)),
+    avg_rating=Avg('book__rating'),
+)</code></pre>
+        <p><strong>Verify</strong>: 1 query with GROUP BY instead of N+1.</p>
+
+        <h3>6. Fix N+1 in Django REST Framework</h3>
+        <p>DRF serializers are a very common source of N+1 queries. [<a
+                href="https://docs.sentry.io/product/issues/issue-details/performance-issues/n-one-queries/">src4</a>]
+        </p>
+        <pre><code class="language-python"># GOOD — Override get_queryset
+class BookViewSet(viewsets.ModelViewSet):
+    serializer_class = BookSerializer
+
+    def get_queryset(self):
+        return Book.objects.select_related('author').all()</code></pre>
+        <p><strong>Verify</strong>: API response triggers 1 query instead of N+1.</p>
+
+        <h3>7. Fix N+1 in Django Admin</h3>
+        <p>Admin list views commonly trigger N+1 queries. [<a
+                href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</p>
+        <pre><code class="language-python">class BookAdmin(admin.ModelAdmin):
+    list_display = ['title', 'author_name', 'publisher_name']
+    list_select_related = ['author', 'publisher']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'author', 'publisher'
+        ).prefetch_related('tags')</code></pre>
+        <p><strong>Verify</strong>: Admin list page uses 1-2 queries regardless of page size.</p>
+
+        <h3>8. Use django-auto-prefetch for zero-config prevention</h3>
+        <p><code>django-auto-prefetch</code> automatically detects when a ForeignKey or OneToOneField is accessed in a
+            loop and speculatively prefetches it for all instances in the same queryset. Supports Django 4.2 through 6.0.
+            [<a href="https://pypi.org/project/django-auto-prefetch/">src9</a>]</p>
+        <pre><code class="language-python"># models.py — Replace standard imports with auto_prefetch
+import auto_prefetch
+
+class Author(auto_prefetch.Model):
+    name = models.CharField(max_length=100)
+    class Meta(auto_prefetch.Model.Meta):
+        pass
+
+class Book(auto_prefetch.Model):
+    title = models.CharField(max_length=200)
+    author = auto_prefetch.ForeignKey(Author, on_delete=models.CASCADE)
+    class Meta(auto_prefetch.Model.Meta):
+        pass
+
+# Now this automatically prefetches — no select_related needed
+books = Book.objects.all()
+for book in books:
+    print(book.author.name)  # Auto-prefetched on first access</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Comprehensive queryset optimizer</h3>
+        <p>Full script: <a href="scripts/comprehensive-queryset-optimizer.py">comprehensive-queryset-optimizer.py</a>
+            (68 lines)</p>
+        <pre><code class="language-python"># Input:  Views with inconsistent query optimization
+# Output: Reusable queryset manager that ensures optimal loading
+
+from django.db import models
+from django.db.models import Count, Prefetch
+
+class BookQuerySet(models.QuerySet):
+    def with_author(self):
+        return self.select_related('author')
+
+    def with_tags(self):
+        return self.prefetch_related('tags')
+
+    def with_recent_reviews(self, limit=5):
+        return self.prefetch_related(
+            Prefetch(
+                'reviews',
+                queryset=Review.objects.select_related('user')
+                    .order_by('-created_at')[:limit],
+                to_attr='recent_reviews'
+            )
+        )
+
+    def with_stats(self):
+        return self.annotate(
+            review_count=Count('reviews'),
+            tag_count=Count('tags', distinct=True),
+        )
+
+    def for_list_view(self):
+        return self.with_author().with_tags().with_stats().only(
+            'id', 'title', 'slug', 'pub_date', 'author__name'
+        )
+
+    def for_detail_view(self):
+        return self.with_author().with_tags().with_recent_reviews().with_stats()
+
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.ForeignKey('Author', on_delete=models.CASCADE)
+    tags = models.ManyToManyField('Tag')
+    objects = BookQuerySet.as_manager()
+
+# Usage: Book.objects.for_list_view()</code></pre>
+
+        <h3>assertNumQueries test helper</h3>
+        <p>Full script: <a href="scripts/assertnumqueries-test-helper.py">assertnumqueries-test-helper.py</a> (36
+            lines)</p>
+        <pre><code class="language-python"># Input:  Need to catch N+1 regressions in tests
+# Output: Test patterns that enforce query count limits
+
+from django.test import TestCase
+
+class BookAPITest(TestCase):
+    def setUp(self):
+        self.author = Author.objects.create(name="Test Author")
+        for i in range(10):
+            Book.objects.create(title=f"Book {i}", author=self.author)
+
+    def test_book_list_no_n_plus_1(self):
+        with self.assertNumQueries(2):
+            response = self.client.get('/api/books/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()['results']), 10)
+
+    def test_book_list_scales(self):
+        for i in range(90):
+            Book.objects.create(title=f"Extra {i}", author=self.author)
+        with self.assertNumQueries(2):  # Still 2, not 101
+            response = self.client.get('/api/books/')</code></pre>
+
+        <h3>Query count middleware for development</h3>
+        <p>Full script: <a
+                href="scripts/query-count-middleware-for-development.py">query-count-middleware-for-development.py</a>
+            (41 lines)</p>
+        <pre><code class="language-python"># Input:  Detect N+1 queries without debug toolbar
+# Output: Middleware that logs warnings on high query counts
+
+import logging
+from django.db import connection, reset_queries
+from django.conf import settings
+
+logger = logging.getLogger('queries')
+
+class QueryCountMiddleware:
+    THRESHOLD = 10
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if not settings.DEBUG:
+            return self.get_response(request)
+
+        reset_queries()
+        response = self.get_response(request)
+        query_count = len(connection.queries)
+        total_time = sum(float(q['time']) for q in connection.queries)
+
+        if query_count &gt; self.THRESHOLD:
+            logger.warning(
+                f"WARNING {request.method} {request.path}: "
+                f"{query_count} queries ({total_time:.3f}s)"
+            )
+            seen = {}
+            for q in connection.queries:
+                normalized = q['sql'][:100]
+                seen[normalized] = seen.get(normalized, 0) + 1
+            dupes = {k: v for k, v in seen.items() if v &gt; 1}
+            if dupes:
+                logger.warning(f"  Duplicate queries: {dupes}")
+        return response</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Accessing ForeignKey in a loop</h3>
+        <pre><code class="language-python"># BAD — N+1 queries [src1, src5]
+books = Book.objects.all()
+for book in books:
+    print(f"{book.title} by {book.author.name}")  # N extra queries!</code></pre>
+
+        <h3>Correct: select_related before the loop</h3>
+        <pre><code class="language-python"># GOOD — 1 query with SQL JOIN [src1]
+books = Book.objects.select_related('author').all()
+for book in books:
+    print(f"{book.title} by {book.author.name}")  # Already loaded</code></pre>
+
+        <h3>Wrong: Counting related objects in a loop</h3>
+        <pre><code class="language-python"># BAD — 1 for authors + N count queries [src3]
+authors = Author.objects.all()
+data = [{'name': a.name, 'books': a.book_set.count()} for a in authors]</code></pre>
+
+        <h3>Correct: annotate() aggregates in one query</h3>
+        <pre><code class="language-python"># GOOD — 1 query with COUNT annotation [src3]
+from django.db.models import Count
+authors = Author.objects.annotate(book_count=Count('book'))
+data = [{'name': a.name, 'books': a.book_count} for a in authors]</code></pre>
+
+        <h3>Wrong: DRF serializer without queryset optimization</h3>
+        <pre><code class="language-python"># BAD — Serializer accesses FK, causing N+1 [src4]
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()  # No select_related!
+    serializer_class = BookSerializer  # Accesses book.author.name</code></pre>
+
+        <h3>Correct: Override get_queryset with eager loading</h3>
+        <pre><code class="language-python"># GOOD — Eager-load everything the serializer needs [src4]
+class BookViewSet(viewsets.ModelViewSet):
+    serializer_class = BookSerializer
+
+    def get_queryset(self):
+        return Book.objects.select_related(
+            'author', 'publisher'
+        ).prefetch_related('tags')</code></pre>
+
+        <h3>Wrong: Filtering a prefetched relationship</h3>
+        <pre><code class="language-python"># BAD — .filter() on prefetched set re-queries the database [src2, src8]
+books = Book.objects.prefetch_related('tags').all()
+for book in books:
+    # This ignores the prefetch cache and hits the DB!
+    python_tags = book.tags.filter(name__startswith='python')</code></pre>
+
+        <h3>Correct: Use Prefetch() with to_attr for filtered access</h3>
+        <pre><code class="language-python"># GOOD — Filter inside Prefetch, access via to_attr [src2, src8]
+from django.db.models import Prefetch
+
+books = Book.objects.prefetch_related(
+    Prefetch(
+        'tags',
+        queryset=Tag.objects.filter(name__startswith='python'),
+        to_attr='python_tags'
+    )
+)
+for book in books:
+    print(book.python_tags)  # List, already filtered, no extra query</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>select_related</code> vs <code>prefetch_related</code> confusion</strong>:
+                <code>select_related</code> works only for ForeignKey/OneToOne (creates SQL JOIN).
+                <code>prefetch_related</code> works for ManyToMany and reverse ForeignKey (separate query + Python
+                join). Using the wrong one fails silently. [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]</li>
+            <li><strong><code>prefetch_related</code> invalidated by <code>.filter()</code></strong>: Calling
+                <code>.filter()</code> on a prefetched queryset triggers a new query. Use <code>Prefetch()</code> object
+                with a filtered queryset and <code>to_attr</code> instead. [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>, <a
+                    href="https://hakibenita.com/all-you-need-to-know-about-prefetching-in-django">src8</a>]</li>
+            <li><strong>Template lazy loading</strong>: Django templates access related objects lazily —
+                <code>{{ book.author.name }}</code> triggers a query even though it doesn't look like Python code.
+                Optimize querysets in views. [<a href="https://scoutapm.com/blog/django-n-1-queries">src5</a>]</li>
+            <li><strong>DRF serializer <code>depth</code></strong>: Setting <code>depth = 1</code> serializes related
+                objects, triggering lazy loads for each row. Override <code>get_queryset()</code> to match. [<a
+                    href="https://docs.sentry.io/product/issues/issue-details/performance-issues/n-one-queries/">src4</a>]
+            </li>
+            <li><strong><code>only()</code> breaking <code>select_related</code></strong>: If you use
+                <code>only()</code> but forget the FK field, Django falls back to lazy loading. Always include FK
+                columns in <code>only()</code>. [<a
+                    href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</li>
+            <li><strong>Ordering by related field</strong>: <code>Book.objects.order_by('author__name')</code> doesn't
+                join — it triggers a separate query. Combine with <code>select_related('author')</code>. [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]</li>
+            <li><strong><code>select_related</code> with <code>values()</code></strong>: Using
+                <code>select_related()</code> alongside <code>values()</code> is pointless — <code>values()</code>
+                returns dicts, not model instances. Use <code>values('author__name')</code> directly. [<a
+                    href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</li>
+            <li><strong>Prefetch cache not shared across querysets</strong>: Each queryset maintains its own prefetch
+                cache. Cloning a queryset (slicing, re-filtering) creates a new cache. Prefetch once and iterate. [<a
+                    href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-python"># Django shell: count queries
+from django.db import connection, reset_queries
+from django.conf import settings
+
+settings.DEBUG = True
+reset_queries()
+
+# ... your code here ...
+books = Book.objects.all()
+for book in books:
+    _ = book.author.name
+
+print(f"Total queries: {len(connection.queries)}")
+for q in connection.queries:
+    print(f"  [{q['time']}s] {q['sql'][:120]}")</code></pre>
+        <pre><code class="language-bash"># Enable SQL logging in settings.py
+# LOGGING = { 'loggers': { 'django.db.backends': { 'level': 'DEBUG' } } }
+
+# Install detection tools
+pip install django-debug-toolbar nplusone
+
+# nplusone logs: "Potential n+1 query detected on `Book.author`"
+
+# Use django-zen-queries to enforce no-query zones
+pip install django-zen-queries
+# In views: with queries_disabled(): render(request, template, context)</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Django 6.0 (2025-12)</td>
+                        <td>Stable</td>
+                        <td><code>StringAgg</code> on all backends; <code>GeneratedField</code> refresh on save;
+                            <code>BigAutoField</code> default. No N+1-specific changes [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 5.2 LTS (2025-04)</td>
+                        <td>Stable (recommended)</td>
+                        <td><code>values()</code>/<code>values_list()</code> ordering now matches specified order;
+                            <code>prefetch_related</code> bug fixes for composite PKs [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 5.1 (2024-08)</td>
+                        <td>Stable</td>
+                        <td>Composite primary keys; <code>bulk_create()</code> used in admin delete action [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 5.0 (2023-12)</td>
+                        <td>Stable</td>
+                        <td><code>GeneratedField</code>; improved query compilation [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 4.2 LTS (2023-04)</td>
+                        <td>Stable</td>
+                        <td>Async ORM: <code>aselect_related()</code>, <code>aprefetch_related()</code> [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 4.1 (2022-08)</td>
+                        <td><code>Prefetch</code> improvements</td>
+                        <td>Async ORM methods; better Prefetch debugging [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 3.2 LTS (2021-04)</td>
+                        <td>Stable</td>
+                        <td><code>prefetch_related</code> performance improvements [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 2.0 (2017-12)</td>
+                        <td>Prefetch object</td>
+                        <td><code>Prefetch()</code> for custom querysets [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#prefetch-objects">src2</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Django 1.11 (2017-04)</td>
+                        <td><code>list_select_related</code></td>
+                        <td>Admin <code>list_select_related</code> attribute [<a
+                                href="https://docs.djangoproject.com/en/5.2/topics/db/optimization/">src3</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Django 1.4 (2012-03)</td>
+                        <td><code>prefetch_related</code></td>
+                        <td>ManyToMany eager loading support [<a
+                                href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">src1</a>]
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Loop accessing related FK objects</td>
+                        <td>Single object detail view (1 related)</td>
+                        <td>Just access the FK normally</td>
+                    </tr>
+                    <tr>
+                        <td>Template displays list with related data</td>
+                        <td>Aggregating, not displaying individuals</td>
+                        <td><code>annotate()</code> + <code>aggregate()</code></td>
+                    </tr>
+                    <tr>
+                        <td>DRF serializer includes nested objects</td>
+                        <td>Related data is optional / rarely needed</td>
+                        <td>Conditional prefetching</td>
+                    </tr>
+                    <tr>
+                        <td>Admin list shows FK columns</td>
+                        <td>QuerySet is already filtered to 1 result</td>
+                        <td>No optimization needed</td>
+                    </tr>
+                    <tr>
+                        <td>Management command iterating large queryset</td>
+                        <td>Read-heavy endpoint already using <code>values()</code></td>
+                        <td><code>values('fk__field')</code> directly</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><code>select_related()</code> uses SQL JOINs which can produce large result sets for deeply nested
+                relationships. Limit depth with explicit field names rather than <code>select_related()</code> (all FK
+                fields).</li>
+            <li><code>prefetch_related()</code> does the joining in Python. For very large related sets, this can cause
+                high memory usage. Use <code>Prefetch()</code> with <code>.filter()</code> or slicing to limit.</li>
+            <li>Calling <code>.all()</code>, <code>.filter()</code>, or <code>.exclude()</code> on a prefetched
+                relationship creates a new queryset and hits the database again, ignoring the prefetch cache.</li>
+            <li><code>assertNumQueries()</code> counts vary with Django version, database backend, and middleware. Set
+                expected counts based on your specific setup.</li>
+            <li>Django 4.2+ provides async variants (<code>aselect_related</code>, <code>aprefetch_related</code>) for
+                async views — they are awaitable and cannot be mixed with sync code.</li>
+            <li><code>django-auto-prefetch</code> is a third-party package (not Django core). It modifies model
+                inheritance and may conflict with custom managers or querysets. Test thoroughly before adopting in
+                existing projects. [<a href="https://pypi.org/project/django-auto-prefetch/">src9</a>]</li>
+            <li>OpenTelemetry and Sentry both offer N+1 detection in production. Consider enabling performance
+                monitoring if debug toolbar and nplusone are insufficient for catching production-only N+1 issues. [<a
+                    href="https://docs.sentry.io/product/issues/issue-details/performance-issues/n-one-queries/">src4</a>]
+            </li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/python-memory-leaks/2026" data-relationship="related_to">Python Memory Leaks</a>
+        <a href="/software/debugging/python-importerror/2026" data-relationship="related_to">Python
+            ImportError/ModuleNotFoundError</a>
+        <a href="/software/debugging/nodejs-econnrefused/2026" data-relationship="related_to">Node.js ECONNREFUSED</a>
+        <a href="/software/debugging/docker-container-wont-start/2026" data-relationship="related_to">Docker Container
+            Won't Start</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

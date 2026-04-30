@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Salesforce-NetSuite Integration: O2C Flow, Field | knowledgelib.io</title>
+  <meta name="description" content="Salesforce-NetSuite O2C integration playbook -- field mapping (Account to Customer, Order to Sales Order), TBA + OAuth auth, ExternalID upserts, rate...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/salesforce-netsuite-integration/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Salesforce-NetSuite Integration: O2C Flow, Field | knowledgelib.io">
+  <meta property="og:description" content="Salesforce-NetSuite O2C integration playbook -- field mapping (Account to Customer, Order to Sales Order), TBA + OAuth auth, ExternalID upserts, rate limits (5-15 concurrent NS requests), and common failures. 7 sources, all cited. Verified 2026-03-02.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/salesforce-netsuite-integration/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-02">
+  <meta property="article:modified_time" content="2026-03-02">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Salesforce-NetSuite Integration: O2C Flow, Field | knowledgelib.io">
+  <meta name="twitter:description" content="Salesforce-NetSuite O2C integration playbook -- field mapping (Account to Customer, Order to Sales Order), TBA + OAuth auth, ExternalID upserts, rate limits (5-15 concurrent NS requests), and common failures. 7 sources, all cited. Verified 2026-03-02.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.88">
+  <meta name="ai:last_verified" content="2026-03-02">
+  <meta name="ai:domain" content="business/erp-integration/salesforce-netsuite-integration">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do you integrate Salesforce and NetSuite - O2C flow, field mapping, auth, common failures?">
+  <meta name="ai:aliases" content="Salesforce to NetSuite order-to-cash integration; How to sync Salesforce orders to NetSuite sales orders; Salesforce NetSuite field mapping and authentication; Celigo Boomi Salesforce NetSuite integration best practices">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/salesforce-netsuite-integration/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-02">
+  <meta name="ai:systems" content="Salesforce (API v62.0); Oracle NetSuite (2025.1)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction,middleware">
+  <meta name="ai:constraints" content="NetSuite concurrency: 5-15 concurrent requests shared across all integrations; Salesforce Apex callout limit: 100 per transaction; NetSuite upsertList max: 1000 records; Customer/Employee share ExternalIDs">
+  <meta name="ai:skip_this_unit_if" content="Need Salesforce-only API reference -> business/erp-integration/salesforce-rest-api-capabilities/2026; Need NetSuite-only API reference -> business/erp-integration/netsuite-suitetalk-rest-capabilities/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Salesforce-NetSuite Integration: O2C Flow, Field Mapping, Auth & Common Failures",
+    "headline": "Salesforce-NetSuite Integration: O2C Flow, Field Mapping, Auth & Common Failures",
+    "description": "Complete integration playbook for Salesforce CRM and Oracle NetSuite ERP covering the order-to-cash flow, field mapping between Account/Customer and Order/Sales Order, authentication (OAuth 2.0 + TBA), ExternalID-based duplicate prevention, rate limits, and common production failure points.",
+    "keywords": ["Salesforce", "NetSuite", "ERP integration", "order-to-cash", "O2C", "field mapping", "API rate limits", "SuiteTalk", "OAuth", "TBA"],
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, Oracle NetSuite 2025.1",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Salesforce REST API Developer Guide - Limits",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_limits.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite SuiteTalk REST API - External IDs Overview",
+        "url": "https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "A Technical Guide to Salesforce-NetSuite Order Integration",
+        "url": "https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Sync Salesforce Order to NetSuite Sales Order - Celigo Help Center",
+        "url": "https://docs.celigo.com/hc/en-us/articles/360035951132-Sync-Salesforce-Order-to-NetSuite-Sales-Order"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite Integration Concurrency Limits 2025",
+        "url": "https://www.katoomi.com/netsuite-integration-concurrency-limits-2025/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NetSuite-Salesforce Integration: Tools, Costs & Fixing Common Failures",
+        "url": "https://www.stockton10.com/blog/netsuite-salesforce-integration-tools-costs-fixing-common-failures"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Salesforce-NetSuite Integration Guide",
+        "url": "https://www.workato.com/the-connector/salesforce-netsuite-integration-guide/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Salesforce-NetSuite Integration: O2C Flow, Field Mapping, Auth & Common Failures",
+    "description": "Integration playbook covering Salesforce CRM to Oracle NetSuite ERP order-to-cash flow with field mapping, authentication patterns, rate limits, and failure points",
+    "keywords": ["Salesforce", "NetSuite", "ERP integration", "order-to-cash", "API capabilities"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "Oracle"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Salesforce-NetSuite Integration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you integrate Salesforce and NetSuite - O2C flow, field mapping, auth, common failures?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use ExternalID-based upserts for all cross-system record sync to prevent duplicates; Celigo or Boomi for out-of-box O2C flows, custom RESTlet/REST API for complex logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce to NetSuite order-to-cash integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use ExternalID-based upserts for all cross-system record sync to prevent duplicates; Celigo or Boomi for out-of-box O2C flows, custom RESTlet/REST API for complex logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to sync Salesforce orders to NetSuite sales orders",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use ExternalID-based upserts for all cross-system record sync to prevent duplicates; Celigo or Boomi for out-of-box O2C flows, custom RESTlet/REST API for complex logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce NetSuite field mapping and authentication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use ExternalID-based upserts for all cross-system record sync to prevent duplicates; Celigo or Boomi for out-of-box O2C flows, custom RESTlet/REST API for complex logic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Celigo Boomi Salesforce NetSuite integration best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use ExternalID-based upserts for all cross-system record sync to prevent duplicates; Celigo or Boomi for out-of-box O2C flows, custom RESTlet/REST API for complex logic."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Salesforce-NetSuite Integration: O2C Flow, Field Mapping, Auth &amp; Common Failures</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do you integrate Salesforce and NetSuite - O2C flow, field mapping, auth, common failures?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/salesforce-netsuite-integration/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Salesforce (API v62.0) + Oracle NetSuite (2025.1)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.88 out of 1">0.88</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-02</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use ExternalID-based upserts for all cross-system record sync to prevent duplicates; Celigo or Boomi for out-of-box O2C flows, custom RESTlet/REST API for complex logic.</li>
+    <li><strong>Key limit</strong>: NetSuite concurrency cap -- 5 concurrent web service requests (base account), 15 with SuiteCloud Plus -- shared across ALL integrations.</li>
+    <li><strong>Watch out for</strong>: Salesforce Account is NOT equal to a NetSuite Customer -- field-level mapping mismatches (name length 255 vs 83, address format, picklist values) cause silent data corruption.</li>
+    <li><strong>Best for</strong>: Order-to-cash automation where Salesforce owns the sales pipeline and NetSuite owns fulfillment, invoicing, and financial close.</li>
+    <li><strong>Authentication</strong>: Salesforce OAuth 2.0 JWT Bearer (server-to-server) + NetSuite Token-Based Authentication (TBA, OAuth 1.0a) -- NLAuth deprecated since 2020.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This integration playbook covers the bidirectional data flow between Salesforce CRM and Oracle NetSuite ERP for the order-to-cash (O2C) process. Salesforce serves as the system of record for leads, opportunities, and customer relationships. NetSuite serves as the system of record for sales orders, fulfillment, invoices, and payments.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce (API v62.0)</td><td>CRM -- source of truth for customers, opportunities, quotes</td><td>REST API, Composite API, Bulk API 2.0</td><td>Outbound + Inbound (sync-back)</td></tr>
+      <tr><td>Oracle NetSuite (2025.1)</td><td>ERP -- financial master for orders, fulfillment, invoicing</td><td>SuiteTalk SOAP, SuiteTalk REST, RESTlets, SuiteQL</td><td>Inbound + Outbound (fulfillment/invoice)</td></tr>
+      <tr><td>Middleware (iPaaS)</td><td>Integration orchestrator</td><td>Celigo / Boomi / MuleSoft / Workato</td><td>Bidirectional orchestration</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">System</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Max Records/Request</th><th scope="col">Concurrency</th><th scope="col">Real-time?</th><th scope="col">Bulk?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>REST API v62.0</td><td>Salesforce</td><td>HTTPS/JSON</td><td>Individual record CRUD, queries</td><td>2,000 per SOQL page</td><td>25 concurrent long-running</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Composite API</td><td>Salesforce</td><td>HTTPS/JSON</td><td>Multi-object operations</td><td>25 subrequests</td><td>Shared with REST</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Bulk API 2.0</td><td>Salesforce</td><td>HTTPS/CSV</td><td>ETL, data migration</td><td>150 MB per file</td><td>15,000 batches/24h</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Platform Events / CDC</td><td>Salesforce</td><td>Bayeux/CometD</td><td>Real-time notifications</td><td>N/A</td><td>Edition-dependent</td><td>Yes</td><td>N/A</td></tr>
+      <tr><td>SuiteTalk SOAP</td><td>NetSuite</td><td>HTTPS/XML</td><td>Full record CRUD, upsert, search</td><td>1,000 per upsertList</td><td>5-15 per account</td><td>Yes</td><td>Partial</td></tr>
+      <tr><td>SuiteTalk REST</td><td>NetSuite</td><td>HTTPS/JSON</td><td>Modern CRUD, SuiteQL queries</td><td>1,000 per page</td><td>Shared with SOAP</td><td>Yes</td><td>No</td></tr>
+      <tr><td>RESTlets</td><td>NetSuite</td><td>HTTPS/JSON</td><td>Custom logic endpoints</td><td>Depends on script</td><td>5 per user</td><td>Yes</td><td>No</td></tr>
+      <tr><td>SuiteQL</td><td>NetSuite</td><td>HTTPS/JSON</td><td>Analytics queries</td><td>1,000 rows/page (100K ceiling)</td><td>Shared</td><td>Yes</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">System</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max records per SOQL query page</td><td>2,000</td><td>Salesforce</td><td>Use queryMore/nextRecordsUrl for pagination</td></tr>
+      <tr><td>Max Composite subrequests</td><td>25</td><td>Salesforce</td><td>All-or-nothing by default</td></tr>
+      <tr><td>Max REST request body</td><td>50 MB</td><td>Salesforce</td><td></td></tr>
+      <tr><td>Max Bulk API file size</td><td>150 MB</td><td>Salesforce</td><td>Split larger files</td></tr>
+      <tr><td>Max records per upsertList</td><td>1,000</td><td>NetSuite SOAP</td><td>Use batching for larger sets</td></tr>
+      <tr><td>Max records per REST page</td><td>1,000</td><td>NetSuite REST</td><td>Use offset pagination</td></tr>
+      <tr><td>SuiteQL max result rows</td><td>100,000</td><td>NetSuite</td><td>Hard ceiling; use filters</td></tr>
+      <tr><td>Apex callout timeout</td><td>120 seconds</td><td>Salesforce</td><td>Per individual callout</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce API calls</td><td>No daily max cap (since Spring '24)</td><td>30-day rolling</td><td>Aggregated monthly; per-edition entitlement applies</td></tr>
+      <tr><td>Salesforce Bulk API batches</td><td>15,000</td><td>24h rolling</td><td>Shared across all editions</td></tr>
+      <tr><td>NetSuite concurrent requests</td><td>5 (base) / 15 (SuiteCloud Plus)</td><td>Per-account, real-time</td><td>Shared across SOAP + REST + RESTlets</td></tr>
+      <tr><td>NetSuite RESTlet per-user concurrency</td><td>5</td><td>Per-user, real-time</td><td>Per integration user</td></tr>
+      <tr><td>NetSuite frequency throttle</td><td>~10 req/s sustained</td><td>60-second window</td><td>Returns 429 when exceeded</td></tr>
+      <tr><td>Salesforce Streaming events</td><td>100K-10M</td><td>24h</td><td>Depends on add-on licenses</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Transaction / Governor Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Per-Transaction Value</th><th scope="col">System</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SOQL queries</td><td>100</td><td>Salesforce</td><td>Includes queries from triggers -- cascading triggers consume from same pool</td></tr>
+      <tr><td>DML statements</td><td>150</td><td>Salesforce</td><td>Each insert/update/delete counts as 1</td></tr>
+      <tr><td>Callouts (HTTP)</td><td>100</td><td>Salesforce</td><td>External HTTP requests within a transaction</td></tr>
+      <tr><td>CPU time</td><td>10,000 ms (sync) / 60,000 ms (async)</td><td>Salesforce</td><td>Exceeded = transaction abort</td></tr>
+      <tr><td>Heap size</td><td>6 MB (sync) / 12 MB (async)</td><td>Salesforce</td><td></td></tr>
+      <tr><td>Governance units (RESTlet)</td><td>5,000 per script</td><td>NetSuite</td><td>SuiteScript 2.x</td></tr>
+      <tr><td>Governance units (Scheduled)</td><td>10,000 per script</td><td>NetSuite</td><td>Use Map/Reduce for heavy processing</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>OAuth 2.0 JWT Bearer</td><td>Server-to-server (recommended)</td><td>Session timeout (2h default)</td><td>New JWT per request</td><td>Requires Connected App + certificate</td></tr>
+      <tr><td>Salesforce</td><td>OAuth 2.0 Web Server</td><td>User-context operations</td><td>Access: 2h, Refresh: until revoked</td><td>Yes</td><td>Requires callback URL</td></tr>
+      <tr><td>Salesforce</td><td>Client Credentials</td><td>First-party server-to-server</td><td>Access: 2h</td><td>No</td><td>Simpler than JWT</td></tr>
+      <tr><td>NetSuite</td><td>Token-Based Auth (TBA)</td><td>All integrations (recommended)</td><td>Does not expire</td><td>N/A -- reused</td><td>OAuth 1.0a; consumer + token pairs</td></tr>
+      <tr><td>NetSuite</td><td>OAuth 2.0</td><td>REST API only</td><td>Access: 60 min</td><td>Yes</td><td>Not supported for SOAP</td></tr>
+      <tr><td>NetSuite</td><td>NLAuth</td><td>NEVER -- deprecated</td><td>N/A</td><td>N/A</td><td>Disallowed since 2020</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>NetSuite TBA tokens are account-wide: changing the role's permissions affects all integrations using that token. [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li>Salesforce JWT flow requires per-environment certificates: self-signed for sandbox, CA-signed for production. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_limits.htm">src1</a>]</li>
+    <li>NetSuite IP whitelisting can silently break integrations -- any IP change produces opaque authentication errors. [<a href="https://www.katoomi.com/netsuite-integration-concurrency-limits-2025/">src5</a>]</li>
+    <li>OAuth 2.0 refresh tokens expire after 90 days of non-use in Salesforce -- implement a keep-alive token refresh. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_limits.htm">src1</a>]</li>
+    <li>NetSuite Customer and Employee share external/internal IDs -- collisions cause creation failures. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>NetSuite concurrency is the primary bottleneck</strong>: 5 concurrent requests (base) shared across ALL integrations. One chatty integration can block all others.</li>
+    <li><strong>Salesforce Apex callout limit</strong>: 100 HTTP calls per transaction. Batch changes and process asynchronously.</li>
+    <li><strong>NetSuite upsertList maxes at 1,000 records</strong>: For larger volumes, implement chunked batching.</li>
+    <li><strong>Salesforce formula fields are read-only via API</strong>: Cannot write to formula, roll-up summary, or auto-number fields.</li>
+    <li><strong>NetSuite mandatory fields vary by custom form</strong>: Test against the exact form your integration uses.</li>
+    <li><strong>Bidirectional sync requires conflict resolution</strong>: Without it, update loops consume API limits and cause data oscillation.</li>
+    <li><strong>NetSuite sandbox has separate (lower) limits</strong>: Load testing in sandbox does not predict production behavior.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Salesforce &lt;-&gt; NetSuite O2C Integration
+|
++-- What entity are you syncing?
+|   +-- Accounts/Customers: SF Account --&gt; NS Customer (upsert by ExternalID)
+|   +-- Products/Items: NS Item --&gt; SF Product2 (scheduled batch, match by SKU)
+|   +-- Orders (O2C core): SF Order/Opp --&gt; NS Sales Order (pre-check customer + items)
+|   +-- Fulfillment: NS Item Fulfillment --&gt; SF Order status + tracking
+|   +-- Invoices/Payments: NS --&gt; SF (scheduled batch)
+|
++-- What middleware?
+|   +-- Celigo: Pre-built SF-NS app, O2C flows included
+|   +-- Boomi: Certified connectors, visual mapping
+|   +-- MuleSoft: Enterprise-grade, Anypoint Platform
+|   +-- Workato: Recipe-based, business-user friendly
+|   +-- Custom: Apex + SuiteScript / RESTlets
+|
++-- Volume?
+|   +-- &lt; 1,000 orders/day: Real-time per-record sync
+|   +-- 1,000-10,000/day: Micro-batching (every 5-15 min)
+|   +-- &gt; 10,000/day: Bulk API 2.0 + batched upsertList
+|
++-- Error tolerance?
+    +-- Zero-loss: ExternalID upserts + DLQ + idempotency
+    +-- Best-effort: Fire-and-forget with 3x exponential backoff</code></pre>
+  </section>
+
+  <!-- Quick Reference: O2C Flow -->
+  <section id="quick-reference">
+  <h2>Quick Reference: O2C Integration Flow</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Step</th><th scope="col">Source</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">Data Objects</th><th scope="col">Failure Handling</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Salesforce</td><td>Account created/updated</td><td>NetSuite</td><td>Customer (upsert by ExternalID)</td><td>Retry 3x, then DLQ</td></tr>
+      <tr><td>2</td><td>NetSuite</td><td>Item created/updated (scheduled)</td><td>Salesforce</td><td>Product2 (upsert by SKU)</td><td>Log mismatch, skip</td></tr>
+      <tr><td>3</td><td>Salesforce</td><td>Opportunity Closed-Won / Order Activated</td><td>NetSuite</td><td>Sales Order + Line Items</td><td>Validate deps first; fail fast</td></tr>
+      <tr><td>4</td><td>NetSuite</td><td>Sales Order fulfilled</td><td>Salesforce</td><td>Order status + tracking #</td><td>Poll every 5 min or event-driven</td></tr>
+      <tr><td>5</td><td>NetSuite</td><td>Invoice generated</td><td>Salesforce</td><td>Custom Invoice object</td><td>Scheduled batch (daily)</td></tr>
+      <tr><td>6</td><td>NetSuite</td><td>Payment applied</td><td>Salesforce</td><td>Payment status</td><td>Scheduled batch (daily)</td></tr>
+      <tr><td>7</td><td>Either</td><td>Credit memo / refund</td><td>Both</td><td>Refund + order status</td><td>Manual review recommended</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Set up authentication credentials</h3>
+  <p>Configure OAuth 2.0 JWT Bearer for Salesforce and Token-Based Authentication for NetSuite. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_limits.htm">src1</a>, <a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</p>
+  <pre><code class="language-bash"># Salesforce: Test JWT auth
+curl -X POST https://login.salesforce.com/services/oauth2/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  -d "assertion=${JWT_TOKEN}"
+
+# NetSuite: Test TBA auth with simple GET
+curl --request GET \
+  --url "https://${ACCOUNT_ID}.suitetalk.api.netsuite.com/services/rest/record/v1/customer?limit=1" \
+  --header "Authorization: OAuth realm=..."</code></pre>
+  <p><strong>Verify</strong>: Both calls return <code>200 OK</code> with valid JSON.</p>
+
+  <h3>2. Sync Salesforce Accounts to NetSuite Customers</h3>
+  <p>Always sync customers before orders. Use ExternalID for duplicate prevention. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>, <a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</p>
+  <pre><code class="language-javascript">// Upsert SF Account as NS Customer via SuiteTalk REST
+const customerPayload = {
+  externalId: sfAccount.Id,
+  companyName: sfAccount.Name.substring(0, 83), // NS max 83 chars
+  subsidiary: { id: '1' },
+  addressbook: { items: [{ addressbookAddress: { /* mapped fields */ } }] }
+};
+await nsClient.put(`/services/rest/record/v1/customer/eid:${sfAccount.Id}`, customerPayload);</code></pre>
+  <p><strong>Verify</strong>: <code>GET /customer/eid:{sfAccountId}</code> returns the customer record.</p>
+
+  <h3>3. Sync Salesforce Order to NetSuite Sales Order</h3>
+  <p>Map Order line items to Sales Order lines. Pre-check customer and items exist. [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>, <a href="https://docs.celigo.com/hc/en-us/articles/360035951132-Sync-Salesforce-Order-to-NetSuite-Sales-Order">src4</a>]</p>
+  <pre><code class="language-javascript">// Create NS Sales Order from SF Order
+const soPayload = {
+  entity: { id: customer.id },
+  externalId: sfOrder.Id,
+  tranDate: sfOrder.EffectiveDate,
+  item: { items: sfLineItems.map(li =&gt; ({
+    item: { externalId: li.Product2.ProductCode },
+    quantity: li.Quantity,
+    rate: li.UnitPrice
+  })) }
+};
+const response = await nsClient.post('/services/rest/record/v1/salesOrder', soPayload);
+// Write NS ID back to Salesforce
+await sfClient.patch(`/sobjects/Order/${sfOrder.Id}`, { NetSuite_Sales_Order_ID__c: response.id });</code></pre>
+  <p><strong>Verify</strong>: <code>GET /salesOrder/{id}</code> returns order with correct line items.</p>
+
+  <h3>4. Sync fulfillment status back to Salesforce</h3>
+  <p>Poll NetSuite for new Item Fulfillment records and update Salesforce Order status. [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</p>
+  <pre><code class="language-javascript">// SuiteQL: find recent fulfillments and update SF Orders
+const query = `SELECT if.tranid, so.externalId as sfOrderId, pkg.packageTrackingNumber
+  FROM transaction if JOIN transaction so ON if.createdFrom = so.id
+  LEFT JOIN itemFulfillmentPackage pkg ON pkg.itemFulfillment = if.id
+  WHERE if.type = 'ItemShip' AND if.lastModifiedDate &gt; '${lastSyncTime}'`;
+const fulfillments = await nsClient.suiteql(query);
+for (const f of fulfillments) {
+  await sfClient.patch(`/sobjects/Order/${f.sfOrderId}`, {
+    Status: 'Fulfilled', Tracking_Number__c: f.packageTrackingNumber
+  });
+}</code></pre>
+  <p><strong>Verify</strong>: Salesforce Orders show updated status and tracking numbers.</p>
+
+  <h3>5. Implement error handling and retry logic</h3>
+  <p>Differentiate transient errors (retry) from data errors (fail fast). [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>, <a href="https://www.stockton10.com/blog/netsuite-salesforce-integration-tools-costs-fixing-common-failures">src6</a>]</p>
+  <pre><code class="language-javascript">const retryWithBackoff = async (fn, maxRetries = 5) =&gt; {
+  for (let attempt = 0; attempt &lt; maxRetries; attempt++) {
+    try { return await fn(); }
+    catch (error) {
+      const isTransient = error.status === 429 || error.status === 503
+        || error.code === 'SSS_REQUEST_LIMIT_EXCEEDED';
+      if (!isTransient || attempt === maxRetries - 1) {
+        await deadLetterQueue.push({ error: error.message, attempt });
+        throw error;
+      }
+      const delay = Math.min(1000 * Math.pow(2, attempt), 60000);
+      await new Promise(r =&gt; setTimeout(r, delay * (0.5 + Math.random() * 0.5)));
+    }
+  }
+};</code></pre>
+  <p><strong>Verify</strong>: 429 errors retry automatically; data errors go to DLQ immediately.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Upsert Salesforce Account to NetSuite Customer</h3>
+  <pre><code class="language-python"># Input:  Salesforce Account dict (from simple_salesforce)
+# Output: NetSuite Customer internalId or error
+
+import requests  # requests==2.31.0
+from requests_oauthlib import OAuth1  # requests-oauthlib==1.3.1
+
+def upsert_sf_account_to_ns(sf_account, ns_config):
+    auth = OAuth1(ns_config['consumer_key'], ns_config['consumer_secret'],
+                  ns_config['token_id'], ns_config['token_secret'],
+                  realm=ns_config['account_id'], signature_method='HMAC-SHA256')
+    customer = {
+        'externalId': sf_account['Id'],
+        'companyName': sf_account['Name'][:83],
+        'subsidiary': {'id': '1'},
+    }
+    url = f"https://{ns_config['account_id']}.suitetalk.api.netsuite.com/services/rest/record/v1/customer/eid:{sf_account['Id']}"
+    resp = requests.put(url, json=customer, auth=auth, timeout=30)
+    if resp.status_code in (200, 204):
+        return {'status': 'success'}
+    elif resp.status_code == 429:
+        raise RetryableError('Rate limit')
+    else:
+        raise DataError(f'{resp.status_code}: {resp.text}')</code></pre>
+
+  <h3>cURL: Test NetSuite TBA Authentication</h3>
+  <pre><code class="language-bash"># Input:  NetSuite account ID, TBA credentials
+# Output: Customer list confirming auth works
+curl -s --request GET \
+  --url "https://${ACCOUNT_ID}.suitetalk.api.netsuite.com/services/rest/record/v1/customer?limit=1" \
+  --header "Authorization: OAuth realm=\"${ACCOUNT_ID}\"..." \
+  --header "Content-Type: application/json"
+# Expected: 200 OK with {"count":1,"items":[...]}</code></pre>
+
+  <h3>cURL: Test Salesforce JWT Bearer Auth</h3>
+  <pre><code class="language-bash"># Input:  Connected App credentials + JWT assertion
+# Output: Access token for API calls
+curl -s -X POST https://login.salesforce.com/services/oauth2/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  -d "assertion=${JWT_ASSERTION}"
+# Expected: {"access_token":"...","instance_url":"https://yourorg.my.salesforce.com"}</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Field Mapping Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Source Field (Salesforce)</th><th scope="col">Target Field (NetSuite)</th><th scope="col">Type</th><th scope="col">Transform</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Account.Id</td><td>customer.externalId</td><td>String (18 char)</td><td>Direct</td><td>Use 18-char ID, not 15-char</td></tr>
+      <tr><td>Account.Name</td><td>customer.companyName</td><td>String</td><td>Truncate to 83 chars</td><td>NS max 83 vs SF 255</td></tr>
+      <tr><td>Account.BillingStreet</td><td>addressbookAddress.addr1</td><td>String</td><td>Direct</td><td>NS splits into addr1/addr2/addr3</td></tr>
+      <tr><td>Account.BillingCountry</td><td>addressbookAddress.country</td><td>Enum</td><td>ISO to NS enum</td><td>NS uses _unitedStates, not "US"</td></tr>
+      <tr><td>Order.OrderNumber</td><td>salesOrder.otherRefNum</td><td>String</td><td>Direct</td><td>Not tranId (NS auto-generated)</td></tr>
+      <tr><td>Order.EffectiveDate</td><td>salesOrder.tranDate</td><td>Date</td><td>YYYY-MM-DD</td><td>SF UTC vs NS account timezone</td></tr>
+      <tr><td>OrderItem.Product2.ProductCode</td><td>item.items[].item.externalId</td><td>String</td><td>SKU match</td><td>Item must exist in NS first</td></tr>
+      <tr><td>OrderItem.Quantity</td><td>item.items[].quantity</td><td>Number</td><td>Direct</td><td>NS rejects negative on SO lines</td></tr>
+      <tr><td>OrderItem.UnitPrice</td><td>item.items[].rate</td><td>Currency</td><td>Direct (decimal)</td><td>Multi-currency: verify exchange rate</td></tr>
+      <tr><td>Opportunity.Amount</td><td>salesOrder.total</td><td>Currency</td><td>Do NOT set -- NS calculates</td><td>NS calculates from line items</td></tr>
+      <tr><td>Order.Status (custom)</td><td>salesOrder.status</td><td>Enum</td><td>Lookup table</td><td>Picklist values do NOT match</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li><strong>DateTime timezone mismatch</strong>: Salesforce stores UTC; NetSuite uses account timezone. A midnight UTC date can show as previous day in US Pacific accounts. [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>Country code formats</strong>: Salesforce uses ISO alpha-2 ("US"); NetSuite uses underscore-prefixed names ("_unitedStates"). Build a lookup table. [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</li>
+    <li><strong>Multi-select picklists</strong>: Salesforce semicolon-delimited; NetSuite pipe-delimited or list IDs. Parse and re-format before sending. [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>Subsidiary assignment</strong>: NetSuite requires subsidiary on every transaction; Salesforce has no native concept. Map from custom field or default by business rules. [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">System</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>429</td><td>Both</td><td>Rate limit exceeded</td><td>Too many concurrent requests</td><td>Exponential backoff: 2^n seconds, max 5 retries</td></tr>
+      <tr><td>SSS_REQUEST_LIMIT_EXCEEDED</td><td>NetSuite</td><td>Concurrency limit breach</td><td>&gt;5 (or 15) concurrent requests</td><td>Queue requests, reduce parallelism</td></tr>
+      <tr><td>RCRD_DSNT_EXIST</td><td>NetSuite</td><td>Record not found</td><td>Customer/item not synced before order</td><td>Sync dependencies first</td></tr>
+      <tr><td>DUPLICATE_EXTERNAL_ID</td><td>NetSuite</td><td>ExternalID collision</td><td>ID already on different record type</td><td>Prefix IDs by type: SF_ACCT_{id}</td></tr>
+      <tr><td>INVALID_FIELD</td><td>Salesforce</td><td>Field not writable</td><td>Wrong API version or missing FLS</td><td>Verify field name + field-level security</td></tr>
+      <tr><td>UNABLE_TO_LOCK_ROW</td><td>Salesforce</td><td>Record locked</td><td>Concurrent updates to same record</td><td>Retry with jitter</td></tr>
+      <tr><td>USER_ERROR</td><td>NetSuite</td><td>Missing required field</td><td>Custom form requires unlisted field</td><td>Test against exact custom form</td></tr>
+      <tr><td>INSUFFICIENT_PERMISSION</td><td>NetSuite</td><td>Role lacks access</td><td>Integration role missing permissions</td><td>Audit role; add record + field access</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Customer not synced before order</strong>: The #1 failure. Order sync fires but Account not in NetSuite. Fix: <code>Always run customer sync as prerequisite. Validate customer exists before order creation.</code> [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>Item SKU mismatch</strong>: ProductCode in Salesforce doesn't match any NetSuite Item. Fix: <code>Maintain cross-reference table. Run item sync before order sync.</code> [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>NetSuite mandatory field varies by custom form</strong>: Works in sandbox, fails in production. Fix: <code>Use exact same custom form. Explicitly set customForm field.</code> [<a href="https://www.stockton10.com/blog/netsuite-salesforce-integration-tools-costs-fixing-common-failures">src6</a>]</li>
+    <li><strong>Silent data truncation</strong>: SF Account.Name (255 chars) truncated to NS companyName (83 chars). Fix: <code>Explicitly truncate with logging when source exceeds target max.</code> [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>Fulfillment sync-back loop</strong>: Updating SF Order triggers new NS sync, creating infinite loop. Fix: <code>Use "last_synced_by" field. Implement sync lock flag.</code> [<a href="https://www.stockton10.com/blog/netsuite-salesforce-integration-tools-costs-fixing-common-failures">src6</a>]</li>
+    <li><strong>OAuth token expiry in long-running batches</strong>: Batch exceeding 2h exhausts SF token. Fix: <code>Refresh token proactively before each chunk.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_limits.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Creating Sales Order without checking customer exists</h3>
+  <pre><code class="language-javascript">// BAD -- assumes customer already synced to NetSuite
+const soPayload = { entity: { externalId: sfOrder.AccountId }, item: { items: [...] } };
+await nsClient.post('/services/rest/record/v1/salesOrder', soPayload); // May fail!</code></pre>
+
+  <h3>Correct: Validate customer, sync if missing, then create order</h3>
+  <pre><code class="language-javascript">// GOOD -- ensures customer exists before order creation
+let customer = await nsClient.get(`/customer/eid:${sfOrder.AccountId}`).catch(e =&gt; null);
+if (!customer) customer = await upsertCustomer(sfAccount, nsClient); // Sync now
+const soPayload = { entity: { id: customer.id }, item: { items: [...] } };
+await nsClient.post('/services/rest/record/v1/salesOrder', soPayload);</code></pre>
+
+  <h3>Wrong: Polling all records to find changes</h3>
+  <pre><code class="language-javascript">// BAD -- queries ALL customers every sync, wastes API calls
+const allCustomers = await sfClient.query('SELECT Id, Name FROM Account');
+for (const acct of allCustomers.records) await upsertCustomer(acct);</code></pre>
+
+  <h3>Correct: Use SystemModstamp filter for delta sync</h3>
+  <pre><code class="language-javascript">// GOOD -- only processes changed records
+const changed = await sfClient.query(
+  `SELECT Id, Name, Phone FROM Account WHERE SystemModstamp &gt; ${lastSync}`
+);
+for (const acct of changed.records) await upsertCustomer(acct);</code></pre>
+
+  <h3>Wrong: Synchronous callouts inside Salesforce triggers</h3>
+  <pre><code class="language-java">// BAD -- Apex trigger with synchronous callout (FAILS in trigger context)
+trigger OrderSync on Order (after update) {
+  Http h = new Http();
+  h.send(req); // Callouts not allowed in trigger context!
+}</code></pre>
+
+  <h3>Correct: Use @future or Queueable for async callouts</h3>
+  <pre><code class="language-java">// GOOD -- trigger queues async callout
+trigger OrderSync on Order (after update) {
+  Set&lt;Id&gt; ids = new Set&lt;Id&gt;();
+  for (Order o : Trigger.new) if (o.Status == 'Activated') ids.add(o.Id);
+  if (!ids.isEmpty()) NetSuiteOrderSync.syncOrdersAsync(ids);
+}
+// Separate class with @future(callout=true)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Sandbox != Production API limits</strong>: NetSuite sandbox has lower concurrency. Fix: <code>Load-test against production-equivalent service tier.</code> [<a href="https://www.katoomi.com/netsuite-integration-concurrency-limits-2025/">src5</a>]</li>
+    <li><strong>Not using ExternalID for upserts</strong>: "add" instead of "upsert" creates duplicates on retry after timeout. Fix: <code>Always use upsert with ExternalID for all cross-system records.</code> [<a href="https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N3433806.html">src2</a>]</li>
+    <li><strong>Ignoring custom form assignment</strong>: Different forms require different fields. Fix: <code>Always include customForm in API payload. Use same form in all environments.</code> [<a href="https://www.stockton10.com/blog/netsuite-salesforce-integration-tools-costs-fixing-common-failures">src6</a>]</li>
+    <li><strong>Multi-currency without exchange rate sync</strong>: Different rates in each system. Fix: <code>Sync exchange rates from NetSuite (financial master). Send amounts in transaction currency.</code> [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>No idempotency on retry</strong>: Network timeout at 119s (limit is 120s) means unknown success. Fix: <code>Use ExternalID upserts. Generate unique request IDs for non-upsert operations.</code> [<a href="https://www.houseblend.io/articles/salesforce-netsuite-order-integration-guide">src3</a>]</li>
+    <li><strong>Line items out of sequence</strong>: NS requires specific ordering for discount/subtotal lines. Fix: <code>Preserve original sort order. Insert discount lines after their parent items.</code> [<a href="https://docs.celigo.com/hc/en-us/articles/360035951132-Sync-Salesforce-Order-to-NetSuite-Sales-Order">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># === SALESFORCE ===
+# Check API usage / remaining limits
+curl -s -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${SF_INSTANCE_URL}/services/data/v62.0/limits" | jq '{DailyApiRequests}'
+
+# Verify field accessibility
+curl -s -H "Authorization: Bearer ${SF_TOKEN}" \
+  "${SF_INSTANCE_URL}/services/data/v62.0/sobjects/Order/describe" \
+  | jq '.fields[] | select(.name == "NetSuite_Sales_Order_ID__c")'
+
+# === NETSUITE ===
+# Test TBA authentication
+curl -s --request GET \
+  "https://${NS_ACCOUNT}.suitetalk.api.netsuite.com/services/rest/record/v1/customer?limit=1" \
+  --header "Authorization: OAuth ..." | jq '.count'
+
+# Verify record by ExternalID
+curl -s --request GET \
+  "https://${NS_ACCOUNT}.suitetalk.api.netsuite.com/services/rest/record/v1/customer/eid:${SF_ID}" \
+  --header "Authorization: OAuth ..." | jq '{id, companyName}'
+
+# Check recent integration errors via SuiteQL
+curl -s -X POST "https://${NS_ACCOUNT}.suitetalk.api.netsuite.com/services/rest/query/v1/suiteql" \
+  --header "Authorization: OAuth ..." -d '{"q": "SELECT id, tranid FROM transaction WHERE type='\''SalesOrd'\'' ORDER BY lastModifiedDate DESC"}'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Version</th><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce REST API</td><td>v62.0</td><td>2026-02</td><td>Current</td><td>None</td><td>Spring '26</td></tr>
+      <tr><td>Salesforce REST API</td><td>v61.0</td><td>2025-10</td><td>Supported</td><td>None</td><td>Winter '26</td></tr>
+      <tr><td>Salesforce REST API</td><td>v58.0</td><td>2024-02</td><td>Supported</td><td>Daily cap removed</td><td>Minimum for cap-free usage</td></tr>
+      <tr><td>NetSuite SuiteTalk REST</td><td>2025.1</td><td>2025-03</td><td>Current</td><td>New record types</td><td>REST coverage expanding</td></tr>
+      <tr><td>NetSuite SuiteTalk SOAP</td><td>2025.1</td><td>2025-03</td><td>Current / Stable</td><td>None</td><td>WSDL versioned</td></tr>
+      <tr><td>Celigo SF-NS App</td><td>2025.3</td><td>2025-11</td><td>Current</td><td>New fulfillment model</td><td>Check release notes</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce is CRM + NetSuite is ERP, need O2C automation</td><td>Both sales and finance are in NetSuite</td><td>NetSuite native CRM module</td></tr>
+      <tr><td>Order volume &lt;50K/day, need near-real-time sync</td><td>Data migration of &gt;1M historical records</td><td>Bulk API 2.0 + CSV import (one-time)</td></tr>
+      <tr><td>You have iPaaS or integration dev team</td><td>Simple lead/contact sync only, no orders</td><td>Zapier or native connector</td></tr>
+      <tr><td>Multi-step O2C: quote-&gt;order-&gt;fulfillment-&gt;invoice-&gt;payment</td><td>One-way push with no sync-back needed</td><td>SF outbound message + NS RESTlet</td></tr>
+      <tr><td>Need bidirectional status sync with conflict resolution</td><td>Real-time inventory sync (sub-second latency)</td><td>Direct NS inventory API or EDI</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">NetSuite</th><th scope="col">Integration Impact</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API Style</td><td>REST + SOAP + Bulk + Streaming</td><td>SOAP + REST + RESTlet + SuiteQL</td><td>Handle both paradigms</td></tr>
+      <tr><td>Rate Limits</td><td>No daily cap (Spring '24+), 25 concurrent</td><td>5-15 concurrent (account-wide)</td><td>NS is the bottleneck</td></tr>
+      <tr><td>Bulk Import</td><td>Bulk API 2.0 (150MB, 15K batches/24h)</td><td>upsertList (1K records/call)</td><td>SF more mature; NS needs chunking</td></tr>
+      <tr><td>Event-Driven</td><td>Platform Events + CDC (mature)</td><td>User Event Scripts + triggers</td><td>SF better events; NS relies on polling</td></tr>
+      <tr><td>Auth Model</td><td>OAuth 2.0 (JWT, Web Server, Client Creds)</td><td>TBA (OAuth 1.0a) + OAuth 2.0 (REST only)</td><td>TBA more complex to implement</td></tr>
+      <tr><td>ExternalID</td><td>Standard on most objects</td><td>Supported on most records</td><td>Critical for duplicate prevention</td></tr>
+      <tr><td>Sandbox</td><td>Full + Partial + Developer</td><td>Separate accounts (lower limits)</td><td>NS sandbox unreliable for perf testing</td></tr>
+      <tr><td>Error Model</td><td>Structured JSON with codes</td><td>SOAP faults + REST JSON (inconsistent)</td><td>Need separate error parsing</td></tr>
+      <tr><td>API Versioning</td><td>Numbered (v62.0), 3-year support</td><td>Release-based (2025.1), backward compat</td><td>Pin both in config</td></tr>
+      <tr><td>Multi-Currency</td><td>Multi-currency org (dated rates)</td><td>OneWorld (subsidiary-based)</td><td>Exchange rate sync required</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>NetSuite concurrency is the #1 production bottleneck -- all integrations share the same pool. Monitor via Setup &gt; Integration &gt; Web Services Usage Log.</li>
+    <li>Sandbox testing is unreliable for performance -- NetSuite sandbox has lower limits and may not reflect production custom forms or workflows.</li>
+    <li>SuiteCloud Plus licensing affects API capacity -- base accounts get 5 concurrent, SuiteCloud Plus gets 15. This is per-account, not per-integration.</li>
+    <li>Salesforce edition affects governor limits -- Developer edition has 15,000 API calls/24h (dev only). Enterprise gets much higher allocations.</li>
+    <li>This card covers the standard O2C flow -- custom commission structures, multi-tier approvals, and advanced revenue recognition require custom development.</li>
+    <li>Rate limits and API capabilities change with each vendor release -- always verify against current release notes. Verified against SF Spring '26 (v62.0) and NS 2025.1.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-rest-api-capabilities/2026" data-relationship="depends_on">Salesforce REST API capabilities and rate limits</a>
+    <a href="/business/erp-integration/netsuite-suitetalk-rest-capabilities/2026" data-relationship="depends_on">NetSuite SuiteTalk REST API capabilities</a>
+    <a href="/business/erp-integration/netsuite-tba-vs-oauth2/2026" data-relationship="related_to">NetSuite TBA vs OAuth 2.0 authentication</a>
+    <a href="/business/erp-integration/netsuite-suitescript-governance/2026" data-relationship="related_to">NetSuite SuiteScript governance limits</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

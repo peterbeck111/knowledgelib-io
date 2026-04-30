@@ -1,0 +1,132 @@
+{
+  "id": "business/erp-integration/circuit-breaker-pattern-erp/2026",
+  "category": "business",
+  "subcategory": "erp-integration",
+  "topic": "circuit-breaker-pattern-erp",
+  "version_tag": "2026",
+  "canonical_question": "How do you implement the circuit breaker pattern for ERP API integrations?",
+  "aliases": [
+    "Circuit breaker for ERP API calls",
+    "How to prevent cascading failures in ERP integrations",
+    "ERP API circuit breaker configuration — thresholds, states, fallbacks",
+    "When should I use circuit breaker vs retry vs bulkhead for ERP APIs?"
+  ],
+  "entity_type": "erp_integration",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.88,
+  "token_estimate": 5200,
+  "source_count": 8,
+  "md_path": "/business/erp-integration/circuit-breaker-pattern-erp/2026.md",
+  "html_path": "/business/erp-integration/circuit-breaker-pattern-erp/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "evolving",
+    "last_breaking_change": "Polly v8 removed legacy CircuitBreakerPolicy, replaced with ResiliencePipeline (2023)",
+    "next_review": "2026-09-07",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Circuit breaker does NOT replace retry — combine both with retry inside breaker",
+    "One breaker per ERP endpoint not per ERP system — wrong granularity defeats the purpose",
+    "State is per-process unless externalized to Redis — horizontal scaling requires shared state",
+    "Open circuit must have fallback strategy (queue, cache, error)",
+    "ERP maintenance windows will repeatedly trip breakers — schedule suppression windows",
+    "Half-open probes must be idempotent to avoid duplicate records"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "User needs retry with exponential backoff only, no cascading failure concern",
+      "use_instead": "business/erp-integration/error-handling-retry-comparison/2026"
+    },
+    {
+      "condition": "User needs distributed transaction coordination across ERPs",
+      "use_instead": "business/erp-integration/saga-pattern-erp-transactions/2026"
+    },
+    {
+      "condition": "User needs rate limiting or throttling, not failure detection",
+      "use_instead": "business/erp-integration/erp-rate-limits-comparison/2026"
+    },
+    {
+      "condition": "User needs dead letter queue patterns for failed messages",
+      "use_instead": "business/erp-integration/error-handling-dead-letter-queues/2026"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [
+      {
+        "id": "business/erp-integration/error-handling-retry-comparison/2026",
+        "label": "Error Handling & Retry Patterns Comparison"
+      }
+    ],
+    "related_to": [
+      {
+        "id": "business/erp-integration/error-handling-dead-letter-queues/2026",
+        "label": "Dead Letter Queue Patterns for ERP Integration"
+      },
+      {
+        "id": "business/erp-integration/idempotency-erp-integrations/2026",
+        "label": "Idempotency in ERP Integrations"
+      },
+      {
+        "id": "business/erp-integration/erp-rate-limits-comparison/2026",
+        "label": "ERP Rate Limits Comparison"
+      }
+    ],
+    "solves": [
+      {
+        "id": "business/erp-integration/saga-pattern-erp-transactions/2026",
+        "label": "Saga Pattern — circuit breaker protects individual saga steps"
+      }
+    ],
+    "alternative_to": [
+      {
+        "id": "business/erp-integration/batch-vs-realtime-integration/2026",
+        "label": "Batch vs Real-time — batch eliminates some circuit breaker needs"
+      }
+    ],
+    "often_confused_with": [
+      {
+        "id": "business/erp-integration/erp-rate-limits-comparison/2026",
+        "label": "Rate limiting (server-side) vs circuit breaker (client-side)"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "integration_pattern",
+      "question": "What integration pattern do you need?",
+      "type": "choice",
+      "options": [
+        "real-time sync (individual records, <1s latency)",
+        "batch/bulk (scheduled, high volume)",
+        "event-driven (webhook, CDC, platform events)",
+        "long-running multi-step business process"
+      ]
+    },
+    {
+      "key": "language_platform",
+      "question": "What language or platform are you using?",
+      "type": "choice",
+      "options": [
+        "Python",
+        "Java / Spring Boot",
+        "C# / .NET",
+        "Node.js / TypeScript",
+        "iPaaS (MuleSoft, Boomi, Workato)"
+      ]
+    },
+    {
+      "key": "failure_mode",
+      "question": "What failure mode are you protecting against?",
+      "type": "choice",
+      "options": [
+        "ERP API timeouts (>30s response)",
+        "Rate limit exhaustion (HTTP 429)",
+        "Intermittent 500 errors during maintenance",
+        "Complete ERP outage"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+# .github/workflows/secure-deploy.yml
+name: Secure Deploy Pipeline
+on:
+  push:
+    branches: [main]
+
+# Least-privilege: only grant permissions each job needs
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a  # v4.2.0
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts  # Prevent post-install script attacks
+      - run: npm test
+
+  deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Scoped to this job only
+    environment: production  # Requires manual approval
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502  # v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/DeployRole
+          aws-region: us-east-1
+      - run: ./deploy.sh

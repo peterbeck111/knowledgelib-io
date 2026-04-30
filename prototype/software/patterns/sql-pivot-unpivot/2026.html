@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>SQL Pivot and Unpivot Queries | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to SQL pivot (rows to columns) and unpivot (columns to rows) queries across PostgreSQL, SQL Server, MySQL, and Oracle.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/sql-pivot-unpivot/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SQL Pivot and Unpivot Queries | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to SQL pivot (rows to columns) and unpivot (columns to rows) queries across PostgreSQL, SQL Server, MySQL, and Oracle. Covers crosstab(), PIVOT/UNPIVOT clauses, CASE+GROUP BY, FILTER, LATERAL VALUES, and dynamic pivot patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/sql-pivot-unpivot/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Pivot and Unpivot Queries | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to SQL pivot (rows to columns) and unpivot (columns to rows) queries across PostgreSQL, SQL Server, MySQL, and Oracle. Covers crosstab(), PIVOT/UNPIVOT clauses, CASE+GROUP BY, FILTER, LATERAL VALUES, and dynamic pivot patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/patterns/sql_pivot_unpivot">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I write SQL pivot and unpivot queries?">
+  <meta name="ai:aliases" content="SQL pivot rows to columns; SQL unpivot columns to rows; SQL Server PIVOT UNPIVOT; PostgreSQL crosstab pivot; MySQL conditional aggregation pivot; Oracle PIVOT UNPIVOT clause; SQL transpose rows columns; CASE WHEN pivot SQL; SQL FILTER clause pivot; LATERAL VALUES unpivot">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/sql-pivot-unpivot/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="database_engine, pivot_direction, columns_known">
+  <meta name="ai:constraints" content="PostgreSQL crosstab requires CREATE EXTENSION tablefunc; SQL Server/Oracle PIVOT requires column values known at query-write time; MySQL has no native PIVOT/UNPIVOT clause; SQL Server UNPIVOT silently drops NULL values; Oracle UNPIVOT defaults to EXCLUDE NULLS">
+  <meta name="ai:skip_this_unit_if" content="Need full matrix transpose -> Use application-layer DataFrame.transpose(); Building dynamic dashboard with unknown columns -> Pivot in presentation layer">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "SQL Pivot and Unpivot Queries",
+    "headline": "SQL Pivot and Unpivot Queries",
+    "description": "Complete guide to SQL pivot (rows to columns) and unpivot (columns to rows) queries across PostgreSQL, SQL Server, MySQL, and Oracle. Covers crosstab(), PIVOT/UNPIVOT clauses, CASE+GROUP BY, FILTER, LATERAL VALUES, and dynamic pivot patterns.",
+    "keywords": ["SQL pivot", "SQL unpivot", "crosstab", "PIVOT clause", "UNPIVOT clause", "conditional aggregation", "CASE WHEN pivot", "FILTER clause", "LATERAL VALUES", "dynamic pivot", "PostgreSQL", "SQL Server", "MySQL", "Oracle"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL 8.3+, SQL Server 2005+, Oracle 11g+, MySQL 5.0+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL Documentation: tablefunc — crosstab functions",
+        "url": "https://www.postgresql.org/docs/current/tablefunc.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Using PIVOT and UNPIVOT — SQL Server",
+        "url": "https://learn.microsoft.com/en-us/sql/t-sql/queries/from-using-pivot-and-unpivot"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SQL Pivot in All Databases",
+        "url": "https://modern-sql.com/use-case/pivot"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PIVOT and UNPIVOT Operators in Oracle Database 11g",
+        "url": "https://oracle-base.com/articles/11g/pivot-and-unpivot-operators-11gr1"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Unpivot with Postgres — LATERAL VALUES approach",
+        "url": "https://blog.sql-workbench.eu/post/unpivot-with-postgres/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The FILTER Clause — Modern SQL",
+        "url": "https://modern-sql.com/feature/filter"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Implementing Pivot and Dynamic Pivot Using GROUP_CONCAT in MySQL",
+        "url": "https://blogs.perficient.com/2024/01/04/implementing-pivot-and-dynamic-pivot-using-group_concat-in-mysql/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SQL Pivot and Unpivot Queries",
+    "description": "Structured reference for SQL pivot (rows to columns) and unpivot (columns to rows) patterns across PostgreSQL, SQL Server, MySQL, and Oracle, including static and dynamic approaches, anti-patterns, and pitfalls.",
+    "keywords": ["SQL pivot", "SQL unpivot", "crosstab", "PIVOT clause", "conditional aggregation", "LATERAL VALUES"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Modern SQL (Markus Winand)"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "Perficient"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "SQL Pivot and Unpivot Queries" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I write SQL pivot and unpivot queries?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL pivot rows to columns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL unpivot columns to rows",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL Server PIVOT UNPIVOT",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PostgreSQL crosstab pivot",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MySQL conditional aggregation pivot",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>SQL Pivot and Unpivot Queries</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I write SQL pivot and unpivot queries?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/sql-pivot-unpivot/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Pivot (rows to columns) and unpivot (columns to rows) are solved differently on every major database engine; pick the right pattern for your platform.</li>
+    <li><strong>Key tool/command</strong>: <code>SELECT ... PIVOT (AGG(val) FOR col IN (...))</code> on SQL Server/Oracle; <code>crosstab()</code> on PostgreSQL; <code>SUM(CASE WHEN ...)</code> everywhere.</li>
+    <li><strong>Watch out for</strong>: SQL Server UNPIVOT silently drops NULLs &mdash; wrap columns in ISNULL() first.</li>
+    <li><strong>Works with</strong>: PostgreSQL 8.3+, SQL Server 2005+, Oracle 11g+, MySQL 5.0+ (CASE-based), all versions of MariaDB and SQLite.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>PostgreSQL <code>crosstab()</code> requires <code>CREATE EXTENSION tablefunc</code> &mdash; fails with &quot;function crosstab does not exist&quot; without it</li>
+    <li>Native PIVOT/UNPIVOT (SQL Server, Oracle) only works with a fixed, compile-time list of column values &mdash; dynamic columns require dynamic SQL</li>
+    <li>MySQL and SQLite have no PIVOT/UNPIVOT syntax &mdash; use conditional aggregation (<code>CASE</code>/<code>IF</code> + <code>GROUP BY</code>) instead</li>
+    <li>SQL Server UNPIVOT silently discards rows where the source column is NULL &mdash; always use <code>ISNULL(col, 0)</code> or <code>COALESCE</code> before unpivoting</li>
+    <li>Oracle UNPIVOT defaults to EXCLUDE NULLS &mdash; add <code>INCLUDE NULLS</code> if you need to preserve them</li>
+    <li>PostgreSQL <code>crosstab()</code> requires input sorted by the row-name column &mdash; unsorted input produces incorrect or missing values</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table (PATTERNS decision matrix) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Pattern</th><th scope="col">Database</th><th scope="col">Complexity</th><th scope="col">Trade-off</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Static pivot, known columns</td><td><code>PIVOT</code> clause</td><td>SQL Server, Oracle</td><td>Low</td><td>Cleanest syntax, no extension needed</td></tr>
+      <tr><td>Static pivot, PostgreSQL</td><td><code>crosstab()</code></td><td>PostgreSQL</td><td>Medium</td><td>Requires tablefunc extension; input must be sorted</td></tr>
+      <tr><td>Static pivot, any database</td><td><code>SUM(CASE WHEN ... END)</code></td><td>All</td><td>Low</td><td>Verbose but universally portable</td></tr>
+      <tr><td>Static pivot, PostgreSQL 9.4+</td><td><code>AGG() FILTER (WHERE ...)</code></td><td>PostgreSQL</td><td>Low</td><td>~8% faster than CASE; cleaner syntax</td></tr>
+      <tr><td>Dynamic pivot, SQL Server</td><td>Dynamic SQL + <code>PIVOT</code></td><td>SQL Server</td><td>High</td><td>SQL injection risk; must whitelist values</td></tr>
+      <tr><td>Dynamic pivot, MySQL</td><td><code>GROUP_CONCAT</code> + <code>PREPARE</code></td><td>MySQL</td><td>High</td><td>Requires prepared statements; max length limit</td></tr>
+      <tr><td>Dynamic pivot, PostgreSQL</td><td><code>crosstab</code> + dynamic SQL / plpgsql</td><td>PostgreSQL</td><td>High</td><td>Function wrapper needed; harder to debug</td></tr>
+      <tr><td>Static unpivot, SQL Server/Oracle</td><td><code>UNPIVOT</code> clause</td><td>SQL Server, Oracle</td><td>Low</td><td>Clean syntax; watch for NULL handling</td></tr>
+      <tr><td>Static unpivot, PostgreSQL</td><td><code>CROSS JOIN LATERAL (VALUES ...)</code></td><td>PostgreSQL</td><td>Low</td><td>Standard SQL; no extension needed</td></tr>
+      <tr><td>Static unpivot, any database</td><td><code>UNION ALL</code> per column</td><td>All</td><td>Low</td><td>Verbose; full table scan per UNION branch</td></tr>
+      <tr><td>Unpivot with NULLs, SQL Server</td><td><code>CROSS APPLY (VALUES ...)</code></td><td>SQL Server</td><td>Medium</td><td>Preserves NULLs unlike UNPIVOT</td></tr>
+      <tr><td>Unpivot with NULLs, Oracle</td><td><code>UNPIVOT INCLUDE NULLS</code></td><td>Oracle</td><td>Low</td><td>Simple flag, often forgotten</td></tr>
+      <tr><td>Dynamic unpivot, PostgreSQL</td><td><code>jsonb_each_text(to_jsonb(row))</code></td><td>PostgreSQL 9.4+</td><td>Medium</td><td>Elegant but slower on large datasets</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Direction: PIVOT (rows → columns)?
+│   ├── YES → Column values known at query-write time?
+│   │   ├── YES (static pivot) → Which database?
+│   │   │   ├── SQL Server / Oracle → Use native PIVOT clause
+│   │   │   ├── PostgreSQL → Use FILTER() (9.4+) or crosstab()
+│   │   │   └── MySQL / SQLite / Any → Use SUM(CASE WHEN ... END) + GROUP BY
+│   │   └── NO (dynamic pivot) → Which database?
+│   │       ├── SQL Server → Build PIVOT in dynamic SQL (sp_executesql)
+│   │       ├── MySQL → GROUP_CONCAT + PREPARE/EXECUTE
+│   │       └── PostgreSQL → PL/pgSQL function with EXECUTE
+│   └── NO ↓
+├── Direction: UNPIVOT (columns → rows)?
+│   ├── YES → Need to preserve NULLs?
+│   │   ├── YES → Which database?
+│   │   │   ├── SQL Server → Use CROSS APPLY (VALUES ...) instead of UNPIVOT
+│   │   │   ├── Oracle → Use UNPIVOT INCLUDE NULLS
+│   │   │   └── PostgreSQL → Use CROSS JOIN LATERAL (VALUES ...)
+│   │   └── NO (NULLs can be dropped) → Which database?
+│   │       ├── SQL Server / Oracle → Use native UNPIVOT clause
+│   │       ├── PostgreSQL → Use CROSS JOIN LATERAL (VALUES ...)
+│   │       └── Any → Use UNION ALL (one SELECT per column)
+│   └── NO ↓
+└── DEFAULT → If columns are truly unknown at runtime, consider pivoting in
+    the application layer (pandas pivot_table, spreadsheet, BI tool)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Identify pivot direction and column values</h3>
+  <p>Determine whether you need pivot (rows to columns) or unpivot (columns to rows). List all distinct values that will become column headers. [<a href="https://modern-sql.com/use-case/pivot">src3</a>]</p>
+  <pre><code class="language-sql">-- Find distinct values that will become columns
+SELECT DISTINCT category FROM sales ORDER BY category;
+-- Result: 'Electronics', 'Clothing', 'Food'</code></pre>
+  <p><strong>Verify</strong>: Count the distinct values &mdash; this is your output column count. If &gt; 20, consider a different approach.</p>
+
+  <h3>2. Write the pivot query for your database engine</h3>
+  <p>Choose the pattern from the Quick Reference table matching your database and static/dynamic requirement. [<a href="https://www.postgresql.org/docs/current/tablefunc.html">src1</a>] [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/from-using-pivot-and-unpivot">src2</a>]</p>
+  <pre><code class="language-sql">-- PostgreSQL: FILTER approach (recommended for PostgreSQL 9.4+)
+SELECT
+  sale_year,
+  SUM(amount) FILTER (WHERE category = 'Electronics') AS electronics,
+  SUM(amount) FILTER (WHERE category = 'Clothing')    AS clothing,
+  SUM(amount) FILTER (WHERE category = 'Food')        AS food
+FROM sales
+GROUP BY sale_year
+ORDER BY sale_year;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(DISTINCT category) FROM sales;</code> &rarr; should match the number of pivoted columns</p>
+
+  <h3>3. Handle NULLs and missing combinations</h3>
+  <p>Pivot results will have NULLs where no data exists for a row/column combination. Decide whether to show NULL or a default. [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/from-using-pivot-and-unpivot">src2</a>]</p>
+  <pre><code class="language-sql">-- Wrap in COALESCE for zero-fill
+SELECT
+  sale_year,
+  COALESCE(SUM(amount) FILTER (WHERE category = 'Electronics'), 0) AS electronics,
+  COALESCE(SUM(amount) FILTER (WHERE category = 'Clothing'), 0)    AS clothing,
+  COALESCE(SUM(amount) FILTER (WHERE category = 'Food'), 0)        AS food
+FROM sales
+GROUP BY sale_year;</code></pre>
+  <p><strong>Verify</strong>: Check for unexpected NULLs &mdash; <code>SELECT * FROM &lt;pivot_result&gt; WHERE electronics IS NULL;</code></p>
+
+  <h3>4. Test with edge cases</h3>
+  <p>Verify the query with: (a) a category with no data, (b) NULL values in the pivot column, (c) duplicate rows. [<a href="https://oracle-base.com/articles/11g/pivot-and-unpivot-operators-11gr1">src4</a>]</p>
+  <pre><code class="language-sql">-- Insert test edge case: NULL category
+INSERT INTO sales (sale_year, category, amount) VALUES (2025, NULL, 100);
+-- Re-run pivot — NULL category should not corrupt other columns</code></pre>
+  <p><strong>Verify</strong>: Row count of pivoted result should equal <code>COUNT(DISTINCT row_identifier)</code> from the source.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Static Pivot with crosstab()</h3>
+  <pre><code class="language-sql">-- Input:  sales table with (sale_year, quarter, revenue) rows
+-- Output: one row per year, columns for Q1-Q4
+
+-- Step 1: Enable extension (once per database)
+CREATE EXTENSION IF NOT EXISTS tablefunc;
+
+-- Step 2: Pivot using crosstab
+-- IMPORTANT: source query MUST be sorted by the row-name column (sale_year)
+SELECT *
+FROM crosstab(
+  $$SELECT sale_year, quarter, SUM(revenue)
+    FROM sales
+    GROUP BY sale_year, quarter
+    ORDER BY sale_year, quarter$$,   -- sorted by row-name
+  $$VALUES ('Q1'), ('Q2'), ('Q3'), ('Q4')$$
+) AS ct(sale_year INT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);</code></pre>
+
+  <h3>PostgreSQL: Static Pivot with FILTER (preferred, no extension)</h3>
+  <pre><code class="language-sql">-- Input:  sales table with (region, product, revenue)
+-- Output: one row per region, one column per product category
+SELECT
+  region,
+  SUM(revenue) FILTER (WHERE product = 'Widget')  AS widget_rev,
+  SUM(revenue) FILTER (WHERE product = 'Gadget')  AS gadget_rev,
+  SUM(revenue) FILTER (WHERE product = 'Gizmo')   AS gizmo_rev,
+  COUNT(*)     FILTER (WHERE product = 'Widget')   AS widget_cnt
+FROM sales
+GROUP BY region
+ORDER BY region;
+-- FILTER is ~8% faster than CASE on PostgreSQL 15+ benchmarks</code></pre>
+
+  <h3>SQL Server: PIVOT and UNPIVOT</h3>
+  <pre><code class="language-sql">-- PIVOT: rows to columns
+SELECT customer_id, [Q1], [Q2], [Q3], [Q4]
+FROM (
+  SELECT customer_id, quarter, total_amount
+  FROM orders
+) AS src
+PIVOT (
+  SUM(total_amount)
+  FOR quarter IN ([Q1], [Q2], [Q3], [Q4])
+) AS pvt
+ORDER BY customer_id;
+
+-- UNPIVOT: columns back to rows
+-- WARNING: UNPIVOT drops rows where value is NULL
+SELECT customer_id, quarter, total_amount
+FROM quarterly_report
+UNPIVOT (
+  total_amount FOR quarter IN ([Q1], [Q2], [Q3], [Q4])
+) AS unpvt;</code></pre>
+
+  <h3>MySQL: CASE-Based Pivot (no native PIVOT)</h3>
+  <pre><code class="language-sql">-- Input:  exam_scores(student_id, subject, score)
+-- Output: one row per student, columns for each subject
+SELECT
+  student_id,
+  MAX(CASE WHEN subject = 'Math'    THEN score END) AS math,
+  MAX(CASE WHEN subject = 'Science' THEN score END) AS science,
+  MAX(CASE WHEN subject = 'English' THEN score END) AS english,
+  MAX(CASE WHEN subject = 'History' THEN score END) AS history
+FROM exam_scores
+GROUP BY student_id
+ORDER BY student_id;
+-- Use MAX for single values, SUM for aggregation</code></pre>
+
+  <h3>SQL Server: Dynamic Pivot with sp_executesql</h3>
+  <pre><code class="language-sql">-- Dynamic columns based on distinct product_name values
+DECLARE @columns NVARCHAR(MAX), @sql NVARCHAR(MAX);
+
+-- Build column list (QUOTENAME prevents SQL injection)
+SELECT @columns = STRING_AGG(QUOTENAME(product_name), ', ')
+FROM (SELECT DISTINCT product_name FROM product_sales) AS products;
+
+SET @sql = N'
+SELECT region, ' + @columns + N'
+FROM (SELECT region, product_name, revenue FROM product_sales) AS src
+PIVOT (SUM(revenue) FOR product_name IN (' + @columns + N')) AS pvt
+ORDER BY region;';
+
+EXEC sp_executesql @sql;</code></pre>
+
+  <h3>PostgreSQL: Unpivot with LATERAL VALUES</h3>
+  <pre><code class="language-sql">-- Input:  quarterly_report(customer_id, q1, q2, q3, q4)
+-- Output: one row per customer per quarter (preserves NULLs)
+SELECT
+  r.customer_id,
+  u.quarter,
+  u.amount
+FROM quarterly_report r
+CROSS JOIN LATERAL (
+  VALUES
+    ('Q1', r.q1),
+    ('Q2', r.q2),
+    ('Q3', r.q3),
+    ('Q4', r.q4)
+) AS u(quarter, amount)
+ORDER BY r.customer_id, u.quarter;
+-- Unlike SQL Server UNPIVOT, this preserves NULL values</code></pre>
+
+  <h3>Oracle: PIVOT and UNPIVOT</h3>
+  <pre><code class="language-sql">-- PIVOT
+SELECT *
+FROM (SELECT department, job_title, salary FROM employees)
+PIVOT (
+  AVG(salary) FOR job_title IN ('Manager' AS mgr, 'Engineer' AS eng, 'Analyst' AS anl)
+)
+ORDER BY department;
+
+-- UNPIVOT (preserving NULLs)
+SELECT department, job_title, avg_salary
+FROM pivoted_employees
+UNPIVOT INCLUDE NULLS (
+  avg_salary FOR job_title IN (mgr AS 'Manager', eng AS 'Engineer', anl AS 'Analyst')
+);</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using UNPIVOT when source columns contain NULLs (SQL Server)</h3>
+  <pre><code class="language-sql">-- BAD — silently drops rows where Q2 or Q3 is NULL
+SELECT customer_id, quarter, amount
+FROM quarterly_report
+UNPIVOT (amount FOR quarter IN (Q1, Q2, Q3, Q4)) AS u;</code></pre>
+
+  <h3>Correct: Use CROSS APPLY VALUES to preserve NULLs</h3>
+  <pre><code class="language-sql">-- GOOD — preserves all rows including NULLs
+SELECT customer_id, quarter, amount
+FROM quarterly_report
+CROSS APPLY (
+  VALUES ('Q1', Q1), ('Q2', Q2), ('Q3', Q3), ('Q4', Q4)
+) AS u(quarter, amount);</code></pre>
+
+  <h3>Wrong: Unsorted input to PostgreSQL crosstab()</h3>
+  <pre><code class="language-sql">-- BAD — missing ORDER BY causes values in wrong columns
+SELECT *
+FROM crosstab(
+  'SELECT dept, quarter, revenue FROM sales GROUP BY dept, quarter'
+) AS ct(dept TEXT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);</code></pre>
+
+  <h3>Correct: Always sort by row-name column and provide category query</h3>
+  <pre><code class="language-sql">-- GOOD — sorted input + explicit category list
+SELECT *
+FROM crosstab(
+  'SELECT dept, quarter, revenue FROM sales
+   GROUP BY dept, quarter ORDER BY dept, quarter',
+  $$VALUES ('Q1'), ('Q2'), ('Q3'), ('Q4')$$
+) AS ct(dept TEXT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);</code></pre>
+
+  <h3>Wrong: String concatenation in dynamic pivot (SQL injection risk)</h3>
+  <pre><code class="language-sql">-- BAD — direct string interpolation allows SQL injection
+SET @sql = 'SELECT * FROM t PIVOT (SUM(val) FOR col IN (' + @user_input + '))';
+EXEC(@sql);</code></pre>
+
+  <h3>Correct: Use QUOTENAME and validate inputs</h3>
+  <pre><code class="language-sql">-- GOOD — QUOTENAME escapes identifiers; validate against whitelist
+SELECT @columns = STRING_AGG(QUOTENAME(col_value), ', ')
+FROM (SELECT DISTINCT col_value FROM t
+      WHERE col_value IN (SELECT allowed_value FROM whitelist)) AS safe;
+
+SET @sql = N'SELECT * FROM t PIVOT (SUM(val) FOR col IN (' + @columns + N')) AS pvt;';
+EXEC sp_executesql @sql;</code></pre>
+
+  <h3>Wrong: Using SUM(CASE) when values are not aggregatable</h3>
+  <pre><code class="language-sql">-- BAD — SUM on non-numeric status values silently returns 0 or errors
+SELECT id,
+  SUM(CASE WHEN attr = 'color' THEN value END) AS color
+FROM attributes
+GROUP BY id;</code></pre>
+
+  <h3>Correct: Use MAX or MIN for non-aggregated single values</h3>
+  <pre><code class="language-sql">-- GOOD — MAX returns the single value per group for non-numeric columns
+SELECT id,
+  MAX(CASE WHEN attr = 'color' THEN value END) AS color,
+  MAX(CASE WHEN attr = 'size'  THEN value END) AS size
+FROM attributes
+GROUP BY id;</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Missing tablefunc extension</strong>: PostgreSQL <code>crosstab()</code> fails with &quot;function crosstab(unknown) does not exist&quot;. Fix: <code>CREATE EXTENSION IF NOT EXISTS tablefunc;</code> &mdash; requires superuser or database owner. [<a href="https://www.postgresql.org/docs/current/tablefunc.html">src1</a>]</li>
+    <li><strong>Unsorted crosstab input</strong>: Values silently land in wrong columns when the source query is not sorted by the row-name column. Fix: Always add <code>ORDER BY row_name_col, category_col</code> to the inner query. [<a href="https://www.postgresql.org/docs/current/tablefunc.html">src1</a>]</li>
+    <li><strong>NULL swallowing in UNPIVOT</strong>: SQL Server UNPIVOT silently removes rows with NULL values &mdash; data loss goes unnoticed. Fix: Use <code>CROSS APPLY (VALUES ...)</code> instead, or wrap columns in <code>ISNULL(col, default)</code>. [<a href="https://learn.microsoft.com/en-us/sql/t-sql/queries/from-using-pivot-and-unpivot">src2</a>]</li>
+    <li><strong>MySQL GROUP_CONCAT truncation</strong>: Dynamic pivot strings truncated at <code>group_concat_max_len</code> (default 1024 bytes). Fix: <code>SET SESSION group_concat_max_len = 1000000;</code> before the query. [<a href="https://blogs.perficient.com/2024/01/04/implementing-pivot-and-dynamic-pivot-using-group_concat-in-mysql/">src7</a>]</li>
+    <li><strong>Oracle UNPIVOT NULL exclusion</strong>: Default is EXCLUDE NULLS. Fix: Add <code>INCLUDE NULLS</code> keyword. [<a href="https://oracle-base.com/articles/11g/pivot-and-unpivot-operators-11gr1">src4</a>]</li>
+    <li><strong>Aggregate function mismatch</strong>: Using <code>SUM</code> for single-valued pivots returns wrong results when duplicates exist; using <code>MAX</code> for aggregations ignores lower values. Fix: Match the aggregate to the semantic meaning &mdash; <code>SUM</code> for totals, <code>MAX</code>/<code>MIN</code> for single values, <code>COUNT</code> for frequencies. [<a href="https://modern-sql.com/use-case/pivot">src3</a>]</li>
+    <li><strong>Column count mismatch in crosstab</strong>: The output column definition in <code>AS ct(...)</code> must exactly match the number of category values &mdash; extra or missing columns cause errors or silent misalignment. Fix: Count distinct category values and match the column list. [<a href="https://www.postgresql.org/docs/current/tablefunc.html">src1</a>]</li>
+    <li><strong>Performance on large datasets</strong>: Conditional aggregation (CASE/FILTER) scans the entire table once; UNION ALL unpivot scans it N times (once per column). Fix: For large unpivots, use LATERAL VALUES (single scan) instead of UNION ALL. [<a href="https://blog.sql-workbench.eu/post/unpivot-with-postgres/">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Database</th><th scope="col">PIVOT Support</th><th scope="col">UNPIVOT Support</th><th scope="col">Best Alternative</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SQL Server 2005+</td><td>Native <code>PIVOT</code> clause</td><td>Native <code>UNPIVOT</code> clause</td><td><code>CROSS APPLY (VALUES ...)</code> for NULL preservation</td></tr>
+      <tr><td>Oracle 11g+ (2007)</td><td>Native <code>PIVOT</code> / <code>PIVOT XML</code></td><td>Native <code>UNPIVOT INCLUDE/EXCLUDE NULLS</code></td><td>&mdash;</td></tr>
+      <tr><td>PostgreSQL 8.3+</td><td><code>crosstab()</code> via tablefunc</td><td>No native support</td><td><code>LATERAL (VALUES ...)</code> for unpivot; <code>FILTER()</code> for pivot (9.4+)</td></tr>
+      <tr><td>MySQL 5.0+</td><td>No native support</td><td>No native support</td><td><code>CASE + GROUP BY</code> pivot; <code>UNION ALL</code> unpivot</td></tr>
+      <tr><td>MariaDB 10.0+</td><td>No native support</td><td>No native support</td><td>Same as MySQL</td></tr>
+      <tr><td>SQLite 3.x</td><td>No native support</td><td>No native support</td><td><code>CASE + GROUP BY</code> pivot; <code>UNION ALL</code> unpivot</td></tr>
+      <tr><td>DuckDB 0.8+</td><td>Native <code>PIVOT</code> / <code>UNPIVOT</code></td><td>Native <code>UNPIVOT</code></td><td>Modern syntax closest to SQL Server</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Generating cross-tab reports with a known, fixed set of column values</td><td>Column values are unknown and change frequently</td><td>Dynamic SQL with strong input validation, or pivot in application layer</td></tr>
+      <tr><td>Transforming EAV (Entity-Attribute-Value) tables into flat rows</td><td>The EAV table has hundreds of distinct attributes</td><td>Application-layer pivot (pandas, DataFrame) or JSON aggregation</td></tr>
+      <tr><td>Denormalizing for BI/reporting queries</td><td>The pivoted result will be written back as a permanent table</td><td>Materialized view with scheduled refresh</td></tr>
+      <tr><td>Unpivoting wide tables for ETL/normalization</td><td>Source table has 2&ndash;3 columns &mdash; already normalized</td><td>No transformation needed</td></tr>
+      <tr><td>One-time data migration or analysis</td><td>Real-time API responses where column count must be fixed</td><td>Pre-defined views or application-layer reshaping</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Dynamic pivot queries are inherently vulnerable to SQL injection &mdash; always use parameterization (<code>QUOTENAME</code> on SQL Server, <code>format('%I', ...)</code> on PostgreSQL) and validate against a whitelist</li>
+    <li><code>crosstab()</code> with the single-parameter form (no category query) assigns values positionally &mdash; this silently produces wrong results when some row/category combinations are missing</li>
+    <li>Oracle <code>PIVOT XML</code> returns XML-typed columns, not scalar values &mdash; useful for dynamic column lists but requires XML parsing downstream</li>
+    <li>Performance of conditional aggregation degrades linearly with the number of pivot columns &mdash; at 50+ columns, consider restructuring the query or using application-layer pivoting</li>
+    <li>UNPIVOT does not round-trip perfectly with PIVOT &mdash; aggregation during pivot merges rows, so unpivoting the result produces fewer rows than the original</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/sql-window-functions/2026" data-relationship="related_to">SQL Window Functions (running totals, rankings, lag/lead)</a>
+    <a href="/software/patterns/sql-recursive-cte/2026" data-relationship="related_to">Recursive CTE Queries for Hierarchies</a>
+    <a href="/software/patterns/sql-json-queries/2026" data-relationship="related_to">Querying JSON Data in PostgreSQL and MySQL</a>
+    <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="solves">PostgreSQL Slow Queries</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

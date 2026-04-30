@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>OAuth2 Device Authorization Flow: Complete Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete implementation guide for OAuth2 Device Authorization Grant (RFC 8628) with polling logic, code examples in Python/Node.js/Go, anti-patterns,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/oauth2-device-flow/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="OAuth2 Device Authorization Flow: Complete Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete implementation guide for OAuth2 Device Authorization Grant (RFC 8628) with polling logic, code examples in Python/Node.js/Go, anti-patterns, and decision tree for input-constrained devices. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/oauth2-device-flow/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OAuth2 Device Authorization Flow: Complete Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete implementation guide for OAuth2 Device Authorization Grant (RFC 8628) with polling logic, code examples in Python/Node.js/Go, anti-patterns, and decision tree for input-constrained devices. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/oauth2_device_flow">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement OAuth2 Device Authorization flow?">
+  <meta name="ai:aliases" content="OAuth2 device flow; device authorization grant; RFC 8628 implementation; device code flow; OAuth for smart TV; OAuth for CLI tools; input-constrained device authentication; OAuth2 device code grant">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/oauth2-device-flow/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="identity_provider,device_type">
+  <meta name="ai:constraints" content="Polling interval MUST respect server-provided interval (default 5s); device_code expires after expires_in seconds; user_code MUST be displayed exactly as received; slow_down adds 5s cumulatively; grant_type MUST be full URN">
+  <meta name="ai:skip_this_unit_if" content="App has a browser and handles redirects → Authorization Code with PKCE; No user interaction needed → Client Credentials grant; SPA with browser → Authorization Code with PKCE for SPAs">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "OAuth2 Device Authorization Flow: Complete Reference",
+    "headline": "OAuth2 Device Authorization Flow: Complete Reference",
+    "description": "Complete implementation guide for OAuth2 Device Authorization Grant (RFC 8628) covering endpoint parameters, polling logic, error handling, code examples in Python/Node.js/Go, anti-patterns, and a decision tree for choosing the right OAuth flow for input-constrained devices.",
+    "keywords": ["OAuth2", "device flow", "RFC 8628", "device authorization grant", "device code flow", "smart TV authentication", "CLI authentication", "IoT OAuth"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "OAuth 2.0 provider supporting RFC 8628",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "RFC 8628 — OAuth 2.0 Device Authorization Grant",
+        "url": "https://datatracker.ietf.org/doc/html/rfc8628"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Device Authorization Flow — Auth0 Documentation",
+        "url": "https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 Device Authorization Grant — Microsoft Identity Platform",
+        "url": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 for TV and Limited-Input Device Applications — Google Identity",
+        "url": "https://developers.google.com/identity/protocols/oauth2/limited-input-device"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 Device Authorization Grant — OAuth.net",
+        "url": "https://oauth.net/2/device-flow/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth 2.0 Device Flow Explained — Curity",
+        "url": "https://curity.io/resources/learn/oauth-device-flow/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Device Authorization Grant: Solving OAuth for screens without keyboards — WorkOS",
+        "url": "https://workos.com/blog/oauth-device-authorization-grant"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "OAuth2 Device Authorization Flow: Complete Reference",
+    "description": "Structured knowledge unit covering OAuth2 Device Authorization Grant (RFC 8628) implementation: endpoints, parameters, polling logic, error codes, code examples, anti-patterns, and decision tree.",
+    "keywords": ["OAuth2", "device flow", "RFC 8628", "device authorization grant", "authentication patterns"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "IETF"},
+      {"@type": "Organization", "name": "Auth0"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Google"},
+      {"@type": "Organization", "name": "OAuth.net"},
+      {"@type": "Organization", "name": "Curity"},
+      {"@type": "Organization", "name": "WorkOS"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "OAuth2 Device Authorization Flow" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement OAuth2 Device Authorization flow?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OAuth2 device flow",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "device authorization grant",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "RFC 8628 implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "device code flow",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OAuth for smart TV",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>OAuth2 Device Authorization Flow: Complete Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement OAuth2 Device Authorization flow?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/oauth2-device-flow/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: The Device Authorization Grant (RFC 8628) lets input-constrained devices (smart TVs, CLI tools, IoT) authenticate users by displaying a short code the user enters on a separate browser-capable device.</li>
+    <li><strong>Key tool/command</strong>: <code>POST /device/code</code> to get user_code + verification_uri, then poll <code>POST /token</code> with <code>grant_type=urn:ietf:params:oauth:grant-type:device_code</code></li>
+    <li><strong>Watch out for</strong>: Polling the token endpoint too fast — exceeding the <code>interval</code> triggers <code>slow_down</code> which cumulatively adds 5 seconds per violation.</li>
+    <li><strong>Works with</strong>: Any OAuth 2.0 provider supporting RFC 8628 (Auth0, Microsoft Entra ID, Google, Okta, Keycloak, GitHub).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Polling interval MUST respect the server-returned <code>interval</code> value (default: 5 seconds). Each <code>slow_down</code> error adds 5 seconds cumulatively. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li>The <code>device_code</code> expires after <code>expires_in</code> seconds (typically 900-1800s). After expiry, the client MUST restart the entire flow. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li>The <code>user_code</code> MUST be displayed exactly as received. Comparison should be case-insensitive and strip non-alphanumeric characters, but display must preserve the original format. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li>The <code>grant_type</code> value MUST be the full URN string <code>urn:ietf:params:oauth:grant-type:device_code</code> — using any abbreviation will fail. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li>On connection timeout during polling, clients MUST apply exponential backoff (recommended: double the interval). [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li>Device flow clients are public clients (cannot store secrets securely) — never embed <code>client_secret</code> in distributed device applications. [<a href="https://curity.io/resources/learn/oauth-device-flow/">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Step</th><th scope="col">Endpoint</th><th scope="col">Method</th><th scope="col">Key Parameters</th><th scope="col">Response Fields</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1. Request device code</td><td><code>/device/code</code></td><td>POST</td><td><code>client_id</code>, <code>scope</code></td><td><code>device_code</code>, <code>user_code</code>, <code>verification_uri</code>, <code>verification_uri_complete</code>, <code>expires_in</code>, <code>interval</code></td><td>Content-Type: application/x-www-form-urlencoded</td></tr>
+      <tr><td>2. Display to user</td><td>N/A (device screen)</td><td>—</td><td>—</td><td>—</td><td>Show <code>user_code</code> + <code>verification_uri</code>; optionally render QR code</td></tr>
+      <tr><td>3. User opens browser</td><td><code>verification_uri</code></td><td>GET (browser)</td><td>—</td><td>—</td><td>User navigates on phone/laptop</td></tr>
+      <tr><td>4. User enters code</td><td><code>verification_uri</code></td><td>POST (browser)</td><td><code>user_code</code></td><td>—</td><td>User types the displayed code</td></tr>
+      <tr><td>5. User authenticates</td><td>IdP login page</td><td>POST (browser)</td><td>credentials</td><td>—</td><td>Standard login + consent screen</td></tr>
+      <tr><td>6. Poll for token</td><td><code>/token</code></td><td>POST</td><td><code>grant_type=urn:ietf:params:oauth:grant-type:device_code</code>, <code>device_code</code>, <code>client_id</code></td><td><code>access_token</code>, <code>refresh_token</code>, <code>token_type</code>, <code>expires_in</code></td><td>Repeat every <code>interval</code> seconds</td></tr>
+      <tr><td>7. Handle authorization_pending</td><td><code>/token</code></td><td>POST</td><td>(same)</td><td><code>error</code>: <code>authorization_pending</code></td><td>Keep polling — user hasn't acted yet</td></tr>
+      <tr><td>8. Handle slow_down</td><td><code>/token</code></td><td>POST</td><td>(same)</td><td><code>error</code>: <code>slow_down</code></td><td>Increase interval by 5 seconds, then continue</td></tr>
+      <tr><td>9. Handle access_denied</td><td><code>/token</code></td><td>POST</td><td>(same)</td><td><code>error</code>: <code>access_denied</code></td><td>User denied — stop polling, show error</td></tr>
+      <tr><td>10. Handle expired_token</td><td><code>/token</code></td><td>POST</td><td>(same)</td><td><code>error</code>: <code>expired_token</code></td><td>Code expired — restart from Step 1</td></tr>
+      <tr><td>11. Use access token</td><td>Resource API</td><td>GET/POST</td><td><code>Authorization: Bearer {access_token}</code></td><td>API response</td><td>Standard OAuth bearer token usage</td></tr>
+      <tr><td>12. Refresh token</td><td><code>/token</code></td><td>POST</td><td><code>grant_type=refresh_token</code>, <code>refresh_token</code>, <code>client_id</code></td><td>New <code>access_token</code></td><td>Use when access_token expires</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START — Does the device have a browser and keyboard?
+├── YES → Use Authorization Code with PKCE (not device flow)
+│
+└── NO → Is there a user who needs to authenticate?
+    ├── NO → Use Client Credentials grant (machine-to-machine)
+    │
+    └── YES → Can the device display a URL and short code?
+        ├── NO → Consider out-of-band setup (pre-provisioned tokens)
+        │
+        └── YES → Use Device Authorization Flow (this unit)
+            ├── Does the IdP support verification_uri_complete?
+            │   ├── YES → Display QR code (better UX) + fallback text code
+            │   └── NO → Display verification_uri + user_code as text
+            │
+            └── Device type?
+                ├── Smart TV / Game Console → Full device flow with on-screen code
+                ├── CLI Tool → Print code to terminal, open browser with xdg-open/open
+                └── IoT / Headless → Send code via display, LED, or companion app</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Register your application with the identity provider</h3>
+  <p>Register a public client application with your OAuth2 provider. Enable the Device Authorization Grant. Note your <code>client_id</code> — you will not have a <code>client_secret</code> for public clients. [<a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow">src2</a>]</p>
+  <pre><code class="language-bash"># Auth0: Enable Device Code grant in Application Settings &gt; Advanced &gt; Grant Types
+# Microsoft: Register app in Azure Portal &gt; App registrations &gt; Authentication &gt; Allow public client flows = Yes
+# Google: Create OAuth credentials at console.cloud.google.com &gt; APIs &amp; Services &gt; Credentials</code></pre>
+  <p><strong>Verify</strong>: Check your IdP dashboard confirms Device Code grant is enabled for the application.</p>
+
+  <h3>2. Request a device code from the authorization server</h3>
+  <p>Send a POST request to the device authorization endpoint with your <code>client_id</code> and desired <code>scope</code>. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</p>
+  <pre><code class="language-bash">curl -X POST "https://YOUR_IDP/device/code" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "scope=openid profile email"</code></pre>
+  <p><strong>Verify</strong>: Response includes <code>device_code</code>, <code>user_code</code>, <code>verification_uri</code>, <code>expires_in</code>, and <code>interval</code>.</p>
+
+  <h3>3. Display the user code and verification URI</h3>
+  <p>Show the <code>user_code</code> and <code>verification_uri</code> on the device screen. If <code>verification_uri_complete</code> is available, render a QR code for it. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>] [<a href="https://curity.io/resources/learn/oauth-device-flow/">src6</a>]</p>
+  <p><strong>Verify</strong>: User can visually read the code and URL from the device screen.</p>
+
+  <h3>4. Poll the token endpoint for authorization</h3>
+  <p>Start polling the token endpoint at the <code>interval</code> specified in the device code response. Handle all error codes correctly. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>] [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code">src3</a>]</p>
+  <pre><code class="language-python">import time
+import requests
+
+def poll_for_token(token_url, device_code, client_id, interval=5):
+    """Poll token endpoint until user authorizes or code expires."""
+    while True:
+        time.sleep(interval)
+        resp = requests.post(token_url, data={
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "device_code": device_code,
+            "client_id": client_id,
+        })
+        data = resp.json()
+        if resp.status_code == 200:
+            return data  # Success
+        error = data.get("error")
+        if error == "authorization_pending":
+            continue
+        elif error == "slow_down":
+            interval += 5  # MUST increase by 5 seconds
+        elif error == "access_denied":
+            raise Exception("User denied authorization")
+        elif error == "expired_token":
+            raise Exception("Device code expired — restart flow")
+        else:
+            raise Exception(f"Unexpected error: {error}")</code></pre>
+  <p><strong>Verify</strong>: <code>poll_for_token()</code> returns a dict with <code>access_token</code> after user completes browser authorization.</p>
+
+  <h3>5. Handle the successful token response</h3>
+  <p>Store the <code>access_token</code> and <code>refresh_token</code> securely. Use the access token for API calls. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code">src3</a>]</p>
+  <pre><code class="language-python">tokens = poll_for_token(token_url, device_code, client_id, interval)
+access_token = tokens["access_token"]
+headers = {"Authorization": f"Bearer {access_token}"}
+api_response = requests.get("https://api.example.com/resource", headers=headers)</code></pre>
+  <p><strong>Verify</strong>: API call returns 200 OK with the protected resource data.</p>
+
+  <h3>6. Implement token refresh</h3>
+  <p>When the access token expires, use the refresh token to obtain a new one without re-running the device flow. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code">src3</a>]</p>
+  <pre><code class="language-python">def refresh_access_token(token_url, refresh_token, client_id):
+    resp = requests.post(token_url, data={
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": client_id,
+    })
+    if resp.status_code == 200:
+        return resp.json()
+    raise Exception(f"Token refresh failed: {resp.json()}")</code></pre>
+  <p><strong>Verify</strong>: New <code>access_token</code> and optionally new <code>refresh_token</code> returned.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Complete Device Flow Client</h3>
+  <pre><code class="language-python"># Input:  client_id, scopes, IdP endpoints
+# Output: access_token + refresh_token
+
+import time
+import requests
+import sys
+
+class DeviceFlowClient:
+    def __init__(self, client_id, device_code_url, token_url):
+        self.client_id = client_id
+        self.device_code_url = device_code_url
+        self.token_url = token_url
+
+    def authenticate(self, scope="openid profile"):
+        # Step 1: Request device code
+        resp = requests.post(self.device_code_url, data={
+            "client_id": self.client_id,
+            "scope": scope,
+        })
+        resp.raise_for_status()
+        auth = resp.json()
+
+        # Step 2: Display instructions
+        print(f"\nTo sign in, visit: {auth['verification_uri']}")
+        print(f"Enter code: {auth['user_code']}\n")
+        if "verification_uri_complete" in auth:
+            print(f"Or open: {auth['verification_uri_complete']}\n")
+
+        # Step 3: Poll for token
+        interval = auth.get("interval", 5)
+        expires_at = time.time() + auth["expires_in"]
+
+        while time.time() &lt; expires_at:
+            time.sleep(interval)
+            token_resp = requests.post(self.token_url, data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": auth["device_code"],
+                "client_id": self.client_id,
+            })
+            data = token_resp.json()
+
+            if token_resp.status_code == 200:
+                return data
+
+            error = data.get("error")
+            if error == "authorization_pending":
+                continue
+            elif error == "slow_down":
+                interval += 5
+            elif error == "access_denied":
+                sys.exit("Authorization denied by user.")
+            elif error == "expired_token":
+                sys.exit("Code expired. Please restart.")
+            else:
+                sys.exit(f"Error: {error}: {data.get('error_description')}")
+
+        sys.exit("Code expired before authorization completed.")</code></pre>
+
+  <h3>Node.js: Complete Device Flow Client</h3>
+  <pre><code class="language-javascript">// Input:  clientId, scopes, IdP endpoints
+// Output: { access_token, refresh_token, expires_in }
+
+async function deviceFlowAuth(clientId, deviceCodeUrl, tokenUrl, scope = "openid profile") {
+  // Step 1: Request device code
+  const codeResp = await fetch(deviceCodeUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: clientId, scope }),
+  });
+  const auth = await codeResp.json();
+
+  // Step 2: Display instructions
+  console.log(`\nTo sign in, visit: ${auth.verification_uri}`);
+  console.log(`Enter code: ${auth.user_code}\n`);
+
+  // Step 3: Poll for token
+  let interval = (auth.interval || 5) * 1000;
+  const deadline = Date.now() + auth.expires_in * 1000;
+
+  while (Date.now() &lt; deadline) {
+    await new Promise((r) =&gt; setTimeout(r, interval));
+
+    const tokenResp = await fetch(tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        device_code: auth.device_code,
+        client_id: clientId,
+      }),
+    });
+    const data = await tokenResp.json();
+
+    if (tokenResp.ok) return data;
+
+    switch (data.error) {
+      case "authorization_pending": continue;
+      case "slow_down":            interval += 5000; continue;
+      case "access_denied":        throw new Error("User denied authorization");
+      case "expired_token":        throw new Error("Device code expired");
+      default:                     throw new Error(`${data.error}: ${data.error_description}`);
+    }
+  }
+  throw new Error("Device code expired before user authorized");
+}</code></pre>
+
+  <h3>Go: Complete Device Flow Client</h3>
+  <pre><code class="language-go">// Input:  clientID, scopes, IdP endpoints
+// Output: TokenResponse with AccessToken, RefreshToken
+
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "net/url"
+    "time"
+)
+
+type DeviceCodeResponse struct {
+    DeviceCode              string `json:"device_code"`
+    UserCode                string `json:"user_code"`
+    VerificationURI         string `json:"verification_uri"`
+    VerificationURIComplete string `json:"verification_uri_complete"`
+    ExpiresIn               int    `json:"expires_in"`
+    Interval                int    `json:"interval"`
+}
+
+type TokenResponse struct {
+    AccessToken  string `json:"access_token"`
+    RefreshToken string `json:"refresh_token"`
+    TokenType    string `json:"token_type"`
+    ExpiresIn    int    `json:"expires_in"`
+    Error        string `json:"error"`
+    ErrorDesc    string `json:"error_description"`
+}
+
+func DeviceFlowAuth(clientID, deviceCodeURL, tokenURL, scope string) (*TokenResponse, error) {
+    resp, err := http.PostForm(deviceCodeURL, url.Values{
+        "client_id": {clientID},
+        "scope":     {scope},
+    })
+    if err != nil {
+        return nil, fmt.Errorf("device code request failed: %w", err)
+    }
+    defer resp.Body.Close()
+
+    var auth DeviceCodeResponse
+    json.NewDecoder(resp.Body).Decode(&amp;auth)
+
+    fmt.Printf("\nTo sign in, visit: %s\n", auth.VerificationURI)
+    fmt.Printf("Enter code: %s\n\n", auth.UserCode)
+
+    interval := time.Duration(auth.Interval) * time.Second
+    if interval == 0 {
+        interval = 5 * time.Second
+    }
+    deadline := time.Now().Add(time.Duration(auth.ExpiresIn) * time.Second)
+
+    for time.Now().Before(deadline) {
+        time.Sleep(interval)
+
+        tokenResp, err := http.PostForm(tokenURL, url.Values{
+            "grant_type":  {"urn:ietf:params:oauth:grant-type:device_code"},
+            "device_code": {auth.DeviceCode},
+            "client_id":   {clientID},
+        })
+        if err != nil {
+            interval *= 2
+            continue
+        }
+        defer tokenResp.Body.Close()
+
+        var token TokenResponse
+        json.NewDecoder(tokenResp.Body).Decode(&amp;token)
+
+        if tokenResp.StatusCode == 200 {
+            return &amp;token, nil
+        }
+
+        switch token.Error {
+        case "authorization_pending":
+            continue
+        case "slow_down":
+            interval += 5 * time.Second
+        case "access_denied":
+            return nil, fmt.Errorf("user denied authorization")
+        case "expired_token":
+            return nil, fmt.Errorf("device code expired")
+        default:
+            return nil, fmt.Errorf("%s: %s", token.Error, token.ErrorDesc)
+        }
+    }
+    return nil, fmt.Errorf("device code expired before user authorized")
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Polling without respecting the interval</h3>
+  <pre><code class="language-python"># BAD — polls as fast as possible, will trigger slow_down and get rate-limited
+while True:
+    resp = requests.post(token_url, data=token_data)
+    if resp.status_code == 200:
+        break</code></pre>
+
+  <h3>Correct: Always sleep for the specified interval before each poll</h3>
+  <pre><code class="language-python"># GOOD — respects server-specified interval and handles slow_down
+interval = auth.get("interval", 5)
+while True:
+    time.sleep(interval)  # Always wait BEFORE polling
+    resp = requests.post(token_url, data=token_data)
+    data = resp.json()
+    if resp.status_code == 200:
+        break
+    if data.get("error") == "slow_down":
+        interval += 5  # Cumulative increase per RFC 8628</code></pre>
+
+  <h3>Wrong: Ignoring the slow_down error</h3>
+  <pre><code class="language-javascript">// BAD — treats slow_down same as authorization_pending
+if (data.error === "authorization_pending" || data.error === "slow_down") {
+  continue; // interval stays the same — server will keep returning slow_down
+}</code></pre>
+
+  <h3>Correct: Incrementing interval on slow_down</h3>
+  <pre><code class="language-javascript">// GOOD — adds 5 seconds on slow_down per RFC 8628 Section 3.5
+if (data.error === "slow_down") {
+  interval += 5000; // cumulative +5s in milliseconds
+  continue;
+}</code></pre>
+
+  <h3>Wrong: Hardcoding the verification URI</h3>
+  <pre><code class="language-python"># BAD — verification_uri may change; different tenants have different URIs
+VERIFY_URL = "https://microsoft.com/devicelogin"
+print(f"Go to {VERIFY_URL}")</code></pre>
+
+  <h3>Correct: Using the URI from the device code response</h3>
+  <pre><code class="language-python"># GOOD — always use the URI returned by the authorization server
+auth = request_device_code(client_id, scope)
+print(f"Go to {auth['verification_uri']}")  # Dynamic from server response</code></pre>
+
+  <h3>Wrong: Embedding client_secret in distributed device apps</h3>
+  <pre><code class="language-python"># BAD — device apps are public clients; secrets can be extracted from binaries
+resp = requests.post(device_code_url, data={
+    "client_id": CLIENT_ID,
+    "client_secret": CLIENT_SECRET,  # NEVER do this on a distributed device
+    "scope": "openid",
+})</code></pre>
+
+  <h3>Correct: Using public client flow without secrets</h3>
+  <pre><code class="language-python"># GOOD — device flow is designed for public clients (no secret)
+resp = requests.post(device_code_url, data={
+    "client_id": CLIENT_ID,  # Only client_id, no secret
+    "scope": "openid",
+})</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Polling before the first interval elapses</strong>: The RFC requires waiting <code>interval</code> seconds before the first poll, not just between polls. Polling immediately after receiving the device code wastes a request. Fix: <code>time.sleep(interval)</code> before the first token request. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li><strong>Not handling verification_uri_complete</strong>: Many IdPs return this field which includes the user_code in the URL. Displaying a QR code for it dramatically improves UX on TVs. Fix: check for <code>verification_uri_complete</code> and render a QR code when available. [<a href="https://developers.google.com/identity/protocols/oauth2/limited-input-device">src4</a>]</li>
+    <li><strong>Forgetting to check expires_in</strong>: If the user never completes authorization, your polling loop runs forever. Fix: track <code>expires_in</code> and break the loop with a clear error when the deadline passes. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li><strong>Using wrong grant_type string</strong>: The grant type is the full URN <code>urn:ietf:params:oauth:grant-type:device_code</code>, not <code>device_code</code> or <code>device_authorization</code>. Fix: use the exact string from RFC 8628. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li><strong>Not requesting offline_access scope</strong>: Without this scope, many providers won't issue a refresh_token, forcing the user to re-authenticate when the access_token expires. Fix: include <code>offline_access</code> in the scope parameter. [<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code">src3</a>]</li>
+    <li><strong>Displaying user_code in lowercase</strong>: Some providers generate case-sensitive codes. Even if comparison is case-insensitive, display must match the server response. Fix: display <code>user_code</code> exactly as received. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+    <li><strong>Not implementing exponential backoff on network errors</strong>: Connection timeouts during polling should trigger backoff, not just retry at the same interval. Fix: double the interval on each consecutive network error. [<a href="https://datatracker.ietf.org/doc/html/rfc8628">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test device code endpoint (replace with your IdP URL and client_id)
+curl -s -X POST "https://YOUR_IDP/device/code" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=YOUR_CLIENT_ID&amp;scope=openid" | jq .
+
+# Test token polling (will return authorization_pending before user acts)
+curl -s -X POST "https://YOUR_IDP/oauth/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:device_code&amp;device_code=YOUR_DEVICE_CODE&amp;client_id=YOUR_CLIENT_ID" | jq .
+
+# Verify access token (decode JWT without verification — for debugging only)
+echo "YOUR_ACCESS_TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq .
+
+# Check token expiry from JWT claims
+echo "YOUR_ACCESS_TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '.exp | todate'
+
+# Check IdP discovery endpoint for device_authorization_endpoint
+curl -s "https://YOUR_IDP/.well-known/openid-configuration" | jq '.device_authorization_endpoint'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version / Standard</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>RFC 8628 (Aug 2019)</td><td>Current, Stable</td><td>Finalized the Device Authorization Grant</td><td>Replaced draft-ietf-oauth-device-flow</td></tr>
+      <tr><td>Draft -15 (2018)</td><td>Superseded</td><td>Last draft before RFC publication</td><td>Minor editorial changes from draft to RFC</td></tr>
+      <tr><td>Google Device Flow (2016+)</td><td>Proprietary predecessor</td><td>Pre-RFC implementation; now aligned with RFC 8628</td><td>Uses <code>https://oauth2.googleapis.com/device/code</code></td></tr>
+      <tr><td>Microsoft Device Code Flow</td><td>RFC 8628 aligned</td><td>Does not support <code>verification_uri_complete</code></td><td>Uses <code>https://login.microsoftonline.com/{tenant}/oauth2/v2.0/devicecode</code></td></tr>
+      <tr><td>Auth0 Device Flow</td><td>RFC 8628 aligned</td><td>Full RFC support including <code>verification_uri_complete</code></td><td>Uses <code>https://{domain}/oauth/device/code</code></td></tr>
+      <tr><td>GitHub Device Flow</td><td>RFC 8628 aligned</td><td>Used for CLI authentication (<code>gh auth login</code>)</td><td>Uses <code>https://github.com/login/device/code</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Smart TV, streaming device, game console needs user auth</td><td>Device has a full browser and keyboard</td><td>Authorization Code with PKCE</td></tr>
+      <tr><td>CLI tool needs to authenticate a human user</td><td>Service-to-service (no human user)</td><td>Client Credentials grant</td></tr>
+      <tr><td>IoT device with a screen but no keyboard</td><td>Mobile app with WebView support</td><td>Authorization Code with PKCE (mobile)</td></tr>
+      <tr><td>Digital signage or kiosk in restricted input mode</td><td>Single-page web application</td><td>Authorization Code with PKCE (SPA)</td></tr>
+      <tr><td>Set-top box or media player needs user login</td><td>Server-side web application</td><td>Authorization Code (standard)</td></tr>
+      <tr><td>Headless device that can display/communicate a code</td><td>Device with no display and no way to show code</td><td>Pre-provisioned credentials or bootstrap token</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>Provider endpoint differences</strong>: Each IdP uses slightly different endpoint paths. Always check the <code>/.well-known/openid-configuration</code> discovery document for the <code>device_authorization_endpoint</code> field rather than hardcoding paths.</li>
+    <li><strong>Scope limitations</strong>: Google's device flow supports only a limited set of scopes. Not all OAuth scopes available in other flows may work with device flow. Check your IdP's documentation for device-flow-specific scope restrictions.</li>
+    <li><strong>No verification_uri_complete on Microsoft</strong>: Microsoft Entra ID does not support the optional <code>verification_uri_complete</code> field, so QR code flows require manual construction.</li>
+    <li><strong>User code entropy</strong>: RFC 8628 recommends 8-character base-20 codes (using consonants BCDFGHJKLMNPQRSTVWXZ) for ~34.5 bits of entropy. Shorter or numeric-only codes reduce security against brute-force attacks.</li>
+    <li><strong>Phishing risk</strong>: An attacker could trick a user into entering a device code on a legitimate verification page, authorizing the attacker's device. Mitigation: display device/location context during the authorization step.</li>
+    <li><strong>No PKCE integration</strong>: Device flow does not use PKCE. Security relies on the short lifetime of the device code and the entropy of both device_code and user_code.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/oauth2-authorization-code-pkce/2026" data-relationship="related_to">OAuth2 Authorization Code with PKCE</a>
+    <a href="/software/patterns/oauth2-client-credentials/2026" data-relationship="related_to">OAuth2 Client Credentials Grant</a>
+    <a href="/software/patterns/jwt-implementation/2026" data-relationship="related_to">JWT Implementation Guide</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

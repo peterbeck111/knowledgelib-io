@@ -1,0 +1,57 @@
+# docker-compose.dev.yml -- Development with hot reload
+# Usage: docker compose -f docker-compose.dev.yml up --build
+# Requires: .env file with MONGO_ROOT_USER, MONGO_ROOT_PASSWORD
+
+services:
+  mongo:
+    image: mongo:8.0
+    ports:
+      - "27017:27017"  # Exposed for local tools (Compass, mongosh)
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-appdb}
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+      - "9229:9229"  # Node.js debugger port
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_DB:-appdb}?authSource=admin
+      PORT: 3001
+    volumes:
+      - ./server:/app
+      - /app/node_modules  # Anonymous volume to preserve container node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: ["npx", "nodemon", "--inspect=0.0.0.0:9229", "server.js"]
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"  # Vite dev server
+    environment:
+      VITE_API_URL: http://localhost:3001
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  mongo-data:
+    driver: local

@@ -63,6 +63,9 @@ knowledge_pipeline/
 ├── migrate_seo_tags.js           # One-time migration: injects OG/Twitter/BreadcrumbList/viewport/creator into existing cards
 ├── migrate_improvement_plan.js   # Idempotent migration: temporal_validity, related_kos, constraints, jurisdiction, ai:* meta tags
 ├── extract_scripts.js            # Extracts long code blocks (>25 lines) from software .md into scripts/ subdirectory
+├── generate_pricing_md.js        # Emits pricing.md alongside every product_comparison card (machine-readable for AI shopping agents). Run via `npm run pricing` or part of `npm run publish`.
+├── migrate_canonical_question_h2.js  # One-time migration: injects `<h2 class="canonical-question">` right after `<h1>` on every unit page. Uses replace callback to avoid `$N` corruption from prices in canonical questions.
+├── fix_canonical_question_corruption.js  # Recovery script reversing the original `$1`-backreference corruption (idempotent).
 └── templates/
     ├── product_comparison.md     # Markdown template for product cards (follow exactly)
     ├── product_comparison.html   # HTML template for product cards (follow exactly)

@@ -1,0 +1,41 @@
+# Input:  Kubernetes cluster with Istio installed
+# Output: Strict mTLS + deny-by-default + explicit allow rules
+
+# 1. Enable strict mTLS mesh-wide
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT
+---
+# 2. Deny all traffic by default in namespace
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+  namespace: production
+spec: {}
+---
+# 3. Allow only specific service accounts
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-checkout
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: payment-service
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - "cluster.local/ns/production/sa/checkout-service"
+    to:
+    - operation:
+        methods: ["POST"]
+        paths: ["/api/v1/charge"]

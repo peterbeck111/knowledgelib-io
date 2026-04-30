@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Oracle BICC Deep Dive — PVO Mapping, Extraction Internals & UCM Staging | knowledgelib.io</title>
+  <meta name="description" content="Oracle BICC deep dive — PVO mapping architecture, data store configuration, incremental vs full extraction internals, UCM staging vs OCI Object Storage, REST metadata API automation. 7 sources, all cited. Verified 2026-03-09.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/oracle-bicc-deep-dive/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Oracle BICC Deep Dive — PVO Mapping, Extraction Internals & UCM Staging | knowledgelib.io">
+  <meta property="og:description" content="Oracle BICC deep dive — PVO mapping architecture, data store configuration, incremental vs full extraction internals, UCM staging vs OCI Object Storage, REST metadata API automation. 7 sources, all cited. Verified 2026-03-09.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/oracle-bicc-deep-dive/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-09">
+  <meta property="article:modified_time" content="2026-03-09">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Oracle BICC Deep Dive — PVO Mapping, Extraction Internals & UCM Staging | knowledgelib.io">
+  <meta name="twitter:description" content="Oracle BICC deep dive — PVO mapping architecture, data store configuration, incremental vs full extraction internals, UCM staging vs OCI Object Storage, REST metadata API automation. 7 sources, all cited. Verified 2026-03-09.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-09">
+  <meta name="ai:domain" content="business/erp-integration/oracle-bicc-deep-dive">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How does Oracle BICC work - data extraction, incremental vs full, PVO mapping, UCM staging?">
+  <meta name="ai:aliases" content="Oracle BICC PVO mapping and data store configuration deep dive; Oracle BI Cloud Connector incremental vs full extraction internals; BICC UCM staging vs OCI Object Storage setup and workflow; Oracle BICC REST API automation PVO metadata management">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/oracle-bicc-deep-dive/2026.md">
+  <meta name="ai:token_estimate" content="4800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-03-09">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-09">
+  <meta name="ai:systems" content="Oracle Fusion Cloud Applications (Release 25C)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction">
+  <meta name="ai:constraints" content="PVOs are offering-scoped and immutable; Only ExtractPVOs for bulk extraction; Custom fields require BI-enablement + BI-publish; UCM shares storage with all Fusion consumers; REST metadata API has no read-only role; Incremental requires LastUpdateDate; Filters limited to simple WHERE predicates">
+  <meta name="ai:skip_this_unit_if" content="Need BICC rate limits and scheduling constraints -> business/erp-integration/oracle-bicc-data-extraction/2026; Need real-time operations -> business/erp-integration/oracle-erp-cloud-rest-api-capabilities/2026; Need inbound data import -> business/erp-integration/oracle-erp-cloud-fbdi-import/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Oracle BICC Deep Dive — PVO Mapping, Extraction Internals & UCM Staging",
+    "headline": "Oracle BICC Deep Dive — PVO Mapping, Extraction Internals & UCM Staging",
+    "description": "Comprehensive deep dive into Oracle BICC internals — PVO architecture and mapping, data store configuration, incremental vs full extraction mechanics, UCM staging workflow, OCI Object Storage setup, and REST metadata API automation for production-grade extraction pipelines.",
+    "keywords": ["Oracle BICC", "BI Cloud Connector", "PVO mapping", "Public View Object", "data extraction", "UCM staging", "OCI Object Storage", "Oracle Fusion Cloud", "ERP integration"],
+    "dateModified": "2026-03-09",
+    "datePublished": "2026-03-09",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Oracle Fusion Cloud Applications Release 25C",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Overview of Business Intelligence Cloud Connector",
+        "url": "https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Customizing Oracle BICC Data Extracts with APIs",
+        "url": "https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Choosing Between UCM and OCI Object Storage for BICC",
+        "url": "https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-choosing-between-ucm-and-oci-object-storage"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Oracle BICC Deep Dive — PVO Mapping, Extraction Internals & UCM Staging",
+    "description": "Deep dive into Oracle BICC architecture: PVO mapping, data store configuration, incremental vs full extraction, UCM staging, OCI Object Storage, and REST metadata API for automation.",
+    "keywords": ["Oracle BICC", "PVO", "BI Cloud Connector", "data extraction", "ERP integration"],
+    "temporalCoverage": "2025/2026",
+    "dateModified": "2026-03-09",
+    "datePublished": "2026-03-09",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Oracle"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Oracle BICC Deep Dive" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Oracle BICC work - data extraction, incremental vs full, PVO mapping, UCM staging?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle BICC extracts data through a three-layer architecture: Offerings (functional areas) contain Data Stores, which reference Public View Objects (PVOs). Each PVO maps to denormalized database views built for bulk extraction. Configure data stores by selecting specific PVO attributes, set extraction type (full or incremental), choose a storage target (UCM or OCI Object Storage), and schedule via the BICC Console or SOAP API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle BICC PVO mapping and data store configuration deep dive",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle BICC extracts data through a three-layer architecture: Offerings (functional areas) contain Data Stores, which reference Public View Objects (PVOs). Each PVO maps to denormalized database views built for bulk extraction. Configure data stores by selecting specific PVO attributes, set extraction type (full or incremental), choose a storage target (UCM or OCI Object Storage), and schedule via the BICC Console or SOAP API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle BI Cloud Connector incremental vs full extraction internals",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle BICC extracts data through a three-layer architecture: Offerings (functional areas) contain Data Stores, which reference Public View Objects (PVOs). Each PVO maps to denormalized database views built for bulk extraction. Configure data stores by selecting specific PVO attributes, set extraction type (full or incremental), choose a storage target (UCM or OCI Object Storage), and schedule via the BICC Console or SOAP API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "BICC UCM staging vs OCI Object Storage setup and workflow",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle BICC extracts data through a three-layer architecture: Offerings (functional areas) contain Data Stores, which reference Public View Objects (PVOs). Each PVO maps to denormalized database views built for bulk extraction. Configure data stores by selecting specific PVO attributes, set extraction type (full or incremental), choose a storage target (UCM or OCI Object Storage), and schedule via the BICC Console or SOAP API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Oracle BICC REST API automation PVO metadata management",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Oracle BICC extracts data through a three-layer architecture: Offerings (functional areas) contain Data Stores, which reference Public View Objects (PVOs). Each PVO maps to denormalized database views built for bulk extraction. Configure data stores by selecting specific PVO attributes, set extraction type (full or incremental), choose a storage target (UCM or OCI Object Storage), and schedule via the BICC Console or SOAP API."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Oracle BICC Deep Dive — PVO Mapping, Extraction Internals &amp; UCM Staging</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How does Oracle BICC work - data extraction, incremental vs full, PVO mapping, UCM staging?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/oracle-bicc-deep-dive/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Oracle Fusion Cloud Applications (Release 25C)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-09</span></span>
+    <span><strong>Freshness:</strong> 2026-03-09</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Oracle BICC extracts data through a three-layer architecture: Offerings (functional areas) contain Data Stores, which reference Public View Objects (PVOs). Each PVO maps to denormalized database views built for bulk extraction. Configure data stores by selecting specific PVO attributes, set extraction type (full or incremental), choose a storage target (UCM or OCI Object Storage), and schedule via the BICC Console or SOAP API. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>, <a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/configure-offerings-to-extractofferingsdata-store-for-offering.html">src4</a>]</li>
+    <li><strong>Key limit</strong>: PVOs are offering-scoped and immutable — you cannot reassign a PVO to a different offering, and OTBI reporting PVOs cause severe performance degradation if used for bulk extraction. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>, <a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/configure-offerings-to-extractofferingsdata-store-for-offering.html">src4</a>]</li>
+    <li><strong>Watch out for</strong>: Custom fields require BI-enablement AND BI-publishing before they appear in BICC PVOs. Missing this step is the #1 reason teams report "missing columns" in their extracts. [<a href="https://www.ateam-oracle.com/post/bi-cloud-connector-custom-object-data-extraction">src6</a>]</li>
+    <li><strong>Best for</strong>: Understanding the internal mechanics of BICC — PVO-to-table lineage, data store configuration, incremental extraction logic, UCM file layout, and REST API automation — to build production-grade extraction pipelines. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>, <a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>]</li>
+    <li><strong>Authentication</strong>: ESS Administrator + BIA_ADMINISTRATOR_DUTY + OBIA_EXTRACTTRANSFORMLOAD_RWD roles required. REST metadata API uses the same Fusion authentication (Basic Auth or JWT). [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>, <a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>Oracle BICC is a native component of Oracle Fusion Cloud Applications that implements a structured extraction pipeline: Offerings map to functional modules (Financials, HCM, SCM, Procurement, CX), each containing curated Data Stores that reference one or more Public View Objects (PVOs). PVOs are pre-built, denormalized views over the Fusion transactional schema, designed specifically for efficient bulk data extraction. This card covers the internal architecture and configuration mechanics. For rate limits and scheduling constraints, see the companion BICC Data Extraction card.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Vendor</strong></td><td>Oracle</td></tr>
+      <tr><td><strong>System</strong></td><td>Oracle Fusion Cloud Applications (Release 25C)</td></tr>
+      <tr><td><strong>API Surface</strong></td><td>BICC Console (UI) + SOAP scheduling API + REST metadata API</td></tr>
+      <tr><td><strong>Current Version</strong></td><td>25C (Update 25.06)</td></tr>
+      <tr><td><strong>Editions Covered</strong></td><td>All Oracle Fusion Cloud editions (ERP, HCM, SCM, CX, Procurement)</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>Cloud</td></tr>
+      <tr><td><strong>API Docs</strong></td><td><a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">BICC Documentation</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>GA — actively maintained</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>BICC exposes three distinct interfaces: the Console UI for interactive configuration, a SOAP API for programmatic scheduling and triggering, and a REST API for metadata and PVO management.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Endpoint Pattern</th><th scope="col">Auth Required</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>BICC Console (UI)</td><td>Web UI</td><td>Interactive PVO selection, data store config</td><td>Navigator &gt; Tools &gt; BI Cloud Connector</td><td>Fusion SSO</td><td>Primary configuration interface</td></tr>
+      <tr><td>BICC SOAP API</td><td>SOAP/XML</td><td>Programmatic extract triggering, scheduling</td><td><code>/biacm/ws/BIACMService</code></td><td>Basic Auth / JWT</td><td>Submit, cancel, monitor jobs</td></tr>
+      <tr><td>BICC REST Metadata API</td><td>HTTPS/JSON</td><td>PVO attribute discovery, filter management</td><td><code>/biacm/rest/meta/offerings</code></td><td>Basic Auth / JWT</td><td>Read and update PVO metadata</td></tr>
+      <tr><td>UCM WebDAV</td><td>WebDAV/HTTPS</td><td>Download extracted files from UCM staging</td><td><code>/cs/idcplg</code></td><td>Basic Auth</td><td>File retrieval only</td></tr>
+      <tr><td>OCI Object Storage API</td><td>HTTPS/JSON</td><td>Download extracted files from OCI storage</td><td>Standard OCI API</td><td>OCI IAM / API Key</td><td>S3-compatible access available</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>REST Metadata API Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Offerings list retrieval</td><td>No explicit limit</td><td>GET <code>/biacm/rest/meta/offerings</code></td><td>Returns all offerings in one call</td></tr>
+      <tr><td>Data store metadata read</td><td>No explicit limit</td><td>GET <code>/biacm/rest/meta/datastores/{id}</code></td><td>Full PVO attribute list per request</td></tr>
+      <tr><td>Data store metadata update</td><td>No explicit limit</td><td>PUT <code>/biacm/rest/meta/datastores/</code></td><td>Updates filters and column selections</td></tr>
+      <tr><td>Concurrent API sessions</td><td>Subject to Fusion connection pool</td><td>All REST/SOAP endpoints</td><td>Shared with other Fusion API consumers</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>PVO and Data Store Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PVOs per offering</td><td>Varies (50-500+ per offering)</td><td>Static</td><td>Seeded by Oracle per functional module</td></tr>
+      <tr><td>Total PVOs available</td><td>5,000+ across all offerings</td><td>Static</td><td>Grows with each quarterly release</td></tr>
+      <tr><td>Custom PVO attributes</td><td>Requires BI-enablement + BI-publish</td><td>Per custom field</td><td>Not automatic — manual admin action required</td></tr>
+      <tr><td>Filter expressions per data store</td><td>Simple WHERE predicates only</td><td>Per data store</td><td>No joins, subqueries, or complex SQL</td></tr>
+      <tr><td>Concurrent extract jobs</td><td>1 per offering</td><td>Per offering</td><td>Multiple offerings can run concurrently</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Oracle Fusion SSO</td><td>BICC Console interactive access</td><td>Session-based</td><td>Yes</td><td>Standard Fusion login</td></tr>
+      <tr><td>Basic Auth</td><td>REST/SOAP API in dev/test</td><td>Session-based</td><td>No</td><td>Blocked if SSO enforced; not for production</td></tr>
+      <tr><td>JWT Token Authentication</td><td>Production REST/SOAP API automation</td><td>Configurable</td><td>New token per request</td><td>Requires X.509 certificate; recommended</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Three roles must be combined: ESS Administrator (scheduling), BIA_ADMINISTRATOR_DUTY (BICC operations and REST metadata API), and OBIA_EXTRACTTRANSFORMLOAD_RWD (UCM file download). Assigning only BIA_ADMINISTRATOR_DUTY grants metadata API access but not file retrieval or job scheduling. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>]</li>
+    <li>The REST metadata API does not have a read-only role — anyone with BIA_ADMINISTRATOR_DUTY can both read AND modify PVO configurations. Implement change management controls externally. [<a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>]</li>
+    <li>For OCI Object Storage targets, a separate OCI IAM policy is required on the BICC service account's API key — independent of Fusion role assignments. [<a href="https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-choosing-between-ucm-and-oci-object-storage">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>PVO offering lock-in</strong>: Each PVO belongs to exactly one offering. You cannot extract a Finance PVO through the HCM offering.</li>
+    <li><strong>ExtractPVO requirement</strong>: Only PVOs named with Extract or BIC prefix patterns are designed for BICC bulk extraction. OTBI reporting PVOs cause locks, timeouts, and performance degradation.</li>
+    <li><strong>Custom field BI-enablement</strong>: Custom fields require explicit BI-enablement in Application Composer AND running the BI-publish ESS job before appearing in BICC PVOs.</li>
+    <li><strong>Filter expression limitations</strong>: Data store filters support only simple WHERE clause predicates. No joins, subqueries, or aggregate functions.</li>
+    <li><strong>No PVO customization</strong>: You cannot create custom PVOs or modify seeded PVO SQL definitions. Only attribute selection/deselection is supported.</li>
+    <li><strong>Incremental extraction dependency</strong>: Requires LastUpdateDate column selected in PVO attribute list. PVOs without this column only support full extraction.</li>
+    <li><strong>BICC log removal (25C)</strong>: As of Release 25C, Oracle removed BICC extraction logs from the UI, reducing diagnostic visibility.</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — Need to understand or configure BICC extraction internals
+|
+|-- What do you need to configure?
+|   |
+|   |-- PVO selection and attribute mapping
+|   |   |-- 1. Navigate to BICC Console &gt; Manage Extracts &gt; Select Offerings
+|   |   |-- 2. Choose offering matching your functional area
+|   |   |-- 3. Select ONLY ExtractPVOs (pattern: *ExtractPVO, *BICVO)
+|   |   |-- 4. Choose attributes — MUST include PK + LastUpdateDate
+|   |
+|   |-- Data store filters (subset extraction)
+|   |   |-- Option A: BICC Console &gt; Data Store &gt; Edit Data Store Details
+|   |   |-- Option B: REST API &gt; PUT /biacm/rest/meta/datastores/
+|   |   |-- Limitation: Simple WHERE predicates only
+|   |
+|   |-- Storage target
+|   |   |-- UCM (default, built-in, shared storage)
+|   |   |-- OCI Object Storage (recommended for new deployments)
+|   |
+|   |-- Incremental vs Full extraction
+|   |   |-- Full: ALL records — required for initial baseline
+|   |   |-- Incremental: Changed records only — requires LastUpdateDate
+|   |   |-- NOTE: Incremental does NOT capture hard deletes
+|   |
+|   |-- Automation via REST API
+|       |-- GET /biacm/rest/meta/offerings
+|       |-- GET /biacm/rest/meta/datastores/{id}
+|       |-- PUT /biacm/rest/meta/datastores/</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Description</th><th scope="col">Configuration Path</th><th scope="col">Key Detail</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Offering</strong></td><td>Functional module grouping</td><td>BICC Console &gt; Select Offerings</td><td>Each offering has its own PVO set</td></tr>
+      <tr><td><strong>Data Store</strong></td><td>Wrapper around a single PVO</td><td>Offering &gt; Data Stores list</td><td>Configure attributes, filters here</td></tr>
+      <tr><td><strong>PVO</strong></td><td>Denormalized view over transactional tables</td><td>Data Store &gt; View Object details</td><td>Use ExtractPVOs only</td></tr>
+      <tr><td><strong>ExtractPVO</strong></td><td>PVO optimized for bulk extraction</td><td>Pattern: *ExtractPVO, *BICVO</td><td>Reads from denormalized views</td></tr>
+      <tr><td><strong>PVO Attributes</strong></td><td>Selectable columns within a PVO</td><td>Data Store &gt; Edit &gt; Select Columns</td><td>Must include PK + LastUpdateDate</td></tr>
+      <tr><td><strong>Data Store Filter</strong></td><td>WHERE clause predicate</td><td>Edit Data Store Details &gt; Query Filter</td><td>Simple predicates only</td></tr>
+      <tr><td><strong>Manifest File</strong></td><td>JSON metadata per extract run</td><td>Root of extract output directory</td><td>VO name, row count, file list</td></tr>
+      <tr><td><strong>UCM Staging</strong></td><td>Default file storage target</td><td>No setup required</td><td>Shared with all Fusion consumers</td></tr>
+      <tr><td><strong>OCI Object Storage</strong></td><td>Recommended file storage target</td><td>Configure External Storage dialog</td><td>Requires OCI tenancy, bucket, API key</td></tr>
+      <tr><td><strong>Full Extract</strong></td><td>All records from PVO</td><td>Extract creation dialog</td><td>Required for initial baseline</td></tr>
+      <tr><td><strong>Incremental Extract</strong></td><td>Changed records since last extract</td><td>Extract creation dialog</td><td>Requires LastUpdateDate</td></tr>
+      <tr><td><strong>Prune Time</strong></td><td>Lookback hours for incremental</td><td>Per offering schedule settings</td><td>Set &gt;= extract duration</td></tr>
+      <tr><td><strong>BI-Enablement</strong></td><td>Making custom fields visible in PVOs</td><td>Application Composer</td><td>Must also run BI-publish ESS job</td></tr>
+      <tr><td><strong>PVO Lineage</strong></td><td>PVO-to-table column mapping</td><td>Extract output lineage file</td><td>Maps attributes to source tables</td></tr>
+      <tr><td><strong>REST API Base</strong></td><td>Metadata API for PVO management</td><td><code>/biacm/rest/meta/</code></td><td>Requires BIA_ADMINISTRATOR_DUTY</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Discover available offerings and PVOs via REST API</h3>
+  <p>Query the BICC metadata API to programmatically list available offerings and their PVOs. [<a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>, <a href="https://docs.oracle.com/en/cloud/saas/applications-common/24d/biacc/manage-meta-data-rest-api1-vo-attributes-for-sdm-vo-and-non-sdm.html">src5</a>]</p>
+  <pre><code class="language-bash"># List all offerings
+curl -s -u "bicc_admin:password" \
+  "https://your-instance.fa.us2.oraclecloud.com/biacm/rest/meta/offerings" \
+  -H "Accept: application/json" | python3 -m json.tool
+
+# Get data store details for a specific offering
+curl -s -u "bicc_admin:password" \
+  "https://your-instance.fa.us2.oraclecloud.com/biacm/rest/meta/datastores/FinancialAnalytics" \
+  -H "Accept: application/json" | python3 -m json.tool</code></pre>
+  <p><strong>Verify</strong>: Response contains a JSON array of offerings with data stores, PVO names, and attribute lists.</p>
+
+  <h3>2. Select PVO attributes and configure data store</h3>
+  <p>Choose the right PVO (ExtractPVO pattern) and select only needed attributes. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/configure-offerings-to-extractofferingsdata-store-for-offering.html">src4</a>, <a href="https://docs.oracle.com/en/cloud/saas/applications-common/24d/biacc/manage-meta-data-rest-api1-vo-attributes-for-sdm-vo-and-non-sdm.html">src5</a>]</p>
+  <pre><code>1. BICC Console &gt; Manage Extracts &gt; Select Offerings
+2. Choose offering (e.g., "Financial Analytics")
+3. For each data store:
+   a. Verify PVO name follows ExtractPVO or BICVO pattern
+   b. Select: Primary key columns + LastUpdateDate + business columns
+   c. DESELECT unnecessary columns
+4. Enable for Extract &gt; Save</code></pre>
+  <p><strong>Verify</strong>: Data store shows "Enabled" status with selected attribute count.</p>
+
+  <h3>3. Apply data store filters for targeted extraction</h3>
+  <p>Restrict extraction to specific business units, ledgers, or date ranges. [<a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>]</p>
+  <pre><code class="language-bash"># Update filter via REST API
+curl -s -u "bicc_admin:password" \
+  -X PUT \
+  "https://your-instance.fa.us2.oraclecloud.com/biacm/rest/meta/datastores/" \
+  -H "Content-Type: application/json" \
+  -d '{"datastoreId":"GL_BALANCES_EXTRACT","filter":"LEDGER_ID = 300000001234"}'</code></pre>
+  <p><strong>Verify</strong>: GET the data store and confirm filter field reflects new predicate.</p>
+
+  <h3>4. Configure external storage target</h3>
+  <p>Set up OCI Object Storage as the extraction target. [<a href="https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-choosing-between-ucm-and-oci-object-storage">src3</a>]</p>
+  <pre><code>1. BICC Console &gt; Manage Extracts &gt; Configure External Storage
+2. Select "Oracle Cloud Infrastructure Object Storage" tab
+3. Enter: Tenancy OCID, User OCID, Fingerprint, Private Key, Region, Namespace, Bucket
+4. Test Connection &gt; Save</code></pre>
+  <p><strong>Verify</strong>: Status shows "Connected". Test extract confirms files in OCI bucket.</p>
+
+  <h3>5. Run initial full extraction</h3>
+  <p>Execute full extraction to establish baseline for incremental. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>]</p>
+  <pre><code>1. BICC Console &gt; Manage Extracts &gt; Create Extract
+2. Select offering, extract type: Full, storage target: OCI Object Storage
+3. Set timeout: 20 hours &gt; Submit
+4. Monitor via BICC Console &gt; Monitor Extracts</code></pre>
+  <p><strong>Verify</strong>: Job status "Completed". Validate manifest row counts against OTBI report.</p>
+
+  <h3>6. Configure incremental extraction with prune time</h3>
+  <p>Set up recurring incremental extracts. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>]</p>
+  <pre><code>1. BICC Console &gt; Manage Extracts &gt; Schedule
+2. Extract type: Incremental
+3. Prune time: 4 hours (&gt;= typical extract duration)
+4. Recurrence: Daily at 02:00
+5. NOTE: Incremental does NOT capture hard deletes</code></pre>
+  <p><strong>Verify</strong>: First incremental run contains only changed records.</p>
+
+  <h3>7. Retrieve PVO lineage mapping</h3>
+  <p>Download PVO-to-database-table lineage for schema design. [<a href="https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-lineage-there-and-back-again">src7</a>]</p>
+  <pre><code class="language-bash"># List lineage files in OCI bucket
+oci os object list --bucket-name bicc-extracts \
+  --prefix "data/" --output json | \
+  python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for obj in data['data']:
+    if 'lineage' in obj['name'].lower():
+        print(obj['name'])
+"</code></pre>
+  <p><strong>Verify</strong>: Lineage file maps each PVO attribute to its source database table and column.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Discover and inventory all BICC PVOs via REST API</h3>
+  <pre><code class="language-python"># Input:  Oracle Fusion URL, credentials
+# Output: Complete inventory of offerings, data stores, and PVO attributes
+
+import requests  # requests&gt;=2.31.0
+import json
+
+def inventory_bicc_pvos(fusion_url, username, password):
+    """Build a complete inventory of all BICC offerings and PVOs."""
+    session = requests.Session()
+    session.auth = (username, password)
+    session.headers.update({"Accept": "application/json"})
+
+    offerings_resp = session.get(f"{fusion_url}/biacm/rest/meta/offerings")
+    offerings_resp.raise_for_status()
+    offerings = offerings_resp.json()
+
+    inventory = []
+    for offering in offerings:
+        offering_name = offering.get("name", "unknown")
+        ds_resp = session.get(
+            f"{fusion_url}/biacm/rest/meta/datastores/{offering_name}"
+        )
+        if ds_resp.status_code != 200:
+            continue
+
+        datastores = ds_resp.json()
+        for ds in datastores if isinstance(datastores, list) else [datastores]:
+            attributes = ds.get("attributes", [])
+            has_lud = any("LastUpdateDate" in a.get("name", "") for a in attributes)
+            inventory.append({
+                "offering": offering_name,
+                "datastore_id": ds.get("datastoreId", "unknown"),
+                "attribute_count": len(attributes),
+                "supports_incremental": has_lud,
+                "filter": ds.get("filter", None),
+            })
+    return inventory</code></pre>
+
+  <h3>Python: Update BICC data store filter via REST API</h3>
+  <pre><code class="language-python"># Input:  Fusion URL, credentials, data store ID, filter expression
+# Output: Updated data store configuration
+
+import requests  # requests&gt;=2.31.0
+
+def update_bicc_filter(fusion_url, username, password, datastore_id, filter_expr):
+    """Update a BICC data store filter via REST API."""
+    session = requests.Session()
+    session.auth = (username, password)
+
+    put_resp = session.put(
+        f"{fusion_url}/biacm/rest/meta/datastores/",
+        json={"datastoreId": datastore_id, "filter": filter_expr},
+        headers={"Content-Type": "application/json"}
+    )
+    put_resp.raise_for_status()
+    return put_resp.json()</code></pre>
+
+  <h3>cURL: Common BICC REST API operations</h3>
+  <pre><code class="language-bash"># List all offerings
+curl -s -u "admin:password" \
+  "https://instance.fa.us2.oraclecloud.com/biacm/rest/meta/offerings" \
+  -H "Accept: application/json"
+
+# Get PVO attributes for a data store
+curl -s -u "admin:password" \
+  "https://instance.fa.us2.oraclecloud.com/biacm/rest/meta/datastores/AP_INVOICES_EXTRACT" \
+  -H "Accept: application/json"
+
+# Update data store filter
+curl -s -u "admin:password" -X PUT \
+  "https://instance.fa.us2.oraclecloud.com/biacm/rest/meta/datastores/" \
+  -H "Content-Type: application/json" \
+  -d '{"datastoreId":"AP_INVOICES_EXTRACT","filter":"ORG_ID = 300000001"}'</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>BICC Architecture: Offering-to-PVO Hierarchy</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Layer</th><th scope="col">Name</th><th scope="col">Description</th><th scope="col">Example</th><th scope="col">Cardinality</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Offering</strong></td><td>Functional module grouping</td><td>Top-level organizational unit</td><td>Financial Analytics, HCM Analytics</td><td>1 offering : N data stores</td></tr>
+      <tr><td><strong>Data Store</strong></td><td>PVO wrapper within an offering</td><td>Configurable extraction unit</td><td>GlBalancesExtract</td><td>1 data store : 1 PVO</td></tr>
+      <tr><td><strong>PVO</strong></td><td>Denormalized database view</td><td>Read-only view over transactional tables</td><td>GlBalancesExtractPVO</td><td>1 PVO : N attributes</td></tr>
+      <tr><td><strong>PVO Attribute</strong></td><td>Individual column in the PVO</td><td>Selectable for extraction</td><td>LEDGER_ID, AMOUNT</td><td>Mapped to 1+ source columns</td></tr>
+      <tr><td><strong>Source Table</strong></td><td>Fusion transactional table</td><td>Underlying data source</td><td>GL_BALANCES, AP_INVOICES_ALL</td><td>PVO joins multiple tables</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>PVO Naming Convention</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Type</th><th scope="col">Use For</th><th scope="col">Performance</th><th scope="col">Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>*ExtractPVO</code></td><td>Extract PVO</td><td>BICC bulk extraction</td><td>Optimized (denormalized)</td><td>GlBalancesExtractPVO</td></tr>
+      <tr><td><code>*BICVO</code></td><td>BIC View Object</td><td>BICC bulk extraction</td><td>Optimized (denormalized)</td><td>ApInvoicesBICVO</td></tr>
+      <tr><td><code>*PVO</code> (no Extract/BIC)</td><td>General PVO</td><td>OTBI reporting (NOT for BICC)</td><td>Poor for bulk</td><td>GlBalancesPVO</td></tr>
+      <tr><td><code>*VO</code></td><td>View Object</td><td>OTBI reporting (NOT for BICC)</td><td>Poor for bulk</td><td>TransactionHeaderVO</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>PVO attribute names use UPPER_CASE_UNDERSCORE convention in CSV output, which may differ from the camelCase shown in the BICC Console. Use CSV header row as authoritative. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/24d/biacc/manage-meta-data-rest-api1-vo-attributes-for-sdm-vo-and-non-sdm.html">src5</a>]</li>
+    <li>LastUpdateDate in BICC output is always UTC, regardless of Fusion user timezone preference. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>]</li>
+    <li>Custom flexfield attributes appear with generated names (e.g., _FLEX_VALUE1). Cross-reference lineage file for functional names. [<a href="https://www.ateam-oracle.com/post/bi-cloud-connector-custom-object-data-extraction">src6</a>]</li>
+    <li>NULL values are empty fields in CSV — indistinguishable from actual empty strings without PVO metadata. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/24d/biacc/manage-meta-data-rest-api1-vo-attributes-for-sdm-vo-and-non-sdm.html">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Conditions</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Condition</th><th scope="col">Symptom</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Missing columns in extract</td><td>Expected PVO attribute absent</td><td>Custom field not BI-enabled or BI-publish job not run</td><td>BI-enable in App Composer, run BI-publish ESS job</td></tr>
+      <tr><td>Incremental returning full dataset</td><td>Unexpectedly large output</td><td>LastUpdateDate not selected, or baseline reset</td><td>Verify LastUpdateDate in PVO selection; check baseline</td></tr>
+      <tr><td>REST API 401 Unauthorized</td><td>Metadata API calls rejected</td><td>Missing BIA_ADMINISTRATOR_DUTY or expired JWT</td><td>Verify role; regenerate JWT</td></tr>
+      <tr><td>Filter expression error</td><td>Extract fails at submission</td><td>Invalid filter syntax</td><td>Simplify to column = value predicates</td></tr>
+      <tr><td>OTBI PVO degradation</td><td>Extract runs 10x slower</td><td>Selected OTBI PVO instead of ExtractPVO</td><td>Switch to ExtractPVO variant</td></tr>
+      <tr><td>OCI write failure</td><td>Files not in bucket</td><td>Expired API key or IAM policy missing</td><td>Rotate key; verify IAM policy</td></tr>
+      <tr><td>PVO not visible</td><td>Expected PVO missing from list</td><td>PVO belongs to different offering</td><td>Check other offerings; verify release notes</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Custom field invisibility</strong>: Requires two steps — BI-enablement in Application Composer AND running BI-publish ESS job. Fix: <code>create deployment checklist: BI-enable, run ESS job, verify in BICC Console</code>. [<a href="https://www.ateam-oracle.com/post/bi-cloud-connector-custom-object-data-extraction">src6</a>]</li>
+    <li><strong>Incremental baseline corruption</strong>: Resetting offering's last extract date destroys baseline. Next "incremental" extracts everything. Fix: <code>monitor row counts; alert if incremental exceeds 2x normal; re-run full extract</code>. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>]</li>
+    <li><strong>Wrong PVO type causing slowdown</strong>: OTBI PVOs lock transactional tables during extraction. Fix: <code>audit PVO names — ExtractPVO or BICVO patterns only</code>. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>, <a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/configure-offerings-to-extractofferingsdata-store-for-offering.html">src4</a>]</li>
+    <li><strong>UCM storage exhaustion cascade</strong>: Shared storage fills up, breaking all file operations. Fix: <code>automated cleanup or migrate to OCI Object Storage</code>. [<a href="https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-choosing-between-ucm-and-oci-object-storage">src3</a>]</li>
+    <li><strong>REST API filter overwrite during promotion</strong>: Env promotion may overwrite filters. Fix: <code>store filters externally; re-apply via REST API post-promotion</code>. [<a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using OTBI reporting PVOs for BICC bulk extraction</h3>
+  <pre><code class="language-sql">-- BAD: TransactionHeaderPVO joins transactional tables, acquires row locks
+Selected: FscmTopModelAM.FinancialAnalysisAM.TransactionHeaderPVO
+Result: 10x slower extraction, Fusion UI sluggish for all users</code></pre>
+
+  <h3>Correct: Use designated ExtractPVOs</h3>
+  <pre><code class="language-sql">-- GOOD: ExtractPVOs read from pre-joined denormalized views
+Selected: FscmTopModelAM.FinExtractAM.ApInvoicesExtractPVO
+Result: Fast extraction, minimal Fusion impact
+Naming rule: *ExtractPVO or *BICVO pattern</code></pre>
+
+  <h3>Wrong: Expecting custom fields automatically in BICC</h3>
+  <pre><code>-- BAD: Add field in Application Composer, immediately check BICC
+Step 1: Add "Custom_Score__c" in Application Composer
+Step 2: Look for it in BICC PVO
+Result: Column not found — support ticket filed</code></pre>
+
+  <h3>Correct: BI-enable, BI-publish, then verify</h3>
+  <pre><code>-- GOOD: Follow the two-step BI-enablement process
+Step 1: Application Composer &gt; BI Enable custom field
+Step 2: Run ESS Job: "Import Oracle Fusion Data Extensions for Transactional BI"
+Step 3: Wait for ESS job completion (30-60 minutes)
+Step 4: Verify field in BICC Console PVO attribute list</code></pre>
+
+  <h3>Wrong: Hardcoding filters in BICC Console per environment</h3>
+  <pre><code>-- BAD: Manual Console configuration — error-prone, not version-controlled
+Dev:  Filter = "ORG_ID = 100" (manual)
+Test: Filter = "ORG_ID = 200" (copy-paste errors)
+Prod: Filter = "ORG_ID = 300" (forgot to update)</code></pre>
+
+  <h3>Correct: Manage filters via REST API with external metadata</h3>
+  <pre><code class="language-python"># GOOD: Version-controlled, auditable, repeatable
+ENVIRONMENTS = {
+    "dev":  {"org_id": 100},
+    "test": {"org_id": 200},
+    "prod": {"org_id": 300},
+}
+def apply_bicc_filters(env, fusion_url, username, password):
+    config = ENVIRONMENTS[env]
+    update_bicc_filter(fusion_url, username, password,
+                       "AP_INVOICES_EXTRACT", f"ORG_ID = {config['org_id']}")</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Not running BI-publish ESS job</strong>: BI-enablement is only step 1. The ESS job must run (30-60 min) to materialize fields. Fix: <code>add ESS job to deployment checklist; verify in BICC Console</code>. [<a href="https://www.ateam-oracle.com/post/bi-cloud-connector-custom-object-data-extraction">src6</a>]</li>
+    <li><strong>Prune time too narrow</strong>: If prune time &lt; extraction duration, changed records are missed. Fix: <code>set prune time &gt;= 2x expected extraction duration</code>. [<a href="https://docs.oracle.com/en/cloud/saas/applications-common/25c/biacc/overview-of-business-intelligence-cloud-connector.html">src1</a>]</li>
+    <li><strong>Ignoring PVO lineage</strong>: PVO attribute names can be misleading. Fix: <code>download lineage file; use as source of truth for target schema</code>. [<a href="https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-lineage-there-and-back-again">src7</a>]</li>
+    <li><strong>Using Console for environment promotion</strong>: Configurations not exportable. Fix: <code>use REST API GET+PUT to export/import as JSON; store in version control</code>. [<a href="https://www.ateam-oracle.com/customizing-oracle-bicc-data-extracts-with-apis">src2</a>]</li>
+    <li><strong>Not monitoring UCM utilization</strong>: Storage fills silently. Fix: <code>weekly monitoring; automated cleanup; or migrate to OCI Object Storage</code>. [<a href="https://www.ateam-oracle.com/fusion-applications-bi-cloud-connector-choosing-between-ucm-and-oci-object-storage">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># List all BICC offerings via REST API
+curl -s -u "admin:password" \
+  "https://instance.fa.us2.oraclecloud.com/biacm/rest/meta/offerings" \
+  -H "Accept: application/json" | python3 -m json.tool
+
+# Get PVO attributes for a specific data store
+curl -s -u "admin:password" \
+  "https://instance.fa.us2.oraclecloud.com/biacm/rest/meta/datastores/GL_BALANCES_EXTRACT" \
+  -H "Accept: application/json" | python3 -c "
+import json, sys
+ds = json.load(sys.stdin)
+attrs = ds.get('attributes', [])
+print(f'Total attributes: {len(attrs)}')
+for a in attrs:
+    print(f'  {a.get(\"name\", \"?\")} [{a.get(\"type\", \"?\")}]')
+"
+
+# Check if LastUpdateDate is selected (for incremental)
+curl -s -u "admin:password" \
+  "https://instance.fa.us2.oraclecloud.com/biacm/rest/meta/datastores/AP_INVOICES_EXTRACT" \
+  -H "Accept: application/json" | python3 -c "
+import json, sys
+ds = json.load(sys.stdin)
+lud = [a for a in ds.get('attributes', []) if 'LastUpdate' in a.get('name', '')]
+print('Incremental supported' if lud else 'WARNING: Only full extraction possible')
+"
+
+# List extracted files in OCI Object Storage
+oci os object list --bucket-name bicc-extracts --prefix "data/" --output table</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Release</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Key BICC Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>25C (25.06)</td><td>2025-06</td><td>Current</td><td>BICC logs removed from UI; OCI OS enhancements</td><td>Reduced diagnostics; use manifest files</td></tr>
+      <tr><td>25B (25.03)</td><td>2025-03</td><td>Supported</td><td>OCI Object Storage recommended over UCM</td><td>Official guidance shift</td></tr>
+      <tr><td>24D (24.12)</td><td>2024-12</td><td>Supported</td><td>Custom object extraction; enhanced lineage</td><td>ExtractPVOs for custom objects</td></tr>
+      <tr><td>24C (24.09)</td><td>2024-09</td><td>Supported</td><td>REST metadata API enhancements</td><td>Improved PVO discovery and filters</td></tr>
+      <tr><td>24B (24.06)</td><td>2024-06</td><td>Supported</td><td>Split file size configurability</td><td>1-5GB configurable per VO</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Need to understand PVO architecture and attribute mapping</td><td>Need BICC rate limits and file size constraints</td><td><a href="/business/erp-integration/oracle-bicc-data-extraction/2026">Oracle BICC Data Extraction</a></td></tr>
+      <tr><td>Automating BICC configuration across environments via REST API</td><td>Need real-time individual record operations</td><td><a href="/business/erp-integration/oracle-erp-cloud-rest-api-capabilities/2026">Oracle ERP Cloud REST API</a></td></tr>
+      <tr><td>Debugging missing custom fields in BICC extracts</td><td>Need to import data INTO Oracle Fusion</td><td><a href="/business/erp-integration/oracle-erp-cloud-fbdi-import/2026">Oracle FBDI Import</a></td></tr>
+      <tr><td>Setting up incremental extraction with proper prune time</td><td>Need middleware orchestration around BICC</td><td><a href="/business/erp-integration/oracle-integration-cloud-capabilities/2026">Oracle Integration Cloud</a></td></tr>
+      <tr><td>Choosing between UCM and OCI Object Storage</td><td>Need Oracle Fusion authentication setup</td><td><a href="/business/erp-integration/oracle-erp-cloud-authentication/2026">Oracle ERP Cloud Authentication</a></td></tr>
+      <tr><td>Understanding PVO lineage for target schema design</td><td>Need simple BICC quick-start guide</td><td><a href="/business/erp-integration/oracle-bicc-data-extraction/2026">Oracle BICC Data Extraction</a></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>The BICC REST metadata API has no read-only access role. Any user with BIA_ADMINISTRATOR_DUTY can modify PVO selections, filters, and data store configurations. Implement external change management controls.</li>
+    <li>As of Release 25C, Oracle removed BICC extraction logs from the UI. Diagnostic capabilities are now limited to manifest files and file inspection.</li>
+    <li>PVO coverage is not uniform across Oracle Fusion modules. Always check the BICC Console for available PVOs before committing to a BICC architecture.</li>
+    <li>Incremental extraction does NOT capture hard deletes — only inserts and updates. Implement periodic full extract + diff for delete detection.</li>
+    <li>Data store filter expressions are not validated at save time — invalid expressions fail only at runtime. Always test with a small extract first.</li>
+    <li>BICC configuration is not included in standard Fusion environment migration tools. Use REST API for environment promotion.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/oracle-bicc-data-extraction/2026" data-relationship="related_to">Oracle BICC Data Extraction — Rate Limits & Constraints</a>
+    <a href="/business/erp-integration/oracle-erp-cloud-authentication/2026" data-relationship="depends_on">Oracle ERP Cloud Authentication</a>
+    <a href="/business/erp-integration/oracle-erp-cloud-rest-api-capabilities/2026" data-relationship="alternative_to">Oracle ERP Cloud REST API Capabilities</a>
+    <a href="/business/erp-integration/oracle-erp-cloud-fbdi-import/2026" data-relationship="often_confused_with">Oracle ERP Cloud FBDI Import</a>
+    <a href="/business/erp-integration/oracle-integration-cloud-capabilities/2026" data-relationship="related_to">Oracle Integration Cloud Capabilities</a>
+    <a href="/business/erp-integration/oracle-oic-vs-mulesoft-oracle-erp/2026" data-relationship="solves">OIC vs MuleSoft for Oracle ERP</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

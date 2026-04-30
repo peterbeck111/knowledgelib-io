@@ -1,0 +1,89 @@
+{
+  "id": "software/patterns/idempotency-patterns/2026",
+  "category": "software",
+  "subcategory": "patterns",
+  "topic": "idempotency-patterns",
+  "version_tag": "2026",
+  "canonical_question": "How do I implement idempotency in APIs and distributed systems?",
+  "aliases": [
+    "idempotent API design",
+    "idempotency key implementation",
+    "safe API retry patterns",
+    "preventing duplicate operations",
+    "Idempotency-Key header",
+    "at-least-once idempotent consumer",
+    "message deduplication patterns",
+    "distributed systems idempotency"
+  ],
+  "entity_type": "software_reference",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.92,
+  "token_estimate": 3600,
+  "source_count": 7,
+  "md_path": "/software/patterns/idempotency-patterns/2026.md",
+  "html_path": "/software/patterns/idempotency-patterns/2026.html",
+  "priority": "high",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "stable",
+    "last_breaking_change": "IETF draft-ietf-httpapi-idempotency-key-header-07 (2024) standardizes the Idempotency-Key header format",
+    "next_review": "2026-08-24",
+    "change_sensitivity": "low"
+  },
+  "constraints": [
+    "Idempotency check MUST happen BEFORE mutation -- checking after write is useless",
+    "Idempotency key + execute MUST be atomic (single transaction or distributed lock) to prevent race conditions",
+    "Idempotency keys MUST have a TTL (24h-30d typical) -- unbounded storage causes OOM or table bloat",
+    "NEVER reuse an idempotency key with different request parameters -- servers must reject with 422",
+    "Client-generated keys MUST use cryptographically random UUIDs (v4) -- sequential IDs enable guessing attacks"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "Need exactly-once message delivery guarantees from the broker itself",
+      "use_instead": "Message broker documentation (Kafka exactly-once, SQS FIFO deduplication)"
+    },
+    {
+      "condition": "Need database-level conflict resolution without application logic",
+      "use_instead": "software/patterns/sql-upsert/2026"
+    },
+    {
+      "condition": "Need to prevent concurrent writes to the same resource",
+      "use_instead": "Optimistic concurrency control / ETags"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [],
+    "related_to": [
+      { "id": "software/system-design/webhooks-system/2026", "label": "Webhook System Design" },
+      { "id": "software/system-design/message-queue-event-driven/2026", "label": "Message Queue & Event-Driven Architecture" },
+      { "id": "software/system-design/payment-processing/2026", "label": "Payment Processing System Design" },
+      { "id": "software/system-design/api-gateway/2026", "label": "API Gateway Design" }
+    ],
+    "solves": [],
+    "alternative_to": [],
+    "often_confused_with": [
+      { "id": "software/patterns/sql-upsert/2026", "label": "SQL UPSERT (INSERT ON CONFLICT) -- handles DB-level dedup, not API-level" }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "layer",
+      "question": "Which layer needs idempotency?",
+      "type": "choice",
+      "options": ["API", "database", "message queue"]
+    },
+    {
+      "key": "storage",
+      "question": "What storage is available for idempotency state?",
+      "type": "choice",
+      "options": ["PostgreSQL", "Redis", "DynamoDB", "in-memory"]
+    },
+    {
+      "key": "ttl_requirements",
+      "question": "How long should idempotency keys be retained?",
+      "type": "choice",
+      "options": ["1 hour", "24 hours", "7 days", "30 days"]
+    }
+  ]
+}

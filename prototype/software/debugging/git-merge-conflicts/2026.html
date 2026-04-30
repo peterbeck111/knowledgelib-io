@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Best Strategies for Resolving Git Merge Conflicts | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to Git merge conflict resolution: 15-row command reference, merge vs rebase, ours/theirs semantics, rerere, zdiff3, ort strategy,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/git-merge-conflicts/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Best Strategies for Resolving Git Merge Conflicts | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to Git merge conflict resolution: merge vs rebase, ours/theirs, rerere, zdiff3, ort strategy, mergetool, AI-assisted resolution, pre-commit hook. 8 authoritative sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/git-merge-conflicts/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-19">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Best Strategies for Resolving Git Merge Conflicts | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to Git merge conflict resolution: merge vs rebase, ours/theirs, rerere, zdiff3, ort strategy, mergetool, AI-assisted resolution, pre-commit hook. 8 authoritative sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.95">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/git_merge_conflicts">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="What are the best strategies for resolving Git merge conflicts?">
+    <meta name="ai:aliases"
+        content="git merge conflict; resolve git conflict; git merge vs rebase; git rerere; git conflict markers; git checkout --ours --theirs; git merge tool; git conflict resolution; git rebase conflict; merge conflict best practices">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/git-merge-conflicts/2026.md">
+    <meta name="ai:token_estimate" content="6200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="yearly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-19">
+    <meta name="ai:inputs_needed" content="operation_type,conflict_complexity,resolution_preference">
+    <meta name="ai:constraints"
+        content="Never commit with conflict markers — use git diff --check; During rebase ours/theirs are reversed; git merge -s ours discards entire other branch tree; Binary files require full-side selection; Never force-push rebased shared branches; Lock files must be regenerated not manually edited">
+    <meta name="ai:skip_this_unit_if"
+        content="Detached HEAD problem → software/debugging/git-detached-head/2026; SSL/TLS certificate errors → software/debugging/ssl-tls-certificate-errors/2026; Git branching strategies → software/devops/git-branching-strategies/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Best Strategies for Resolving Git Merge Conflicts",
+    "headline": "What Are the Best Strategies for Resolving Git Merge Conflicts?",
+    "description": "Complete reference for Git merge conflict resolution covering merge vs rebase strategies, ours/theirs semantics, rerere configuration, zdiff3 conflict style, ort merge strategy, AI-assisted resolution, merge tools, and pre-commit hooks.",
+    "keywords": ["Git", "merge conflict", "git rebase", "git merge", "rerere", "conflict resolution", "ours theirs", "mergetool", "zdiff3", "ort strategy"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-19",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "Git 2.0+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Git docs — git-merge", "url": "https://git-scm.com/docs/git-merge" },
+      { "@type": "WebPage", "name": "Git docs — git-rerere", "url": "https://git-scm.com/docs/git-rerere" },
+      { "@type": "WebPage", "name": "Atlassian — merge strategy", "url": "https://www.atlassian.com/git/tutorials/using-branches/merge-strategy" },
+      { "@type": "WebPage", "name": "GitButler — How Core Git Devs Configure Git", "url": "https://blog.gitbutler.com/how-git-core-devs-configure-git" },
+      { "@type": "WebPage", "name": "Ductile Systems — Better Git Conflicts with zdiff3", "url": "https://www.ductile.systems/zdiff3/" },
+      { "@type": "WebPage", "name": "Pro Git — Advanced Merging", "url": "https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging" },
+      { "@type": "WebPage", "name": "VS Code — Resolve merge conflicts", "url": "https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts" },
+      { "@type": "WebPage", "name": "Git docs — merge-strategies (ort)", "url": "https://git-scm.com/docs/merge-strategies" }
+    ]
+  }
+  </script>
+
+    <!-- Structured data: Dataset -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Best Strategies for Resolving Git Merge Conflicts",
+    "description": "Structured reference for Git merge conflict resolution strategies with command reference, ours/theirs semantics, rerere configuration, zdiff3 conflict style, ort strategy updates, and anti-patterns.",
+    "keywords": ["Git", "version control", "merge conflict", "rebase", "rerere", "zdiff3", "ort"],
+    "temporalCoverage": "2005/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-19",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Git Project"},
+      {"@type": "Organization", "name": "Atlassian"},
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "Best Strategies for Resolving Git Merge Conflicts" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best strategies for resolving Git merge conflicts?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Merge conflicts occur when Git can't auto-reconcile divergent changes to the same lines, a deleted-vs-modified file, or a renamed file. The fastest resolution path is: identify conflicted files → open in editor → resolve conflict markers → git add → git commit (or git rebase --continue)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git merge conflict",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Merge conflicts occur when Git can't auto-reconcile divergent changes to the same lines, a deleted-vs-modified file, or a renamed file. The fastest resolution path is: identify conflicted files → open in editor → resolve conflict markers → git add → git commit (or git rebase --continue)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "resolve git conflict",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Merge conflicts occur when Git can't auto-reconcile divergent changes to the same lines, a deleted-vs-modified file, or a renamed file. The fastest resolution path is: identify conflicted files → open in editor → resolve conflict markers → git add → git commit (or git rebase --continue)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git merge vs rebase",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Merge conflicts occur when Git can't auto-reconcile divergent changes to the same lines, a deleted-vs-modified file, or a renamed file. The fastest resolution path is: identify conflicted files → open in editor → resolve conflict markers → git add → git commit (or git rebase --continue)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git rerere",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Merge conflicts occur when Git can't auto-reconcile divergent changes to the same lines, a deleted-vs-modified file, or a renamed file. The fastest resolution path is: identify conflicted files → open in editor → resolve conflict markers → git add → git commit (or git rebase --continue)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "git conflict markers",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Merge conflicts occur when Git can't auto-reconcile divergent changes to the same lines, a deleted-vs-modified file, or a renamed file. The fastest resolution path is: identify conflicted files → open in editor → resolve conflict markers → git add → git commit (or git rebase --continue)."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>What Are the Best Strategies for Resolving Git Merge Conflicts?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best strategies for resolving Git merge conflicts?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/git-merge-conflicts/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> yearly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Merge conflicts occur when Git can't auto-reconcile divergent changes to
+                the same lines. The fastest path: identify conflicted files → resolve markers → <code>git add</code> →
+                <code>git commit</code> (merge) or <code>git rebase --continue</code> (rebase).</li>
+            <li><strong>Key tool/command</strong>: <code>git status</code> to list conflicted files;
+                <code>git diff --diff-filter=U</code> to see all unmerged hunks; <code>git mergetool</code> to open a
+                GUI resolver.</li>
+            <li><strong>Watch out for</strong>: Never commit with conflict markers
+                (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>,
+                <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>) still in files. Run <code>git diff --check</code> to catch
+                stray markers before committing.</li>
+            <li><strong>Works with</strong>: Git 2.0+. The <code>zdiff3</code> conflict style requires Git 2.35+. The
+                <code>ort</code> merge strategy (now default) requires Git 2.33+. As of Git 2.50,
+                <code>recursive</code> is a synonym for <code>ort</code>.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li><strong>Never commit with conflict markers</strong>: Always run <code>git diff --check</code> before
+                committing a merge resolution. Stray <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> markers in production code
+                cause syntax errors and silent data corruption.</li>
+            <li><strong>ours/theirs semantics flip during rebase</strong>: During <code>git merge</code>,
+                <code>--ours</code> = your current branch (HEAD), <code>--theirs</code> = incoming. During
+                <code>git rebase</code>, <code>--ours</code> = the upstream branch you're rebasing onto,
+                <code>--theirs</code> = your commits being replayed. Getting this wrong silently discards the wrong
+                side's changes.</li>
+            <li><strong><code>git merge -s ours</code> is destructive</strong>: This merge <em>strategy</em> creates a
+                merge commit but completely ignores the other branch's tree. It is not the same as
+                <code>git merge -X ours</code> (a strategy <em>option</em> that only resolves conflicted hunks with
+                HEAD). Confusing the two can silently discard an entire branch of work. [<a
+                    href="https://git-scm.com/docs/git-merge">src1</a>]</li>
+            <li><strong>Binary files require full-side selection</strong>: Git cannot partially merge binary files. You
+                must choose <code>--ours</code> or <code>--theirs</code> entirely. [<a
+                    href="https://git-scm.com/docs/git-merge">src1</a>]</li>
+            <li><strong>Never force-push rebased shared branches</strong>: Rebasing rewrites commit SHAs. Force-pushing
+                a shared branch breaks every collaborator who has based work on the original commits.</li>
+            <li><strong>Lock files must be regenerated</strong>: Resolve <code>package-lock.json</code>,
+                <code>yarn.lock</code>, <code>pnpm-lock.yaml</code> by accepting one side and regenerating:
+                <code>git checkout --theirs package-lock.json &amp;&amp; npm install</code>. Manual edits produce
+                invalid checksums.</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Scenario</th>
+                        <th scope="col">Command / Solution</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>List all conflicted files</td>
+                        <td><code>git status</code> or <code>git diff --name-only --diff-filter=U</code></td>
+                        <td>Files marked <code>UU</code> (both modified) [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Accept current branch for one file</td>
+                        <td><code>git checkout --ours &lt;file&gt;</code></td>
+                        <td>"Ours" = branch you're on (HEAD) [<a href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                                href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Accept incoming branch for one file</td>
+                        <td><code>git checkout --theirs &lt;file&gt;</code></td>
+                        <td>"Theirs" = branch being merged in [<a href="https://git-scm.com/docs/git-merge">src1</a>,
+                            <a href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Accept ours for entire merge</td>
+                        <td><code>git merge -X ours &lt;branch&gt;</code></td>
+                        <td>Silently resolves all conflicts with HEAD version [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                                href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Accept theirs for entire merge</td>
+                        <td><code>git merge -X theirs &lt;branch&gt;</code></td>
+                        <td>Silently resolves all conflicts with incoming version [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                                href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Open GUI merge tool</td>
+                        <td><code>git mergetool</code></td>
+                        <td>Uses configured tool (VS Code, vimdiff, meld) [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                                href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Show common ancestor in markers</td>
+                        <td><code>git config merge.conflictStyle diff3</code></td>
+                        <td>Adds <code>|||||||</code> section with base version [<a
+                                href="https://www.ductile.systems/zdiff3/">src5</a>, <a
+                                href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Use improved zdiff3 (recommended)</td>
+                        <td><code>git config --global merge.conflictStyle zdiff3</code></td>
+                        <td>Zealously removes common context from conflict markers (Git 2.35+) [<a
+                                href="https://blog.gitbutler.com/how-git-core-devs-configure-git">src4</a>, <a
+                                href="https://www.ductile.systems/zdiff3/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Enable rerere (auto-reuse resolutions)</td>
+                        <td><code>git config --global rerere.enabled true</code></td>
+                        <td>Records and replays conflict resolutions [<a
+                                href="https://git-scm.com/docs/git-rerere">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Abort a merge</td>
+                        <td><code>git merge --abort</code></td>
+                        <td>Returns to pre-merge state [<a href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Abort a rebase</td>
+                        <td><code>git rebase --abort</code></td>
+                        <td>Returns to pre-rebase state [<a href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Continue after rebase conflict</td>
+                        <td><code>git add &lt;file&gt; &amp;&amp; git rebase --continue</code></td>
+                        <td>Move to next commit in rebase [<a href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>Skip conflicted commit in rebase</td>
+                        <td><code>git rebase --skip</code></td>
+                        <td>Drops the conflicting commit entirely [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>View conflict history</td>
+                        <td><code>git log --merge --oneline</code></td>
+                        <td>Shows commits that caused the conflict [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>AI-assisted resolution (VS Code)</td>
+                        <td>Open conflicted file → "Resolve with Copilot"</td>
+                        <td>Requires GitHub Copilot subscription; uses merge base as context [<a
+                                href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START — Merge conflict encountered
+├── Is this a merge or a rebase?
+│   ├── MERGE
+│   │   ├── Abort? → git merge --abort [src1]
+│   │   ├── Accept one side for all files?
+│   │   │   ├── Keep HEAD → git merge -X ours &lt;branch&gt; [src1, src3]
+│   │   │   └── Keep incoming → git merge -X theirs &lt;branch&gt; [src1, src3]
+│   │   └── Resolve file by file:
+│   │       ├── One side wins → git checkout --ours/--theirs &lt;file&gt; [src1, src6]
+│   │       ├── Need to combine → edit manually, remove markers [src6]
+│   │       ├── Complex conflict → git mergetool (GUI) [src1, src7]
+│   │       └── AI-assisted → VS Code "Resolve with Copilot" (experimental) [src7]
+│   └── REBASE (conflicts appear per commit replayed)
+│       ├── Abort? → git rebase --abort [src1]
+│       ├── Resolve → git add &lt;file&gt; → git rebase --continue [src1]
+│       └── Skip commit? → git rebase --skip [src1]
+├── After resolving each file:
+│   ├── git add &lt;resolved-file&gt;
+│   ├── git diff --check  (verify no stray markers)
+│   └── git commit (merge) or git rebase --continue (rebase)
+├── Lock file conflict?
+│   └── Accept one side → regenerate → git checkout --theirs package-lock.json &amp;&amp; npm install [src6]
+└── Recurring conflicts? → git config --global rerere.enabled true [src2]</code></pre>
+    </section>
+
+    <!-- Step-by-Step -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Understand conflict markers</h3>
+        <p>When a conflict occurs, Git inserts markers into the file. [<a
+                href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                href="https://www.ductile.systems/zdiff3/">src5</a>, <a
+                href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]
+        </p>
+        <pre><code class="language-text">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD (current branch)
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+||||||| base (common ancestor — only with diff3/zdiff3 style)
+function greet(name) {
+  return 'Hello, ' + name + '!';
+}
+======= (separator)
+function greet(name, greeting = 'Hello') {
+  return `${greeting}, ${name}!`;
+}
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/greeting-improvements (incoming branch)</code></pre>
+        <p><strong>Enable <code>zdiff3</code> style to see the common ancestor</strong> (strongly recommended — used by
+            Git core developers): [<a href="https://blog.gitbutler.com/how-git-core-devs-configure-git">src4</a>, <a
+                href="https://www.ductile.systems/zdiff3/">src5</a>]</p>
+        <pre><code class="language-bash"># Git 2.35+ — zealously removes common context from markers
+git config --global merge.conflictStyle zdiff3
+# Older Git — still better than default
+git config --global merge.conflictStyle diff3</code></pre>
+        <p><strong>Verify</strong>: <code>git config merge.conflictStyle</code> → expected: <code>zdiff3</code></p>
+
+        <h3>2. Find and triage all conflicts</h3>
+        <pre><code class="language-bash">git status                              # UU = unmerged
+git diff --name-only --diff-filter=U   # filenames only
+git diff                                # all conflict hunks
+git log --merge --oneline --left-right  # contributing commits</code></pre>
+        <p><strong>Verify</strong>: <code>git diff --name-only --diff-filter=U</code> → lists all files needing
+            resolution</p>
+
+        <h3>3. Resolve manually</h3>
+        <p>Edit each conflicted file, remove all conflict markers, and keep the correct code. [<a
+                href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</p>
+        <pre><code class="language-bash"># Edit file → remove all &lt;&lt;&lt;&lt;&lt;&lt;&lt;, =======, &gt;&gt;&gt;&gt;&gt;&gt;&gt; markers
+git add path/to/resolved-file.js
+git diff --check          # verify no stray markers
+git commit                # finalise the merge</code></pre>
+        <p><strong>Verify</strong>: <code>git diff --check</code> → empty output means no stray markers</p>
+
+        <h3>4. Accept one side entirely</h3>
+        <p>When one side's changes are definitively correct: [<a href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>, <a
+                href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</p>
+        <pre><code class="language-bash">git checkout --ours   src/config.json &amp;&amp; git add src/config.json
+git checkout --theirs src/api/client.js &amp;&amp; git add src/api/client.js
+
+# In rebase: ours/theirs are SWAPPED
+# --ours = upstream branch; --theirs = your feature commit being replayed</code></pre>
+        <p><strong>Verify</strong>: <code>git status</code> → file should show as staged (green), no longer UU</p>
+
+        <h3>5. Use a merge tool for complex conflicts</h3>
+        <p>A visual three-way merge tool is much faster for multi-hunk conflicts. [<a
+                href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</p>
+        <pre><code class="language-bash"># Configure VS Code as merge tool (includes 3-way merge editor + AI assist)
+git config --global merge.tool vscode
+git config --global mergetool.vscode.cmd 'code --wait $MERGED'
+git config --global mergetool.keepBackup false
+
+# Launch
+git mergetool                        # all conflicted files
+git mergetool path/to/file.js        # specific file</code></pre>
+        <p><strong>Verify</strong>: <code>git status</code> → all conflicted files should be resolved</p>
+
+        <h3>6. Enable rerere — avoid resolving the same conflict twice</h3>
+        <p><code>rerere</code> records conflict resolutions and automatically replays them. [<a
+                href="https://git-scm.com/docs/git-rerere">src2</a>, <a
+                href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</p>
+        <pre><code class="language-bash">git config --global rerere.enabled true
+git config --global rerere.autoupdate true  # auto-stage rerere fixes
+
+git rerere status          # show tracked conflicts
+git rerere diff            # show recorded resolution
+git rerere forget file.js  # discard a bad resolution</code></pre>
+        <p><strong>Verify</strong>: <code>git config rerere.enabled</code> → <code>true</code></p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Bash: automated conflict detection and summary</h3>
+        <p>Full script: <a
+                href="scripts/script-automated-conflict-detection-and-summary.sh">script-automated-conflict-detection-and-summary.sh</a>
+            (32 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+echo "=== Git Conflict Summary ==="
+echo "Branch: $(git branch --show-current)"
+
+CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null)
+CONFLICT_COUNT=$(echo "$CONFLICT_FILES" | grep -c . 2>/dev/null || echo 0)
+
+[ "$CONFLICT_COUNT" -eq 0 ] && echo "No conflicts" && exit 0
+
+echo "$CONFLICT_COUNT conflicted file(s):"
+while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    HUNKS=$(grep -c "^<<<<<<< " "$file" 2>/dev/null || echo 0)
+    echo "  $file ($HUNKS hunk(s))"
+    grep -n "^<<<<<<< \|^>>>>>>> \|^=======" "$file" 2>/dev/null | head -4 | sed 's/^/     /'
+done &lt;&lt;&lt; "$CONFLICT_FILES"
+
+echo ""
+echo "Resolution: edit files → git add &lt;file&gt; → git commit"
+echo "GUI:        git mergetool"
+echo "Abort:      git merge --abort | git rebase --abort"</code></pre>
+
+        <h3>Python: pre-commit hook — detect conflict markers</h3>
+        <p>Full script: <a
+                href="scripts/python-pre-commit-hook-detect-conflict-markers.py">python-pre-commit-hook-detect-conflict-markers.py</a>
+            (53 lines)</p>
+        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+Pre-commit hook — blocks commits containing unresolved conflict markers.
+Install: cp this_file .git/hooks/pre-commit &amp;&amp; chmod +x .git/hooks/pre-commit
+"""
+import subprocess, sys, re
+
+MARKERS = re.compile(r'^(&lt;{7}|={7}|&gt;{7}|\|{7})', re.MULTILINE)
+
+def get_staged_files():
+    r = subprocess.run(['git','diff','--cached','--name-only','--diff-filter=ACMR'],
+                       capture_output=True, text=True)
+    return [f.strip() for f in r.stdout.splitlines() if f.strip()]
+
+def check_file(path):
+    r = subprocess.run(['git','show',f':{path}'], capture_output=True, text=True)
+    if r.returncode != 0: return []
+    return [(i+1, l.rstrip()) for i,l in enumerate(r.stdout.splitlines())
+            if MARKERS.match(l)]
+
+found = False
+for f in get_staged_files():
+    hits = check_file(f)
+    if hits:
+        found = True
+        print(f"Conflict markers in {f}:")
+        for lineno, line in hits:
+            print(f"   Line {lineno}: {line}")
+
+if found:
+    print("\nResolve conflicts first: git mergetool | git diff --check")
+    sys.exit(1)
+sys.exit(0)</code></pre>
+
+        <h3>Bash: clean feature branch rebase workflow</h3>
+        <p>Full script: <a
+                href="scripts/git-workflow-feature-branch-with-clean-rebase.sh">git-workflow-feature-branch-with-clean-rebase.sh</a>
+            (40 lines)</p>
+        <pre><code class="language-bash">#!/bin/bash
+FEATURE="${1:-$(git branch --show-current)}"
+TARGET="${2:-main}"
+
+echo "=== Rebasing $FEATURE onto $TARGET ==="
+git fetch origin "$TARGET"
+git checkout "$FEATURE"
+git rebase "origin/$TARGET"
+
+if [ $? -ne 0 ]; then
+    echo "Conflicts detected. For each conflicted file:"
+    echo "  1. Resolve in editor (remove &lt;&lt;&lt;&lt;&lt;&lt;&lt; markers)"
+    echo "  2. git add &lt;resolved-file&gt;"
+    echo "  3. git rebase --continue"
+    echo ""
+    echo "Cancel: git rebase --abort"
+    echo "Skip commit: git rebase --skip"
+    echo "Tip: git config --global rerere.enabled true (auto-replay resolutions)"
+    exit 1
+fi
+
+echo "Rebase complete"
+git checkout "$TARGET"
+git merge --ff-only "$FEATURE"
+echo "Fast-forward merge complete — push: git push origin $TARGET"</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Resolving rebase conflicts with --ours when you mean your feature branch</h3>
+        <pre><code class="language-bash"># BAD — during rebase, --ours = UPSTREAM branch (not your feature!) [src1, src6]
+git rebase main
+# conflict appears...
+git checkout --ours conflicted-file.js   # keeps main's version silently!
+git add conflicted-file.js
+git rebase --continue
+# Your feature changes are lost with no warning!</code></pre>
+
+        <h3>Correct: During rebase, --theirs is your feature branch</h3>
+        <pre><code class="language-bash"># GOOD — understand the ours/theirs flip in rebase [src1, src6]
+# Rebasing feature onto main:
+#   --ours   = main (upstream)
+#   --theirs = your feature commit being replayed
+git checkout --theirs conflicted-file.js
+git add conflicted-file.js
+git rebase --continue
+
+# When in doubt, inspect explicitly:
+git show :2:conflicted-file.js  # "ours" (main)
+git show :3:conflicted-file.js  # "theirs" (feature commit)</code></pre>
+
+        <h3>Wrong: Committing without verifying conflict markers are gone</h3>
+        <pre><code class="language-bash"># BAD — committing with stray markers [src1, src6]
+git add src/utils.js
+git commit -m "resolve conflict"
+# &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD is now in production code!</code></pre>
+
+        <h3>Correct: Always run git diff --check before committing</h3>
+        <pre><code class="language-bash"># GOOD — verify no markers remain [src1, src6]
+git diff --check
+# Empty output means safe to commit
+# Use pre-commit hook (see code example above) to automate this</code></pre>
+
+        <h3>Wrong: Using git merge -X theirs when only some files should accept theirs</h3>
+        <pre><code class="language-bash"># BAD — silently overwrites ALL conflicts with one side [src1, src3]
+git merge -X theirs feature/big-refactor
+# No review — even files you wanted to keep are overwritten</code></pre>
+
+        <h3>Correct: Per-file intentional resolution</h3>
+        <pre><code class="language-bash"># GOOD — make intentional per-file decisions [src1, src3]
+git merge feature/big-refactor   # let it conflict
+git checkout --theirs src/api/client.js    # their refactor is better
+git checkout --ours   src/config/env.js    # keep our environment config
+# Manually resolve src/utils/helpers.js    # both sides have useful changes
+git add src/api/client.js src/config/env.js src/utils/helpers.js
+git diff --check
+git commit</code></pre>
+
+        <h3>Wrong: Using default conflict style without common ancestor context</h3>
+        <pre><code class="language-bash"># BAD — default conflict style shows only two sides [src4, src5]
+# Without diff3/zdiff3, you can't see what the original code looked like:
+# &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+# const timeout = 5000;
+# =======
+# const timeout = 10000;
+# &gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/performance
+# Was it 3000 before? 5000? You don't know — forced to guess.</code></pre>
+
+        <h3>Correct: Configure zdiff3 globally to see the base version</h3>
+        <pre><code class="language-bash"># GOOD — zdiff3 shows the common ancestor with minimized noise [src4, src5]
+git config --global merge.conflictStyle zdiff3
+
+# Now conflicts show the base version:
+# &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+# const timeout = 5000;
+# ||||||| base
+# const timeout = 3000;
+# =======
+# const timeout = 10000;
+# &gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/performance
+# Now you can see both sides changed from 3000 — make an informed decision.</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>ours</code>/<code>theirs</code> meaning flips during rebase</strong>: During
+                <code>git merge</code>, <code>ours</code> = your current branch; during <code>git rebase</code>,
+                <code>ours</code> = the upstream branch you're rebasing onto. This trips up even experienced developers.
+                [<a href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                    href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</li>
+            <li><strong>Default conflict style hides the base</strong>: Without <code>merge.conflictStyle zdiff3</code>,
+                you only see two sides. Enabling <code>zdiff3</code> (Git 2.35+) often makes the correct resolution
+                immediately obvious. Git core developers use zdiff3 by default. [<a
+                    href="https://blog.gitbutler.com/how-git-core-devs-configure-git">src4</a>,
+                <a href="https://www.ductile.systems/zdiff3/">src5</a>]</li>
+            <li><strong>Long-lived branches accumulate conflicts</strong>: The longer a branch diverges from
+                <code>main</code>, the more conflicts accumulate. Keeping branches short (less than a week) and rebasing
+                daily dramatically reduces complexity. [<a
+                    href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>]</li>
+            <li><strong><code>git rerere</code> not enabled by default</strong>: This powerful feature is off by
+                default. Enable globally with <code>rerere.enabled true</code>. Use
+                <code>--no-rerere-autoupdate</code> if you want to review rerere's resolutions before they're staged.
+                [<a href="https://git-scm.com/docs/git-rerere">src2</a>, <a
+                    href="https://blog.gitbutler.com/how-git-core-devs-configure-git">src4</a>]</li>
+            <li><strong>Backup files from mergetool</strong>: By default, <code>git mergetool</code> creates
+                <code>.orig</code> backup files. Set <code>mergetool.keepBackup false</code> globally to suppress them,
+                and add <code>*.orig</code> to <code>.gitignore</code>. [<a
+                    href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                    href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</li>
+            <li><strong>Forgetting to <code>git add</code> after manual resolution</strong>: After editing a conflicted
+                file, you must <code>git add</code> it to mark it resolved. Just saving the file is not enough — Git
+                still considers it conflicted until staged. [<a href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                    href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging">src6</a>]</li>
+            <li><strong><code>recursive</code> strategy removed in Git 2.50</strong>: As of Git 2.50, the
+                <code>recursive</code> merge strategy is a synonym for <code>ort</code>. If your CI scripts reference
+                <code>-s recursive</code> explicitly, they still work but are redirected. New scripts should use
+                <code>ort</code> directly. [<a href="https://git-scm.com/docs/merge-strategies">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <p>Full script: <a href="scripts/diagnostic-commands.sh">diagnostic-commands.sh</a> (31 lines)</p>
+        <pre><code class="language-bash"># Find conflicts
+git status
+git diff --name-only --diff-filter=U
+git diff
+git log --merge --oneline --left-right
+
+# Inspect both sides of a conflict
+git show :1:file.js   # common ancestor
+git show :2:file.js   # ours (HEAD)
+git show :3:file.js   # theirs (incoming)
+
+# Quick resolution
+git checkout --ours file.js
+git checkout --theirs file.js
+git add file.js
+
+# After resolving
+git diff --check    # verify no stray markers
+git status          # confirm no more UU files
+
+# Abort
+git merge --abort
+git rebase --abort
+git cherry-pick --abort
+
+# rerere
+git rerere status
+git rerere diff
+git rerere forget file.js
+ls .git/rr-cache/
+
+# Global configuration (recommended)
+git config --global merge.conflictStyle zdiff3
+git config --global rerere.enabled true
+git config --global rerere.autoupdate true
+git config --global merge.tool vscode
+git config --global mergetool.keepBackup false</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Available Since</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>git rerere</code></td>
+                        <td>Git 1.5.4</td>
+                        <td>Enable with <code>rerere.enabled true</code> [<a
+                                href="https://git-scm.com/docs/git-rerere">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>merge.conflictStyle diff3</code></td>
+                        <td>Git 1.6.1</td>
+                        <td>Shows common ancestor in conflict markers [<a
+                                href="https://www.ductile.systems/zdiff3/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>merge.conflictStyle zdiff3</code></td>
+                        <td>Git 2.35 (Jan 2022)</td>
+                        <td>Improved diff3 — zealously removes common context from markers [<a
+                                href="https://blog.gitbutler.com/how-git-core-devs-configure-git">src4</a>, <a
+                                href="https://www.ductile.systems/zdiff3/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git checkout --ours/--theirs</code></td>
+                        <td>Git 1.6.1</td>
+                        <td>Per-file resolution [<a href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git merge -X ours/theirs</code></td>
+                        <td>Git 1.7.0</td>
+                        <td>Whole-merge strategy option [<a href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git mergetool</code></td>
+                        <td>Git 1.5.1</td>
+                        <td>Launch configured merge tool [<a href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git merge --abort</code></td>
+                        <td>Git 1.7.4</td>
+                        <td>Before: <code>git reset --merge</code> [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git rebase --abort/--continue</code></td>
+                        <td>Git 1.7.8</td>
+                        <td>Safely cancel or continue a rebase [<a
+                                href="https://git-scm.com/docs/git-merge">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>ort</code> merge strategy (default)</td>
+                        <td>Git 2.33 (Aug 2021)</td>
+                        <td>Faster replacement for <code>recursive</code>; better rename detection [<a
+                                href="https://git-scm.com/docs/merge-strategies">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>recursive</code> → <code>ort</code> redirect</td>
+                        <td>Git 2.50 (2025)</td>
+                        <td><code>recursive</code> is now a synonym for <code>ort</code> [<a
+                                href="https://git-scm.com/docs/merge-strategies">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>VS Code AI-assisted merge</td>
+                        <td>VS Code 1.105 (2025)</td>
+                        <td>Requires GitHub Copilot subscription [<a
+                                href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Strategy</th>
+                        <th scope="col">When</th>
+                        <th scope="col">Why</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>git merge</code></td>
+                        <td>Shared/public branches</td>
+                        <td>Preserves full history; safe for collaborators [<a
+                                href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>git rebase</code></td>
+                        <td>Private feature branches</td>
+                        <td>Linear history; cleaner PR diffs [<a
+                                href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>git merge -X ours/theirs</code></td>
+                        <td>Auto-generated files (lock files, changelogs)</td>
+                        <td>One side is definitively correct [<a href="https://git-scm.com/docs/git-merge">src1</a>, <a
+                                href="https://www.atlassian.com/git/tutorials/using-branches/merge-strategy">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>rerere</code></td>
+                        <td>Frequent rebases; long-lived branches</td>
+                        <td>Avoid re-resolving the same conflict [<a
+                                href="https://git-scm.com/docs/git-rerere">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>zdiff3</code> style</td>
+                        <td>Always</td>
+                        <td>More context = better resolution decisions; recommended by Git core devs [<a
+                                href="https://blog.gitbutler.com/how-git-core-devs-configure-git">src4</a>, <a
+                                href="https://www.ductile.systems/zdiff3/">src5</a>]</td>
+                    </tr>
+                    <tr>
+                        <td><code>git mergetool</code></td>
+                        <td>Complex multi-hunk conflicts</td>
+                        <td>Visual three-way merge is faster [<a
+                                href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>AI-assisted (VS Code Copilot)</td>
+                        <td>Conflicts with clear intent on both sides</td>
+                        <td>AI considers merge base + both branches; experimental, review output carefully [<a
+                                href="https://code.visualstudio.com/docs/sourcecontrol/merge-conflicts">src7</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>Never force-push a rebased shared branch without team agreement</strong>: Rebasing rewrites
+                commit SHAs. If teammates have based work on the original commits, force-pushing will cause them major
+                problems. Only rebase branches that are purely local or clearly marked as regularly rebased.</li>
+            <li><strong><code>git merge -X ours</code> is not <code>git merge -s ours</code></strong>:
+                <code>-X ours</code> is a strategy <em>option</em> (resolves conflicts with HEAD while incorporating the
+                merge). <code>-s ours</code> is a strategy (creates a merge commit but completely ignores the other
+                branch's tree). The latter is rarely what you want. [<a
+                    href="https://git-scm.com/docs/git-merge">src1</a>]</li>
+            <li><strong>Lock files always conflict</strong>: Handle <code>package-lock.json</code>,
+                <code>yarn.lock</code>, <code>Pipfile.lock</code> by accepting one side and regenerating:
+                <code>git checkout --theirs package-lock.json &amp;&amp; npm install</code>.</li>
+            <li><strong>Binary file conflicts require full side selection</strong>: Git cannot auto-resolve binary file
+                conflicts. You must choose <code>--ours</code> or <code>--theirs</code> entirely. There are no partial
+                resolutions for binary files. [<a href="https://git-scm.com/docs/git-merge">src1</a>]</li>
+            <li><strong>Squash merges can stale rerere cache</strong>: If your workflow squash-merges PRs, individual
+                commit SHAs change and <code>rerere</code> cache entries become stale. Evaluate whether
+                <code>rerere</code> fits your merge strategy. [<a href="https://git-scm.com/docs/git-rerere">src2</a>]
+            </li>
+            <li><strong><code>ort</code> strategy differences</strong>: The <code>ort</code> merge strategy (default
+                since Git 2.33, sole backend since 2.50) handles rename detection better than the old
+                <code>recursive</code> strategy but may produce different conflict markers for edge cases involving
+                directory renames. If you see unexpected conflicts after upgrading, check
+                <code>git log --diff-filter=R</code> for renames. [<a
+                    href="https://git-scm.com/docs/merge-strategies">src8</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/git-detached-head/2026"
+            data-relationship="related_to">Git Detached HEAD</a>
+        <a href="/software/debugging/browser-cors-errors/2026"
+            data-relationship="related_to">Browser CORS Errors</a>
+        <a href="/software/debugging/ssl-tls-certificate-errors/2026"
+            data-relationship="solves">SSL/TLS Certificate Errors</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Salesforce Platform Events, Change Data Capture | knowledgelib.io</title>
+  <meta name="description" content="Salesforce Platform Events, CDC, and Pub/Sub API capabilities — publishing limits (250K/hour), delivery allocations, 72-hour event retention, gRPC vs...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/salesforce-streaming-platform-events/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Salesforce Platform Events, Change Data Capture | knowledgelib.io">
+  <meta property="og:description" content="Salesforce Platform Events, CDC, and Pub/Sub API capabilities — publishing limits (250K/hour), delivery allocations, 72-hour event retention, gRPC vs CometD, CDC entity limits, replay IDs, and integration pattern decision tree. 8 sources, all cited. Verified 2026-03-01.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/salesforce-streaming-platform-events/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-01">
+  <meta property="article:modified_time" content="2026-03-01">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Salesforce Platform Events, Change Data Capture | knowledgelib.io">
+  <meta name="twitter:description" content="Salesforce Platform Events, CDC, and Pub/Sub API capabilities — publishing limits (250K/hour), delivery allocations, 72-hour event retention, gRPC vs CometD, CDC entity limits, replay IDs, and integration pattern decision tree. 8 sources, all cited. Verified 2026-03-01.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-03-01">
+  <meta name="ai:domain" content="business/erp-integration/salesforce-streaming-platform-events">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are Salesforce Platform Events, Change Data Capture, and Pub/Sub API capabilities and limits?">
+  <meta name="ai:aliases" content="Salesforce Platform Events limits and allocations; Salesforce Change Data Capture CDC configuration and limits; Salesforce Pub/Sub API gRPC vs Streaming API CometD; Salesforce event-driven architecture streaming options">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/salesforce-streaming-platform-events/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-03-01">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-01">
+  <meta name="ai:systems" content="Salesforce Platform (API v62.0)">
+  <meta name="ai:inputs_needed" content="integration_pattern,data_volume,direction">
+  <meta name="ai:constraints" content="250K publishes/hour (Perf/Unlim), delivery counted per subscriber; CDC 5-entity limit without add-on; 72h event retention; 2,000 concurrent CometD clients; 1,000 gRPC streams/channel; 1 MB per event, 4 MB per PublishRequest">
+  <meta name="ai:skip_this_unit_if" content="Need REST API CRUD operations -> business/erp-integration/salesforce-rest-api/2026; Need Bulk API for batch/ETL -> business/erp-integration/salesforce-bulk-api/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Salesforce Platform Events, Change Data Capture, and Pub/Sub API",
+    "headline": "Salesforce Platform Events, Change Data Capture, and Pub/Sub API",
+    "description": "Comprehensive reference for Salesforce event-driven integration: Platform Events publishing limits (250K/hour), Change Data Capture entity limits and retention (72h), Pub/Sub API gRPC allocations, CometD vs gRPC comparison, authentication flows, and integration pattern decision tree.",
+    "keywords": ["Salesforce", "Platform Events", "Change Data Capture", "CDC", "Pub/Sub API", "gRPC", "Streaming API", "CometD", "ERP integration", "event-driven architecture"],
+    "dateModified": "2026-03-01",
+    "datePublished": "2026-03-01",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce Platform API v62.0",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Platform Event Allocations — Platform Events Developer Guide",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pub/Sub API Allocations",
+        "url": "https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Change Data Capture Allocations — CDC Developer Guide",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Streaming API vs. Pub/Sub API",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pub/Sub API as a gRPC API",
+        "url": "https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Event Message Durability — Pub/Sub API",
+        "url": "https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Work Within Platform Events Delivery Limits",
+        "url": "https://developer.salesforce.com/blogs/2021/08/how-to-work-within-platform-events-delivery-limits"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Pub/Sub API: Building Event-Driven Integrations Just Got Even Easier",
+        "url": "https://developer.salesforce.com/blogs/2021/07/pub-sub-api-building-event-driven-integrations-just-got-even-easier"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Salesforce Platform Events, Change Data Capture, and Pub/Sub API",
+    "description": "Structured reference for Salesforce event-driven APIs: Platform Events, CDC, Pub/Sub API — rate limits, allocations, retention windows, protocol comparison, and integration patterns.",
+    "keywords": ["Salesforce", "Platform Events", "Change Data Capture", "Pub/Sub API", "ERP integration", "event-driven"],
+    "temporalCoverage": "2025/2026",
+    "dateModified": "2026-03-01",
+    "datePublished": "2026-03-01",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Salesforce Streaming & Platform Events" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are Salesforce Platform Events, Change Data Capture, and Pub/Sub API capabilities and limits?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce provides three complementary event-driven mechanisms — Platform Events (custom event messages), Change Data Capture (automatic record-change events), and Pub/Sub API (gRPC-based subscribe/publish) — each with distinct limits and use cases. Pub/Sub API is the recommended modern interface for external subscribers; CometD-based Streaming API still works but is less efficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce Platform Events limits and allocations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce provides three complementary event-driven mechanisms — Platform Events (custom event messages), Change Data Capture (automatic record-change events), and Pub/Sub API (gRPC-based subscribe/publish) — each with distinct limits and use cases. Pub/Sub API is the recommended modern interface for external subscribers; CometD-based Streaming API still works but is less efficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce Change Data Capture CDC configuration and limits",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce provides three complementary event-driven mechanisms — Platform Events (custom event messages), Change Data Capture (automatic record-change events), and Pub/Sub API (gRPC-based subscribe/publish) — each with distinct limits and use cases. Pub/Sub API is the recommended modern interface for external subscribers; CometD-based Streaming API still works but is less efficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce Pub/Sub API gRPC vs Streaming API CometD",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce provides three complementary event-driven mechanisms — Platform Events (custom event messages), Change Data Capture (automatic record-change events), and Pub/Sub API (gRPC-based subscribe/publish) — each with distinct limits and use cases. Pub/Sub API is the recommended modern interface for external subscribers; CometD-based Streaming API still works but is less efficient."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Salesforce event-driven architecture streaming options",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Salesforce provides three complementary event-driven mechanisms — Platform Events (custom event messages), Change Data Capture (automatic record-change events), and Pub/Sub API (gRPC-based subscribe/publish) — each with distinct limits and use cases. Pub/Sub API is the recommended modern interface for external subscribers; CometD-based Streaming API still works but is less efficient."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Salesforce Platform Events, Change Data Capture, and Pub/Sub API</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are Salesforce Platform Events, Change Data Capture, and Pub/Sub API capabilities and limits?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/salesforce-streaming-platform-events/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Salesforce Platform (API v62.0)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-01</span></span>
+    <span><strong>Freshness:</strong> 2026-03-01</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Salesforce provides three complementary event-driven mechanisms &mdash; Platform Events (custom event messages), Change Data Capture (automatic record-change events), and Pub/Sub API (gRPC-based subscribe/publish) &mdash; each with distinct limits and use cases. Pub/Sub API is the recommended modern interface for external subscribers. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>]</li>
+    <li><strong>Key limit</strong>: 250,000 platform event publishes/hour (Performance/Unlimited); delivery allocation is per-subscriber (1,000 events &times; 10 subscribers = 10,000 deliveries). [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+    <li><strong>Watch out for</strong>: CDC has a 5-entity selection limit without add-on license, and events are retained for only 72 hours &mdash; if your subscriber goes offline beyond that window, you lose events permanently. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>, <a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</li>
+    <li><strong>Best for</strong>: Event-driven architectures where external systems need near-real-time notification of Salesforce data changes without polling REST API.</li>
+    <li><strong>Authentication</strong>: OAuth 2.0 (JWT bearer for server-to-server) &mdash; same auth as REST API; Pub/Sub API connects via gRPC with OAuth access token in metadata. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>Salesforce's event-driven architecture centers on the Event Bus, a unified message backbone that carries Platform Events, Change Data Capture events, and standard platform events. External consumers can subscribe via the legacy CometD-based Streaming API or the newer gRPC-based Pub/Sub API (GA since Spring '22). All new custom platform events default to high-volume since Spring '23; legacy standard-volume events can no longer be created. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>]</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Property</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Vendor</strong></td><td>Salesforce</td></tr>
+      <tr><td><strong>System</strong></td><td>Salesforce Platform (API v62.0, Spring '26)</td></tr>
+      <tr><td><strong>API Surface</strong></td><td>Platform Events, Change Data Capture, Pub/Sub API, Streaming API</td></tr>
+      <tr><td><strong>Current API Version</strong></td><td>v62.0</td></tr>
+      <tr><td><strong>Editions Covered</strong></td><td>Enterprise, Performance, Unlimited, Developer</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>Cloud</td></tr>
+      <tr><td><strong>API Docs</strong></td><td><a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm">Platform Events Developer Guide</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>GA (Pub/Sub API GA since Spring '22; Streaming API GA, not deprecated)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API Surface</th><th scope="col">Protocol</th><th scope="col">Best For</th><th scope="col">Event Retention</th><th scope="col">Rate Limit</th><th scope="col">Real-time?</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Platform Events (High-Volume)</td><td>Event Bus</td><td>Custom event messages between systems</td><td>72 hours</td><td>250K publishes/hour (Perf/Unlim)</td><td>Yes</td><td>Publish + Subscribe</td></tr>
+      <tr><td>Change Data Capture (CDC)</td><td>Event Bus</td><td>Automatic record-change notifications</td><td>72 hours (3 days)</td><td>Shared with PE delivery allocation</td><td>Yes</td><td>Subscribe only</td></tr>
+      <tr><td>Pub/Sub API</td><td>gRPC / HTTP/2 / Avro</td><td>External subscription, high throughput</td><td>N/A (consumes from Event Bus)</td><td>1,000 concurrent gRPC streams/channel</td><td>Yes</td><td>Publish + Subscribe</td></tr>
+      <tr><td>Streaming API</td><td>CometD / Bayeux / HTTP/1.1 / JSON</td><td>Legacy external subscription</td><td>N/A (consumes from Event Bus)</td><td>2,000 concurrent CometD clients/org</td><td>Yes</td><td>Subscribe only</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>[<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>]</p>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Applies To</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Max events per FetchRequest</td><td>100</td><td>Pub/Sub API Subscribe RPC</td><td>Maximum num_requested value per request [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>Max event message size</td><td>1 MB</td><td>Pub/Sub API PublishRequest</td><td>Per individual event in a batch [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>Recommended batch size</td><td>200 events</td><td>Pub/Sub API PublishRequest</td><td>Total batch &lt; 3 MB recommended [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>Hard gRPC message limit</td><td>4 MB</td><td>Pub/Sub API PublishRequest</td><td>Exceeding causes publish failure and stream closure [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</td></tr>
+      <tr><td>Concurrent gRPC streams</td><td>1,000</td><td>Pub/Sub API per channel</td><td>Active RPC calls on same gRPC channel [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</td></tr>
+      <tr><td>Max managed subscriptions</td><td>200</td><td>Pub/Sub API per org</td><td>Unique managed subscriptions per Salesforce org [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>Max custom fields per PE</td><td>25</td><td>Platform Event definition</td><td>Per platform event definition [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Platform Event hourly publishing</td><td>250,000</td><td>1 hour</td><td>Performance/Unlimited: 250K; add-on adds +25K/hour [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</td></tr>
+      <tr><td>Platform Event + CDC daily delivery</td><td>50,000 base</td><td>24 hours</td><td>Performance/Unlimited: 50K; add-on adds +100K/day (shifts to 3M/month) [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</td></tr>
+      <tr><td>CDC entity selection</td><td>5 objects</td><td>Ongoing</td><td>All editions: 5 entities without add-on; add-on removes limit [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td>Concurrent CometD clients</td><td>2,000</td><td>Per org</td><td>Shared across all Streaming API subscriptions [<a href="https://developer.salesforce.com/blogs/2021/08/how-to-work-within-platform-events-delivery-limits">src7</a>]</td></tr>
+      <tr><td>Event retention (high-volume PE)</td><td>72 hours</td><td>Rolling</td><td>Events beyond 72h are permanently deleted [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</td></tr>
+      <tr><td>Event retention (CDC)</td><td>72 hours (3 days)</td><td>Rolling</td><td>Same retention window as high-volume platform events [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td>Event retention (legacy standard-volume PE)</td><td>24 hours</td><td>Rolling</td><td>Standard-volume events can no longer be created [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Delivery Counting Methodology</h3>
+  <p>Delivery allocations are consumed per subscriber, not per published event. Publishing 1,000 events to 10 subscribers consumes 10,000 deliveries (1,000 &times; 10) from the daily allocation. This is the single most impactful limit for fan-out architectures. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/blogs/2021/08/how-to-work-within-platform-events-delivery-limits">src7</a>]</p>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Flow</th><th scope="col">Use When</th><th scope="col">Token Lifetime</th><th scope="col">Refresh?</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.0 JWT Bearer</td><td>Server-to-server Pub/Sub API connections</td><td>Session timeout (default 2h)</td><td>New JWT per request</td><td>Recommended for unattended integrations [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</td></tr>
+      <tr><td>OAuth 2.0 Web Server</td><td>User-context event publishing</td><td>Access: 2h, Refresh: until revoked</td><td>Yes</td><td>Requires callback URL</td></tr>
+      <tr><td>Connected App + Client Credentials</td><td>Service-to-service without user context</td><td>Configurable</td><td>Yes</td><td>Available since Winter '23</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Pub/Sub API requires the OAuth access token in the gRPC call metadata (not as a URL parameter). The token goes in the <code>accesstoken</code> metadata key, and the instance URL in the <code>instanceurl</code> key. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li>JWT bearer flow connected apps require a digital certificate &mdash; self-signed works for development, but CA-signed is recommended for production. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li>Session timeout is configurable by the Salesforce admin. Do not hardcode a 2-hour expiry &mdash; handle <code>UNAUTHENTICATED</code> gRPC errors with token refresh. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>CDC 5-entity limit</strong>: Without the Platform Events add-on license, CDC is limited to 5 selected standard/custom objects per org. This is a hard licensing constraint. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</li>
+    <li><strong>72-hour replay window</strong>: Events older than 72 hours cannot be replayed. If a subscriber is offline for more than 3 days, those events are permanently lost. Design for reconciliation. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</li>
+    <li><strong>Delivery allocation is per-subscriber</strong>: Fan-out patterns multiply delivery consumption. 1 event to N subscribers = N deliveries counted. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/blogs/2021/08/how-to-work-within-platform-events-delivery-limits">src7</a>]</li>
+    <li><strong>Platform Events are immutable</strong>: Published events cannot be updated or deleted. Design event schemas carefully. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+    <li><strong>Pub/Sub API payload is Avro binary</strong>: Unlike Streaming API (JSON), Pub/Sub API delivers events as Apache Avro binary payloads. Subscribers must fetch the schema and deserialize. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>, <a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li><strong>No guaranteed ordering across partitions</strong>: High-volume platform events may be delivered out of order across different transactions. Within a single Apex transaction, events are ordered. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START -- Need event-driven integration with Salesforce
+|-- What triggers the event?
+|   |-- Custom business logic (order placed, status changed)
+|   |   |-- Need custom event schema?
+|   |   |   |-- YES --> Platform Events (define __e custom event)
+|   |   |   |-- NO --> Standard platform events (LoginEvent, etc.)
+|   |-- Any record change on specific objects (create/update/delete/undelete)
+|   |   |-- YES --> Change Data Capture (CDC)
+|   |   |   |-- Tracking &lt;= 5 objects?
+|   |   |   |   |-- YES --> CDC works without add-on license
+|   |   |   |   |-- NO --> Requires Platform Events add-on license
+|   |   |-- Need field-level change tracking?
+|   |       |-- YES --> CDC (delivers changed fields + ChangeEventHeader)
+|   |       |-- NO --> Platform Events (custom schema, publish explicitly)
+|-- Where is the subscriber?
+|   |-- External system (outside Salesforce)
+|   |   |-- Greenfield / new integration?
+|   |   |   |-- YES --> Pub/Sub API (gRPC) -- modern, efficient, recommended
+|   |   |   |-- NO (existing CometD) --> Streaming API still works, migrate when ready
+|   |   |-- Need &gt; 2,000 concurrent subscribers?
+|   |       |-- YES --> Fan-out via middleware (Heroku, Kafka, EventBridge)
+|   |       |-- NO --> Direct Pub/Sub API subscription
+|   |-- Inside Salesforce (Apex, Flow, LWC)
+|       |-- Apex trigger on platform event (after insert)
+|       |-- Flow: Platform Event-Triggered
+|       |-- LWC: empApi for real-time UI updates
+|-- Volume and reliability?
+    |-- &lt; 250K events/hour, &lt; 50K deliveries/day?
+    |   |-- YES --> Standard allocation sufficient
+    |   |-- NO --> Purchase Platform Events add-on
+    |-- Need guaranteed delivery?
+        |-- YES --> Store replay ID, resubscribe on disconnect
+        |-- NO --> Fire-and-forget acceptable</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Platform Events vs CDC vs Pub/Sub API</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Platform Events</th><th scope="col">Change Data Capture</th><th scope="col">Pub/Sub API</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>What it does</strong></td><td>Custom event messages you define and publish</td><td>Automatic events on record CUD operations</td><td>gRPC interface to subscribe/publish events</td></tr>
+      <tr><td><strong>Event schema</strong></td><td>Custom (__e object definition)</td><td>Automatic (mirrors object fields)</td><td>Consumes PE + CDC events</td></tr>
+      <tr><td><strong>Publishing</strong></td><td>Apex, API, Flow, Process Builder</td><td>Automatic (system-generated)</td><td>gRPC PublishRequest</td></tr>
+      <tr><td><strong>Subscribing</strong></td><td>Apex trigger, Flow, empApi, CometD, gRPC</td><td>Apex trigger, Flow, empApi, CometD, gRPC</td><td>gRPC Subscribe/ManagedSubscribe RPC</td></tr>
+      <tr><td><strong>Retention</strong></td><td>72h (high-volume)</td><td>72h (3 days)</td><td>N/A (reads from Event Bus)</td></tr>
+      <tr><td><strong>Replay support</strong></td><td>Yes (replay ID)</td><td>Yes (replay ID)</td><td>Yes (replay ID or custom preset)</td></tr>
+      <tr><td><strong>Payload format (external)</strong></td><td>JSON (CometD) / Avro (Pub/Sub)</td><td>JSON (CometD) / Avro (Pub/Sub)</td><td>Avro binary only</td></tr>
+      <tr><td><strong>Protocol</strong></td><td>Via Streaming API or Pub/Sub API</td><td>Via Streaming API or Pub/Sub API</td><td>gRPC / HTTP/2</td></tr>
+      <tr><td><strong>Ordering</strong></td><td>Within single Apex transaction</td><td>Per object per transaction</td><td>Preserved from source</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Streaming API (CometD) vs Pub/Sub API (gRPC)</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Feature</th><th scope="col">Streaming API (CometD)</th><th scope="col">Pub/Sub API (gRPC)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Protocol</strong></td><td>HTTP/1.1, Bayeux/CometD</td><td>HTTP/2, gRPC</td></tr>
+      <tr><td><strong>Payload format</strong></td><td>JSON</td><td>Apache Avro (binary, compressed)</td></tr>
+      <tr><td><strong>Delivery model</strong></td><td>Push (server pushes to client)</td><td>Pull (client requests N events)</td></tr>
+      <tr><td><strong>Flow control</strong></td><td>None (server controls pace)</td><td>Client-controlled (num_requested)</td></tr>
+      <tr><td><strong>Efficiency</strong></td><td>Higher bandwidth, larger payloads</td><td>~7-10x faster; compressed byte buffers</td></tr>
+      <tr><td><strong>Language support</strong></td><td>JavaScript (CometD client)</td><td>11+ languages (Python, Java, Node, C++, Go)</td></tr>
+      <tr><td><strong>Publishing</strong></td><td>Not supported (subscribe only)</td><td>Supported (PublishRequest RPC)</td></tr>
+      <tr><td><strong>Concurrent limit</strong></td><td>2,000 CometD clients/org</td><td>1,000 streams/gRPC channel (no org-wide cap)</td></tr>
+      <tr><td><strong>Managed subscriptions</strong></td><td>No</td><td>Yes (up to 200/org)</td></tr>
+      <tr><td><strong>Deprecation status</strong></td><td>Not deprecated, no new features</td><td>Actively developed, recommended</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>[<a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>, <a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</p>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Define a Platform Event (if using custom events)</h3>
+  <p>Navigate to Setup &gt; Platform Events &gt; New Platform Event. Define fields for your event payload. The API name ends with <code>__e</code>. For CDC, skip this step. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</p>
+  <pre><code>Setup &gt; Integrations &gt; Platform Events &gt; New Platform Event
+- Label: Order Placed
+- API Name: Order_Placed__e
+- Publish Behavior: Publish After Commit
+- Add custom fields: Order_Id__c, Amount__c, Status__c</code></pre>
+  <p><strong>Verify</strong>: <code>GET /services/data/v62.0/sobjects/Order_Placed__e/describe</code> &mdash; returns field definitions.</p>
+
+  <h3>2. Enable CDC for target objects (if using CDC)</h3>
+  <p>Navigate to Setup &gt; Integrations &gt; Change Data Capture. Select up to 5 objects (without add-on). [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</p>
+  <pre><code>Setup &gt; Integrations &gt; Change Data Capture
+- Select objects: Account, Opportunity, Contact, Lead, Case
+- Save -- CDC begins immediately
+- Channel name: /data/AccountChangeEvent, /data/OpportunityChangeEvent, etc.</code></pre>
+  <p><strong>Verify</strong>: Update a record on a selected object &mdash; the change event should appear on the corresponding channel within seconds.</p>
+
+  <h3>3. Connect via Pub/Sub API (gRPC)</h3>
+  <p>Establish a gRPC connection to <code>api.pubsub.salesforce.com:7443</code>. Use OAuth access token in gRPC metadata. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</p>
+  <pre><code class="language-python">import grpc
+
+PUBSUB_ENDPOINT = "api.pubsub.salesforce.com:7443"
+
+channel_credentials = grpc.ssl_channel_credentials()
+channel = grpc.secure_channel(PUBSUB_ENDPOINT, channel_credentials)
+
+metadata = (
+    ("accesstoken", "YOUR_OAUTH_ACCESS_TOKEN"),
+    ("instanceurl", "https://yourinstance.my.salesforce.com"),
+    ("tenantid", "YOUR_ORG_ID"),
+)</code></pre>
+  <p><strong>Verify</strong>: Call <code>GetTopic</code> RPC with your event channel name &mdash; returns topic metadata and schema ID.</p>
+
+  <h3>4. Subscribe to events and handle replay</h3>
+  <p>Use the Subscribe RPC to receive events. Store the replay ID after each batch. Max 100 events per FetchRequest. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>, <a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</p>
+  <pre><code class="language-python">def subscribe_to_events(stub, topic_name, replay_id=None):
+    fetch_request = {
+        "topic_name": topic_name,
+        "num_requested": 100,  # max per FetchRequest
+    }
+    if replay_id:
+        fetch_request["replay_id"] = replay_id
+    else:
+        fetch_request["replay_preset"] = "LATEST"
+
+    for response in stub.Subscribe(iter([fetch_request]), metadata=metadata):
+        for event in response.events:
+            payload = decode_avro(event.event.payload, response.schema_id)
+            last_replay_id = event.replay_id  # Store for reconnection
+        yield {"topic_name": topic_name, "num_requested": 100}</code></pre>
+  <p><strong>Verify</strong>: Publish a test event &mdash; subscriber receives it within seconds. Store <code>replay_id</code> and verify reconnection resumes correctly.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>JavaScript/Node.js: Subscribe to Platform Events via CometD</h3>
+  <pre><code class="language-javascript">// Input:  Salesforce OAuth token, event channel name
+// Output: Real-time event notifications via CometD long-polling
+
+const jsforce = require("jsforce"); // v2.x
+
+const conn = new jsforce.Connection({
+  loginUrl: "https://login.salesforce.com",
+  accessToken: process.env.SF_ACCESS_TOKEN,
+  instanceUrl: process.env.SF_INSTANCE_URL,
+});
+
+// Subscribe to Platform Event
+conn.streaming.topic("/event/Order_Placed__e").subscribe((message) =&gt; {
+  console.log("Event received:", JSON.stringify(message, null, 2));
+  const replayId = message.event.replayId;
+  // Store replayId persistently for reconnection
+});
+
+// Subscribe to CDC
+conn.streaming.topic("/data/AccountChangeEvent").subscribe((message) =&gt; {
+  const header = message.payload.ChangeEventHeader;
+  console.log(`Change: ${header.changeType}, IDs: ${header.recordIds}`);
+});</code></pre>
+
+  <h3>cURL: Publish a Platform Event via REST API</h3>
+  <pre><code class="language-bash"># Publish a single platform event
+curl -X POST \
+  "https://yourinstance.my.salesforce.com/services/data/v62.0/sobjects/Order_Placed__e" \
+  -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"Order_Id__c":"ORD-2026-001","Amount__c":1500.00,"Status__c":"Confirmed"}'
+# Response: {"id":"e01xx0000000001AAA","success":true,"errors":[]}
+
+# Check platform event usage limits
+curl -s "https://yourinstance.my.salesforce.com/services/data/v62.0/limits" \
+  -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+  | jq '.HourlyPublishedPlatformEvents, .DailyDeliveredPlatformEvents'</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>CDC ChangeEventHeader Fields</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>changeType</code></td><td>String</td><td>CREATE, UPDATE, DELETE, UNDELETE, GAP_*</td><td>GAP_ types indicate missed events &mdash; trigger full reconciliation [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>changedFields</code></td><td>String[]</td><td>API names of changed fields</td><td>Empty for CREATE (all fields in body) [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>recordIds</code></td><td>String[]</td><td>IDs of affected records</td><td>Can contain multiple IDs when batched [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>commitTimestamp</code></td><td>Long</td><td>Epoch timestamp of DML commit</td><td>Not the publish time &mdash; delivery delay is possible [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>transactionKey</code></td><td>String</td><td>Unique ID for the transaction</td><td>Use to group events from same Apex transaction [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>sequenceNumber</code></td><td>Integer</td><td>Order within transaction</td><td>Events with same transactionKey ordered by this [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>entityName</code></td><td>String</td><td>SObject API name</td><td>Use to route from compound channels [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td><code>commitUser</code></td><td>String</td><td>User ID who made the change</td><td>May be automation user [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>DateTime fields are ISO 8601 UTC strings in CometD JSON but Avro logical types (long milliseconds since epoch) in Pub/Sub API. Convert carefully. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>]</li>
+    <li>Multi-select picklist values are semicolon-delimited strings in CDC events, matching Salesforce API convention. External systems may expect arrays. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</li>
+    <li>Currency fields in CDC include the value but not the currency code &mdash; in multi-currency orgs, CurrencyIsoCode must be tracked separately. [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OPERATION_TOO_LARGE</td><td>Event payload exceeds 1 MB</td><td>Single event too large</td><td>Reduce payload; split into multiple events [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>UNAVAILABLE (gRPC)</td><td>Server temporarily unavailable</td><td>Service disruption</td><td>Exponential backoff: 1s, 2s, 4s, 8s, max 60s [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</td></tr>
+      <tr><td>UNAUTHENTICATED (gRPC)</td><td>Invalid or expired token</td><td>OAuth token expired</td><td>Refresh token and reconnect [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</td></tr>
+      <tr><td>RESOURCE_EXHAUSTED (gRPC)</td><td>Rate limit exceeded</td><td>Exceeds concurrent stream or publishing limit</td><td>Reduce streams or publishing rate [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>GAP_OVERFLOW</td><td>CDC events lost</td><td>Event volume exceeded delivery capacity</td><td>Full data reconciliation required [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td>INVALID_REPLAY_ID</td><td>Replay ID outside retention window</td><td>Replay ID older than 72 hours</td><td>Use EARLIEST preset or LATEST; full sync may be needed [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Subscriber offline &gt; 72 hours</strong>: Events permanently lost. Fix: <code>Implement heartbeat + full reconciliation fallback when gap exceeds 72 hours.</code> [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</li>
+    <li><strong>Fan-out exhausts daily delivery allocation</strong>: 50K events to 10 subscribers = 500K deliveries. Fix: <code>Use middleware fan-out (Kafka, EventBridge) with single Salesforce subscriber.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/blogs/2021/08/how-to-work-within-platform-events-delivery-limits">src7</a>]</li>
+    <li><strong>CDC GAP events during high-volume DML</strong>: Salesforce emits GAP events instead of individual changes. Fix: <code>Handle all GAP_ change types; on GAP_OVERFLOW, trigger full sync.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</li>
+    <li><strong>gRPC channel exhaustion</strong>: Hitting 1,000 concurrent streams. Fix: <code>Create multiple gRPC channels (one per event type), each with own connection pool.</code> [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li><strong>Avro schema mismatch</strong>: Schema changes cause deserialization failures. Fix: <code>Always call GetSchema before processing; cache by schema_id; refresh on error.</code> [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li><strong>Publish callbacks silently failing</strong>: EventBus.PublishCallback swallows exceptions. Fix: <code>Log callback results; use Database.SaveResult for individual event failures.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Polling REST API for changes instead of using CDC</h3>
+  <pre><code class="language-python"># BAD -- Queries all records every 5 minutes to find changes
+# Wastes API calls, misses changes between polls
+while True:
+    results = sf.query("SELECT Id, Name FROM Opportunity WHERE SystemModstamp &gt; {last_poll}")
+    process_changes(results)
+    time.sleep(300)</code></pre>
+
+  <h3>Correct: Subscribe to CDC for real-time change notifications</h3>
+  <pre><code class="language-python"># GOOD -- CDC delivers changes in real-time, zero API call overhead
+def handle_cdc_event(event):
+    header = event["ChangeEventHeader"]
+    if header["changeType"] in ("CREATE", "UPDATE"):
+        sync_to_target(header["recordIds"], event)
+    elif header["changeType"] == "DELETE":
+        delete_from_target(header["recordIds"])
+    elif header["changeType"].startswith("GAP_"):
+        trigger_full_reconciliation(header["entityName"])</code></pre>
+
+  <h3>Wrong: One CometD subscription per downstream consumer</h3>
+  <pre><code class="language-javascript">// BAD -- Each CometD client counts against 2,000 org limit
+services.forEach((svc) =&gt; {
+  const client = new CometDClient(sfCredentials);
+  client.subscribe("/event/Order_Placed__e", svc.handler);
+});</code></pre>
+
+  <h3>Correct: Single subscriber with middleware fan-out</h3>
+  <pre><code class="language-javascript">// GOOD -- One subscriber, fan-out via Kafka
+const pubsubClient = new SalesforcePubSubClient(credentials);
+pubsubClient.subscribe("/event/Order_Placed__e", async (event) =&gt; {
+  await kafkaProducer.send({
+    topic: "salesforce.order-placed",
+    messages: [{ value: JSON.stringify(event) }],
+  });
+});</code></pre>
+
+  <h3>Wrong: Ignoring replay IDs on reconnect</h3>
+  <pre><code class="language-python"># BAD -- Always subscribes from LATEST, losing events during downtime
+subscriber.subscribe(topic="/data/AccountChangeEvent", replay_preset="LATEST")</code></pre>
+
+  <h3>Correct: Persisting replay IDs for gap-free reconnection</h3>
+  <pre><code class="language-python"># GOOD -- Stores replay ID, resumes from last position
+last_id = load_replay_id(topic)
+if last_id:
+    subscriber.subscribe(topic=topic, replay_id=last_id)
+else:
+    subscriber.subscribe(topic=topic, replay_preset="EARLIEST")
+
+for event in subscriber.events():
+    process(event)
+    save_replay_id(topic, event.replay_id)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Exceeding delivery allocation without realizing it</strong>: Each subscriber counts separately. 10 triggers + 5 Flows + 3 external = 18 deliveries per event. Fix: <code>Monitor via /services/data/v62.0/limits; consolidate subscribers.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/blogs/2021/08/how-to-work-within-platform-events-delivery-limits">src7</a>]</li>
+    <li><strong>CDC 5-entity limit surprise</strong>: Attempting to select a 6th object without add-on may silently fail. Fix: <code>Check selections via Setup &gt; Change Data Capture before assuming CDC is active.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</li>
+    <li><strong>Publish After Commit vs Publish Immediately</strong>: "Publish After Commit" only publishes if transaction succeeds; "Publish Immediately" publishes even on rollback. Fix: <code>Use Publish After Commit for data consistency.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+    <li><strong>Replay ID arithmetic</strong>: IDs are not sequential or contiguous. Fix: <code>Store exact replay ID; never compute derived values.</code> [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</li>
+    <li><strong>Avro schema evolution</strong>: New fields break old cached schemas. Fix: <code>Fetch schema via GetSchema RPC using schema_id; cache with refresh-on-error.</code> [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li><strong>Sandbox event limits differ</strong>: Sandbox may have lower allocations. Fix: <code>Test with production-like volumes in full sandbox; verify limits via Limits API.</code> [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check platform event usage / remaining limits
+curl -s "https://${SF_INSTANCE}/services/data/v62.0/limits" \
+  -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+  | jq '{HourlyPublishedPlatformEvents, DailyDeliveredPlatformEvents}'
+
+# List all platform event definitions in the org
+curl -s "https://${SF_INSTANCE}/services/data/v62.0/sobjects" \
+  -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+  | jq '[.sobjects[] | select(.name | endswith("__e")) | {name, label}]'
+
+# Describe a specific platform event schema
+curl -s "https://${SF_INSTANCE}/services/data/v62.0/sobjects/Order_Placed__e/describe" \
+  -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+  | jq '{name, fields: [.fields[] | {name, type, length}]}'
+
+# Test publishing a platform event
+curl -X POST "https://${SF_INSTANCE}/services/data/v62.0/sobjects/Order_Placed__e" \
+  -H "Authorization: Bearer ${SF_ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"Order_Id__c":"TEST-001","Amount__c":100,"Status__c":"Test"}'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">API/Feature</th><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pub/Sub API</td><td>Spring '22 (v54.0)</td><td>GA</td><td>Initial GA &mdash; gRPC Subscribe + Publish</td><td>Replaced need for external CometD libraries [<a href="https://developer.salesforce.com/blogs/2021/07/pub-sub-api-building-event-driven-integrations-just-got-even-easier">src8</a>]</td></tr>
+      <tr><td>Pub/Sub Managed Subscriptions</td><td>Spring '24 (v60.0)</td><td>Beta</td><td>Server-managed subscription state</td><td>Salesforce tracks replay position [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/allocations.html">src2</a>]</td></tr>
+      <tr><td>High-Volume PE as default</td><td>Spring '23 (v57.0)</td><td>GA</td><td>All new PE definitions are high-volume</td><td>Standard-volume creation disabled [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</td></tr>
+      <tr><td>Change Data Capture</td><td>Winter '19 (v44.0)</td><td>GA</td><td>Initial GA for selected standard objects</td><td>Entity limit: 5 without add-on [<a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</td></tr>
+      <tr><td>Streaming API (CometD)</td><td>API v21.0</td><td>GA</td><td>Long-standing, stable</td><td>Not deprecated; Pub/Sub API preferred [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/pubsub_api_streaming_api_comparison.htm">src4</a>]</td></tr>
+      <tr><td>Platform Events</td><td>Winter '17 (v38.0)</td><td>GA</td><td>Initial GA</td><td>Apex triggers, Flow, API publishing [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Need real-time notification of Salesforce record changes</td><td>Need to bulk-export historical data</td><td>Bulk API 2.0</td></tr>
+      <tr><td>External system needs to react to Salesforce events</td><td>Need to query current record state</td><td>REST API SOQL query</td></tr>
+      <tr><td>Building event-driven microservice architecture</td><td>Need request-response pattern</td><td>REST API or Composite API</td></tr>
+      <tr><td>Tracking field-level changes on specific objects (CDC)</td><td>Tracking &gt; 5 objects without add-on</td><td>Platform Events with Apex triggers</td></tr>
+      <tr><td>Need guaranteed delivery with replay (within 72h)</td><td>Need event retention &gt; 72 hours</td><td>External broker (Kafka, AWS SQS)</td></tr>
+      <tr><td>Fan-out to single middleware subscriber</td><td>Fan-out to &gt; 2,000 direct subscribers</td><td>Middleware hub-and-spoke pattern</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Platform event allocation limits vary by Salesforce edition and are subject to change each release. Always verify via the Limits REST API (<code>/services/data/v62.0/limits</code>). [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+    <li>The Platform Events add-on license changes both CDC entity limit (removes 5-object cap) and delivery allocation (+100K/day, shifts to monthly enforcement at 3M/month). Contact Salesforce for pricing. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>, <a href="https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_allocations.htm">src3</a>]</li>
+    <li>Sandbox orgs have independent event allocations that may be lower than production. Performance testing may not reflect production capacity. [<a href="https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_event_limits.htm">src1</a>]</li>
+    <li>Pub/Sub API is only for external connections &mdash; Apex code within Salesforce cannot use gRPC. Use Apex triggers on platform events or empApi in LWC for internal consumption. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/grpc-api.html">src5</a>]</li>
+    <li>Replay IDs are org-specific and environment-specific. A replay ID from sandbox cannot be used in production. [<a href="https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-message-durability.html">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/salesforce-rest-api/2026" data-relationship="related_to">Salesforce REST API capabilities and rate limits</a>
+    <a href="/business/erp-integration/salesforce-bulk-api/2026" data-relationship="related_to">Salesforce Bulk API 2.0 for high-volume data operations</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes Helm Chart Structure Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete Helm chart structure reference covering Chart.yaml fields, templates directory, values.yaml best practices, hooks lifecycle, OCI registry...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-helm-chart/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes Helm Chart Structure Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete Helm chart structure reference covering Chart.yaml fields, templates directory, values.yaml best practices, hooks lifecycle, OCI registry support, dependencies/subcharts, and Helm 3/4 compatibility. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-helm-chart/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes Helm Chart Structure Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Helm chart structure reference covering Chart.yaml fields, templates directory, values.yaml best practices, hooks lifecycle, OCI registry support, dependencies/subcharts, and Helm 3/4 compatibility. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes Helm Chart Structure">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Kubernetes reference: Helm Chart structure">
+  <meta name="ai:aliases" content="Helm chart directory layout; Chart.yaml fields explained; Helm templates values.yaml structure; Helm chart best practices; Helm hooks pre-install post-install; Helm OCI registry chart push pull; Helm chart dependencies subcharts; Helm 3 vs Helm 4 chart differences">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-helm-chart/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="helm_version,chart_type,registry_type">
+  <meta name="ai:constraints" content="Chart.yaml MUST contain apiVersion v2, name, and version; Chart names lowercase + dashes only; Version MUST follow SemVer 2.0.0; CRDs in crds/ cannot use Go templates; Never hardcode namespace in templates; Hook resources not tracked as release resources">
+  <meta name="ai:skip_this_unit_if" content="Need K8s Deployment/Service/Ingress YAML -> software/devops/k8s-deployment-service-ingress/2026; Need Kustomize overlays -> software/devops/kustomize-overlays/2026; Need CrashLoopBackOff debugging -> software/debugging/kubernetes-crashloopbackoff/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes Helm Chart Structure Reference",
+    "headline": "Kubernetes Helm Chart Structure Reference",
+    "description": "Complete reference for Helm chart structure covering Chart.yaml metadata fields, templates directory with Go templating, values.yaml best practices, hook lifecycle annotations, OCI registry support, chart dependencies and subcharts, and Helm 3 to 4 migration guidance.",
+    "keywords": ["Helm", "Helm chart", "Chart.yaml", "values.yaml", "Kubernetes", "k8s", "Helm templates", "Helm hooks", "OCI registry", "Helm dependencies", "subcharts", "helm create", "helm package", "Helm 4"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Helm 3.8+ or 4.x, Kubernetes 1.19+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Charts",
+        "url": "https://helm.sh/docs/topics/charts/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Chart Template Guide",
+        "url": "https://helm.sh/docs/chart_template_guide/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Chart Hooks",
+        "url": "https://helm.sh/docs/topics/charts_hooks/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practices - General Conventions",
+        "url": "https://helm.sh/docs/chart_best_practices/conventions/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Use OCI-based registries",
+        "url": "https://helm.sh/docs/topics/registries/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Helm 4 Released",
+        "url": "https://helm.sh/blog/helm-4-released/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practices - Values",
+        "url": "https://helm.sh/docs/chart_best_practices/values/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes Helm Chart Structure Reference",
+    "description": "Structured knowledge unit covering Helm chart directory layout, Chart.yaml fields, templates with Go templating, values.yaml conventions, hook lifecycle, OCI registry support, dependencies, and version compatibility across Helm 3 and 4.",
+    "keywords": ["Helm", "Helm chart", "Chart.yaml", "values.yaml", "Kubernetes", "OCI registry", "Helm hooks", "Helm dependencies"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Helm Project"},
+      {"@type": "Organization", "name": "CNCF"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes Helm Chart Structure Reference" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kubernetes reference: Helm Chart structure",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required Chart.yaml, a values.yaml for defaults, and Go-templated manifests in templates/."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Helm chart directory layout",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required Chart.yaml, a values.yaml for defaults, and Go-templated manifests in templates/."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Chart.yaml fields explained",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required Chart.yaml, a values.yaml for defaults, and Go-templated manifests in templates/."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Helm templates values.yaml structure",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required Chart.yaml, a values.yaml for defaults, and Go-templated manifests in templates/."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Helm chart best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required Chart.yaml, a values.yaml for defaults, and Go-templated manifests in templates/."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Helm hooks pre-install post-install",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required Chart.yaml, a values.yaml for defaults, and Go-templated manifests in templates/."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes Helm Chart Structure Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Kubernetes reference: Helm Chart structure</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-helm-chart/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A Helm chart is a versioned package of pre-configured Kubernetes resources defined by a required <code>Chart.yaml</code>, a <code>values.yaml</code> for defaults, and Go-templated manifests in <code>templates/</code>.</li>
+    <li><strong>Key tool/command</strong>: <code>helm create mychart</code> scaffolds the full directory structure with best-practice defaults.</li>
+    <li><strong>Watch out for</strong>: CRD files in <code>crds/</code> cannot be templated -- they are installed as plain YAML before any templates render.</li>
+    <li><strong>Works with</strong>: Helm 3.x and 4.x, Kubernetes 1.19+, OCI registries (GA since Helm 3.8).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Chart.yaml MUST contain <code>apiVersion: v2</code>, <code>name</code>, and <code>version</code> -- all three are required fields</li>
+    <li>Chart names MUST be lowercase letters, numbers, and dashes only -- no uppercase, underscores, or dots</li>
+    <li>Chart <code>version</code> MUST follow SemVer 2.0.0 -- Helm rejects non-compliant versions</li>
+    <li>CRDs in <code>crds/</code> are plain YAML -- Go template directives are not processed</li>
+    <li>Never hardcode <code>namespace:</code> in template metadata -- use <code>{{ .Release.Namespace }}</code> or let users pass <code>--namespace</code></li>
+    <li>Hook-created resources are NOT tracked as part of the release -- they require explicit deletion policies</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">File / Directory</th><th scope="col">Required</th><th scope="col">Purpose</th><th scope="col">Templated</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Chart.yaml</code></td><td>Yes</td><td>Chart metadata: name, version, apiVersion, dependencies</td><td>No</td></tr>
+      <tr><td><code>values.yaml</code></td><td>No (recommended)</td><td>Default configuration values for templates</td><td>No</td></tr>
+      <tr><td><code>values.schema.json</code></td><td>No</td><td>JSON Schema validation for values</td><td>No</td></tr>
+      <tr><td><code>templates/</code></td><td>No</td><td>Go-templated Kubernetes manifests</td><td>Yes</td></tr>
+      <tr><td><code>templates/_helpers.tpl</code></td><td>No</td><td>Named template definitions (partials)</td><td>Yes</td></tr>
+      <tr><td><code>templates/NOTES.txt</code></td><td>No</td><td>Post-install usage instructions shown to user</td><td>Yes</td></tr>
+      <tr><td><code>templates/tests/</code></td><td>No</td><td>Test pod definitions run by <code>helm test</code></td><td>Yes</td></tr>
+      <tr><td><code>charts/</code></td><td>No</td><td>Dependency chart archives (.tgz) or unpacked subdirectories</td><td>N/A</td></tr>
+      <tr><td><code>crds/</code></td><td>No</td><td>Custom Resource Definitions (installed before templates)</td><td>No</td></tr>
+      <tr><td><code>Chart.lock</code></td><td>No</td><td>Locked dependency versions (auto-generated)</td><td>No</td></tr>
+      <tr><td><code>.helmignore</code></td><td>No</td><td>File patterns to exclude from packaging</td><td>No</td></tr>
+      <tr><td><code>LICENSE</code></td><td>No</td><td>Chart license file</td><td>No</td></tr>
+      <tr><td><code>README.md</code></td><td>No</td><td>Chart documentation</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Chart.yaml Required and Common Fields</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Field</th><th scope="col">Required</th><th scope="col">Type</th><th scope="col">Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>apiVersion</code></td><td>Yes</td><td>string</td><td><code>v2</code> for Helm 3/4 (<code>v1</code> was Helm 2)</td></tr>
+      <tr><td><code>name</code></td><td>Yes</td><td>string</td><td>Chart name (lowercase, dashes allowed)</td></tr>
+      <tr><td><code>version</code></td><td>Yes</td><td>string</td><td>Chart version (SemVer 2.0.0)</td></tr>
+      <tr><td><code>type</code></td><td>No</td><td>string</td><td><code>application</code> (default, installable) or <code>library</code> (helpers only)</td></tr>
+      <tr><td><code>appVersion</code></td><td>No</td><td>string</td><td>App version (informational, not used by Helm)</td></tr>
+      <tr><td><code>kubeVersion</code></td><td>No</td><td>string</td><td>SemVer constraint for compatible K8s versions</td></tr>
+      <tr><td><code>description</code></td><td>No</td><td>string</td><td>Single-sentence chart description</td></tr>
+      <tr><td><code>dependencies</code></td><td>No</td><td>list</td><td>Subchart dependencies with name, version, repository</td></tr>
+      <tr><td><code>keywords</code></td><td>No</td><td>list</td><td>Search keywords</td></tr>
+      <tr><td><code>maintainers</code></td><td>No</td><td>list</td><td>Maintainer name, email, url</td></tr>
+      <tr><td><code>icon</code></td><td>No</td><td>string</td><td>URL to SVG/PNG icon</td></tr>
+      <tr><td><code>deprecated</code></td><td>No</td><td>bool</td><td>Mark chart as deprecated</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What do you need?
+├── Create a new chart from scratch?
+│   ├── YES → Run `helm create mychart` (see Step 1)
+│   └── NO ↓
+├── Add dependencies/subcharts?
+│   ├── YES → Add to Chart.yaml dependencies (see Step 3)
+│   │   ├── OCI registry? → Use repository: "oci://registry/path"
+│   │   └── Traditional repo? → Use repository: "https://charts.example.com"
+│   └── NO ↓
+├── Run pre/post-install jobs (DB migration, etc.)?
+│   ├── YES → Use Helm hooks with annotations (see Hooks section)
+│   └── NO ↓
+├── Share reusable template helpers across charts?
+│   ├── YES → Create a library chart (type: library)
+│   └── NO ↓
+├── Publish chart to a registry?
+│   ├── OCI registry (recommended) → helm push mychart-1.0.0.tgz oci://registry/repo
+│   └── Traditional repo → helm repo index + host index.yaml
+└── DEFAULT → Use application chart (type: application)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Scaffold a new chart</h3>
+  <p><code>helm create</code> generates a complete chart directory with best-practice defaults including a Deployment, Service, Ingress, HPA, and ServiceAccount template. [<a href="https://helm.sh/docs/topics/charts/">src1</a>]</p>
+  <pre><code class="language-bash"># Create a new chart named "myapp"
+helm create myapp
+
+# Directory structure created:
+# myapp/
+# ├── Chart.yaml
+# ├── values.yaml
+# ├── charts/
+# ├── templates/
+# │   ├── _helpers.tpl
+# │   ├── deployment.yaml
+# │   ├── hpa.yaml
+# │   ├── ingress.yaml
+# │   ├── service.yaml
+# │   ├── serviceaccount.yaml
+# │   ├── NOTES.txt
+# │   └── tests/
+# │       └── test-connection.yaml
+# └── .helmignore</code></pre>
+  <p><strong>Verify</strong>: <code>ls myapp/</code> → expected: <code>Chart.yaml  charts  templates  values.yaml</code></p>
+
+  <h3>2. Define chart metadata in Chart.yaml</h3>
+  <p>Every chart must declare its identity and version. The <code>appVersion</code> field is purely informational. [<a href="https://helm.sh/docs/topics/charts/">src1</a>]</p>
+  <pre><code class="language-yaml"># myapp/Chart.yaml
+apiVersion: v2
+name: myapp
+description: A production-ready web application chart
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+kubeVersion: ">=1.22.0-0"
+maintainers:
+  - name: Platform Team
+    email: platform@example.com
+keywords:
+  - web
+  - api
+  - microservice</code></pre>
+  <p><strong>Verify</strong>: <code>helm lint myapp/</code> → expected: <code>1 chart(s) linted, 0 chart(s) failed</code></p>
+
+  <h3>3. Add dependencies</h3>
+  <p>Dependencies are declared in Chart.yaml and resolved with <code>helm dependency update</code>. Both OCI and traditional repositories are supported. [<a href="https://helm.sh/docs/topics/charts/">src1</a>] [<a href="https://helm.sh/docs/topics/registries/">src5</a>]</p>
+  <pre><code class="language-yaml"># myapp/Chart.yaml (append to existing)
+dependencies:
+  - name: postgresql
+    version: "15.5.x"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: postgresql.enabled
+  - name: redis
+    version: "19.x.x"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: redis.enabled
+    alias: cache</code></pre>
+  <p><strong>Verify</strong>: <code>helm dependency list myapp/</code> → shows STATUS <code>ok</code> for all dependencies</p>
+
+  <h3>4. Configure default values</h3>
+  <p>Structure values with camelCase naming. Prefer flat over nested for simple configs. Quote all strings explicitly to avoid YAML type coercion. [<a href="https://helm.sh/docs/chart_best_practices/values/">src7</a>]</p>
+  <pre><code class="language-yaml"># myapp/values.yaml
+replicaCount: 3
+
+image:
+  repository: myapp
+  pullPolicy: IfNotPresent
+  tag: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: myapp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi</code></pre>
+  <p><strong>Verify</strong>: <code>helm template myapp myapp/</code> → renders all YAML with default values substituted</p>
+
+  <h3>5. Write templates with built-in objects</h3>
+  <p>Templates use Go template syntax with Sprig functions. The key built-in objects are <code>.Values</code>, <code>.Release</code>, <code>.Chart</code>, <code>.Files</code>, <code>.Capabilities</code>, and <code>.Template</code>. [<a href="https://helm.sh/docs/chart_template_guide/">src2</a>]</p>
+  <pre><code class="language-yaml"># myapp/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "myapp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "myapp.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}</code></pre>
+  <p><strong>Verify</strong>: <code>helm template myapp myapp/ --debug</code> → shows rendered manifest with no errors</p>
+
+  <h3>6. Package and push to OCI registry</h3>
+  <p>Helm 3.8+ and 4.x support OCI registries natively. The chart name and version are read from Chart.yaml automatically. [<a href="https://helm.sh/docs/topics/registries/">src5</a>]</p>
+  <pre><code class="language-bash"># Package the chart into a .tgz archive
+helm package myapp/
+
+# Login to OCI registry
+helm registry login ghcr.io -u USERNAME
+
+# Push to OCI registry
+helm push myapp-0.1.0.tgz oci://ghcr.io/myorg/charts
+
+# Install directly from OCI
+helm install myapp oci://ghcr.io/myorg/charts/myapp --version 0.1.0</code></pre>
+  <p><strong>Verify</strong>: <code>helm show chart oci://ghcr.io/myorg/charts/myapp --version 0.1.0</code> → displays Chart.yaml contents</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Helm Hook: Pre-install database migration Job</h3>
+  <pre><code class="language-yaml"># templates/db-migrate-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "myapp.fullname" . }}-db-migrate
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: ["./migrate", "--up"]
+  backoffLimit: 3</code></pre>
+
+  <h3>Conditional Ingress with TLS</h3>
+  <pre><code class="language-yaml"># templates/ingress.yaml
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "myapp.fullname" $ }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}</code></pre>
+
+  <h3>values.schema.json for validation</h3>
+  <pre><code class="language-json">{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["replicaCount", "image"],
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository"],
+      "properties": {
+        "repository": { "type": "string" },
+        "tag": { "type": "string" },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      }
+    }
+  }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Hardcoding namespace in templates</h3>
+  <pre><code class="language-yaml"># BAD -- prevents users from deploying to their chosen namespace
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-config
+  namespace: production</code></pre>
+
+  <h3>Correct: Let Helm manage namespace</h3>
+  <pre><code class="language-yaml"># GOOD -- namespace set via helm install --namespace or Release.Namespace
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "myapp.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}</code></pre>
+
+  <h3>Wrong: Using :latest tag in values.yaml</h3>
+  <pre><code class="language-yaml"># BAD -- :latest is mutable, breaks rollbacks and reproducibility
+image:
+  repository: myapp
+  tag: latest</code></pre>
+
+  <h3>Correct: Pin to specific version or use Chart.appVersion</h3>
+  <pre><code class="language-yaml"># GOOD -- pinned version, defaults to Chart.appVersion if empty
+image:
+  repository: myapp
+  tag: ""  # defaults to .Chart.AppVersion via template logic</code></pre>
+
+  <h3>Wrong: Using arrays for user-configurable resources</h3>
+  <pre><code class="language-yaml"># BAD -- arrays are hard to override with --set (index-based)
+servers:
+  - name: foo
+    port: 80
+  - name: bar
+    port: 443</code></pre>
+
+  <h3>Correct: Use maps for merge-friendly overrides</h3>
+  <pre><code class="language-yaml"># GOOD -- maps are easy to override: --set servers.foo.port=8080
+servers:
+  foo:
+    port: 80
+  bar:
+    port: 443</code></pre>
+
+  <h3>Wrong: Not quoting string values in YAML</h3>
+  <pre><code class="language-yaml"># BAD -- YAML type coercion: "yes" becomes boolean, "3.0" becomes float
+enabled: yes
+version: 3.0</code></pre>
+
+  <h3>Correct: Always quote strings explicitly</h3>
+  <pre><code class="language-yaml"># GOOD -- explicit quoting prevents type coercion surprises
+enabled: "yes"
+version: "3.0"</code></pre>
+
+  <h3>Wrong: No resource limits in chart defaults</h3>
+  <pre><code class="language-yaml"># BAD -- omitting resources risks OOMKills and noisy-neighbor issues
+containers:
+  - name: myapp
+    image: myapp:1.0.0</code></pre>
+
+  <h3>Correct: Always set resource requests and limits</h3>
+  <pre><code class="language-yaml"># GOOD -- set sane defaults that users can override via values.yaml
+containers:
+  - name: {{ .Chart.Name }}
+    image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    resources:
+      {{- toYaml .Values.resources | nindent 6 }}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Missing <code>include</code> vs <code>template</code></strong>: <code>template</code> does not allow pipeline chaining (e.g., <code>| nindent</code>). Always use <code>include</code> for named templates that need indentation. Fix: replace <code>{{ template "foo" . }}</code> with <code>{{ include "foo" . | nindent N }}</code>. [<a href="https://helm.sh/docs/chart_template_guide/">src2</a>]</li>
+    <li><strong>Whitespace in templates</strong>: Go templates insert whitespace literally. Fix: use <code>{{-</code> (trim left) and <code>-}}</code> (trim right) to control whitespace. [<a href="https://helm.sh/docs/chart_template_guide/">src2</a>]</li>
+    <li><strong>Chart.lock out of sync</strong>: After editing dependencies in Chart.yaml, <code>Chart.lock</code> is stale. Fix: run <code>helm dependency update</code> to regenerate. [<a href="https://helm.sh/docs/topics/charts/">src1</a>]</li>
+    <li><strong>Hook resources not cleaned up</strong>: Hook-created Jobs persist after completion. Fix: add <code>"helm.sh/hook-delete-policy": hook-succeeded</code> annotation. [<a href="https://helm.sh/docs/topics/charts_hooks/">src3</a>]</li>
+    <li><strong>SemVer <code>+</code> in Kubernetes labels</strong>: K8s labels prohibit the <code>+</code> character. Fix: replace <code>+</code> with <code>_</code> using <code>| replace "+" "_"</code>. [<a href="https://helm.sh/docs/chart_best_practices/conventions/">src4</a>]</li>
+    <li><strong>appVersion treated as constraint</strong>: <code>appVersion</code> is informational only. Fix: do not rely on it for dependency resolution. [<a href="https://helm.sh/docs/topics/charts/">src1</a>]</li>
+    <li><strong>values.yaml type coercion</strong>: Bare <code>yes</code>/<code>no</code> become booleans; <code>3.0</code> becomes a float. Fix: quote all string values. [<a href="https://helm.sh/docs/chart_best_practices/values/">src7</a>]</li>
+    <li><strong>Global values not propagated</strong>: Subcharts only receive their own scoped values. Fix: place shared config under <code>global:</code> key. [<a href="https://helm.sh/docs/chart_template_guide/">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Lint chart for errors and best-practice warnings
+helm lint mychart/
+
+# Render templates locally without installing (dry run)
+helm template myrelease mychart/ --debug
+
+# Show computed values (merged defaults + overrides)
+helm get values myrelease -n mynamespace
+
+# Show all manifest content of an installed release
+helm get manifest myrelease -n mynamespace
+
+# List installed releases across all namespaces
+helm list --all-namespaces
+
+# Debug dependency resolution
+helm dependency list mychart/
+
+# Validate values against schema
+helm install myrelease mychart/ --dry-run --debug
+
+# Show chart metadata from OCI registry
+helm show chart oci://ghcr.io/myorg/charts/mychart --version 1.0.0
+
+# Diff upcoming upgrade (requires helm-diff plugin)
+helm diff upgrade myrelease mychart/ -f custom-values.yaml
+
+# Run chart test hooks
+helm test myrelease -n mynamespace</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Helm 4.x (Nov 2025)</td><td>Current</td><td>Server-side apply, WASM plugins, post-renderers as plugins, kstatus-based watching, reproducible builds</td><td>Chart.yaml apiVersion v2 unchanged; plugin configs may need updates</td></tr>
+      <tr><td>Helm 3.x (2019-2026)</td><td>Bug fixes until Jul 2026, security until Nov 2026</td><td>Tiller removed, per-namespace releases, three-way merge, OCI GA (3.8+)</td><td>Most charts work on both 3.x and 4.x</td></tr>
+      <tr><td>Helm 2.x</td><td>EOL (Nov 2020)</td><td>Required Tiller with cluster-admin</td><td>Use <code>helm 2to3</code> plugin; heritage labels immutable</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Packaging a multi-resource K8s app for distribution</td><td>Simple single-manifest deployment (1-2 YAML files)</td><td>Plain kubectl apply or Kustomize</td></tr>
+      <tr><td>Parameterized config across environments (dev/staging/prod)</td><td>All environments are identical</td><td>kubectl apply with a single manifest</td></tr>
+      <tr><td>Publishing reusable charts to a team or community</td><td>One-off internal deployment that never changes</td><td>Kustomize overlays</td></tr>
+      <tr><td>Managing complex dependency trees (app + database + cache)</td><td>Already using GitOps tool that handles deps</td><td>Native GitOps composition</td></tr>
+      <tr><td>Need lifecycle hooks for migrations, backups, or tests</td><td>Simple workloads with no pre/post-deploy actions</td><td>kubectl apply</td></tr>
+      <tr><td>Distributing charts via OCI registries alongside container images</td><td>Vendoring all manifests in a monorepo with no reuse</td><td>Directory of plain YAML</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Helm 4.0 introduced server-side apply and WASM plugins but kept Chart.yaml <code>apiVersion: v2</code> -- existing charts work without changes, but post-renderer plugins may need migration</li>
+    <li>CRDs in <code>crds/</code> are only installed on <code>helm install</code> -- they are NOT updated on <code>helm upgrade</code>. To update CRDs, apply them separately with <code>kubectl apply</code></li>
+    <li>Library charts (type: library) cannot be installed directly -- they only provide helper templates consumed by application charts via dependencies</li>
+    <li>OCI-based chart registries do not use <code>index.yaml</code> -- <code>helm repo add</code> does not work with OCI references; use <code>oci://</code> prefix directly</li>
+    <li>Hook resources are not tracked as part of the release -- <code>helm uninstall</code> will NOT delete hook-created resources unless a delete-policy is set</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/k8s-deployment-service-ingress/2026" data-relationship="related_to">Kubernetes Deployment + Service + Ingress Reference</a>
+    <a href="/software/devops/k8s-statefulset-databases/2026" data-relationship="related_to">Kubernetes StatefulSet for Databases</a>
+    <a href="/software/devops/k8s-hpa/2026" data-relationship="related_to">Kubernetes HPA Autoscaling</a>
+    <a href="/software/migrations/docker-compose-to-kubernetes/2026" data-relationship="often_confused_with">Docker Compose to Kubernetes Migration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

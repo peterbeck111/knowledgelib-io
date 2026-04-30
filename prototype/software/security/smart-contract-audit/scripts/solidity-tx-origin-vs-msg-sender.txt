@@ -1,0 +1,28 @@
+// ============================================
+// VULNERABLE: tx.origin for authorization
+// ============================================
+// SWC-115: Phishing attack via intermediate contract
+contract VulnerableWallet {
+    address public owner;
+
+    function transfer(address to, uint256 amount) external {
+        // BAD: tx.origin is the EOA that started the transaction chain
+        // An attacker contract can trick the owner into calling it,
+        // then call this function — tx.origin will be the owner
+        require(tx.origin == owner, "Not owner");
+        payable(to).transfer(amount);
+    }
+}
+
+// ============================================
+// SECURE: msg.sender for authorization
+// ============================================
+contract SecureWallet {
+    address public owner;
+
+    function transfer(address to, uint256 amount) external {
+        // GOOD: msg.sender is the immediate caller
+        require(msg.sender == owner, "Not owner");
+        payable(to).transfer(amount);
+    }
+}

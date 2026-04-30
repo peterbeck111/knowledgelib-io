@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>Ride-Sharing Platform System Design (Uber Clone) | knowledgelib.io</title>
+    <meta name="description" content="Complete system design guide for building a ride-sharing platform (Uber clone): 14-component architecture, H3 geospatial matching, surge pricing...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/system-design/ride-sharing-platform/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Ride-Sharing Platform System Design (Uber Clone) | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete system design guide for building a ride-sharing platform: 14-component architecture, H3 geospatial matching, surge pricing, trip state machine, real-time tracking. 7 sources, all cited.">
+    <meta property="og:url" content="https://knowledgelib.io/software/system-design/ride-sharing-platform/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-23">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ride-Sharing Platform System Design (Uber Clone) | knowledgelib.io">
+    <meta name="twitter:description"
+        content="14-component architecture, H3 geospatial matching, surge pricing algorithm, trip state machine, code examples in Python/JS/Go. 7 sources.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.91">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/system-design/ride_sharing_platform">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I design a ride-sharing platform (Uber clone)?">
+    <meta name="ai:aliases"
+        content="Design a ride-sharing service like Uber; Uber system design interview; Ride-hailing platform architecture; How to build an Uber clone; Lyft system design; Ride matching service architecture; Real-time ride dispatch system design">
+    <meta name="ai:raw" content="/api/v1/units/software/system-design/ride-sharing-platform/2026.md">
+    <meta name="ai:token_estimate" content="3800">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="medium">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-23">
+    <meta name="ai:inputs_needed" content="scale,matching_priority,pricing_model">
+    <meta name="ai:constraints"
+        content="GPS accuracy is 3-10m — always map-snap coordinates; Driver location updates must go through message queue not direct DB writes; Surge pricing regulated in multiple jurisdictions — implement configurable caps; Payment must be PCI-DSS compliant with idempotency keys; WebSocket requires sticky sessions or connection registry">
+    <meta name="ai:skip_this_unit_if"
+        content="Building food/grocery delivery platform -> Food delivery system design; Designing only payment subsystem -> Payment processing system design; Building carpooling with shared rides -> Ride-pooling system design">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Structured data: TechArticle -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"Ride-Sharing Platform System Design (Uber Clone)","headline":"Ride-Sharing Platform System Design (Uber Clone)","description":"Complete system design guide for building a ride-sharing platform covering 14-component microservices architecture, H3 geospatial driver matching, surge pricing algorithms, trip state machines, WebSocket real-time tracking, and async payment processing.","keywords":["system design","Uber","ride-sharing","H3","geospatial","microservices","surge pricing","WebSocket","Kafka","matching algorithm"],"dateModified":"2026-02-23","datePublished":"2026-02-23","proficiencyLevel":"Expert","dependencies":"H3 geospatial library, Apache Kafka, Redis, PostgreSQL, WebSocket","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"citation":[{"@type":"WebPage","name":"H3: Uber's Hexagonal Hierarchical Spatial Index","url":"https://www.uber.com/en-US/blog/h3/"},{"@type":"WebPage","name":"Design a Ride-Sharing Service Like Uber","url":"https://www.hellointerview.com/learn/system-design/problem-breakdowns/uber"},{"@type":"WebPage","name":"How Uber Finds Nearby Drivers at 1 Million Requests per Second","url":"https://newsletter.systemdesign.one/p/how-does-uber-find-nearby-drivers"},{"@type":"WebPage","name":"System Design of Uber App — Uber System Architecture","url":"https://www.geeksforgeeks.org/system-design/system-design-of-uber-app-uber-system-architecture/"},{"@type":"WebPage","name":"Uber System Design: Architecture and Scalability","url":"https://www.karanpratapsingh.com/courses/system-design/uber"},{"@type":"WebPage","name":"Dynamic Pricing in Ridesharing Platforms","url":"https://dl.acm.org/doi/10.1145/2994501.2994505"},{"@type":"WebPage","name":"Fraud Detection in Mobility Services with Apache Kafka and Flink","url":"https://www.kai-waehner.de/blog/2025/04/28/fraud-detection-in-mobility-services-ride-hailing-food-delivery-with-data-streaming-using-apache-kafka-and-flink/"}]}</script>
+
+    <!-- Dataset structured data (for Google Dataset Search) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Ride-Sharing Platform System Design (Uber Clone)",
+        "description": "Structured knowledge unit covering the complete architecture of a ride-sharing platform including geospatial matching, surge pricing, real-time tracking, trip management, and payment processing.",
+        "keywords": ["system design", "Uber", "ride-sharing", "H3 geospatial", "microservices", "surge pricing", "real-time matching"],
+        "temporalCoverage": "2020/2026",
+        "dateModified": "2026-02-23",
+        "datePublished": "2026-02-23",
+        "sourceOrganization": [
+            {"@type": "Organization", "name": "Uber Engineering"},
+            {"@type": "Organization", "name": "Hello Interview"},
+            {"@type": "Organization", "name": "System Design Newsletter"},
+            {"@type": "Organization", "name": "GeeksforGeeks"},
+            {"@type": "Organization", "name": "ACM SIGecom"}
+        ],
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "creator": {
+            "@type": "Organization",
+            "name": "knowledgelib.io",
+            "url": "https://knowledgelib.io"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "knowledgelib.io",
+            "url": "https://knowledgelib.io"
+        }
+    }
+    </script>
+
+    <!-- Breadcrumb structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+            { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+            { "@type": "ListItem", "position": 4, "name": "Ride-Sharing Platform System Design (Uber Clone)" }
+        ]
+    }
+    </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a ride-sharing platform (Uber clone)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Design a ride-sharing service like Uber",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Uber system design interview",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Ride-hailing platform architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to build an Uber clone",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Lyft system design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent)."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>Ride-Sharing Platform System Design (Uber Clone)</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a ride-sharing platform (Uber clone)?</h2>
+
+    <aside class="unit-meta" data-card-id="software/system-design/ride-sharing-platform/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.91 out of 1">0.91</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: A ride-sharing platform requires five core subsystems: real-time location tracking (WebSocket + Kafka), geospatial driver matching (H3 hexagonal index), dynamic surge pricing, trip management (state machine), and payment processing (async, idempotent).</li>
+            <li><strong>Key tool/command</strong>: <code>h3-js</code> library for hexagonal geospatial indexing &mdash; converts lat/lng to cell IDs for O(1) nearest-driver lookups.</li>
+            <li><strong>Watch out for</strong>: Storing driver locations in a relational DB &mdash; at scale, you need an in-memory geospatial index (Redis GEO or custom H3 grid) updated every 3-4 seconds per driver.</li>
+            <li><strong>Works with</strong>: Any cloud provider (AWS/GCP/Azure), any language stack; core patterns are language-agnostic.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>GPS accuracy is 3-10m in urban canyons &mdash; always map-snap coordinates to the road network before matching or ETA calculation</li>
+            <li>Driver location updates at scale (&gt;10K concurrent drivers) must go through a message queue (Kafka/Pulsar), not direct DB writes</li>
+            <li>Surge pricing multipliers are regulated in multiple jurisdictions (NYC caps at 2x during emergencies, EU has transparency requirements) &mdash; always implement configurable caps</li>
+            <li>Payment charges must be idempotent &mdash; network retries must not double-charge riders; use idempotency keys</li>
+            <li>WebSocket-based real-time connections require sticky sessions or a connection registry service &mdash; stateless horizontal scaling will silently drop connections</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Component</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Technology Options</th>
+                        <th scope="col">Scaling Strategy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>API Gateway</td>
+                        <td>Rate limiting, auth, request routing</td>
+                        <td>Kong, AWS API Gateway, Envoy</td>
+                        <td>Horizontal + edge caching</td>
+                    </tr>
+                    <tr>
+                        <td>Rider Service</td>
+                        <td>Ride requests, fare estimates, trip history</td>
+                        <td>Node.js, Go, Java Spring</td>
+                        <td>Stateless horizontal pods</td>
+                    </tr>
+                    <tr>
+                        <td>Driver Service</td>
+                        <td>Driver onboarding, availability, earnings</td>
+                        <td>Go, Java, Kotlin</td>
+                        <td>Stateless horizontal pods</td>
+                    </tr>
+                    <tr>
+                        <td>Location Service</td>
+                        <td>Ingest GPS pings, maintain driver positions</td>
+                        <td>Go + Redis GEO, custom H3 grid</td>
+                        <td>Sharded by geo-region</td>
+                    </tr>
+                    <tr>
+                        <td>Matching Service</td>
+                        <td>Pair riders with nearest available drivers</td>
+                        <td>Go, Rust, Java</td>
+                        <td>Sharded by H3 cell region</td>
+                    </tr>
+                    <tr>
+                        <td>Trip Service</td>
+                        <td>Trip state machine (requested &rarr; matched &rarr; in_progress &rarr; completed)</td>
+                        <td>Node.js, Go</td>
+                        <td>Event-sourced with Kafka</td>
+                    </tr>
+                    <tr>
+                        <td>Pricing Service</td>
+                        <td>Fare calculation, surge pricing, promotions</td>
+                        <td>Python, Go</td>
+                        <td>Stateless; reads supply/demand from cache</td>
+                    </tr>
+                    <tr>
+                        <td>Payment Service</td>
+                        <td>Charge riders, pay drivers, handle refunds</td>
+                        <td>Java, Node.js + Stripe/Braintree</td>
+                        <td>Async processing with idempotency</td>
+                    </tr>
+                    <tr>
+                        <td>Notification Service</td>
+                        <td>Push notifications, SMS, email</td>
+                        <td>Node.js, Go + Firebase/APNs/SNS</td>
+                        <td>Fan-out via message queue</td>
+                    </tr>
+                    <tr>
+                        <td>ETA Service</td>
+                        <td>Estimated time of arrival, route optimization</td>
+                        <td>Python, C++ + OSRM/Valhalla</td>
+                        <td>Precomputed graph + ML model</td>
+                    </tr>
+                    <tr>
+                        <td>WebSocket Gateway</td>
+                        <td>Persistent connections for real-time updates</td>
+                        <td>Node.js (Socket.io), Go (gorilla/websocket)</td>
+                        <td>Sticky sessions + connection registry</td>
+                    </tr>
+                    <tr>
+                        <td>Message Queue</td>
+                        <td>Async event bus for all services</td>
+                        <td>Apache Kafka, Apache Pulsar</td>
+                        <td>Partitioned by driver_id or trip_id</td>
+                    </tr>
+                    <tr>
+                        <td>Geospatial Index</td>
+                        <td>Fast nearest-neighbor driver lookup</td>
+                        <td>Redis GEO, H3 in-memory grid, PostGIS</td>
+                        <td>Sharded by H3 resolution-3 cells</td>
+                    </tr>
+                    <tr>
+                        <td>Analytics Pipeline</td>
+                        <td>Trip data, driver metrics, business intelligence</td>
+                        <td>Kafka &rarr; Spark/Flink &rarr; data warehouse</td>
+                        <td>Batch + real-time (Lambda architecture)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Expected scale?
+│   ├── &lt;1K concurrent users (MVP)
+│   │   ├── Use monolith with PostGIS for location queries
+│   │   ├── Simple distance-based matching (SQL query)
+│   │   └── Fixed pricing — skip surge entirely
+│   ├── 1K-100K concurrent users (city-level)
+│   │   ├── Split into 5-8 microservices
+│   │   ├── Redis GEO for driver locations
+│   │   ├── Kafka for event streaming
+│   │   └── Basic supply/demand surge pricing
+│   ├── 100K-1M concurrent users (regional)
+│   │   ├── Full microservices (12+ services)
+│   │   ├── H3 hexagonal index, sharded by region
+│   │   ├── Dedicated matching service with scoring algorithm
+│   │   └── ML-based surge pricing + ETA prediction
+│   └── &gt;1M concurrent users (global, Uber-scale)
+│       ├── Geo-sharded infrastructure (multi-region)
+│       ├── Custom geospatial engine (RingPop for consistent hashing)
+│       ├── Real-time ML pipeline for matching/pricing/ETA
+│       └── CQRS + event sourcing for trip state
+├── Matching priority?
+│   ├── Lowest wait time → Nearest-driver with availability check
+│   ├── Cost optimization → Factor in driver heading direction + ETA
+│   └── Quality → Weighted scoring: distance (40%) + rating (30%) + acceptance rate (30%)
+└── Pricing model?
+    ├── Fixed fare → Precomputed zone-to-zone matrix
+    ├── Metered → Distance (GPS trace) + time (wall clock) + base fare
+    └── Dynamic surge → Supply/demand ratio per H3 cell, updated every 30-60s</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Define the data model and core entities</h3>
+        <p>Design your database schema around four core entities: Users (riders + drivers), Vehicles, Trips, and Payments. Use PostgreSQL for transactional data and Redis for real-time state. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/uber">src2</a>]</p>
+        <pre><code class="language-sql">CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    role VARCHAR(10) NOT NULL CHECK (role IN ('rider', 'driver')),
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    rating DECIMAL(3,2) DEFAULT 5.00,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE trips (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    rider_id UUID REFERENCES users(id),
+    driver_id UUID REFERENCES users(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'requested',
+    pickup_lat DOUBLE PRECISION NOT NULL,
+    pickup_lng DOUBLE PRECISION NOT NULL,
+    dropoff_lat DOUBLE PRECISION NOT NULL,
+    dropoff_lng DOUBLE PRECISION NOT NULL,
+    fare_cents INT,
+    surge_multiplier DECIMAL(3,2) DEFAULT 1.00,
+    requested_at TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+);</code></pre>
+        <p><strong>Verify</strong>: <code>SELECT count(*) FROM information_schema.tables WHERE table_name IN ('users', 'trips');</code> &rarr; expected: <code>2</code></p>
+
+        <h3>2. Implement the location ingestion pipeline</h3>
+        <p>Drivers send GPS pings every 3-4 seconds over WebSocket. These flow through Kafka to the Location Service, which updates an in-memory geospatial index for real-time matching. [<a href="https://newsletter.systemdesign.one/p/how-does-uber-find-nearby-drivers">src3</a>]</p>
+        <pre><code>Driver App --[WebSocket]--&gt; WebSocket Gateway
+    --[produce]--&gt; Kafka (topic: driver.location)
+    --[consume]--&gt; Location Service
+        ├── Hot path: Update Redis GEO / H3 in-memory index
+        └── Cold path: Write to TimescaleDB for trip trace history</code></pre>
+        <p><strong>Verify</strong>: Send a test location ping and confirm Redis GEOSEARCH returns the driver within the expected radius.</p>
+
+        <h3>3. Build the geospatial matching engine</h3>
+        <p>Use Uber's H3 hexagonal grid to partition the map. Convert the pickup location to an H3 cell ID, then search that cell and its k-ring neighbors for available drivers. [<a href="https://www.uber.com/en-US/blog/h3/">src1</a>]</p>
+        <pre><code class="language-python">import h3
+
+def find_nearby_drivers(pickup_lat, pickup_lng, driver_index, k=1):
+    pickup_cell = h3.latlng_to_cell(pickup_lat, pickup_lng, 9)
+    search_cells = h3.grid_disk(pickup_cell, k)
+    nearby_drivers = []
+    for cell in search_cells:
+        if cell in driver_index:
+            nearby_drivers.extend(driver_index[cell])
+    return nearby_drivers</code></pre>
+        <p><strong>Verify</strong>: <code>h3.latlng_to_cell(40.7128, -74.0060, 9)</code> returns a valid 15-character hex string.</p>
+
+        <h3>4. Implement the ride matching algorithm</h3>
+        <p>Score candidate drivers using a weighted function of distance, ETA, rating, and acceptance rate. Send the offer to the top-ranked driver; cascade on decline/timeout. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/uber">src2</a>]</p>
+        <pre><code class="language-python">def score_driver(driver, pickup_lat, pickup_lng):
+    dist = haversine(pickup_lat, pickup_lng, driver['lat'], driver['lng'])
+    distance_score = max(0, (5.0 - dist) / 5.0) * 40
+    rating_score = (driver['rating'] / 5.0) * 30
+    accept_score = driver['acceptance_rate'] * 20
+    heading_bonus = 10 if driver.get('heading_toward') else 0
+    return distance_score + rating_score + accept_score + heading_bonus</code></pre>
+        <p><strong>Verify</strong>: A driver 0.1km away with 4.8 rating and 92% acceptance scores &gt; 80.</p>
+
+        <h3>5. Build the surge pricing engine</h3>
+        <p>Calculate surge multipliers per H3 cell by comparing demand to supply. Update every 30-60 seconds. [<a href="https://dl.acm.org/doi/10.1145/2994501.2994505">src6</a>]</p>
+        <pre><code class="language-python">def calculate_surge(cell_id, request_count, available_drivers,
+                    base_threshold=0.7, max_multiplier=3.0):
+    if available_drivers == 0:
+        return max_multiplier
+    ratio = request_count / available_drivers
+    if ratio &lt;= base_threshold:
+        return 1.0
+    surge = 1.0 + (ratio - base_threshold) * 1.5
+    return min(round(surge, 2), max_multiplier)</code></pre>
+        <p><strong>Verify</strong>: <code>calculate_surge("cell", 10, 20)</code> &rarr; <code>1.0</code>; <code>calculate_surge("cell", 50, 10)</code> &rarr; <code>3.0</code></p>
+
+        <h3>6. Implement the trip state machine</h3>
+        <p>Model each trip as a finite state machine with event sourcing via Kafka. [<a href="https://www.geeksforgeeks.org/system-design/system-design-of-uber-app-uber-system-architecture/">src4</a>]</p>
+        <pre><code>REQUESTED ──[driver accepts]──&gt; MATCHED
+MATCHED ──[driver arrives]──&gt; DRIVER_ARRIVING
+DRIVER_ARRIVING ──[rider picked up]──&gt; IN_PROGRESS
+IN_PROGRESS ──[arrived at destination]──&gt; COMPLETED
+COMPLETED ──[payment processed]──&gt; PAID</code></pre>
+        <p><strong>Verify</strong>: No valid transition exists from COMPLETED back to IN_PROGRESS.</p>
+
+        <h3>7. Set up the payment and billing pipeline</h3>
+        <p>Process payments asynchronously after trip completion. Use idempotency keys to prevent double charges. [<a href="https://www.karanpratapsingh.com/courses/system-design/uber">src5</a>]</p>
+        <pre><code>Trip Completed Event (Kafka) --&gt; Payment Service
+  1. Calculate final fare: base + (distance_km * per_km) + (duration_min * per_min) * surge
+  2. Capture pre-authorized amount (Stripe/Braintree)
+  3. If capture fails: retry with exponential backoff (max 3)
+  4. Emit PaymentCompleted event</code></pre>
+        <p><strong>Verify</strong>: Two identical capture requests with same idempotency key &rarr; only one charge.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Python: Geospatial Driver Matching with H3</h3>
+        <pre><code class="language-python"># Input:  rider pickup coordinates, dict of active drivers
+# Output: ranked list of nearby driver IDs
+
+import h3
+import redis
+
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+def update_driver_location(driver_id: str, lat: float, lng: float):
+    r.geoadd("drivers:geo", (lng, lat, driver_id))
+    cell = h3.latlng_to_cell(lat, lng, 9)
+    r.sadd(f"drivers:h3:{cell}", driver_id)
+    r.set(f"drivers:cell:{driver_id}", cell, ex=30)
+
+def match_rider(pickup_lat: float, pickup_lng: float, radius_km: float = 3.0):
+    results = r.geosearch(
+        "drivers:geo", longitude=pickup_lng, latitude=pickup_lat,
+        radius=radius_km, unit="km", sort="ASC", count=10
+    )
+    return [driver_id.decode() for driver_id in results]</code></pre>
+
+        <h3>JavaScript/Node.js: WebSocket Driver Connection Handler</h3>
+        <pre><code class="language-javascript">// Input:  WebSocket connection from driver app
+// Output: location updates forwarded to Kafka
+
+const { Kafka } = require('kafkajs');
+const WebSocket = require('ws');
+
+const kafka = new Kafka({ brokers: ['kafka:9092'] });
+const producer = kafka.producer();
+const wss = new WebSocket.Server({ port: 8080 });
+
+wss.on('connection', (ws, req) =&gt; {
+  const driverId = req.headers['x-driver-id'];
+  ws.on('message', async (data) =&gt; {
+    const { lat, lng, timestamp } = JSON.parse(data);
+    await producer.send({
+      topic: 'driver.location',
+      messages: [{ key: driverId, value: JSON.stringify({ lat, lng, timestamp }) }]
+    });
+  });
+});</code></pre>
+
+        <h3>Go: Surge Pricing Calculator</h3>
+        <pre><code class="language-go">// Input:  demand (request count), supply (driver count)
+// Output: surge multiplier (float64)
+
+package pricing
+
+import "math"
+
+const (
+    BaseThreshold = 0.7
+    MaxMultiplier = 3.0
+    SurgeSlope    = 1.5
+)
+
+func CalculateSurge(requests, drivers int) float64 {
+    if drivers == 0 {
+        return MaxMultiplier
+    }
+    ratio := float64(requests) / float64(drivers)
+    if ratio &lt;= BaseThreshold {
+        return 1.0
+    }
+    surge := 1.0 + (ratio-BaseThreshold)*SurgeSlope
+    return math.Min(math.Round(surge*100)/100, MaxMultiplier)
+}</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Polling all drivers in the database for every ride request</h3>
+        <pre><code class="language-sql">-- BAD: full table scan on every ride request, O(n) for n drivers
+SELECT id, lat, lng,
+       ST_Distance(location, ST_MakePoint(-74.006, 40.7128)) AS dist
+FROM drivers
+WHERE is_available = true
+ORDER BY dist ASC
+LIMIT 10;
+-- At 100K+ active drivers this query takes 500ms+ per request</code></pre>
+
+        <h3>Correct: Use in-memory geospatial index with H3 partitioning</h3>
+        <pre><code class="language-python"># GOOD: O(1) cell lookup + O(k) for k neighbors, typically &lt;5ms
+pickup_cell = h3.latlng_to_cell(40.7128, -74.006, 9)
+search_cells = h3.grid_disk(pickup_cell, 1)  # ~7 cells
+candidates = []
+for cell in search_cells:
+    candidates.extend(driver_index.get(cell, []))</code></pre>
+
+        <h3>Wrong: Synchronous payment processing blocking trip completion</h3>
+        <pre><code class="language-python"># BAD: rider waits for payment before seeing "trip complete"
+def complete_trip(trip_id):
+    trip = db.get_trip(trip_id)
+    trip.status = 'completed'
+    charge = stripe.charges.create(amount=trip.fare)  # 2-5s blocking call
+    if charge.status != 'succeeded':
+        trip.status = 'payment_failed'  # rider stuck
+    db.save(trip)</code></pre>
+
+        <h3>Correct: Async payment via event queue with retry</h3>
+        <pre><code class="language-python"># GOOD: trip completes instantly, payment processed asynchronously
+def complete_trip(trip_id):
+    trip = db.get_trip(trip_id)
+    trip.status = 'completed'
+    db.save(trip)
+    kafka.produce('trip.completed', {
+        'trip_id': trip_id, 'fare': trip.fare,
+        'idempotency_key': f"trip-{trip_id}"
+    })</code></pre>
+
+        <h3>Wrong: Single-point surge pricing for an entire city</h3>
+        <pre><code class="language-python"># BAD: one surge multiplier for the whole city
+total_requests = get_city_wide_requests()
+total_drivers = get_city_wide_drivers()
+city_surge = total_requests / total_drivers  # meaningless average</code></pre>
+
+        <h3>Correct: Per-cell surge pricing using H3 hexagonal grid</h3>
+        <pre><code class="language-python"># GOOD: granular surge per H3 cell captures local imbalance
+for cell_id in active_cells:
+    requests = get_cell_requests(cell_id, window_minutes=5)
+    drivers = get_cell_drivers(cell_id)
+    surge = calculate_surge(cell_id, requests, drivers)
+    cache.set(f"surge:{cell_id}", surge, ttl=60)</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>Stale driver locations</strong>: Drivers that close the app remain in the index as "available." Fix: Set a TTL on driver location entries (30s) and require periodic heartbeats. [<a href="https://newsletter.systemdesign.one/p/how-does-uber-find-nearby-drivers">src3</a>]</li>
+            <li><strong>GPS drift in tunnels/garages</strong>: GPS signal loss causes drivers to "teleport" when signal returns, triggering false surge spikes. Fix: Apply a Kalman filter or speed-based sanity check &mdash; discard jumps &gt; 200km/h. [<a href="https://www.uber.com/en-US/blog/h3/">src1</a>]</li>
+            <li><strong>Hot-spot matching storms</strong>: A concert ending creates 10K requests in one H3 cell. Fix: Expand the search radius dynamically and implement a request queue with ETA-based prioritization. [<a href="https://www.geeksforgeeks.org/system-design/system-design-of-uber-app-uber-system-architecture/">src4</a>]</li>
+            <li><strong>Payment authorization expiry</strong>: Pre-authorized holds expire after 7 days. Fix: Capture within 24 hours; for disputes, create a new charge. [<a href="https://www.karanpratapsingh.com/courses/system-design/uber">src5</a>]</li>
+            <li><strong>Cascading driver rejection</strong>: Re-running full matching on each decline wastes time. Fix: Pre-rank the top 5 candidates and cascade through with 10-15s timeouts. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/uber">src2</a>]</li>
+            <li><strong>Inconsistent trip state</strong>: Rider app shows "matched" but driver shows "cancelled." Fix: Use a single source of truth (Trip Service with event sourcing). [<a href="https://www.karanpratapsingh.com/courses/system-design/uber">src5</a>]</li>
+            <li><strong>ETA inaccuracy from Euclidean distance</strong>: Straight-line distance / avg speed ignores road networks. Fix: Use a road-graph routing engine (OSRM, Valhalla). [<a href="https://www.geeksforgeeks.org/system-design/system-design-of-uber-app-uber-system-architecture/">src4</a>]</li>
+            <li><strong>WebSocket connection leaks</strong>: Failed connections exhaust server file descriptors. Fix: Implement ping/pong health checks every 30s and automatic cleanup. [<a href="https://www.karanpratapsingh.com/courses/system-design/uber">src5</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Check Redis GEO driver count in radius
+redis-cli GEOSEARCH drivers:geo FROMLONLAT -74.006 40.7128 BYRADIUS 3 km COUNT 100 ASC
+
+# Monitor Kafka consumer lag for location topic
+kafka-consumer-groups.sh --bootstrap-server kafka:9092 --describe --group location-consumer
+
+# Count active WebSocket connections
+ss -s | grep -i estab
+
+# Check H3 cell for a coordinate
+python3 -c "import h3; print(h3.latlng_to_cell(40.7128, -74.006, 9))"
+
+# Monitor trip state transitions (Kafka)
+kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic trip.events --from-latest
+
+# Check surge pricing for a cell
+redis-cli GET surge:891f1a80537ffff</code></pre>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Building a two-sided marketplace connecting riders with drivers in real-time</td>
+                        <td>Building a food delivery platform with restaurant prep time</td>
+                        <td>Food delivery system design (different matching + batching)</td>
+                    </tr>
+                    <tr>
+                        <td>Need to handle &gt;1K concurrent ride requests with &lt;3s matching latency</td>
+                        <td>Simple point-to-point scheduled shuttle service</td>
+                        <td>Queue-based booking system</td>
+                    </tr>
+                    <tr>
+                        <td>Implementing dynamic pricing based on real-time supply/demand</td>
+                        <td>Fixed-route public transit scheduling</td>
+                        <td>Transit scheduling system (GTFS-based)</td>
+                    </tr>
+                    <tr>
+                        <td>Require real-time driver tracking and ETA updates for riders</td>
+                        <td>Package/freight logistics with multi-day delivery windows</td>
+                        <td>Logistics/fleet management system design</td>
+                    </tr>
+                    <tr>
+                        <td>Supporting multiple vehicle types (economy, premium, XL) in one platform</td>
+                        <td>Peer-to-peer car rental (no real-time matching needed)</td>
+                        <td>Marketplace platform design (Airbnb-style)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li>The H3 resolution level matters significantly: resolution 9 (~174m edge) is suitable for urban areas, but rural matching may need resolution 7 (~5.2km edge) to find enough drivers</li>
+            <li>Surge pricing algorithms are under active regulatory scrutiny &mdash; California AB5, EU Digital Services Act, and NYC TLC all impose constraints; always build in jurisdiction-specific caps and transparency mechanisms</li>
+            <li>Driver matching at Uber-scale (&gt;1M concurrent) uses ML ranking models trained on acceptance/completion data &mdash; the weighted scoring shown here is a solid starting point but production systems evolve toward learned models</li>
+            <li>WebSocket at scale is expensive &mdash; at &gt;100K concurrent drivers, consider a connection broker (e.g., RingPop, NATS) rather than a monolithic WebSocket server</li>
+            <li>Payment processing varies dramatically by country &mdash; design the payment service with pluggable provider adapters from day one</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+        Browse: Software &middot; System Design<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

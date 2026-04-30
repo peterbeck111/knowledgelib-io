@@ -1,0 +1,28 @@
+START — java.lang.OutOfMemoryError thrown
+├── Error message contains "Java heap space" or "GC overhead limit exceeded"?
+│   ├── YES → Heap problem
+│   │   ├── Heap dump available? (HeapDumpOnOutOfMemoryError enabled?)
+│   │   │   ├── YES → Open in Eclipse MAT → Leak Suspects report
+│   │   │   │   ├── Single object/collection dominates heap? → Memory leak → Fix code
+│   │   │   │   └── Many objects, heap nearly full → Undersized heap → Increase -Xmx
+│   │   │   └── NO → Enable -XX:+HeapDumpOnOutOfMemoryError, reproduce, then analyze
+│   │   └── Happens only under load spikes? → Increase -Xmx + add monitoring
+│   └── NO ↓
+├── Error message contains "Metaspace"?
+│   ├── YES → Class loading problem
+│   │   ├── Happens on redeploy (app server)? → Classloader leak → Restart; fix leak
+│   │   └── Grows slowly? → Dynamic proxy/reflection/Groovy → Increase -XX:MaxMetaspaceSize
+│   └── NO ↓
+├── Error message contains "Unable to create new native thread"?
+│   ├── YES → Thread exhaustion
+│   │   ├── Thread count growing? (jstack | grep "Thread" | wc -l) → Thread leak
+│   │   └── Hit OS limit? → Increase ulimit -u; reduce -Xss
+│   └── NO ↓
+├── Error message contains "Direct buffer memory"?
+│   ├── YES → NIO buffer leak → Fix buffer release; increase -XX:MaxDirectMemorySize
+│   └── NO ↓
+├── Error message contains "Kill process or sacrifice child"?
+│   ├── YES → Linux OOM Killer → Increase container/host memory
+│   └── NO ↓
+└── Other (array size, compressed class, native method)
+    └── See Quick Reference table for specific fix

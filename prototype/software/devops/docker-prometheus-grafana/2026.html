@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Docker Compose: Prometheus + Grafana Monitoring | knowledgelib.io</title>
+  <meta name="description" content="Complete Docker Compose reference for Prometheus + Grafana monitoring stack with Node Exporter, cAdvisor, and Alertmanager.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/docker-prometheus-grafana/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Docker Compose: Prometheus + Grafana Monitoring | knowledgelib.io">
+  <meta property="og:description" content="Complete Docker Compose reference for Prometheus + Grafana monitoring stack with Node Exporter, cAdvisor, and Alertmanager. Config files, alert rules, Grafana provisioning, and 5 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/docker-prometheus-grafana/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Docker Compose: Prometheus + Grafana Monitoring | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Docker Compose reference for Prometheus + Grafana monitoring stack with Node Exporter, cAdvisor, and Alertmanager. Config files, alert rules, Grafana provisioning, and 5 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Docker Prometheus Grafana">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Docker Compose reference: Prometheus + Grafana">
+  <meta name="ai:aliases" content="Prometheus Grafana Docker Compose monitoring stack; docker compose prometheus grafana node exporter setup; Docker monitoring stack with Prometheus and Grafana; prometheus grafana cAdvisor alertmanager docker compose; container monitoring Docker Compose Prometheus; self-hosted monitoring stack docker; docker compose observability stack; prometheus grafana docker production setup">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/docker-prometheus-grafana/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="monitoring_scope,alerting">
+  <meta name="ai:constraints" content="Pin image versions in production -- never use :latest; Never expose Prometheus or Alertmanager publicly without authentication; cAdvisor requires privileged volume mounts; Node Exporter must run with --path.rootfs=/host and host PID; Grafana provisioned datasources are read-only unless editable: true">
+  <meta name="ai:skip_this_unit_if" content="Need Kubernetes monitoring → software/devops/kube-prometheus-stack/2026; Need cloud-managed monitoring → software/devops/cloud-monitoring-comparison/2026; Need log aggregation → software/devops/docker-loki-grafana/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Docker Compose: Prometheus + Grafana Monitoring Stack",
+    "headline": "Docker Compose: Prometheus + Grafana Monitoring Stack",
+    "description": "Complete Docker Compose reference for deploying a production-ready monitoring stack with Prometheus, Grafana, Node Exporter, cAdvisor, and Alertmanager. Includes docker-compose.yml, prometheus.yml, alert rules, Grafana provisioning, dashboard JSON, and diagnostic commands.",
+    "keywords": ["Docker Compose", "Prometheus", "Grafana", "Node Exporter", "cAdvisor", "Alertmanager", "monitoring stack", "container monitoring", "infrastructure monitoring", "devops"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Docker Compose v2+, Prometheus 3.10.0, Grafana 12.4.0, Node Exporter 1.9.0, cAdvisor 0.49.1, Alertmanager 0.28.1",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Installation | Prometheus",
+        "url": "https://prometheus.io/docs/prometheus/latest/installation/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Monitoring Docker container metrics using cAdvisor",
+        "url": "https://prometheus.io/docs/guides/cadvisor/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Provision Grafana",
+        "url": "https://grafana.com/docs/grafana/latest/administration/provisioning/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Run Grafana Docker image",
+        "url": "https://grafana.com/docs/grafana/latest/setup-grafana/installation/docker/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Prometheus with Docker Compose: Guide & Examples",
+        "url": "https://spacelift.io/blog/prometheus-docker-compose"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Monitoring a Linux host with Prometheus, Node Exporter, and Docker Compose",
+        "url": "https://grafana.com/docs/grafana-cloud/send-data/metrics/metrics-prometheus/prometheus-config-examples/docker-compose-linux/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "dockprom: Docker hosts and containers monitoring",
+        "url": "https://github.com/stefanprodan/dockprom"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Docker Compose: Prometheus + Grafana Monitoring Stack",
+    "description": "Structured knowledge unit on deploying a production-ready monitoring stack using Docker Compose with Prometheus, Grafana, Node Exporter, cAdvisor, and Alertmanager. Includes complete configuration files, alert rules, Grafana provisioning, and diagnostic commands.",
+    "keywords": ["Docker Compose", "Prometheus", "Grafana", "monitoring", "Node Exporter", "cAdvisor", "Alertmanager", "container monitoring", "devops"],
+    "temporalCoverage": "2025/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Prometheus Authors"},
+      {"@type": "Organization", "name": "Grafana Labs"},
+      {"@type": "Organization", "name": "Spacelift"},
+      {"@type": "Organization", "name": "Stefan Prodan"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Docker Compose: Prometheus + Grafana" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Docker Compose reference: Prometheus + Grafana",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Prometheus Grafana Docker Compose monitoring stack",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "docker compose prometheus grafana node exporter setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker monitoring stack with Prometheus and Grafana",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "prometheus grafana cAdvisor alertmanager docker compose",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "container monitoring Docker Compose Prometheus",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Docker Compose: Prometheus + Grafana Monitoring Stack</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Docker Compose reference: Prometheus + Grafana</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/docker-prometheus-grafana/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A production-ready monitoring stack using Docker Compose combines Prometheus (metrics collection), Grafana (visualization), Node Exporter (host metrics), cAdvisor (container metrics), and Alertmanager (notifications) -- all configured declaratively with persistent storage and auto-provisioned dashboards.</li>
+    <li><strong>Key tool/command</strong>: <code>docker compose up -d</code> with pinned image versions and named volumes for all stateful services.</li>
+    <li><strong>Watch out for</strong>: Running Prometheus or Alertmanager without authentication -- both expose unauthenticated web UIs by default on ports 9090 and 9093.</li>
+    <li><strong>Works with</strong>: Docker Compose v2+, Prometheus 3.x, Grafana 12.x, Node Exporter 1.9.x, cAdvisor 0.49.x, Alertmanager 0.28.x. Linux, macOS, Windows (WSL2).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Pin image versions in production -- never use :latest for Prometheus, Grafana, or exporters</li>
+    <li>Never expose Prometheus (9090) or Alertmanager (9093) publicly without authentication -- no auth by default</li>
+    <li>cAdvisor requires privileged volume mounts (/var/run, /sys, /var/lib/docker) -- review security implications</li>
+    <li>Node Exporter must run with --path.rootfs=/host and host PID namespace for accurate host metrics</li>
+    <li>Grafana provisioned datasources/dashboards are read-only in UI unless editable: true is set</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Service Configuration Summary</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Service</th><th scope="col">Image</th><th scope="col">Ports</th><th scope="col">Volumes</th><th scope="col">Key Config</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Prometheus</td><td><code>prom/prometheus:v3.10.0</code></td><td><code>9090:9090</code></td><td><code>prometheus_data:/prometheus</code>, <code>./prometheus.yml:/etc/prometheus/prometheus.yml</code></td><td><code>--storage.tsdb.retention.time=30d</code></td></tr>
+      <tr><td>Grafana</td><td><code>grafana/grafana:12.4.0</code></td><td><code>3000:3000</code></td><td><code>grafana_data:/var/lib/grafana</code>, <code>./grafana/provisioning:/etc/grafana/provisioning</code></td><td><code>GF_SECURITY_ADMIN_PASSWORD</code></td></tr>
+      <tr><td>Node Exporter</td><td><code>prom/node-exporter:v1.9.0</code></td><td><code>9100:9100</code></td><td><code>/:/host:ro,rslave</code></td><td><code>--path.rootfs=/host</code>, PID host</td></tr>
+      <tr><td>cAdvisor</td><td><code>gcr.io/cadvisor/cadvisor:v0.49.1</code></td><td><code>8080:8080</code></td><td><code>/var/run:/var/run:ro</code>, <code>/sys:/sys:ro</code>, <code>/var/lib/docker:/var/lib/docker:ro</code></td><td>Privileged mounts required</td></tr>
+      <tr><td>Alertmanager</td><td><code>prom/alertmanager:v0.28.1</code></td><td><code>9093:9093</code></td><td><code>alertmanager_data:/alertmanager</code>, <code>./alertmanager.yml:/etc/alertmanager/alertmanager.yml</code></td><td>Route + receiver config</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Default Endpoints</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Endpoint</th><th scope="col">URL</th><th scope="col">Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Prometheus UI</td><td><code>http://localhost:9090</code></td><td>Query, targets, rules, TSDB status</td></tr>
+      <tr><td>Prometheus Targets</td><td><code>http://localhost:9090/targets</code></td><td>Scrape target health check</td></tr>
+      <tr><td>Grafana UI</td><td><code>http://localhost:3000</code></td><td>Dashboards (default: admin/admin)</td></tr>
+      <tr><td>Alertmanager UI</td><td><code>http://localhost:9093</code></td><td>Alert status, silences</td></tr>
+      <tr><td>Node Exporter Metrics</td><td><code>http://localhost:9100/metrics</code></td><td>Raw host metrics</td></tr>
+      <tr><td>cAdvisor UI</td><td><code>http://localhost:8080</code></td><td>Container metrics explorer</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What monitoring do you need?
+&#9500;&#9472;&#9472; Host metrics only (CPU, RAM, disk, network)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Prometheus + Node Exporter + Grafana (skip cAdvisor)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Docker container metrics only?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Prometheus + cAdvisor + Grafana (skip Node Exporter)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Both host + container metrics?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Full stack: Prometheus + Node Exporter + cAdvisor + Grafana
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Need alerting (email, Slack, PagerDuty)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Add Alertmanager service + alert rules
+&#9474;   &#9492;&#9472;&#9472; NO &#8594; Skip Alertmanager
+&#9500;&#9472;&#9472; Running on Kubernetes?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use kube-prometheus-stack Helm chart instead
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Full stack with all 5 services</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create the project directory structure</h3>
+  <p>Organize configuration files into service-specific directories for clarity. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</p>
+  <pre><code class="language-bash">mkdir -p monitoring/{prometheus,grafana/provisioning/datasources,grafana/provisioning/dashboards,alertmanager}
+cd monitoring</code></pre>
+  <p><strong>Verify</strong>: <code>find . -type d</code> &#8594; should list all subdirectories.</p>
+
+  <h3>2. Create the Docker Compose file</h3>
+  <p>Define all services with pinned versions, named volumes, health checks, and a shared network. [<a href="https://prometheus.io/docs/prometheus/latest/installation/">src1</a>]</p>
+  <pre><code class="language-yaml"># docker-compose.yml
+services:
+  prometheus:
+    image: prom/prometheus:v3.10.0
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+      - "--storage.tsdb.wal-compression"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:12.4.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      prometheus:
+        condition: service_healthy
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.0
+    container_name: node-exporter
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+    pid: host
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+
+networks:
+  monitoring:
+    driver: bridge</code></pre>
+  <p><strong>Verify</strong>: <code>docker compose config</code> &#8594; should print resolved YAML with no errors.</p>
+
+  <h3>3. Configure Prometheus scrape targets</h3>
+  <p>Define scrape jobs for all exporters. Use Docker DNS names (service names resolve automatically within the compose network). [<a href="https://prometheus.io/docs/prometheus/latest/installation/">src1</a>]</p>
+  <pre><code class="language-yaml"># prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - "rules.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  - job_name: "cadvisor"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["cadvisor:8080"]</code></pre>
+  <p><strong>Verify</strong>: After starting, visit <code>http://localhost:9090/targets</code> &#8594; all targets should show <code>UP</code>.</p>
+
+  <h3>4. Create Prometheus alert rules</h3>
+  <p>Define alert conditions for common failure scenarios. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</p>
+  <pre><code class="language-yaml"># prometheus/rules.yml
+groups:
+  - name: node_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) &gt; 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 &gt; 85
+        for: 5m
+        labels:
+          severity: warning
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 &gt; 90
+        for: 10m
+        labels:
+          severity: critical
+
+  - name: container_alerts
+    rules:
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total{name=~".+"}[5m]) * 100 &gt; 80
+        for: 5m
+        labels:
+          severity: warning</code></pre>
+  <p><strong>Verify</strong>: <code>http://localhost:9090/rules</code> &#8594; rules should appear as loaded.</p>
+
+  <h3>5. Configure Alertmanager</h3>
+  <p>Set up routing and receivers for notifications. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</p>
+  <pre><code class="language-yaml"># alertmanager/alertmanager.yml
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ["alertname", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: "default"
+
+receivers:
+  - name: "default"
+    webhook_configs:
+      - url: "http://example.com/webhook"
+        send_resolved: true</code></pre>
+  <p><strong>Verify</strong>: <code>http://localhost:9093/#/status</code> &#8594; config should be loaded.</p>
+
+  <h3>6. Provision Grafana datasource and dashboard</h3>
+  <p>Use Grafana provisioning to auto-configure Prometheus as a datasource. [<a href="https://grafana.com/docs/grafana/latest/administration/provisioning/">src3</a>]</p>
+  <pre><code class="language-yaml"># grafana/provisioning/datasources/datasource.yml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false</code></pre>
+  <pre><code class="language-yaml"># grafana/provisioning/dashboards/dashboard.yml
+apiVersion: 1
+
+providers:
+  - name: "default"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false</code></pre>
+  <p><strong>Verify</strong>: Log into Grafana at <code>http://localhost:3000</code> &#8594; Configuration &gt; Data Sources &#8594; Prometheus should appear.</p>
+
+  <h3>7. Start the stack and verify</h3>
+  <p>Launch all services and confirm everything is healthy. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</p>
+  <pre><code class="language-bash"># Start all services
+docker compose up -d
+
+# Check all containers are running
+docker compose ps
+
+# View logs for any errors
+docker compose logs --tail=50</code></pre>
+  <p><strong>Verify</strong>: <code>docker compose ps</code> &#8594; all 5 services should show <code>running</code>.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Grafana Dashboard JSON: Node Exporter Host Overview</h3>
+  <pre><code class="language-json">{
+  "dashboard": {
+    "title": "Node Exporter - Host Overview",
+    "uid": "node-exporter-host",
+    "panels": [
+      {
+        "title": "CPU Usage %",
+        "type": "timeseries",
+        "targets": [{
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU %"
+        }],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "title": "Memory Usage %",
+        "type": "timeseries",
+        "targets": [{
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "legendFormat": "Memory %"
+        }],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      }
+    ],
+    "time": {"from": "now-1h", "to": "now"},
+    "refresh": "30s"
+  }
+}</code></pre>
+
+  <h3>Prometheus Recording Rules: Pre-compute expensive queries</h3>
+  <pre><code class="language-yaml"># prometheus/recording-rules.yml
+groups:
+  - name: node_recording_rules
+    interval: 15s
+    rules:
+      - record: instance:node_cpu_utilization:ratio
+        expr: 1 - avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))
+
+      - record: instance:node_memory_utilization:ratio
+        expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+
+      - record: instance:node_disk_utilization:ratio
+        expr: 1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using :latest tags for all images</h3>
+  <pre><code class="language-yaml"># BAD -- unpinned versions cause silent breaking changes
+services:
+  prometheus:
+    image: prom/prometheus:latest
+  grafana:
+    image: grafana/grafana:latest
+  node-exporter:
+    image: prom/node-exporter:latest</code></pre>
+
+  <h3>Correct: Pin specific versions</h3>
+  <pre><code class="language-yaml"># GOOD -- predictable, reproducible deployments
+services:
+  prometheus:
+    image: prom/prometheus:v3.10.0
+  grafana:
+    image: grafana/grafana:12.4.0
+  node-exporter:
+    image: prom/node-exporter:v1.9.0</code></pre>
+
+  <h3>Wrong: No persistent volumes</h3>
+  <pre><code class="language-yaml"># BAD -- all metrics data lost on container restart
+services:
+  prometheus:
+    image: prom/prometheus:v3.10.0
+    # No volumes defined</code></pre>
+
+  <h3>Correct: Named volumes for all stateful services</h3>
+  <pre><code class="language-yaml"># GOOD -- data survives container restarts and upgrades
+services:
+  prometheus:
+    image: prom/prometheus:v3.10.0
+    volumes:
+      - prometheus_data:/prometheus
+volumes:
+  prometheus_data:</code></pre>
+
+  <h3>Wrong: Exposing Prometheus publicly without auth</h3>
+  <pre><code class="language-yaml"># BAD -- anyone can query/delete metrics
+services:
+  prometheus:
+    ports:
+      - "0.0.0.0:9090:9090"</code></pre>
+
+  <h3>Correct: Bind to localhost or use reverse proxy with auth</h3>
+  <pre><code class="language-yaml"># GOOD -- only accessible locally
+services:
+  prometheus:
+    ports:
+      - "127.0.0.1:9090:9090"</code></pre>
+
+  <h3>Wrong: Node Exporter without host PID and rootfs mount</h3>
+  <pre><code class="language-yaml"># BAD -- incomplete host metrics
+services:
+  node-exporter:
+    image: prom/node-exporter:v1.9.0
+    # Missing pid: host and /:/host volume</code></pre>
+
+  <h3>Correct: Proper Node Exporter configuration</h3>
+  <pre><code class="language-yaml"># GOOD -- accurate host metrics with rootfs remapping
+services:
+  node-exporter:
+    image: prom/node-exporter:v1.9.0
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+    pid: host</code></pre>
+
+  <h3>Wrong: Hardcoded Grafana admin password</h3>
+  <pre><code class="language-yaml"># BAD -- password committed to version control
+services:
+  grafana:
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=mysecretpassword</code></pre>
+
+  <h3>Correct: Use environment variable or .env file</h3>
+  <pre><code class="language-yaml"># GOOD -- password loaded from .env file (excluded from git)
+services:
+  grafana:
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Prometheus targets show DOWN</strong>: Service names in scrape_configs must match docker-compose service names exactly. <code>node-exporter:9100</code> not <code>node_exporter:9100</code> or <code>localhost:9100</code>. Fix: Check <code>docker compose ps</code> for exact service names. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</li>
+    <li><strong>Grafana shows "No data"</strong>: Prometheus datasource URL must use Docker internal DNS name <code>http://prometheus:9090</code>, not <code>http://localhost:9090</code>. Fix: Use service name in datasource URL. [<a href="https://grafana.com/docs/grafana/latest/administration/provisioning/">src3</a>]</li>
+    <li><strong>cAdvisor crash on newer kernels</strong>: cAdvisor may fail with <code>Failed to start container manager</code> on Linux 6.x+ kernels. Fix: Add <code>--docker_only=true</code> flag or update to cAdvisor v0.49+. [<a href="https://prometheus.io/docs/guides/cadvisor/">src2</a>]</li>
+    <li><strong>Prometheus OOM on high cardinality</strong>: Too many unique label combinations cause memory exhaustion. Fix: Add <code>metric_relabel_configs</code> to drop high-cardinality labels, or set <code>--storage.tsdb.retention.size=5GB</code>. [<a href="https://prometheus.io/docs/prometheus/latest/installation/">src1</a>]</li>
+    <li><strong>Alert rules not loading</strong>: <code>rule_files</code> path in prometheus.yml must match the mounted path inside the container. Fix: Verify mount paths match rule_files paths. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</li>
+    <li><strong>Grafana provisioned dashboards can't be edited</strong>: Provisioned dashboards are read-only by default. Fix: Set <code>editable: true</code> in datasource config, or export and re-provision. [<a href="https://grafana.com/docs/grafana/latest/administration/provisioning/">src3</a>]</li>
+    <li><strong>Node Exporter shows container filesystem</strong>: Missing <code>--path.rootfs=/host</code> flag or volume mount. Fix: Ensure both the volume mount and the flag are set. [<a href="https://grafana.com/docs/grafana-cloud/send-data/metrics/metrics-prometheus/prometheus-config-examples/docker-compose-linux/">src6</a>]</li>
+    <li><strong>Alertmanager not receiving alerts</strong>: Must reference alertmanager service by Docker DNS name <code>alertmanager:9093</code>, not <code>localhost:9093</code>. Fix: Use Docker service names. [<a href="https://spacelift.io/blog/prometheus-docker-compose">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check all service health
+docker compose ps
+
+# View Prometheus targets status
+curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | {scrapeUrl, health, lastError}'
+
+# Test Prometheus config validity
+docker compose exec prometheus promtool check config /etc/prometheus/prometheus.yml
+
+# Validate alert rules
+docker compose exec prometheus promtool check rules /etc/prometheus/rules.yml
+
+# Check Grafana datasource connectivity
+curl -s -u admin:changeme http://localhost:3000/api/datasources | jq '.[].name'
+
+# Test Alertmanager config
+docker compose exec alertmanager amtool check-config /etc/alertmanager/alertmanager.yml
+
+# Query a specific metric directly
+curl -s 'http://localhost:9090/api/v1/query?query=up' | jq '.data.result'
+
+# Reload Prometheus config without restart (requires --web.enable-lifecycle)
+curl -X POST http://localhost:9090/-/reload
+
+# Check container resource usage
+docker stats --no-stream</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Prometheus</td><td>3.10.0</td><td>Current</td><td>3.0 removed deprecated flags, UTF-8 metric names</td><td>LTS: 3.5.1</td></tr>
+      <tr><td>Prometheus</td><td>2.54.x</td><td>LTS until 2025-07</td><td>--</td><td>Last 2.x LTS</td></tr>
+      <tr><td>Grafana</td><td>12.4.0</td><td>Current</td><td>12.0 changed auth defaults</td><td>Unified alerting is default</td></tr>
+      <tr><td>Node Exporter</td><td>1.9.0</td><td>Current</td><td>None</td><td>--</td></tr>
+      <tr><td>cAdvisor</td><td>0.49.1</td><td>Current</td><td>0.47+ requires Linux 5.4+</td><td>Google-maintained</td></tr>
+      <tr><td>Alertmanager</td><td>0.28.1</td><td>Current</td><td>0.27 removed v1 API</td><td>v2 API only</td></tr>
+      <tr><td>Docker Compose</td><td>v2.x</td><td>Current</td><td>v1 syntax deprecated</td><td>Built into Docker CLI</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Self-hosted monitoring on VMs or bare metal with Docker</td><td>Running on Kubernetes</td><td>kube-prometheus-stack Helm chart</td></tr>
+      <tr><td>Need full control over retention, scraping, alerting</td><td>Want managed monitoring with zero ops</td><td>Grafana Cloud, Datadog, or AWS CloudWatch</td></tr>
+      <tr><td>Dev/staging environment monitoring</td><td>Monitoring 1000+ nodes</td><td>Thanos or Cortex for horizontal scaling</td></tr>
+      <tr><td>Docker Compose is already your deployment tool</td><td>Need log aggregation (not metrics)</td><td>Loki + Grafana or ELK stack</td></tr>
+      <tr><td>Budget-conscious -- all components free and open-source</td><td>Need APM/tracing</td><td>OpenTelemetry + Jaeger or commercial APM</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Prometheus stores data locally on a single node -- it is NOT horizontally scalable; for multi-node or long-term storage, add Thanos, Cortex, or Mimir as a remote write target</li>
+    <li>cAdvisor's <code>privileged: true</code> and volume mounts give it broad host access -- in multi-tenant environments, evaluate the security risk</li>
+    <li>Grafana dashboard JSON exported from the UI may differ from provisioned JSON format -- always test provisioned dashboards after export</li>
+    <li>Docker Desktop on macOS and Windows runs containers in a Linux VM, so Node Exporter reports the VM's metrics, not the host OS; use platform-specific collectors for native host metrics</li>
+    <li>Prometheus 3.0 introduced breaking changes (removed deprecated flags, OTLP endpoint enabled by default) -- verify configuration when upgrading from 2.x</li>
+    <li>Default scrape interval of 15s generates ~5,760 samples/day per metric per target -- adjust based on storage capacity and metric cardinality</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/docker-loki-grafana/2026" data-relationship="related_to">Docker Loki + Grafana Log Aggregation</a>
+    <a href="/software/devops/prometheus-alerting-rules/2026" data-relationship="related_to">Prometheus Alerting Rules Reference</a>
+    <a href="/software/devops/kube-prometheus-stack/2026" data-relationship="alternative_to">Kubernetes Prometheus Stack (Helm)</a>
+    <a href="/software/devops/docker-elk-stack/2026" data-relationship="often_confused_with">Docker ELK Stack</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

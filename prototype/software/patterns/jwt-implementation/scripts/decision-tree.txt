@@ -1,0 +1,28 @@
+START: What is the token for?
+├── Authentication (user login)?
+│   ├── Single service (monolith)?
+│   │   ├── YES → HS256 with strong secret (>= 256 bits)
+│   │   │         Access token: 15min, Refresh: 7 days (opaque, server-stored)
+│   │   └── NO ↓
+│   ├── Multiple services (microservices)?
+│   │   ├── YES → RS256 or ES256 with key pair
+│   │   │         Publish public key via JWKS endpoint
+│   │   │         Access token: 5-15min, Refresh: opaque token in DB
+│   │   └── NO ↓
+│   └── Mobile / IoT clients?
+│       └── YES → ES256 (compact signatures, fast on constrained devices)
+│                 Store refresh token in secure storage (Keychain/Keystore)
+│
+├── Service-to-service (machine auth)?
+│   ├── Same trust boundary?
+│   │   ├── YES → HS256 with shared secret from secrets manager
+│   │   └── NO ↓
+│   └── Cross-boundary / zero trust?
+│       └── YES → RS256/ES256 with JWKS, validate iss + aud strictly
+│
+├── Data exchange (signed claims)?
+│   └── → RS256 or EdDSA; include iat + exp + custom claims
+│         Recipient verifies with issuer's public key
+│
+└── Need payload confidentiality?
+    └── → Use JWE (RFC 7516), not JWS — JWTs do NOT encrypt

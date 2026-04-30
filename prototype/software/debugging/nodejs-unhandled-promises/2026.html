@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- SEO essentials -->
+    <title>How to Debug Unhandled Promise Rejections in Node.js | knowledgelib.io</title>
+    <meta name="description" content="Complete debugging guide for Node.js unhandled promise rejections: 10 ranked causes, Express 4/5 async error handling, Promise.allSettled patterns,...">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/nodejs-unhandled-promises/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Debug Unhandled Promise Rejections in Node.js | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete debugging guide for Node.js unhandled promise rejections: 10 ranked causes, Express 4/5 async error handling, Promise.allSettled patterns, ESLint no-floating-promises, 3 code examples, 3 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/nodejs-unhandled-promises/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-17">
+    <meta property="article:modified_time" content="2026-02-23">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Debug Unhandled Promise Rejections in Node.js | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete debugging guide for Node.js unhandled promise rejections: 10 ranked causes, Express 4/5 async error handling, Promise.allSettled patterns, ESLint no-floating-promises, 3 code examples, 3 anti-pattern pairs, 6 constraints. 8 sources, verified 2026-02-23.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <!-- AI discovery hints -->
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.93">
+    <meta name="ai:last_verified" content="2026-02-23">
+    <meta name="ai:domain" content="software/debugging/nodejs_unhandled_promises">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I debug unhandled promise rejections in Node.js?">
+    <meta name="ai:aliases"
+        content="Node.js unhandled promise rejection; UnhandledPromiseRejectionWarning; Node.js PromiseRejectionHandledWarning; unhandledRejection event; Node.js async error not caught; Node.js promise not catching error; DEP0018 unhandled promise; Node.js process crash unhandled rejection">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/nodejs-unhandled-promises/2026.md">
+    <meta name="ai:token_estimate" content="5200">
+    <meta name="ai:source_count" content="8">
+    <meta name="ai:freshness" content="quarterly">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="2.0">
+    <meta name="ai:first_published" content="2026-02-17">
+    <meta name="ai:inputs_needed" content="node_version,framework,typescript">
+    <meta name="ai:constraints"
+        content="Node.js 15+ crashes by default on unhandled rejections; process.on('unhandledRejection') is a safety net not a fix; Never use async callbacks with Array.forEach; Express 4 does not catch async route handler rejections; Always exit after unhandled rejection in production; Jest/Mocha swallow unhandled rejections as warnings">
+    <meta name="ai:skip_this_unit_if"
+        content="Error is a synchronous thrown exception → Standard try/catch debugging; Error is ECONNREFUSED or ENOTFOUND → software/debugging/nodejs-econnrefused/2026; Error is a memory leak or heap OOM → software/debugging/nodejs-memory-leaks/2026">
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Debug Unhandled Promise Rejections in Node.js",
+    "headline": "How to Debug Unhandled Promise Rejections in Node.js",
+    "description": "Complete debugging reference for Node.js unhandled promise rejections covering 10 ranked causes, Express 4/5 async handling, Promise.allSettled, ESLint rules, graceful shutdown patterns, and version compatibility from Node.js 12 to 25.",
+    "keywords": ["unhandled promise rejection", "UnhandledPromiseRejectionWarning", "Node.js async error", "Express error handling", "Promise.allSettled", "no-floating-promises", "Express 5", "Node.js 24"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Node.js 12+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Node.js — Process Event: unhandledRejection", "url": "https://nodejs.org/api/process.html#event-unhandledrejection" },
+      { "@type": "WebPage", "name": "Node.js — Errors", "url": "https://nodejs.org/api/errors.html" },
+      { "@type": "WebPage", "name": "Better Stack — Error Handling in Node.js", "url": "https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/" },
+      { "@type": "WebPage", "name": "ESLint — no-floating-promises", "url": "https://typescript-eslint.io/rules/no-floating-promises/" },
+      { "@type": "WebPage", "name": "Toptal — Node.js Mistakes", "url": "https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes" },
+      { "@type": "WebPage", "name": "MDN — Promise.allSettled()", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled" },
+      { "@type": "WebPage", "name": "Express.js — Error Handling", "url": "https://expressjs.com/en/guide/error-handling.html" },
+      { "@type": "WebPage", "name": "Express 5.0 Released — InfoQ", "url": "https://www.infoq.com/news/2025/01/express-5-released/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Debug Unhandled Promise Rejections in Node.js",
+    "description": "Structured debugging reference for Node.js unhandled promise rejections with ranked causes, Express 4/5 patterns, diagnostic commands, and version compatibility from Node.js 12 to 25.",
+    "keywords": ["unhandled promise rejection", "Node.js", "async error handling", "Express 5"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Node.js Foundation"},
+      {"@type": "Organization", "name": "Express.js Foundation"},
+      {"@type": "Organization", "name": "Mozilla Developer Network"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Debug Unhandled Promise Rejections in Node.js" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I debug unhandled promise rejections in Node.js?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An unhandled promise rejection occurs when a Promise is rejected but no .catch() or try/catch handles the error. Since Node.js 15+, unhandled rejections crash the process by default (--unhandled-rejections=throw). The top causes: (1) missing .catch() on promise chains, (2) async functions without try/catch, (3) forgotten await (floating promises), (4) errors in .then() callbacks, (5) Promise.all() without error handling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js unhandled promise rejection",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An unhandled promise rejection occurs when a Promise is rejected but no .catch() or try/catch handles the error. Since Node.js 15+, unhandled rejections crash the process by default (--unhandled-rejections=throw). The top causes: (1) missing .catch() on promise chains, (2) async functions without try/catch, (3) forgotten await (floating promises), (4) errors in .then() callbacks, (5) Promise.all() without error handling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "UnhandledPromiseRejectionWarning",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An unhandled promise rejection occurs when a Promise is rejected but no .catch() or try/catch handles the error. Since Node.js 15+, unhandled rejections crash the process by default (--unhandled-rejections=throw). The top causes: (1) missing .catch() on promise chains, (2) async functions without try/catch, (3) forgotten await (floating promises), (4) errors in .then() callbacks, (5) Promise.all() without error handling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js PromiseRejectionHandledWarning",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An unhandled promise rejection occurs when a Promise is rejected but no .catch() or try/catch handles the error. Since Node.js 15+, unhandled rejections crash the process by default (--unhandled-rejections=throw). The top causes: (1) missing .catch() on promise chains, (2) async functions without try/catch, (3) forgotten await (floating promises), (4) errors in .then() callbacks, (5) Promise.all() without error handling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "unhandledRejection event",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An unhandled promise rejection occurs when a Promise is rejected but no .catch() or try/catch handles the error. Since Node.js 15+, unhandled rejections crash the process by default (--unhandled-rejections=throw). The top causes: (1) missing .catch() on promise chains, (2) async functions without try/catch, (3) forgotten await (floating promises), (4) errors in .then() callbacks, (5) Promise.all() without error handling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Node.js async error not caught",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: An unhandled promise rejection occurs when a Promise is rejected but no .catch() or try/catch handles the error. Since Node.js 15+, unhandled rejections crash the process by default (--unhandled-rejections=throw). The top causes: (1) missing .catch() on promise chains, (2) async functions without try/catch, (3) forgotten await (floating promises), (4) errors in .then() callbacks, (5) Promise.all() without error handling."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How to Debug Unhandled Promise Rejections in Node.js</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I debug unhandled promise rejections in Node.js?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/nodejs-unhandled-promises/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+        <span><strong>Sources:</strong> 8</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+        <span><strong>Freshness:</strong> quarterly</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: An unhandled promise rejection occurs when a Promise is rejected but no
+                <code>.catch()</code> or <code>try/catch</code> handles the error. Since Node.js 15+, unhandled
+                rejections crash the process by default (<code>--unhandled-rejections=throw</code>). The top causes: (1)
+                missing <code>.catch()</code> on promise chains, (2) <code>async</code> functions without
+                <code>try/catch</code>, (3) forgotten <code>await</code> (floating promises), (4) errors in
+                <code>.then()</code> callbacks, (5) <code>Promise.all()</code> without error handling.</li>
+            <li><strong>Key tool/command</strong>: <code>node --unhandled-rejections=strict app.js</code> to crash
+                immediately on unhandled rejections during development. Use ESLint rule
+                <code>@typescript-eslint/no-floating-promises</code> to catch them at lint time.</li>
+            <li><strong>Watch out for</strong>: <code>async</code> functions in event handlers, <code>setTimeout</code>
+                callbacks, and <code>Array.forEach</code> — <code>await</code> doesn't work in <code>forEach</code>, so
+                rejections silently escape.</li>
+            <li><strong>Works with</strong>: Node.js 15+ (crashes by default), Node.js 12-14 (warning only). Applies to
+                all frameworks: Express 4/5, Fastify, NestJS, Koa.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints — agents: read before recommending any action -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Node.js 15+ crashes by default on unhandled rejections — code that "worked" on Node.js 14 will crash
+                after upgrade. [<a href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</li>
+            <li><code>process.on('unhandledRejection')</code> is a diagnostic safety net, not a permanent fix —
+                swallowing errors hides bugs and leaves the process in an inconsistent state. [<a
+                    href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>, <a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]</li>
+            <li>Never use <code>async</code> callbacks with <code>Array.forEach</code> — rejections silently escape
+                because <code>forEach</code> does not <code>await</code>. Use <code>for...of</code> or
+                <code>Promise.all(arr.map(...))</code>. [<a
+                    href="https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes">src5</a>]</li>
+            <li>Express 4 does not catch async route handler rejections — use <code>express-async-errors</code>, a
+                manual wrapper, or upgrade to Express 5 (which handles async natively since v5.0.0, released
+                2025-01-11). [<a href="https://expressjs.com/en/guide/error-handling.html">src7</a>, <a
+                    href="https://www.infoq.com/news/2025/01/express-5-released/">src8</a>]</li>
+            <li>In production, always exit after an unhandled rejection — continuing risks corrupted state, leaked
+                connections, and silent data loss. [<a
+                    href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>, <a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]</li>
+            <li>Jest/Mocha test runners swallow unhandled rejections as warnings, not test failures — use
+                <code>expect(...).rejects.toThrow()</code> explicitly. [<a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Cause</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Missing <code>.catch()</code> on promise chain</td>
+                        <td>~25% of cases</td>
+                        <td><code>UnhandledPromiseRejectionWarning</code> with stack trace of <code>.then()</code></td>
+                        <td>Add <code>.catch()</code> to every promise chain [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>, <a
+                                href="https://nodejs.org/api/errors.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><code>async</code> function without <code>try/catch</code></td>
+                        <td>~22% of cases</td>
+                        <td>Crash at <code>await</code> line; no handler above</td>
+                        <td>Wrap <code>await</code> calls in <code>try/catch</code> blocks [<a
+                                href="https://nodejs.org/api/errors.html">src2</a>, <a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Floating promise (missing <code>await</code>)</td>
+                        <td>~18% of cases</td>
+                        <td>Promise fires but rejection has no handler</td>
+                        <td>Add <code>await</code> or <code>.catch()</code>; enable <code>no-floating-promises</code>
+                            lint rule [<a href="https://typescript-eslint.io/rules/no-floating-promises/">src4</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Error thrown inside <code>.then()</code> callback</td>
+                        <td>~10% of cases</td>
+                        <td>Stack trace points to <code>.then()</code> handler code</td>
+                        <td>Chain <code>.catch()</code> after the <code>.then()</code> [<a
+                                href="https://nodejs.org/api/errors.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><code>Promise.all()</code> without error handling</td>
+                        <td>~8% of cases</td>
+                        <td>One rejection crashes; other results lost</td>
+                        <td>Use <code>Promise.allSettled()</code> or wrap with <code>try/catch</code> [<a
+                                href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled">src6</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Express async route without error wrapper</td>
+                        <td>~7% of cases</td>
+                        <td>Express hangs, no error response sent</td>
+                        <td>Use <code>express-async-errors</code> (Express 4) or upgrade to Express 5 [<a
+                                href="https://expressjs.com/en/guide/error-handling.html">src7</a>, <a
+                                href="https://www.infoq.com/news/2025/01/express-5-released/">src8</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Event handler with async callback</td>
+                        <td>~4% of cases</td>
+                        <td><code>emitter.on('event', async fn)</code> — rejection escapes</td>
+                        <td>Wrap async callback body in <code>try/catch</code> [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>,
+                            <a href="https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td><code>async</code> in <code>forEach</code>/<code>map</code> without await</td>
+                        <td>~3% of cases</td>
+                        <td>Iterations start but rejections aren't caught</td>
+                        <td>Use <code>for...of</code> loop with <code>await</code> or
+                            <code>Promise.all(arr.map(...))</code> [<a
+                                href="https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes">src5</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Conditional <code>.catch()</code> (missing in some code paths)</td>
+                        <td>~2% of cases</td>
+                        <td>Only fails in certain conditions</td>
+                        <td>Ensure <code>.catch()</code> on all branches [<a
+                                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Rejected promise in module top-level</td>
+                        <td>~1% of cases</td>
+                        <td>Crash during <code>import</code>/<code>require</code> initialization</td>
+                        <td>Wrap top-level async in IIFE with error handling [<a
+                                href="https://nodejs.org/api/errors.html">src2</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START
+├── Is the error "UnhandledPromiseRejectionWarning" or immediate crash?
+│   ├── WARNING (Node 14 or earlier) → Add --unhandled-rejections=strict to catch early [src1]
+│   └── CRASH (Node 15+) → Default behavior, read the stack trace ↓
+├── Does the stack trace show a specific file and line?
+│   ├── YES → Go to that line
+│   │   ├── Is there an `await` without `try/catch`? → Add try/catch [src2, src3]
+│   │   ├── Is there a `.then()` without `.catch()`? → Add .catch() [src2]
+│   │   ├── Is there a function call returning a Promise without await? → Floating promise — add await [src4]
+│   │   └── Is it inside a callback (event handler, setTimeout, forEach)? → Wrap in try/catch [src5]
+│   └── NO (stack trace is unhelpful) ↓
+├── Enable async stack traces: node --async-stack-traces app.js
+│   └── Still unclear → Add process.on('unhandledRejection') with full logging [src1]
+├── Is it in an Express route?
+│   ├── YES, Express 4 → Use express-async-errors or wrap route handler [src7]
+│   ├── YES, Express 5 → Async errors are caught automatically — check error middleware [src8]
+│   └── NO ↓
+├── Is it in a loop processing multiple items?
+│   ├── YES → Using forEach? → Switch to for...of with await [src5]
+│   │   └── Using Promise.all? → Switch to Promise.allSettled or add try/catch [src6]
+│   └── NO ↓
+└── Add global handler as safety net: process.on('unhandledRejection') [src1]</code></pre>
+    </section>
+
+    <!-- Step-by-Step Guide -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Understand the Node.js version behavior</h3>
+        <p>The way Node.js handles unhandled rejections changed significantly across versions. [<a
+                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</p>
+        <pre><code>Node.js 10-14: Warning only (DEP0018 deprecation warning), process continues
+Node.js 15+:  Throws, process crashes (--unhandled-rejections=throw is default)</code></pre>
+        <pre><code class="language-bash"># Check your Node.js version
+node -v
+
+# Force strict mode in development (crash immediately)
+node --unhandled-rejections=strict app.js
+
+# Modes: throw (default 15+), warn (default &lt;15), strict, none
+node --unhandled-rejections=throw app.js</code></pre>
+        <p><strong>Verify</strong>: Run your app with <code>--unhandled-rejections=strict</code> — any unhandled
+            rejections will crash immediately with a stack trace.</p>
+
+        <h3>2. Add a global handler for diagnosis</h3>
+        <p>While you find and fix the root cause, add a global handler to log full details. [<a
+                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</p>
+        <pre><code class="language-javascript">// Add at the top of your entry file (app.js / index.js)
+process.on('unhandledRejection', (reason, promise) =&gt; {
+  console.error('UNHANDLED REJECTION at:', promise);
+  console.error('Reason:', reason);
+  console.error('Stack:', reason?.stack || 'No stack trace');
+
+  // In production: log to error tracker, then exit
+  // process.exit(1);
+});
+
+// Also catch uncaught exceptions (synchronous)
+process.on('uncaughtException', (error) =&gt; {
+  console.error('UNCAUGHT EXCEPTION:', error);
+  process.exit(1);
+});</code></pre>
+        <p><strong>Verify</strong>: Run your app and trigger the failing code path — you should see the full error
+            details logged.</p>
+
+        <h3>3. Fix missing try/catch in async functions</h3>
+        <p>The most common pattern: <code>async</code> function without error handling. [<a
+                href="https://nodejs.org/api/errors.html">src2</a>, <a
+                href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]</p>
+        <pre><code class="language-javascript">// ✅ CORRECT — error caught and handled
+async function fetchUserData(userId) {
+  try {
+    const response = await fetch(`/api/users/${userId}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch user ${userId}:`, error.message);
+    throw error;
+  }
+}</code></pre>
+        <p><strong>Verify</strong>: The error is caught and logged, not crashing the process.</p>
+
+        <h3>4. Find and fix floating promises</h3>
+        <p>A "floating promise" is a promise that's not awaited or <code>.catch()</code>-ed. [<a
+                href="https://typescript-eslint.io/rules/no-floating-promises/">src4</a>]</p>
+        <pre><code class="language-javascript">// ❌ WRONG — floating promise
+function handleRequest(req, res) {
+  saveToDatabase(req.body);  // Returns promise, nobody handles it!
+  res.json({ ok: true });
+}
+
+// ✅ CORRECT — await the promise
+async function handleRequest(req, res) {
+  try {
+    await saveToDatabase(req.body);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}</code></pre>
+        <p><strong>Verify</strong>: Enable <code>@typescript-eslint/no-floating-promises</code> ESLint rule to catch
+            these at build time.</p>
+
+        <h3>5. Fix Promise.all() error handling</h3>
+        <p><code>Promise.all()</code> rejects as soon as one promise rejects, losing other results. [<a
+                href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled">src6</a>]
+        </p>
+        <pre><code class="language-javascript">// ✅ CORRECT — Promise.allSettled handles partial failures
+const results = await Promise.allSettled([
+  fetchUser(1), fetchUser(2), fetchUser(3),
+]);
+
+const successes = results.filter(r =&gt; r.status === 'fulfilled').map(r =&gt; r.value);
+const failures = results.filter(r =&gt; r.status === 'rejected').map(r =&gt; r.reason);
+if (failures.length) console.error(`${failures.length} fetches failed:`, failures);</code></pre>
+        <p><strong>Verify</strong>: All operations complete; failures are logged, successes are used.</p>
+
+        <h3>6. Fix Express async routes</h3>
+        <p>Express 4 doesn't natively catch async route handler rejections. Express 5 (released 2025-01-11) fixes this.
+            [<a href="https://expressjs.com/en/guide/error-handling.html">src7</a>, <a
+                href="https://www.infoq.com/news/2025/01/express-5-released/">src8</a>]</p>
+        <pre><code class="language-javascript">// ✅ FIX 1 — Use express-async-errors (Express 4, simplest)
+require('express-async-errors');
+
+// ✅ FIX 2 — Manual wrapper (Express 4)
+const asyncHandler = (fn) =&gt; (req, res, next) =&gt;
+  Promise.resolve(fn(req, res, next)).catch(next);
+
+app.get('/users/:id', asyncHandler(async (req, res) =&gt; {
+  const user = await db.getUser(req.params.id);
+  res.json(user);
+}));
+
+// ✅ FIX 3 — Express 5 (handles async natively, released 2025-01-11)
+// No wrapper needed — just ensure error middleware has 4 params
+
+// Error middleware (required — must have 4 params)
+app.use((err, req, res, next) =&gt; {
+  console.error('Error:', err.message);
+  res.status(err.status || 500).json({ error: err.message });
+});</code></pre>
+        <p><strong>Verify</strong>: Trigger an error in the route — Express responds with the error middleware, no
+            crash.</p>
+
+        <h3>7. Fix async in loops</h3>
+        <p><code>Array.forEach</code> doesn't await async callbacks — rejections escape silently. [<a
+                href="https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes">src5</a>]</p>
+        <pre><code class="language-javascript">// ❌ WRONG — forEach doesn't handle async rejections
+items.forEach(async (item) =&gt; {
+  await processItem(item);  // Rejection has no handler!
+});
+
+// ✅ CORRECT — for...of with await (sequential)
+for (const item of items) {
+  await processItem(item);
+}
+
+// ✅ CORRECT — Promise.all with map (parallel)
+await Promise.all(items.map(item =&gt; processItem(item)));</code></pre>
+        <p><strong>Verify</strong>: All items are processed; errors are caught, not silently dropped.</p>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Global error handler with graceful shutdown</h3>
+        <pre><code class="language-javascript">// Input:  App crashes randomly from various unhandled rejections
+// Output: Comprehensive global handler with logging and graceful shutdown
+
+let isShuttingDown = false;
+
+process.on('unhandledRejection', (reason, promise) =&gt; {
+  console.error('=== UNHANDLED PROMISE REJECTION ===');
+  console.error('Reason:', reason);
+  console.error('Stack:', reason?.stack || 'No stack');
+  // Sentry.captureException(reason);
+
+  if (!isShuttingDown) {
+    isShuttingDown = true;
+    gracefulShutdown('unhandledRejection', 1);
+  }
+});
+
+process.on('uncaughtException', (error, origin) =&gt; {
+  console.error(`=== UNCAUGHT EXCEPTION (${origin}) ===`);
+  console.error(error);
+  if (!isShuttingDown) {
+    isShuttingDown = true;
+    gracefulShutdown('uncaughtException', 1);
+  }
+});
+
+async function gracefulShutdown(signal, exitCode = 0) {
+  console.log(`${signal} received — shutting down gracefully`);
+  const timeout = setTimeout(() =&gt; process.exit(1), 10000);
+  try {
+    if (global.server) await new Promise(r =&gt; global.server.close(r));
+    if (global.dbPool) await global.dbPool.end();
+  } finally {
+    clearTimeout(timeout);
+    process.exit(exitCode);
+  }
+}
+
+process.on('SIGTERM', () =&gt; gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () =&gt; gracefulShutdown('SIGINT'));</code></pre>
+
+        <h3>Safe async utility functions</h3>
+        <pre><code class="language-javascript">// Input:  Need reusable patterns for safe async operations
+// Output: Utility functions that prevent unhandled rejections
+
+// Go-style error handling: [error, result] tuple
+async function safely(promise) {
+  try {
+    const result = await promise;
+    return [null, result];
+  } catch (error) {
+    return [error, null];
+  }
+}
+
+// Usage
+const [err, user] = await safely(db.getUser(123));
+if (err) {
+  console.error('Failed:', err.message);
+  return res.status(500).json({ error: 'Database error' });
+}
+res.json(user);
+
+// Batch operations with individual error handling
+async function safelyAll(promises, options = {}) {
+  const results = await Promise.allSettled(promises);
+  return results.map((r, i) =&gt; {
+    if (r.status === 'rejected') {
+      if (options.onError) options.onError(r.reason, i);
+      return { ok: false, error: r.reason };
+    }
+    return { ok: true, value: r.value };
+  });
+}
+
+const results = await safelyAll(
+  userIds.map(id =&gt; db.getUser(id)),
+  { onError: (err, i) =&gt; console.error(`User ${userIds[i]} failed:`, err) }
+);
+const users = results.filter(r =&gt; r.ok).map(r =&gt; r.value);</code></pre>
+
+        <h3>Express app with comprehensive error handling</h3>
+        <pre><code class="language-javascript">// Input:  Express app with async routes that crash on errors
+// Output: Production-ready error handling setup
+
+const express = require('express');
+require('express-async-errors');
+
+const app = express();
+app.use(express.json());
+
+// Routes — async errors auto-forwarded to error middleware
+app.get('/users/:id', async (req, res) =&gt; {
+  const user = await db.getUser(req.params.id);
+  if (!user) {
+    const err = new Error('User not found');
+    err.status = 404;
+    throw err;
+  }
+  res.json(user);
+});
+
+// 404 handler
+app.use((req, res) =&gt; {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Centralized error middleware (must have 4 params)
+app.use((err, req, res, next) =&gt; {
+  const status = err.status || 500;
+  const message = status === 500 ? 'Internal server error' : err.message;
+  console.error(`[${req.method} ${req.path}] ${status}:`, err.message);
+  if (status === 500) console.error(err.stack);
+  res.status(status).json({
+    error: message,
+    ...(process.env.NODE_ENV !== 'production' &amp;&amp; { stack: err.stack }),
+  });
+});
+
+app.listen(3000);</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Async function without try/catch</h3>
+        <pre><code class="language-javascript">// ❌ BAD — rejection propagates as unhandled [src2, src3]
+app.get('/data', async (req, res) =&gt; {
+  const data = await fetchExternalAPI();  // If API is down → crash
+  res.json(data);
+});</code></pre>
+
+        <h3>Correct: Wrap in try/catch</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — error caught and handled [src2, src3]
+app.get('/data', async (req, res, next) =&gt; {
+  try {
+    const data = await fetchExternalAPI();
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+});</code></pre>
+
+        <h3>Wrong: forEach with async callbacks</h3>
+        <pre><code class="language-javascript">// ❌ BAD — forEach doesn't handle async rejections [src5]
+async function processAll(items) {
+  items.forEach(async (item) =&gt; {
+    await sendEmail(item.email);  // If one fails → unhandled
+  });
+  console.log('Done');  // Logs immediately, before emails send!
+}</code></pre>
+
+        <h3>Correct: for...of or Promise.all</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — proper sequential processing [src5]
+async function processAll(items) {
+  for (const item of items) {
+    try {
+      await sendEmail(item.email);
+    } catch (err) {
+      console.error(`Failed to email ${item.email}:`, err.message);
+    }
+  }
+  console.log('Done');
+}</code></pre>
+
+        <h3>Wrong: Fire-and-forget without .catch()</h3>
+        <pre><code class="language-javascript">// ❌ BAD — floating promise, rejection unhandled [src4]
+function logUserAction(userId, action) {
+  db.insertLog({ userId, action, timestamp: new Date() });
+  // Returns promise but nobody handles it!
+}</code></pre>
+
+        <h3>Correct: Always handle the promise</h3>
+        <pre><code class="language-javascript">// ✅ GOOD — explicit .catch() for fire-and-forget [src4]
+function logUserAction(userId, action) {
+  db.insertLog({ userId, action, timestamp: new Date() })
+    .catch(err =&gt; console.error('Log insert failed:', err.message));
+}</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong><code>async</code> in <code>forEach</code> doesn't work</strong>: <code>Array.forEach</code>
+                doesn't handle async callbacks — rejections become unhandled. Use <code>for...of</code> with
+                <code>await</code> or <code>Promise.all()</code> with <code>.map()</code>. [<a
+                    href="https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes">src5</a>]</li>
+            <li><strong>Express 4 doesn't catch async errors</strong>: Async route handlers that throw or reject bypass
+                Express error middleware entirely. Use <code>express-async-errors</code> or a manual wrapper. Express 5
+                (released 2025-01-11) fixes this natively — it automatically forwards rejected promises to error
+                middleware. [<a href="https://expressjs.com/en/guide/error-handling.html">src7</a>, <a
+                    href="https://www.infoq.com/news/2025/01/express-5-released/">src8</a>]</li>
+            <li><strong><code>process.on('unhandledRejection')</code> is a safety net, not a fix</strong>: Using the
+                global handler to silently swallow errors hides bugs. Log, alert, and fix the root cause. [<a
+                    href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>, <a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]</li>
+            <li><strong>Conditional promise chains</strong>: If a <code>.catch()</code> is only on one branch of an
+                <code>if/else</code>, the other branch's rejection is unhandled. Always catch on all paths. [<a
+                    href="https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/">src3</a>]</li>
+            <li><strong><code>setTimeout</code> / <code>setInterval</code> with async callbacks</strong>: Timer
+                callbacks run outside the promise chain. Rejections inside <code>setTimeout(async () =&gt; {...})</code>
+                are unhandled unless wrapped in <code>try/catch</code>. [<a
+                    href="https://www.toptal.com/nodejs/top-10-common-nodejs-developer-mistakes">src5</a>]</li>
+            <li><strong>Node.js 15+ crash vs 14 warning</strong>: Code that "worked" on Node.js 14 (with warnings) will
+                crash on 15+. Upgrading Node.js versions may expose hidden bugs. [<a
+                    href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</li>
+            <li><strong><code>Error.isError()</code> for robust checking (Node.js 24+)</strong>: Use
+                <code>Error.isError(reason)</code> instead of <code>reason instanceof Error</code> in the global handler
+                — it works across realms (iframes, vm contexts). [<a
+                    href="https://nodejs.org/api/errors.html">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># Run with strict mode — crash immediately on unhandled rejection
+node --unhandled-rejections=strict app.js
+
+# Run with async stack traces (better debugging)
+node --async-stack-traces app.js
+
+# Both flags together
+node --unhandled-rejections=strict --async-stack-traces app.js
+
+# Check which Node.js mode is default for your version
+node -e "console.log(process.version, process.execArgv)"
+
+# Find floating promises in TypeScript projects
+npx eslint . --rule '{"@typescript-eslint/no-floating-promises": "error"}'
+
+# Find forEach with async
+grep -rn "forEach(async" --include="*.js" --include="*.ts" src/
+
+# Find all .catch() patterns
+grep -rn "\.catch(" --include="*.js" --include="*.ts" src/
+
+# Check Express version (5+ handles async natively)
+node -e "console.log(require('express/package.json').version)"
+
+# Test global handler
+node -e "
+process.on('unhandledRejection', r =&gt; console.log('CAUGHT:', r));
+Promise.reject(new Error('test'));
+"</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">Behavior</th>
+                        <th scope="col">Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Node.js 25 (Current)</td>
+                        <td>Crash (default)</td>
+                        <td>Removes <code>multipleResolves</code> event; portable compile cache; Web Storage default [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 24</td>
+                        <td>Crash (default)</td>
+                        <td>V8 13.6; <code>Error.isError()</code> for cross-realm checks;
+                            <code>using</code>/<code>await using</code> for resource cleanup [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>, <a
+                                href="https://nodejs.org/api/errors.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 23</td>
+                        <td>Crash (default)</td>
+                        <td>15-20% faster bootstrap; <code>require(esm)</code> unflagged [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 22 LTS</td>
+                        <td>Crash (default)</td>
+                        <td><code>error.cause</code> in promise rejections; improved diagnostics [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>, <a
+                                href="https://nodejs.org/api/errors.html">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 20 LTS</td>
+                        <td>Crash (default)</td>
+                        <td><code>Promise.withResolvers()</code> for cleaner promise patterns [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 18 LTS (EOL)</td>
+                        <td>Crash (default)</td>
+                        <td>Built-in <code>fetch()</code> (experimental); async errors catchable [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 16 (EOL)</td>
+                        <td>Crash (default)</td>
+                        <td><code>--unhandled-rejections=throw</code> became default [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 15 (EOL)</td>
+                        <td>Crash (default)</td>
+                        <td>First version to crash by default on unhandled rejections [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 14 (EOL)</td>
+                        <td>Warning only</td>
+                        <td><code>UnhandledPromiseRejectionWarning</code>; deprecation DEP0018 [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>Node.js 12 (EOL)</td>
+                        <td>Warning only</td>
+                        <td><code>--unhandled-rejections</code> flag introduced [<a
+                                href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use / When Not to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Process crashes with "unhandled rejection"</td>
+                        <td>Error is a caught exception (sync throw)</td>
+                        <td>Standard <code>try/catch</code> debugging</td>
+                    </tr>
+                    <tr>
+                        <td><code>UnhandledPromiseRejectionWarning</code> in logs</td>
+                        <td>Error is <code>ECONNREFUSED</code> (connection issue)</td>
+                        <td>Check service connectivity first</td>
+                    </tr>
+                    <tr>
+                        <td>Express route hangs without responding</td>
+                        <td>Error is in a callback-based API (not Promise)</td>
+                        <td>Check callback error parameter</td>
+                    </tr>
+                    <tr>
+                        <td>Upgrading Node.js version causes new crashes</td>
+                        <td>Error is logged but handled correctly</td>
+                        <td>Verify handler is working as expected</td>
+                    </tr>
+                    <tr>
+                        <td>Jest/Mocha shows warning but test passes</td>
+                        <td>Error is memory-related (heap OOM)</td>
+                        <td>Node.js memory leak debugging</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Important Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>Rejections are not the same as thrown errors</strong>: A rejected promise only becomes an
+                "unhandled rejection" after the microtask queue processes. Attaching <code>.catch()</code> even slightly
+                later can prevent the error — but this is fragile and not recommended.</li>
+            <li><strong><code>process.on('unhandledRejection')</code> prevents crash but hides bugs</strong>: If you
+                handle the event and don't exit, the process continues in a potentially inconsistent state. In
+                production, log the error and restart.</li>
+            <li><strong>Express 5 changes everything</strong>: Express 5 (stable release 2025-01-11) natively handles
+                async route handler rejections, forwarding them to error middleware automatically. This eliminates the
+                need for <code>express-async-errors</code> or manual wrappers. Express 5 requires Node.js 18+. [<a
+                    href="https://www.infoq.com/news/2025/01/express-5-released/">src8</a>]</li>
+            <li><strong><code>Promise.allSettled()</code> vs <code>Promise.all()</code></strong>:
+                <code>Promise.all()</code> fails fast — the first rejection rejects the whole batch.
+                <code>Promise.allSettled()</code> waits for all promises and reports individual outcomes. Choose based
+                on whether partial results are useful.</li>
+            <li><strong>Jest/Mocha test frameworks</strong>: Test runners have their own unhandled rejection handling.
+                An unhandled rejection in a test may show as a warning rather than a test failure — use
+                <code>expect(...).rejects.toThrow()</code> explicitly.</li>
+            <li><strong>Node.js 24+ <code>using</code>/<code>await using</code> (explicit resource management)</strong>:
+                The <code>await using</code> syntax (V8 13.6) provides deterministic cleanup for resources like database
+                connections and file handles, reducing the chance of rejections from leaked resources. [<a
+                    href="https://nodejs.org/api/errors.html">src2</a>]</li>
+            <li><strong>Node.js 25 removed <code>multipleResolves</code> event</strong>: The
+                <code>process.on('multipleResolves')</code> event was removed in Node.js 25. If you relied on it for
+                diagnostics, switch to the <code>unhandledRejection</code> event and <code>Error.isError()</code>
+                checks. [<a href="https://nodejs.org/api/process.html#event-unhandledrejection">src1</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Related Units -->
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/nodejs-memory-leaks/2026" data-relationship="related_to">Node.js Memory Leak Debugging</a>
+        <a href="/software/debugging/nodejs-econnrefused/2026" data-relationship="related_to">Node.js ECONNREFUSED Debugging</a>
+        <a href="/software/debugging/nextjs-build-failures/2026" data-relationship="solves">Next.js Build Failures</a>
+        <a href="/software/debugging/react-hydration-mismatch/2026" data-relationship="often_confused_with">React/Next.js Hydration Mismatch</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

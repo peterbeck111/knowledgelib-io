@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes Network Policies | knowledgelib.io</title>
+  <meta name="description" content="Complete reference for Kubernetes NetworkPolicy: default deny patterns, ingress/egress rules, AND vs OR selector logic, CNI plugin comparison (Calico,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-network-policies/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes Network Policies | knowledgelib.io">
+  <meta property="og:description" content="Complete reference for Kubernetes NetworkPolicy: default deny patterns, ingress/egress rules, AND vs OR selector logic, CNI plugin comparison (Calico, Cilium, Weave), debugging commands, and 5 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-network-policies/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes Network Policies | knowledgelib.io">
+  <meta name="twitter:description" content="Complete reference for Kubernetes NetworkPolicy: default deny patterns, ingress/egress rules, AND vs OR selector logic, CNI plugin comparison (Calico, Cilium, Weave), debugging commands, and 5 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes Network Policies">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do Kubernetes Network Policies work and how do I implement them?">
+  <meta name="ai:aliases" content="How do I restrict pod-to-pod traffic in Kubernetes?; What is a Kubernetes NetworkPolicy and how do I write one?; How do I create a default deny network policy in Kubernetes?; How do I control ingress and egress traffic between Kubernetes pods?">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-network-policies/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="cni_plugin,policy_goal">
+  <meta name="ai:constraints" content="NetworkPolicy has NO effect without a CNI plugin that implements enforcement; Flannel does NOT support NetworkPolicy natively; Policies are namespace-scoped; Policies are additive (union) -- cannot deny flows allowed by another policy; Traffic to/from the pod's node is ALWAYS allowed">
+  <meta name="ai:skip_this_unit_if" content="Need L7 (HTTP/gRPC) policy enforcement → Cilium Network Policies or service mesh; Need cluster-wide policies → Calico GlobalNetworkPolicy or Cilium ClusterNetworkPolicy; Need external HTTP routing → Kubernetes Ingress / Gateway API">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes Network Policies",
+    "headline": "Kubernetes Network Policies",
+    "description": "Complete reference for Kubernetes NetworkPolicy resource: how to write ingress/egress rules, default deny patterns, AND vs OR selector logic, CNI plugin comparison, debugging commands, and common anti-patterns.",
+    "keywords": ["Kubernetes", "NetworkPolicy", "network security", "pod isolation", "CNI", "Calico", "Cilium", "ingress", "egress", "default deny", "microsegmentation"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.7+, CNI plugin (Calico, Cilium, Weave, Antrea, or Kube-router)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Network Policies - Kubernetes",
+        "url": "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Network Policy Recipes",
+        "url": "https://github.com/ahmetb/kubernetes-network-policy-recipes"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Get started with Kubernetes network policy - Calico",
+        "url": "https://docs.tigera.io/calico/latest/network-policy/get-started/kubernetes-policy/kubernetes-network-policy"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Network Policy - Guide with Examples",
+        "url": "https://spacelift.io/blog/kubernetes-network-policy"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Cilium vs Calico vs Flannel CNI Performance Comparison",
+        "url": "https://sanj.dev/post/cilium-calico-flannel-cni-performance-comparison"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes Network Policy Best Practices",
+        "url": "https://snyk.io/blog/kubernetes-network-policy-best-practices/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Declare Network Policy - Kubernetes",
+        "url": "https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes Network Policies",
+    "description": "Structured reference for Kubernetes NetworkPolicy: default deny patterns, ingress/egress rules, selector logic, CNI comparison, debugging commands, anti-patterns, and version compatibility.",
+    "keywords": ["Kubernetes", "NetworkPolicy", "CNI", "Calico", "Cilium", "network security", "pod isolation"],
+    "temporalCoverage": "2019/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes Project"},
+      {"@type": "Organization", "name": "Tigera (Calico)"},
+      {"@type": "Organization", "name": "Spacelift"},
+      {"@type": "Organization", "name": "Snyk"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes Network Policies" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do Kubernetes Network Policies work and how do I implement them?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes NetworkPolicy is a namespace-scoped resource (API networking.k8s.io/v1) that controls pod-to-pod and pod-to-external traffic at L3/L4 using label selectors, namespace selectors, and CIDR blocks -- but only works if your CNI plugin supports it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I restrict pod-to-pod traffic in Kubernetes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes NetworkPolicy is a namespace-scoped resource (API networking.k8s.io/v1) that controls pod-to-pod and pod-to-external traffic at L3/L4 using label selectors, namespace selectors, and CIDR blocks -- but only works if your CNI plugin supports it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is a Kubernetes NetworkPolicy and how do I write one?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes NetworkPolicy is a namespace-scoped resource (API networking.k8s.io/v1) that controls pod-to-pod and pod-to-external traffic at L3/L4 using label selectors, namespace selectors, and CIDR blocks -- but only works if your CNI plugin supports it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I create a default deny network policy in Kubernetes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes NetworkPolicy is a namespace-scoped resource (API networking.k8s.io/v1) that controls pod-to-pod and pod-to-external traffic at L3/L4 using label selectors, namespace selectors, and CIDR blocks -- but only works if your CNI plugin supports it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I control ingress and egress traffic between Kubernetes pods?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes NetworkPolicy is a namespace-scoped resource (API networking.k8s.io/v1) that controls pod-to-pod and pod-to-external traffic at L3/L4 using label selectors, namespace selectors, and CIDR blocks -- but only works if your CNI plugin supports it."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes Network Policies</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do Kubernetes Network Policies work and how do I implement them?</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-network-policies/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Kubernetes NetworkPolicy is a namespace-scoped resource (API <code>networking.k8s.io/v1</code>) that controls pod-to-pod and pod-to-external traffic at L3/L4 using label selectors, namespace selectors, and CIDR blocks -- but only works if your CNI plugin supports it.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl apply -f network-policy.yaml</code> and <code>kubectl get networkpolicy -n &lt;namespace&gt;</code></li>
+    <li><strong>Watch out for</strong>: Creating a NetworkPolicy in a cluster with a CNI that does not enforce it (e.g., Flannel alone) -- the resource is accepted silently but has zero effect.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.7+ (NetworkPolicy v1 GA); requires Calico, Cilium, Weave Net, Antrea, or Kube-router as CNI.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>NetworkPolicy has NO effect without a CNI plugin that implements enforcement (Calico, Cilium, Weave, Antrea, Kube-router). Flannel alone does not enforce policies. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li>Policies are <strong>additive</strong> (union of all matching rules). You cannot write a policy that explicitly denies a specific flow allowed by another policy. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li>Policies are <strong>namespace-scoped</strong>. A default-deny policy in namespace <code>foo</code> does not affect namespace <code>bar</code>. You must create policies per namespace. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li>Traffic to/from the node where a pod runs is <strong>always allowed</strong>, regardless of NetworkPolicy rules. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li><code>ipBlock</code> rules apply to external (non-pod) traffic only. Pod IPs are ephemeral; do not use <code>ipBlock</code> to target pods. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li>Egress policies that block port 53 (UDP/TCP) will break DNS resolution for affected pods. Always allow DNS egress when restricting outbound traffic. [<a href="https://docs.tigera.io/calico/latest/network-policy/get-started/kubernetes-policy/kubernetes-network-policy">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">podSelector</th><th scope="col">policyTypes</th><th scope="col">Ingress Rules</th><th scope="col">Egress Rules</th><th scope="col">Effect</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Default deny all ingress</td><td><code>{}</code> (all pods)</td><td><code>[Ingress]</code></td><td><code>[]</code> (empty)</td><td>--</td><td>Block all inbound traffic namespace-wide</td></tr>
+      <tr><td>Default deny all egress</td><td><code>{}</code> (all pods)</td><td><code>[Egress]</code></td><td>--</td><td><code>[]</code> (empty)</td><td>Block all outbound traffic namespace-wide</td></tr>
+      <tr><td>Default deny both</td><td><code>{}</code> (all pods)</td><td><code>[Ingress, Egress]</code></td><td><code>[]</code> (empty)</td><td><code>[]</code> (empty)</td><td>Block all traffic in both directions</td></tr>
+      <tr><td>Allow all ingress</td><td><code>{}</code> (all pods)</td><td><code>[Ingress]</code></td><td><code>[{from: [podSelector: {}]}]</code></td><td>--</td><td>Override deny: allow all inbound</td></tr>
+      <tr><td>Allow specific pod ingress</td><td><code>matchLabels: {app: db}</code></td><td><code>[Ingress]</code></td><td><code>from: [{podSelector: {app: api}}]</code></td><td>--</td><td>Only pods labeled <code>app=api</code> can reach <code>app=db</code></td></tr>
+      <tr><td>Allow cross-namespace</td><td><code>matchLabels: {app: db}</code></td><td><code>[Ingress]</code></td><td><code>from: [{namespaceSelector: {team: frontend}}]</code></td><td>--</td><td>Pods in namespaces labeled <code>team=frontend</code> can reach db</td></tr>
+      <tr><td>Allow specific port</td><td><code>matchLabels: {app: db}</code></td><td><code>[Ingress]</code></td><td><code>from: [...] ports: [{port: 5432, protocol: TCP}]</code></td><td>--</td><td>Only TCP/5432 allowed</td></tr>
+      <tr><td>Allow egress to CIDR</td><td><code>matchLabels: {app: api}</code></td><td><code>[Egress]</code></td><td>--</td><td><code>to: [{ipBlock: {cidr: 10.0.0.0/8}}]</code></td><td>Outbound only to 10.0.0.0/8</td></tr>
+      <tr><td>Allow DNS egress</td><td><code>{}</code> (all pods)</td><td><code>[Egress]</code></td><td>--</td><td><code>to: [] ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]</code></td><td>Allow DNS lookups for all pods</td></tr>
+      <tr><td>Deny external egress</td><td><code>{}</code> (all pods)</td><td><code>[Egress]</code></td><td>--</td><td><code>to: [{podSelector: {}}, {namespaceSelector: {}}]</code></td><td>Only cluster-internal egress allowed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What traffic control do you need?
+|
++-- Want to block ALL traffic by default?
+|   +-- YES --&gt; Apply "default deny all" policy to namespace (see Step 1)
+|   |           Then add specific allow policies per service
+|   +-- NO  |
+|           v
++-- Want to restrict INBOUND traffic to specific pods?
+|   +-- YES --&gt; Use podSelector + ingress rules
+|   |   +-- From same namespace only? --&gt; Use podSelector in "from"
+|   |   +-- From another namespace?   --&gt; Use namespaceSelector in "from"
+|   |   +-- From external IPs?        --&gt; Use ipBlock in "from"
+|   +-- NO  |
+|           v
++-- Want to restrict OUTBOUND traffic from specific pods?
+|   +-- YES --&gt; Use podSelector + egress rules
+|   |   +-- IMPORTANT: Always allow DNS (port 53 UDP/TCP) in egress
+|   +-- NO  |
+|           v
++-- Want to combine ingress + egress?
+    +-- YES --&gt; Set policyTypes: [Ingress, Egress] with both rule sets
+    +-- NO  --&gt; No NetworkPolicy needed (default: all traffic allowed)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Verify your CNI supports NetworkPolicy</h3>
+  <p>Before writing any policy, confirm your cluster's CNI plugin enforces NetworkPolicy. Applying policies to a cluster without enforcement gives a false sense of security. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</p>
+  <pre><code class="language-bash"># Check which CNI is installed
+kubectl get pods -n kube-system -l k8s-app -o wide | grep -E 'calico|cilium|weave|antrea'</code></pre>
+  <p><strong>Verify</strong>: If you see <code>calico-node</code>, <code>cilium</code>, <code>weave-net</code>, or <code>antrea-agent</code> pods running in <code>kube-system</code>, NetworkPolicy enforcement is active.</p>
+
+  <h3>2. Apply a default-deny policy to your namespace</h3>
+  <p>Start with a deny-all baseline. This ensures no pod can communicate unless explicitly permitted. [<a href="https://github.com/ahmetb/kubernetes-network-policy-recipes">src2</a>] [<a href="https://snyk.io/blog/kubernetes-network-policy-best-practices/">src6</a>]</p>
+  <pre><code class="language-yaml"># default-deny-all.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get networkpolicy -n production</code> -- should show <code>default-deny-all</code>.</p>
+
+  <h3>3. Allow DNS egress for all pods</h3>
+  <p>After applying default-deny egress, pods cannot resolve DNS. This breaks virtually everything. Add a DNS allow policy immediately. [<a href="https://docs.tigera.io/calico/latest/network-policy/get-started/kubernetes-policy/kubernetes-network-policy">src3</a>]</p>
+  <pre><code class="language-yaml"># allow-dns.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl exec -n production &lt;pod&gt; -- nslookup kubernetes.default</code> -- should resolve successfully.</p>
+
+  <h3>4. Create allow policies for your services</h3>
+  <p>Now explicitly open the traffic paths your application requires. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>] [<a href="https://spacelift.io/blog/kubernetes-network-policy">src4</a>]</p>
+  <pre><code class="language-yaml"># allow-frontend-to-api.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-api
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+      tier: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+              tier: web
+      ports:
+        - protocol: TCP
+          port: 8080</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl exec -n production &lt;frontend-pod&gt; -- curl -s -o /dev/null -w "%{http_code}" http://api:8080/health</code> -- should return <code>200</code>.</p>
+
+  <h3>5. Test blocked traffic</h3>
+  <p>Confirm that traffic NOT explicitly allowed is blocked. [<a href="https://spacelift.io/blog/kubernetes-network-policy">src4</a>]</p>
+  <pre><code class="language-bash"># From a pod that should NOT have access:
+kubectl exec -n production &lt;unauthorized-pod&gt; -- curl --connect-timeout 3 http://api:8080/health
+# Expected: connection timeout (exit code 28)</code></pre>
+  <p><strong>Verify</strong>: The command should time out after 3 seconds.</p>
+
+  <h3>6. Label your namespaces for cross-namespace policies</h3>
+  <p>Cross-namespace policies require labeled namespaces. Kubernetes 1.21+ automatically labels namespaces with <code>kubernetes.io/metadata.name</code>. For older clusters, add labels manually. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</p>
+  <pre><code class="language-bash"># Label namespaces for policy selectors
+kubectl label namespace monitoring team=monitoring
+kubectl label namespace logging team=logging
+
+# Verify labels
+kubectl get namespace --show-labels | grep -E 'monitoring|logging'</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get namespace monitoring -o jsonpath='{.metadata.labels}'</code> -- should include <code>team: monitoring</code>.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Default deny all traffic in a namespace</h3>
+  <pre><code class="language-yaml"># Input:  A namespace where you want zero-trust networking
+# Output: All pod traffic blocked; only explicitly allowed flows work
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production        # Change to your namespace
+spec:
+  podSelector: {}              # {} = select ALL pods in this namespace
+  policyTypes:
+    - Ingress                  # Block all inbound
+    - Egress                   # Block all outbound</code></pre>
+
+  <h3>YAML: Allow ingress from specific pods on specific ports</h3>
+  <pre><code class="language-yaml"># Input:  Backend pods that should only accept traffic from frontend on port 8080
+# Output: Only frontend pods can reach backend on TCP/8080
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-allow-frontend
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+      tier: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend    # Only pods with this label
+      ports:
+        - protocol: TCP
+          port: 8080           # Only this port</code></pre>
+
+  <h3>YAML: Allow cross-namespace monitoring access</h3>
+  <pre><code class="language-yaml"># Input:  Prometheus in 'monitoring' namespace needs to scrape all pods
+# Output: Pods in production allow ingress from monitoring namespace on metrics port
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-scrape
+  namespace: production
+spec:
+  podSelector: {}              # All pods in production
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090</code></pre>
+
+  <h3>YAML: Restrict egress to specific CIDRs and DNS</h3>
+  <pre><code class="language-yaml"># Input:  API pods that should only reach a specific external service + DNS
+# Output: Egress limited to 10.0.0.0/8 (cluster), external API, and DNS
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-restricted-egress
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Egress
+  egress:
+    # Rule 1: Allow DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Rule 2: Allow cluster-internal traffic
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+    # Rule 3: Allow specific external API
+    - to:
+        - ipBlock:
+            cidr: 203.0.113.0/24
+      ports:
+        - protocol: TCP
+          port: 443</code></pre>
+
+  <h3>YAML: AND vs OR selector logic (critical distinction)</h3>
+  <pre><code class="language-yaml"># --- OR logic: two SEPARATE list items ---
+# Allows from: (any pod in namespace labeled team=frontend)
+#           OR  (any pod labeled role=client in THIS namespace)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: or-logic-example
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:          # First list item
+            matchLabels:
+              team: frontend
+        - podSelector:                # Second list item (OR)
+            matchLabels:
+              role: client
+---
+# --- AND logic: SINGLE list item with both selectors ---
+# Allows from: pods labeled role=client
+#          AND  in namespaces labeled team=frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: and-logic-example
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:          # Single list item
+            matchLabels:
+              team: frontend
+          podSelector:                # Same list item (AND)
+            matchLabels:
+              role: client</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Applying NetworkPolicy without a supporting CNI</h3>
+  <pre><code class="language-yaml"># BAD -- Policy is accepted but NEVER enforced (Flannel alone)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+# Result: All traffic still flows freely. Zero security benefit.</code></pre>
+
+  <h3>Correct: Verify CNI enforcement before relying on policies</h3>
+  <pre><code class="language-bash"># GOOD -- Verify CNI first, then apply
+kubectl get ds -n kube-system | grep -E 'calico|cilium|weave|antrea'
+# If no result: install a policy-enforcing CNI before deploying NetworkPolicies</code></pre>
+
+  <h3>Wrong: Blocking egress without allowing DNS</h3>
+  <pre><code class="language-yaml"># BAD -- Blocks ALL egress including DNS; every pod loses name resolution
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-egress
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: database
+      ports:
+        - protocol: TCP
+          port: 5432
+# Result: api pod cannot resolve 'database' hostname</code></pre>
+
+  <h3>Correct: Always include DNS in egress policies</h3>
+  <pre><code class="language-yaml"># GOOD -- Allow DNS + specific service egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-egress-with-dns
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app: database
+      ports:
+        - protocol: TCP
+          port: 5432</code></pre>
+
+  <h3>Wrong: Confusing AND vs OR selectors (YAML indentation trap)</h3>
+  <pre><code class="language-yaml"># BAD -- Intended: only frontend pods in staging namespace
+# Actual: ALL pods in staging OR ALL frontend pods in ANY namespace
+  ingress:
+    - from:
+        - namespaceSelector:         # List item 1 (OR)
+            matchLabels:
+              env: staging
+        - podSelector:               # List item 2 (OR) -- NOT AND!
+            matchLabels:
+              app: frontend</code></pre>
+
+  <h3>Correct: Use single list item for AND logic</h3>
+  <pre><code class="language-yaml"># GOOD -- Single list item = AND logic
+  ingress:
+    - from:
+        - namespaceSelector:         # Same list item = AND
+            matchLabels:
+              env: staging
+          podSelector:               # Both must match
+            matchLabels:
+              app: frontend</code></pre>
+
+  <h3>Wrong: Using ipBlock to target pods</h3>
+  <pre><code class="language-yaml"># BAD -- Pod IPs are ephemeral; this breaks on reschedule
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 10.244.1.5/32     # This pod IP will change!</code></pre>
+
+  <h3>Correct: Use label selectors for pod-to-pod policies</h3>
+  <pre><code class="language-yaml"># GOOD -- Labels are stable across pod restarts
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api              # Labels survive reschedules</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Silent no-op with unsupported CNI</strong>: NetworkPolicy resources are accepted by the API server even if no CNI enforces them. Flannel alone ignores policies entirely. Fix: <code>kubectl get ds -n kube-system | grep -E 'calico|cilium|weave|antrea'</code>. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li><strong>DNS breaks after egress deny</strong>: Default-deny egress blocks UDP/TCP port 53, breaking all DNS resolution. Fix: always create a companion policy allowing egress on port 53. [<a href="https://docs.tigera.io/calico/latest/network-policy/get-started/kubernetes-policy/kubernetes-network-policy">src3</a>]</li>
+    <li><strong>AND vs OR YAML indentation</strong>: A single dash difference in YAML indentation changes selector logic from AND to OR, potentially opening traffic to unintended sources. Fix: use a YAML linter and test with <code>kubectl describe networkpolicy</code>. [<a href="https://spacelift.io/blog/kubernetes-network-policy">src4</a>]</li>
+    <li><strong>Namespace label mismatch</strong>: Cross-namespace policies fail silently if the target namespace lacks the expected label. Fix: verify with <code>kubectl get namespace --show-labels</code> and use <code>kubernetes.io/metadata.name</code> (auto-applied in K8s 1.21+). [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li><strong>Forgetting policyTypes field</strong>: Omitting <code>policyTypes</code> when you only have egress rules causes Kubernetes to infer <code>[Ingress]</code> only. Your egress rules are silently ignored. Fix: always explicitly set <code>policyTypes</code>. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li><strong>Policies don't apply to HostNetwork pods</strong>: Pods with <code>hostNetwork: true</code> bypass NetworkPolicy entirely. Fix: use node-level firewall rules (iptables, nftables) for host-networked pods. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li><strong>No pod-level deny rules</strong>: You cannot deny specific traffic that another policy allows. Policies are purely additive. Fix: restructure policies so the unwanted flow is never explicitly allowed. [<a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">src1</a>]</li>
+    <li><strong>Empty selector matches everything</strong>: <code>podSelector: {}</code> selects ALL pods; <code>namespaceSelector: {}</code> selects ALL namespaces. Fix: always verify selector specificity with <code>kubectl describe networkpolicy</code>. [<a href="https://snyk.io/blog/kubernetes-network-policy-best-practices/">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># List all network policies in a namespace
+kubectl get networkpolicy -n &lt;namespace&gt;
+
+# Describe a specific policy (shows parsed selectors and rules)
+kubectl describe networkpolicy &lt;policy-name&gt; -n &lt;namespace&gt;
+
+# Test connectivity between pods
+kubectl exec -n &lt;namespace&gt; &lt;source-pod&gt; -- \
+  curl --connect-timeout 3 -s -o /dev/null -w "%{http_code}" http://&lt;target-service&gt;:&lt;port&gt;/
+
+# Test DNS resolution (verify DNS egress works)
+kubectl exec -n &lt;namespace&gt; &lt;pod&gt; -- nslookup kubernetes.default.svc.cluster.local
+
+# Debug with Calico: check Felix logs for policy decisions
+kubectl logs -n kube-system -l k8s-app=calico-node --tail=50 | grep -i policy
+
+# Debug with Cilium: use Hubble for real-time flow observation
+kubectl exec -n kube-system &lt;cilium-pod&gt; -- hubble observe --namespace &lt;namespace&gt; --verdict DROPPED
+
+# Verify CNI plugin is running and healthy
+kubectl get pods -n kube-system -l k8s-app --field-selector=status.phase!=Running
+
+# Export all policies in a namespace as YAML (for review)
+kubectl get networkpolicy -n &lt;namespace&gt; -o yaml
+
+# Test with a temporary debug pod
+kubectl run nettest --image=nicolaka/netshoot --rm -it --restart=Never -n &lt;namespace&gt; -- \
+  curl --connect-timeout 3 &lt;target-service&gt;:&lt;port&gt;</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>networking.k8s.io/v1</td><td>Stable (GA) since K8s 1.7</td><td>None</td><td>Current API; use this version</td></tr>
+      <tr><td>extensions/v1beta1</td><td>Removed in K8s 1.16</td><td>API group changed</td><td>Change apiVersion to networking.k8s.io/v1</td></tr>
+      <tr><td>K8s 1.21+</td><td>Feature</td><td>kubernetes.io/metadata.name auto-label</td><td>Simplifies cross-namespace namespaceSelector</td></tr>
+      <tr><td>K8s 1.25+</td><td>Feature</td><td>endPort field GA</td><td>Allows port ranges: port: 32000, endPort: 32100</td></tr>
+      <tr><td>AdminNetworkPolicy</td><td>Alpha (K8s 1.27+)</td><td>New cluster-scoped API</td><td>Future: admin-enforced policies that override namespace policies</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>You need L3/L4 pod traffic isolation</td><td>You need L7 (HTTP path/header) filtering</td><td>Cilium L7 Policy, Istio AuthorizationPolicy</td></tr>
+      <tr><td>Implementing zero-trust within a cluster</td><td>You need cluster-wide default policies</td><td>Calico GlobalNetworkPolicy, Cilium ClusterNetworkPolicy</td></tr>
+      <tr><td>Restricting pod egress to specific CIDRs</td><td>You need to block traffic by DNS name</td><td>Cilium DNS-aware policies</td></tr>
+      <tr><td>Multi-tenant namespace isolation</td><td>You need to rate-limit traffic</td><td>Service mesh or CNI-specific rate limiting</td></tr>
+      <tr><td>Compliance requires microsegmentation</td><td>You only need external ingress routing</td><td>Kubernetes Ingress / Gateway API</td></tr>
+      <tr><td>Your CNI supports NetworkPolicy</td><td>Your cluster uses Flannel without a policy plugin</td><td>Install Calico or Cilium alongside Flannel</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>CNI-dependent behavior</strong>: Different CNI plugins may have subtle differences in how they interpret edge cases (e.g., ipBlock with pod CIDRs, except ranges). Always test policies with your specific CNI.</li>
+    <li><strong>No audit logging in vanilla Kubernetes</strong>: Standard NetworkPolicy provides no logging of allowed/denied connections. For audit trails, use Cilium Hubble, Calico Felix logging, or GKE network policy logging.</li>
+    <li><strong>Performance at scale</strong>: Each NetworkPolicy translates to iptables rules (Calico legacy mode) or eBPF maps (Cilium, Calico eBPF mode). Cilium's eBPF has O(1) lookup time regardless of rule count.</li>
+    <li><strong>Stateful connection tracking</strong>: NetworkPolicy is stateful -- reply traffic for allowed connections is implicitly permitted. You do not need separate rules for return traffic.</li>
+    <li><strong>Node traffic exception</strong>: Traffic between a pod and its host node is always allowed. Node-local processes (kubelet, node exporters) can always reach pods on that node regardless of policies.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/security/kubernetes-security/2026" data-relationship="related_to">Kubernetes Security Checklist</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

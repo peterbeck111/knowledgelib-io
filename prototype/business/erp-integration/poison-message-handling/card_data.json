@@ -1,0 +1,129 @@
+{
+  "id": "business/erp-integration/poison-message-handling/2026",
+  "category": "business",
+  "subcategory": "erp-integration",
+  "topic": "poison-message-handling",
+  "version_tag": "2026",
+  "canonical_question": "How do you handle poison messages - triage and replay of failed ERP integration messages?",
+  "aliases": [
+    "Poison message handling and dead letter queue triage for ERP integrations",
+    "How to triage and replay failed ERP integration messages from DLQ",
+    "Poison pill detection and remediation in enterprise middleware",
+    "DLQ triage workflow and message replay patterns for ERP"
+  ],
+  "entity_type": "erp_integration",
+  "region": "global",
+  "jurisdiction": "global",
+  "confidence": 0.87,
+  "token_estimate": 5200,
+  "source_count": 7,
+  "md_path": "/business/erp-integration/poison-message-handling/2026.md",
+  "html_path": "/business/erp-integration/poison-message-handling/2026.html",
+  "priority": "medium",
+  "buy_links": [],
+  "temporal_validity": {
+    "status": "evolving",
+    "last_breaking_change": "2024-06 — AWS SQS DLQ Redrive API GA",
+    "next_review": "2026-09-07",
+    "change_sensitivity": "medium"
+  },
+  "constraints": [
+    "Detect poison messages within 3-5 delivery attempts — fewer than 3 causes premature DLQ routing, more than 5 wastes processing capacity",
+    "DLQ retention varies by platform: AWS SQS max 14 days, Azure Service Bus unlimited (Premium), Kafka depends on topic config",
+    "Replay requires idempotency keys — without them, replay creates duplicate records in target ERP",
+    "Replay ordering matters — parent records must be replayed before child records to avoid referential integrity violations",
+    "DLQ-of-DLQ is an anti-pattern — never assign a DLQ to a DLQ consumer",
+    "MuleSoft Anypoint MQ DLQ must be in same region as source queue",
+    "Azure Service Bus DLQ messages persist indefinitely — no TTL, no automatic cleanup"
+  ],
+  "skip_this_unit_if": [
+    {
+      "condition": "User needs general retry strategies and circuit breaker patterns",
+      "use_instead": "business/erp-integration/error-handling-dead-letter-queues/2026"
+    },
+    {
+      "condition": "User needs idempotency key implementation for replay safety",
+      "use_instead": "business/erp-integration/idempotency-erp-integrations/2026"
+    },
+    {
+      "condition": "User needs distributed transaction coordination across ERPs",
+      "use_instead": "business/erp-integration/saga-pattern-erp-transactions/2026"
+    }
+  ],
+  "related_kos": {
+    "depends_on": [
+      {
+        "id": "business/erp-integration/error-handling-dead-letter-queues/2026",
+        "label": "Error handling and DLQ fundamentals — retry strategies, exponential backoff, circuit breakers"
+      }
+    ],
+    "related_to": [
+      {
+        "id": "business/erp-integration/idempotency-erp-integrations/2026",
+        "label": "Idempotency patterns — required for safe message replay"
+      },
+      {
+        "id": "business/erp-integration/change-data-capture-erp/2026",
+        "label": "Change data capture — upstream event source that generates messages"
+      }
+    ],
+    "solves": [
+      {
+        "id": "business/erp-integration/order-to-cash-integration/2026",
+        "label": "Order-to-cash integration — poison messages block order processing"
+      },
+      {
+        "id": "business/erp-integration/procure-to-pay-integration/2026",
+        "label": "Procure-to-pay integration — invoice failures require triage and replay"
+      }
+    ],
+    "alternative_to": [
+      {
+        "id": "business/erp-integration/saga-pattern-erp-transactions/2026",
+        "label": "Saga pattern — for coordinated multi-step compensation, not message-level triage"
+      }
+    ],
+    "often_confused_with": [
+      {
+        "id": "business/erp-integration/error-handling-dead-letter-queues/2026",
+        "label": "Error handling & DLQ (covers retry/backoff/circuit breaker; this card covers what happens AFTER messages reach the DLQ)"
+      }
+    ]
+  },
+  "inputs_needed": [
+    {
+      "key": "message_broker",
+      "question": "Which message broker or middleware are you using?",
+      "type": "choice",
+      "options": [
+        "AWS SQS / SNS",
+        "Azure Service Bus",
+        "Apache Kafka",
+        "RabbitMQ",
+        "iPaaS (MuleSoft, Boomi, Workato)",
+        "Custom / other"
+      ]
+    },
+    {
+      "key": "failure_type",
+      "question": "What type of failures are you seeing?",
+      "type": "choice",
+      "options": [
+        "Data quality errors (schema violations, missing required fields)",
+        "Transient errors (timeouts, rate limits, network issues)",
+        "Permanent errors (invalid API endpoint, authentication failures)",
+        "Mixed / unknown"
+      ]
+    },
+    {
+      "key": "replay_requirement",
+      "question": "Do you need to replay failed messages after fixing the root cause?",
+      "type": "choice",
+      "options": [
+        "Yes — zero-loss, every message must eventually succeed",
+        "Yes — but only after manual review and approval",
+        "No — log and discard is acceptable"
+      ]
+    }
+  ]
+}

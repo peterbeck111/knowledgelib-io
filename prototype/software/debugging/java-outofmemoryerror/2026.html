@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>How to Diagnose and Fix Java OutOfMemoryError | knowledgelib.io</title>
+    <meta name="description" content="Complete guide to all 8 types of Java OutOfMemoryError: heap space, GC overhead, Metaspace, native threads, direct buffers.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://knowledgelib.io/software/debugging/java-outofmemoryerror/2026">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Diagnose and Fix Java OutOfMemoryError | knowledgelib.io">
+    <meta property="og:description"
+        content="Complete guide to all 8 types of Java OutOfMemoryError: heap dump analysis with Eclipse MAT, jmap, jcmd. Decision tree, diagnostic commands, container-aware configuration. 7 sources, verified 2026-02-20.">
+    <meta property="og:url" content="https://knowledgelib.io/software/debugging/java-outofmemoryerror/2026">
+    <meta property="og:site_name" content="knowledgelib.io">
+    <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="article:published_time" content="2026-02-20">
+    <meta property="article:modified_time" content="2026-02-20">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Diagnose and Fix Java OutOfMemoryError | knowledgelib.io">
+    <meta name="twitter:description"
+        content="Complete guide to all 8 types of Java OutOfMemoryError: heap dump analysis, jmap, jcmd, Eclipse MAT. Decision tree, anti-patterns, container configuration.">
+    <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+    <meta name="ai:type" content="knowledge_unit">
+    <meta name="ai:entity_type" content="software_reference">
+    <meta name="ai:confidence" content="0.95">
+    <meta name="ai:last_verified" content="2026-02-20">
+    <meta name="ai:domain" content="software/debugging/java_outofmemoryerror">
+    <meta name="ai:jurisdiction" content="global">
+    <meta name="ai:canonical_question" content="How do I diagnose and fix Java OutOfMemoryError?">
+    <meta name="ai:aliases"
+        content="java.lang.OutOfMemoryError Java heap space; Java OOM error fix; Java memory leak detection; Java heap dump analysis; GC overhead limit exceeded Java; Java OutOfMemoryError Metaspace; Java OutOfMemoryError unable to create new native thread; Java OutOfMemoryError direct buffer memory; jmap heap dump Java; Eclipse MAT memory leak">
+    <meta name="ai:raw" content="/api/v1/units/software/debugging/java-outofmemoryerror/2026.md">
+    <meta name="ai:token_estimate" content="4200">
+    <meta name="ai:source_count" content="7">
+    <meta name="ai:freshness" content="stable">
+    <meta name="ai:temporal_status" content="stable">
+    <meta name="ai:change_sensitivity" content="low">
+    <meta name="ai:version" content="1.0">
+    <meta name="ai:first_published" content="2026-02-20">
+    <meta name="ai:inputs_needed" content="oom_type,java_version,container">
+    <meta name="ai:constraints" content="JVM-specific (HotSpot, OpenJ9) — flags and tools do not apply to Android ART/Dalvik; Heap dump analysis requires matching or later JDK version of Eclipse MAT; Increasing -Xmx is a band-aid — always analyze heap dump before resizing; Each OOM subtype requires a different diagnostic path — do not apply heap-space fixes to non-heap OOM; Container JVMs may be OOM-killed before throwing OutOfMemoryError — check dmesg and exit code 137 first">
+    <meta name="ai:skip_this_unit_if" content="StackOverflowError (infinite recursion, not memory exhaustion) → increase -Xss or fix recursion; Native/off-heap memory leak via JNI or Unsafe → use NMT, pmap, or jemalloc profiling; Kubernetes OOMKilled (exit 137) without JVM OutOfMemoryError → adjust container resources.limits.memory; C/C++ segfault or memory corruption → use Valgrind or AddressSanitizer">
+    <meta name="ai:sections"
+        content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Diagnose and Fix Java OutOfMemoryError",
+    "headline": "How Do I Diagnose and Fix Java OutOfMemoryError?",
+    "description": "Complete reference for diagnosing and fixing all 8 types of Java OutOfMemoryError, including heap space, GC overhead, Metaspace, native threads, and direct buffers. Covers heap dump analysis with Eclipse MAT, jmap, jcmd, and container-aware JVM configuration.",
+    "keywords": ["Java", "OutOfMemoryError", "heap dump", "memory leak", "Eclipse MAT", "jmap", "Metaspace", "GC overhead", "JVM tuning", "container memory"],
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "proficiencyLevel": "Intermediate",
+    "dependencies": "Java 8+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "citation": [
+      { "@type": "WebPage", "name": "Oracle — Understand the OutOfMemoryError Exception", "url": "https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html" },
+      { "@type": "WebPage", "name": "HeapHero — 9 Types of OutOfMemoryError", "url": "https://blog.heaphero.io/types-of-outofmemoryerror/" },
+      { "@type": "WebPage", "name": "Sematext — Java OutOfMemoryError Exceptions", "url": "https://sematext.com/blog/java-lang-outofmemoryerror/" },
+      { "@type": "WebPage", "name": "Last9 — How to Fix java.lang.OutOfMemoryError", "url": "https://last9.io/blog/java-lang-outofmemoryerror/" },
+      { "@type": "WebPage", "name": "Rollbar — How to Fix OutOfMemoryError", "url": "https://rollbar.com/blog/how-to-handle-outofmemoryerror-exceptions-in-java/" },
+      { "@type": "WebPage", "name": "Oracle — Diagnose Leaks in Java Language Code", "url": "https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html" },
+      { "@type": "WebPage", "name": "HowToDoInJava — Troubleshooting OutOfMemoryError", "url": "https://howtodoinjava.com/java/exception-handling/java-outofmemoryerror/" }
+    ]
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Diagnose and Fix Java OutOfMemoryError",
+    "description": "Structured reference covering all 8 types of Java OutOfMemoryError with diagnostic decision tree, JVM flags, heap dump analysis workflow, and container-aware configuration.",
+    "keywords": ["Java", "OutOfMemoryError", "JVM memory", "heap dump", "memory leak", "GC tuning"],
+    "temporalCoverage": "2000/2026",
+    "dateModified": "2026-02-20",
+    "datePublished": "2026-02-20",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "HeapHero"},
+      {"@type": "Organization", "name": "Sematext"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" },
+    "publisher": { "@type": "Organization", "name": "knowledgelib.io", "url": "https://knowledgelib.io" }
+  }
+  </script>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Debugging", "item": "https://knowledgelib.io/software/debugging/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Diagnose and Fix Java OutOfMemoryError" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I diagnose and fix Java OutOfMemoryError?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Java OutOfMemoryError has 8+ distinct types, each with different causes and fixes. The diagnosis loop is: Identify (which OOM type from the error message) -> Capture (heap dump with -XX:+HeapDumpOnOutOfMemoryError) -> Analyze (with Eclipse MAT or VisualVM) -> Fix (increase memory, fix leak, or tune GC). ~70% of OOM errors are \"Java heap space\" caused by memory leaks or undersized heaps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "java.lang.OutOfMemoryError Java heap space",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Java OutOfMemoryError has 8+ distinct types, each with different causes and fixes. The diagnosis loop is: Identify (which OOM type from the error message) -> Capture (heap dump with -XX:+HeapDumpOnOutOfMemoryError) -> Analyze (with Eclipse MAT or VisualVM) -> Fix (increase memory, fix leak, or tune GC). ~70% of OOM errors are \"Java heap space\" caused by memory leaks or undersized heaps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Java OOM error fix",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Java OutOfMemoryError has 8+ distinct types, each with different causes and fixes. The diagnosis loop is: Identify (which OOM type from the error message) -> Capture (heap dump with -XX:+HeapDumpOnOutOfMemoryError) -> Analyze (with Eclipse MAT or VisualVM) -> Fix (increase memory, fix leak, or tune GC). ~70% of OOM errors are \"Java heap space\" caused by memory leaks or undersized heaps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Java memory leak detection",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Java OutOfMemoryError has 8+ distinct types, each with different causes and fixes. The diagnosis loop is: Identify (which OOM type from the error message) -> Capture (heap dump with -XX:+HeapDumpOnOutOfMemoryError) -> Analyze (with Eclipse MAT or VisualVM) -> Fix (increase memory, fix leak, or tune GC). ~70% of OOM errors are \"Java heap space\" caused by memory leaks or undersized heaps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Java heap dump analysis",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Java OutOfMemoryError has 8+ distinct types, each with different causes and fixes. The diagnosis loop is: Identify (which OOM type from the error message) -> Capture (heap dump with -XX:+HeapDumpOnOutOfMemoryError) -> Analyze (with Eclipse MAT or VisualVM) -> Fix (increase memory, fix leak, or tune GC). ~70% of OOM errors are \"Java heap space\" caused by memory leaks or undersized heaps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "GC overhead limit exceeded Java",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Java OutOfMemoryError has 8+ distinct types, each with different causes and fixes. The diagnosis loop is: Identify (which OOM type from the error message) -> Capture (heap dump with -XX:+HeapDumpOnOutOfMemoryError) -> Analyze (with Eclipse MAT or VisualVM) -> Fix (increase memory, fix leak, or tune GC). ~70% of OOM errors are \"Java heap space\" caused by memory leaks or undersized heaps."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+
+<body class="knowledge-unit software-reference">
+
+    
+  <main role="main">
+
+<h1>How Do I Diagnose and Fix Java OutOfMemoryError?</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I diagnose and fix Java OutOfMemoryError?</h2>
+
+    <aside class="unit-meta" data-card-id="software/debugging/java-outofmemoryerror/2026" aria-label="Knowledge unit metadata">
+        <span><strong>Type:</strong> Software Reference</span>
+        <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.95 out of 1">0.95</span></span>
+        <span><strong>Sources:</strong> 7</span>
+        <span><strong>Verified:</strong> <span id="verified-date">2026-02-20</span></span>
+        <span><strong>Freshness:</strong> stable</span>
+    </aside>
+
+    <!-- TL;DR -->
+    <section id="tldr">
+        <h2>TL;DR</h2>
+        <ul>
+            <li><strong>Bottom line</strong>: Java <code>OutOfMemoryError</code> has 8+ distinct types, each with
+                different causes and fixes. The diagnosis loop is: <strong>Identify</strong> (which OOM type from the
+                error message) &rarr; <strong>Capture</strong> (heap dump with
+                <code>-XX:+HeapDumpOnOutOfMemoryError</code>) &rarr; <strong>Analyze</strong> (with Eclipse MAT or
+                VisualVM) &rarr; <strong>Fix</strong> (increase memory, fix leak, or tune GC). ~70% of OOM errors are
+                "Java heap space" caused by memory leaks or undersized heaps.</li>
+            <li><strong>Key tool/command</strong>:
+                <code>jmap -dump:format=b,file=heap.hprof &lt;pid&gt;</code> to capture a heap dump, then analyze with
+                Eclipse MAT's Leak Suspects report.</li>
+            <li><strong>Watch out for</strong>: Increasing <code>-Xmx</code> without analyzing the heap dump just delays
+                the crash &mdash; if there is a memory leak, you must find and fix the leaking code path.</li>
+            <li><strong>Works with</strong>: Java 8+ (all current LTS versions: 8, 11, 17, 21). Metaspace replaces
+                PermGen from Java 8 onward.</li>
+        </ul>
+    </section>
+
+    <!-- Constraints -->
+    <section id="constraints">
+        <h2>Constraints</h2>
+        <ul>
+            <li>Never catch <code>OutOfMemoryError</code> and continue normal operation &mdash; the JVM state may be
+                corrupted after OOM. Only catch for graceful shutdown or logging. [<a
+                    href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+            </li>
+            <li>In containers (Docker/Kubernetes), always use <code>-XX:+UseContainerSupport</code> (default since JDK
+                10) and <code>-XX:MaxRAMPercentage=75.0</code> instead of fixed <code>-Xmx</code> values to respect
+                container memory limits. [<a href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</li>
+            <li>Always enable <code>-XX:+HeapDumpOnOutOfMemoryError</code> in production &mdash; without a heap dump,
+                diagnosis is guesswork. [<a
+                    href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>,
+                <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>]
+            </li>
+            <li>Do not set <code>-Xmx</code> larger than 80% of available physical/container RAM &mdash; the JVM needs
+                native memory for threads, Metaspace, direct buffers, JIT code cache, and GC overhead. [<a
+                    href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</li>
+            <li>If the error is "Kill process or sacrifice child" (Linux OOM Killer), the fix is at the OS/container
+                level, not the JVM level. [<a href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quick-reference">
+        <h2>Quick Reference</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">OOM Type</th>
+                        <th scope="col">Error Message</th>
+                        <th scope="col">Likelihood</th>
+                        <th scope="col">Primary Cause</th>
+                        <th scope="col">Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Java heap space</td>
+                        <td><code>OutOfMemoryError: Java heap space</code></td>
+                        <td>~50%</td>
+                        <td>Memory leak or undersized <code>-Xmx</code></td>
+                        <td>Analyze heap dump; increase <code>-Xmx</code> or fix leak [<a
+                                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>GC overhead limit exceeded</td>
+                        <td><code>OutOfMemoryError: GC overhead limit exceeded</code></td>
+                        <td>~20%</td>
+                        <td>GC spending &gt;98% of time, recovering &lt;2% heap</td>
+                        <td>Same as heap space &mdash; fix leak or increase heap [<a
+                                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Metaspace</td>
+                        <td><code>OutOfMemoryError: Metaspace</code></td>
+                        <td>~10%</td>
+                        <td>Too many classes loaded (dynamic proxies, reflection)</td>
+                        <td>Increase <code>-XX:MaxMetaspaceSize</code>; fix classloader leak [<a
+                                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>,
+                            <a href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Unable to create native thread</td>
+                        <td><code>OutOfMemoryError: Unable to create new native thread</code></td>
+                        <td>~8%</td>
+                        <td>Thread leak or OS thread limit reached</td>
+                        <td>Fix thread leak; reduce <code>-Xss</code>; increase <code>ulimit -u</code> [<a
+                                href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Direct buffer memory</td>
+                        <td><code>OutOfMemoryError: Direct buffer memory</code></td>
+                        <td>~5%</td>
+                        <td>NIO direct buffers not released</td>
+                        <td>Increase <code>-XX:MaxDirectMemorySize</code>; fix buffer leak [<a
+                                href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Requested array size</td>
+                        <td><code>OutOfMemoryError: Requested array size exceeds VM limit</code></td>
+                        <td>~3%</td>
+                        <td>Array allocation &gt; <code>Integer.MAX_VALUE</code> or heap</td>
+                        <td>Fix array sizing logic; process in chunks [<a
+                                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Compressed class space</td>
+                        <td><code>OutOfMemoryError: Compressed class space</code></td>
+                        <td>~2%</td>
+                        <td>Class metadata exceeds compressed pointer space</td>
+                        <td>Increase <code>-XX:CompressedClassSpaceSize</code> [<a
+                                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Kill process or sacrifice child</td>
+                        <td><code>OutOfMemoryError: Kill process or sacrifice child</code></td>
+                        <td>~2%</td>
+                        <td>Linux OOM Killer terminated JVM</td>
+                        <td>Increase container/host RAM; tune <code>oom_score_adj</code> [<a
+                                href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Decision Tree -->
+    <section id="decision-tree">
+        <h2>Decision Tree</h2>
+        <pre><code>START &mdash; java.lang.OutOfMemoryError thrown
+&boxvr;&boxh;&boxh; Error message contains "Java heap space" or "GC overhead limit exceeded"?
+&boxv;   &boxvr;&boxh;&boxh; YES &rarr; Heap problem
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; Heap dump available?
+&boxv;   &boxv;   &boxv;   &boxvr;&boxh;&boxh; YES &rarr; Eclipse MAT &rarr; Leak Suspects report
+&boxv;   &boxv;   &boxv;   &boxv;   &boxvr;&boxh;&boxh; Single object dominates heap? &rarr; Memory leak &rarr; Fix code
+&boxv;   &boxv;   &boxv;   &boxv;   &boxur;&boxh;&boxh; Many objects, heap nearly full &rarr; Increase -Xmx
+&boxv;   &boxv;   &boxv;   &boxur;&boxh;&boxh; NO &rarr; Enable -XX:+HeapDumpOnOutOfMemoryError, reproduce
+&boxv;   &boxv;   &boxur;&boxh;&boxh; Only under load spikes? &rarr; Increase -Xmx + add monitoring
+&boxv;   &boxur;&boxh;&boxh; NO &darr;
+&boxvr;&boxh;&boxh; Error message contains "Metaspace"?
+&boxv;   &boxvr;&boxh;&boxh; YES &rarr; Class loading problem
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; On redeploy? &rarr; Classloader leak &rarr; Restart; fix leak
+&boxv;   &boxv;   &boxur;&boxh;&boxh; Grows slowly? &rarr; Increase -XX:MaxMetaspaceSize
+&boxv;   &boxur;&boxh;&boxh; NO &darr;
+&boxvr;&boxh;&boxh; Error message contains "Unable to create new native thread"?
+&boxv;   &boxvr;&boxh;&boxh; YES &rarr; Thread exhaustion
+&boxv;   &boxv;   &boxvr;&boxh;&boxh; Thread count growing? &rarr; Thread leak &rarr; Fix code
+&boxv;   &boxv;   &boxur;&boxh;&boxh; Hit OS limit? &rarr; Increase ulimit -u; reduce -Xss
+&boxv;   &boxur;&boxh;&boxh; NO &darr;
+&boxvr;&boxh;&boxh; "Direct buffer memory"? &rarr; Fix buffer release; increase -XX:MaxDirectMemorySize
+&boxvr;&boxh;&boxh; "Kill process or sacrifice child"? &rarr; Increase container/host memory
+&boxur;&boxh;&boxh; Other (array size, compressed class, native method)
+    &boxur;&boxh;&boxh; See Quick Reference table for specific fix</code></pre>
+    </section>
+
+    <!-- Step-by-Step -->
+    <section id="step-by-step">
+        <h2>Step-by-Step Guide</h2>
+
+        <h3>1. Enable heap dump on OOM (do this first)</h3>
+        <p>Configure the JVM to automatically capture a heap dump when any OutOfMemoryError occurs. This is the single
+            most important diagnostic step. [<a
+                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>, <a
+                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>]
+        </p>
+        <pre><code class="language-bash"># Add to JVM startup options
+java -XX:+HeapDumpOnOutOfMemoryError \
+     -XX:HeapDumpPath=/var/log/java/heap-dump.hprof \
+     -XX:+ExitOnOutOfMemoryError \
+     -jar myapp.jar</code></pre>
+        <p><strong>Verify</strong>:
+            <code>java -XX:+PrintFlagsFinal -version 2>&amp;1 | grep HeapDumpOnOutOfMemoryError</code> &rarr; expected:
+            <code>bool HeapDumpOnOutOfMemoryError = true</code></p>
+
+        <h3>2. Identify the OOM type from the error message</h3>
+        <p>The error message after <code>OutOfMemoryError:</code> tells you exactly which memory region is exhausted.
+            [<a
+                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+        </p>
+        <pre><code class="language-bash"># Search application logs for the specific OOM type
+grep -A 5 "OutOfMemoryError" /var/log/myapp/application.log
+
+# Common patterns:
+# "Java heap space"                     &rarr; Heap (-Xmx)
+# "GC overhead limit exceeded"          &rarr; Heap (-Xmx)
+# "Metaspace"                           &rarr; Class metadata (-XX:MaxMetaspaceSize)
+# "Unable to create new native thread"  &rarr; Thread limit
+# "Direct buffer memory"                &rarr; NIO buffers (-XX:MaxDirectMemorySize)</code></pre>
+
+        <h3>3. Capture a heap dump (if not auto-captured)</h3>
+        <p>If <code>HeapDumpOnOutOfMemoryError</code> was not enabled, capture a dump from the running process. [<a
+                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>]
+        </p>
+        <pre><code class="language-bash"># Find Java process PID
+jps -lv
+
+# Capture heap dump (~2 sec per GB, causes brief pause)
+jmap -dump:format=b,file=/tmp/heap.hprof &lt;pid&gt;
+
+# Alternative: jcmd (preferred on modern JDKs)
+jcmd &lt;pid&gt; GC.heap_dump /tmp/heap.hprof
+
+# Quick histogram (no full dump, minimal impact)
+jmap -histo &lt;pid&gt; | head -30</code></pre>
+
+        <h3>4. Analyze the heap dump with Eclipse MAT</h3>
+        <p>Eclipse Memory Analyzer Tool (MAT) is the most effective free tool for finding memory leaks. [<a
+                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>, <a
+                href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</p>
+        <pre><code># Download Eclipse MAT from https://eclipse.dev/mat/
+# Open the .hprof file in MAT
+
+# Key reports to check:
+# 1. Leak Suspects Report (automatic) &mdash; highlights top memory consumers
+# 2. Dominator Tree &mdash; shows objects retaining the most memory
+# 3. Histogram &mdash; sorted by retained heap size
+# 4. Path to GC Roots (exclude weak refs) &mdash; shows WHY an object is retained</code></pre>
+
+        <h3>5. Check GC behavior</h3>
+        <p>Review garbage collection logs to understand memory pressure patterns. [<a
+                href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</p>
+        <pre><code class="language-bash"># Enable GC logging (JDK 9+)
+java -Xlog:gc*:file=/var/log/java/gc.log:time,uptime,level,tags \
+     -jar myapp.jar
+
+# Enable GC logging (JDK 8)
+java -verbose:gc -Xloggc:/var/log/java/gc.log \
+     -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
+     -jar myapp.jar</code></pre>
+
+        <h3>6. Apply the fix based on OOM type</h3>
+        <p>After identifying the root cause, apply the appropriate fix. [<a
+                href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>, <a
+                href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>, <a
+                href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</p>
+        <pre><code class="language-bash"># Heap space / GC overhead
+java -Xms2g -Xmx4g -jar myapp.jar
+
+# Metaspace
+java -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -jar myapp.jar
+
+# Native threads
+java -Xss512k -jar myapp.jar
+ulimit -u 65536
+
+# Direct buffers
+java -XX:MaxDirectMemorySize=512m -jar myapp.jar
+
+# Containers &mdash; percentage-based sizing
+java -XX:+UseContainerSupport \
+     -XX:MaxRAMPercentage=75.0 \
+     -XX:InitialRAMPercentage=50.0 \
+     -jar myapp.jar</code></pre>
+    </section>
+
+    <!-- Code Examples -->
+    <section id="code-examples">
+        <h2>Code Examples</h2>
+
+        <h3>Java: detect and log memory pressure before OOM</h3>
+        <pre><code class="language-java">// Input:  Running JVM with MemoryMXBean
+// Output: Early warning logs when heap usage exceeds threshold
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class MemoryMonitor {
+    private static final double WARN = 0.80;
+    private static final double CRITICAL = 0.90;
+
+    public static void startMonitoring() {
+        MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
+        Executors.newSingleThreadScheduledExecutor(r -&gt; {
+            Thread t = new Thread(r, "memory-monitor");
+            t.setDaemon(true);
+            return t;
+        }).scheduleAtFixedRate(() -&gt; {
+            MemoryUsage heap = memBean.getHeapMemoryUsage();
+            double usedPct = (double) heap.getUsed() / heap.getMax();
+            if (usedPct &gt; CRITICAL) {
+                System.err.printf("CRITICAL: Heap %.1f%% (%dMB/%dMB)%n",
+                    usedPct * 100, heap.getUsed() &gt;&gt; 20, heap.getMax() &gt;&gt; 20);
+            } else if (usedPct &gt; WARN) {
+                System.err.printf("WARNING: Heap %.1f%% (%dMB/%dMB)%n",
+                    usedPct * 100, heap.getUsed() &gt;&gt; 20, heap.getMax() &gt;&gt; 20);
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+    }
+}</code></pre>
+
+        <h3>Bash: automated OOM diagnostic script</h3>
+        <pre><code class="language-bash">#!/bin/bash
+# Input:  Java PID (or auto-detect)
+# Output: Memory diagnostics: heap, threads, top objects
+
+PID="${1:-$(jps -lv | grep -v Jps | head -1 | awk '{print $1}')}"
+[ -z "$PID" ] &amp;&amp; { echo "No Java process found"; exit 1; }
+
+echo "=== Java OOM Diagnostic Report &mdash; PID: $PID ==="
+echo "--- JVM Flags ---"
+jcmd "$PID" VM.flags 2&gt;/dev/null || jinfo -flags "$PID"
+
+echo -e "\n--- Heap Usage ---"
+jcmd "$PID" GC.heap_info 2&gt;/dev/null || jmap -heap "$PID"
+
+echo -e "\n--- Top 20 Objects ---"
+jmap -histo "$PID" | head -25
+
+echo -e "\n--- Thread Count ---"
+jstack "$PID" 2&gt;/dev/null | grep -c "^\"" || echo "N/A"
+
+echo -e "\n--- Native Memory (if NMT enabled) ---"
+jcmd "$PID" VM.native_memory summary 2&gt;/dev/null \
+    || echo "NMT not enabled. Start with -XX:NativeMemoryTracking=summary"</code></pre>
+
+        <h3>Java: common memory leak patterns and fixes</h3>
+        <pre><code class="language-java">// PATTERN 1: Unbounded cache &mdash; use bounded cache
+// BAD:  static Map&lt;String, Object&gt; cache = new HashMap&lt;&gt;();
+// GOOD:
+var cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+    .maximumSize(10_000)
+    .expireAfterWrite(java.time.Duration.ofHours(1))
+    .build();
+
+// PATTERN 2: Unclosed resources &mdash; use try-with-resources
+try (var is = new java.io.FileInputStream(file)) {
+    // process stream
+} // auto-closed
+
+// PATTERN 3: Large collections &mdash; process in batches
+int page = 0;
+List&lt;Record&gt; batch;
+do {
+    batch = repo.findByPage(page++, 1000);
+    processBatch(batch);
+} while (!batch.isEmpty());</code></pre>
+    </section>
+
+    <!-- Anti-Patterns -->
+    <section id="anti-patterns">
+        <h2>Anti-Patterns</h2>
+
+        <h3>Wrong: Catching OutOfMemoryError and continuing</h3>
+        <pre><code class="language-java">// BAD &mdash; JVM state may be corrupted after OOM [src1]
+try {
+    byte[] data = new byte[Integer.MAX_VALUE];
+} catch (OutOfMemoryError e) {
+    System.out.println("Not enough memory, retrying...");
+    byte[] data = new byte[1024 * 1024]; // unreliable
+}</code></pre>
+
+        <h3>Correct: Crash fast and analyze the heap dump</h3>
+        <pre><code class="language-java">// GOOD &mdash; let the JVM crash; capture dump; fix root cause [src1]
+// JVM flags: -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError
+// The heap dump gives you the evidence to fix the actual problem.</code></pre>
+
+        <h3>Wrong: Blindly increasing -Xmx without analysis</h3>
+        <pre><code class="language-bash"># BAD &mdash; just delays the crash if there is a memory leak [src4, src6]
+# Monday:    java -Xmx2g -jar app.jar  # OOM after 6 hours
+# Tuesday:   java -Xmx4g -jar app.jar  # OOM after 12 hours
+# Wednesday: java -Xmx8g -jar app.jar  # OOM after 24 hours &mdash; still leaking!</code></pre>
+
+        <h3>Correct: Analyze heap dump first, then right-size</h3>
+        <pre><code class="language-bash"># GOOD &mdash; capture evidence, then decide [src4, src6]
+# 1. Enable dump: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/
+# 2. Reproduce OOM
+# 3. Open dump in Eclipse MAT &rarr; Leak Suspects
+# 4. Leak found? &rarr; fix code, keep original -Xmx
+# 5. No leak? &rarr; increase -Xmx to actual usage + 25% headroom</code></pre>
+
+        <h3>Wrong: Using fixed -Xmx in containers</h3>
+        <pre><code class="language-bash"># BAD &mdash; ignores container limits; may get OOM-killed [src4]
+docker run -m 2g myapp java -Xmx8g -jar app.jar
+# Result: Linux OOM Killer terminates JVM</code></pre>
+
+        <h3>Correct: Use container-aware memory settings</h3>
+        <pre><code class="language-bash"># GOOD &mdash; JVM respects container memory limits [src4]
+docker run -m 2g myapp java \
+    -XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -jar app.jar
+# JVM calculates: 2GB * 75% = 1.5GB max heap</code></pre>
+    </section>
+
+    <!-- Common Pitfalls -->
+    <section id="pitfalls">
+        <h2>Common Pitfalls</h2>
+        <ul>
+            <li><strong>PermGen vs Metaspace confusion</strong>: Java 7 uses <code>-XX:MaxPermSize</code>; Java 8+ uses
+                <code>-XX:MaxMetaspaceSize</code>. Using the wrong flag is silently ignored. Check Java version first.
+                [<a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>,
+                <a href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</li>
+            <li><strong>Heap dump fills disk</strong>: Dumps are roughly the size of used heap. A 16GB heap generates a
+                ~16GB file. Ensure <code>-XX:HeapDumpPath</code> has sufficient space. [<a
+                    href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>]
+            </li>
+            <li><strong>NMT overhead</strong>: <code>-XX:NativeMemoryTracking=detail</code> adds 5-10% memory overhead.
+                Use <code>summary</code> mode in production. [<a
+                    href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>]
+            </li>
+            <li><strong>Thread stack memory is invisible to heap metrics</strong>: Each thread uses <code>-Xss</code>
+                memory (default 512KB-1MB). 2000 threads = 1-2GB of native memory, not counted in heap. [<a
+                    href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</li>
+            <li><strong>G1GC humongous allocations</strong>: Objects larger than half a G1 region (default 16MB) are
+                "humongous" and can cause premature OOM. Split large allocations or increase
+                <code>-XX:G1HeapRegionSize</code>. [<a
+                    href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</li>
+            <li><strong>finalize() delays GC</strong>: Objects with <code>finalize()</code> require two GC cycles.
+                Remove <code>finalize()</code> and use <code>try-with-resources</code> or <code>Cleaner</code> instead.
+                [<a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">src1</a>,
+                <a href="https://rollbar.com/blog/how-to-handle-outofmemoryerror-exceptions-in-java/">src5</a>]</li>
+            <li><strong>String.intern() memory leak</strong>: Aggressive <code>String.intern()</code> in Java 7+ stores
+                strings in the heap, which can cause exhaustion if interning unbounded user input. [<a
+                    href="https://sematext.com/blog/java-lang-outofmemoryerror/">src3</a>]</li>
+        </ul>
+    </section>
+
+    <!-- Diagnostic Commands -->
+    <section id="diagnostic-commands">
+        <h2>Diagnostic Commands</h2>
+        <pre><code class="language-bash"># === Identify the Java process ===
+jps -lv                               # list Java processes with JVM flags
+jcmd -l                               # alternative (modern JDKs)
+
+# === Heap overview ===
+jcmd &lt;pid&gt; GC.heap_info               # current heap usage (JDK 9+)
+jmap -heap &lt;pid&gt;                       # heap summary (JDK 8)
+
+# === Heap dump ===
+jcmd &lt;pid&gt; GC.heap_dump /tmp/heap.hprof  # recommended (JDK 9+)
+jmap -dump:format=b,file=/tmp/heap.hprof &lt;pid&gt;  # JDK 8+
+
+# === Object histogram (quick, no full dump) ===
+jmap -histo &lt;pid&gt; | head -30          # top objects by count
+jmap -histo:live &lt;pid&gt; | head -30     # forces GC first
+
+# === Thread analysis ===
+jstack &lt;pid&gt; &gt; /tmp/threads.txt       # full thread dump
+jstack &lt;pid&gt; | grep -c "^\""          # thread count
+
+# === GC stats ===
+jstat -gcutil &lt;pid&gt; 1000 10           # GC stats every 1s, 10 times
+# Columns: S0% S1% E% O% M% &mdash; Eden, Old, Metaspace
+
+# === Native memory (requires -XX:NativeMemoryTracking=summary) ===
+jcmd &lt;pid&gt; VM.native_memory summary   # heap, metaspace, threads, code cache
+
+# === JVM flags ===
+jcmd &lt;pid&gt; VM.flags                   # all active JVM flags
+jinfo -flags &lt;pid&gt;                    # alternative</code></pre>
+    </section>
+
+    <!-- Version Compatibility -->
+    <section id="version-compat">
+        <h2>Version History &amp; Compatibility</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Java Version</th>
+                        <th scope="col">Memory Model Change</th>
+                        <th scope="col">Key Flags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Java 7 and earlier</td>
+                        <td>PermGen for class metadata</td>
+                        <td><code>-XX:MaxPermSize=256m</code></td>
+                    </tr>
+                    <tr>
+                        <td>Java 8</td>
+                        <td>PermGen replaced by Metaspace (native memory)</td>
+                        <td><code>-XX:MaxMetaspaceSize=256m</code></td>
+                    </tr>
+                    <tr>
+                        <td>Java 9</td>
+                        <td>Unified GC logging (<code>-Xlog:gc*</code>)</td>
+                        <td><code>-Xlog:gc*:file=gc.log</code></td>
+                    </tr>
+                    <tr>
+                        <td>Java 10</td>
+                        <td>Container support default on</td>
+                        <td><code>-XX:MaxRAMPercentage=75.0</code></td>
+                    </tr>
+                    <tr>
+                        <td>Java 11 (LTS)</td>
+                        <td>ZGC experimental; Epsilon GC</td>
+                        <td><code>-XX:+UseZGC</code> (experimental)</td>
+                    </tr>
+                    <tr>
+                        <td>Java 15</td>
+                        <td>ZGC production-ready</td>
+                        <td><code>-XX:+UseZGC</code></td>
+                    </tr>
+                    <tr>
+                        <td>Java 17 (LTS)</td>
+                        <td>Strongly encapsulated JDK internals</td>
+                        <td><code>--add-opens</code> for reflection</td>
+                    </tr>
+                    <tr>
+                        <td>Java 21 (LTS)</td>
+                        <td>Virtual threads reduce native thread OOM</td>
+                        <td><code>-XX:+UseZGC -XX:+ZGenerational</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- When to Use -->
+    <section id="when-to-use">
+        <h2>When to Use / When Not to Use</h2>
+        <div class="table-wrap">
+            <table aria-label="Reference table">
+                <thead>
+                    <tr>
+                        <th scope="col">Use This Guide When</th>
+                        <th scope="col">Don't Use When</th>
+                        <th scope="col">Use Instead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>java.lang.OutOfMemoryError</code> in logs</td>
+                        <td><code>java.lang.StackOverflowError</code></td>
+                        <td>Increase <code>-Xss</code> or fix recursion</td>
+                    </tr>
+                    <tr>
+                        <td>JVM killed by OOM Killer (<code>dmesg | grep oom</code>)</td>
+                        <td>Slow GC pauses but no OOM</td>
+                        <td>GC tuning guide (G1GC/ZGC)</td>
+                    </tr>
+                    <tr>
+                        <td>Heap usage grows monotonically over time</td>
+                        <td>High CPU from GC but heap stable</td>
+                        <td>GC algorithm selection guide</td>
+                    </tr>
+                    <tr>
+                        <td>Application crashes after hours/days</td>
+                        <td>Immediate crash on startup</td>
+                        <td>Check classpath / dependency issues</td>
+                    </tr>
+                    <tr>
+                        <td>Container restarts with exit code 137</td>
+                        <td>Container restarts with exit code 1</td>
+                        <td>Application error logs</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Caveats -->
+    <section id="caveats">
+        <h2>Important Caveats</h2>
+        <ul>
+            <li><strong>Heap dump captures a moment in time</strong>: The dump only shows objects alive at capture.
+                Transient bursts may not appear. Use GC logs + heap dump together for a complete picture. [<a
+                    href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>]
+            </li>
+            <li><strong>Eclipse MAT vs VisualVM</strong>: MAT is far more powerful for leak analysis (Leak Suspects,
+                dominator tree, OQL). VisualVM is better for live monitoring. Use MAT for post-mortem, VisualVM for live
+                investigation. [<a href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>, <a
+                    href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html">src6</a>]
+            </li>
+            <li><strong>Container memory != JVM memory</strong>: A 4GB container must fit heap + Metaspace + threads +
+                direct buffers + code cache + GC overhead. Set <code>MaxRAMPercentage</code> to 75% of container limit.
+                [<a href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</li>
+            <li><strong>ZGC and Shenandoah change OOM behavior</strong>: Low-latency collectors may delay OOM but do not
+                prevent it. The heap dump is still the primary diagnostic tool. [<a
+                    href="https://blog.heaphero.io/types-of-outofmemoryerror/">src2</a>]</li>
+            <li><strong>Kubernetes OOMKilled (exit 137) vs Java OOM</strong>: If the pod is killed before the JVM throws
+                <code>OutOfMemoryError</code>, no heap dump is generated. Set
+                <code>resources.requests.memory</code> close to <code>resources.limits.memory</code>. [<a
+                    href="https://last9.io/blog/java-lang-outofmemoryerror/">src4</a>]</li>
+        </ul>
+    </section>
+
+    <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+        <a href="/software/debugging/java-gc-tuning/2026" data-relationship="related_to">Java Garbage Collection
+            Tuning</a>
+        <a href="/software/debugging/java-thread-dump-analysis/2026" data-relationship="related_to">Java Thread Dump
+            Analysis</a>
+        <a href="/software/debugging/postgresql-slow-queries/2026" data-relationship="related_to">PostgreSQL Slow Query
+            Diagnosis</a>
+    </nav>
+  </main>
+
+
+    <footer role="contentinfo" aria-label="Site footer">
+        <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and
+        researchers.<br>
+        Browse: Software &middot; Debugging<br>
+        <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API
+            Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+        For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all
+        knowledge units at $0.10/request.<br>
+        Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited
+        inline. <a href="/methodology">Verification methodology</a>.
+    </footer>
+
+    <script>window.__KL = { supabaseUrl: "https://qkinqevfhachlykmwnzs.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8" };</script>
+    <script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,34 @@
+START — Build fails
+├── Error message contains "Module not found" or "Can't resolve"?
+│   ├── Points to a local file (./src/foo)?
+│   │   ├── YES → Check file exists, verify casing (Linux is case-sensitive) [src4, src6]
+│   │   └── NO → Points to a package?
+│   │       ├── In node_modules? → npm install / check package.json [src6]
+│   │       ├── Node.js core module (crypto, path, fs, buffer)?
+│   │       │   ├── Webpack 5 → Add resolve.fallback config [src2]
+│   │       │   └── Vite → Module externalized; avoid in browser code [src1]
+│   │       └── Platform-specific binary (@rollup/rollup-*)?
+│   │           └── Delete lockfile + node_modules; reinstall on target platform [src7]
+│   │
+├── Error contains "Module build failed" or "Module parse failed"?
+│   ├── "Unknown word" or "Unexpected token" → Missing loader for file type [src4]
+│   ├── Loader exists but wrong version → npm update loader [src4]
+│   └── Syntax error in source → Check Babel/TS config, ensure transpilation covers node_modules if needed [src3]
+│   │
+├── Error contains "ERR_REQUIRE_ESM" or "import/export" mismatch?
+│   ├── Config file issue → Rename to .mjs/.mts or add "type": "module" [src1]
+│   └── Dependency issue → Check dependency's package.json exports field [src2]
+│   │
+├── Build succeeds but runtime error?
+│   ├── "process is not defined" → Add DefinePlugin for process.env [src2]
+│   ├── "Buffer is not defined" → Install buffer polyfill [src2]
+│   └── 404 on chunk files → Check publicPath / base config [src2, src5]
+│   │
+├── Build hangs or OOM?
+│   ├── Increase memory: NODE_OPTIONS=--max-old-space-size=8192 [src3]
+│   ├── Webpack → Enable persistent cache: cache.type = 'filesystem' [src3]
+│   └── Reduce scope: check resolve.modules, loader include paths [src3]
+│   │
+└── DEFAULT → Enable verbose output and read the full error:
+    ├── Webpack: npx webpack --stats=verbose [src3, src4]
+    └── Vite: npx vite build --debug [src1]

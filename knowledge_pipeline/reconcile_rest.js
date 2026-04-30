@@ -409,6 +409,13 @@ const INDEX_SECTIONS = [
   { category: 'personal-care', name: 'Personal Care', flat: true },
   { category: 'baby', name: 'Baby', flat: true },
   {
+    category: 'lifestyle',
+    name: 'Lifestyle',
+    groups: [
+      { name: 'Wedding', subcategories: ['wedding'] },
+    ]
+  },
+  {
     category: 'outdoor',
     name: 'Outdoor',
     groups: [
@@ -497,7 +504,7 @@ function regenerateIndex(cards) {
     if (sectionCards.length === 0) continue;
 
     categoryCount++;
-    html += `\n  <details class="category-group">\n  <summary><h3>${section.name} <small>(${sectionCards.length} unit${sectionCards.length === 1 ? '' : 's'})</small></h3></summary>\n`;
+    html += `\n  <details class="category-group">\n  <summary><span class="cat-name">${section.name} <small>(${sectionCards.length} unit${sectionCards.length === 1 ? '' : 's'})</small></span></summary>\n`;
 
     if (section.flat) {
       html += '  <ul>\n';
@@ -538,7 +545,7 @@ function regenerateIndex(cards) {
     for (const cat of unknownCats) {
       const catCards = unknownCards.filter(c => c.category === cat);
       categoryCount++;
-      html += `\n  <details class="category-group">\n  <summary><h3>${formatName(cat)} <small>(${catCards.length} unit${catCards.length === 1 ? '' : 's'})</small></h3></summary>\n`;
+      html += `\n  <details class="category-group">\n  <summary><span class="cat-name">${formatName(cat)} <small>(${catCards.length} unit${catCards.length === 1 ? '' : 's'})</small></span></summary>\n`;
       html += '  <ul>\n';
       for (const card of catCards) {
         html += cardLi(card);
@@ -764,6 +771,18 @@ function regenerateAiKnowledge(cards, feedbackCounts = {}) {
       versioning: true,
       question_suggestions: true,
       content_feedback: true,
+      agent_commerce: true,
+      structured_offers: true,
+      faq_schema: true,
+      aggregate_rating: true,
+      aria_landmarks: true,
+    },
+    agent_commerce: {
+      protocol: 'schema.org-offer; ucp',
+      checkout_via: 'affiliate-redirect',
+      redirect_path_pattern: '/go/{slug}',
+      currency: 'USD',
+      schemas_emitted_per_page: ['Product', 'Offer', 'Review', 'AggregateRating', 'FAQPage', 'BreadcrumbList', 'Dataset'],
     },
     filters: {
       domain: 'Filter by content domain (e.g., "consumer_electronics")',

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Startup Dashboard Architecture | knowledgelib.io</title>
+  <meta name="description" content="Software reference for architecting startup dashboards: five-layer data flow (ingestion, storage, transformation, serving, access control), ELT pipelines, PostgreSQL RLS, tiered architecture from free to enterprise. 6 sources, all cited. Verified 2026-03-13.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/startup-dashboard/startup-dashboard-architecture/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Startup Dashboard Architecture | knowledgelib.io">
+  <meta property="og:description" content="Software reference for architecting startup dashboards: five-layer data flow (ingestion, storage, transformation, serving, access control), ELT pipelines, PostgreSQL RLS, tiered architecture from free to enterprise. 6 sources, all cited. Verified 2026-03-13.">
+  <meta property="og:url" content="https://knowledgelib.io/software/startup-dashboard/startup-dashboard-architecture/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-13">
+  <meta property="article:modified_time" content="2026-03-13">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Startup Dashboard Architecture | knowledgelib.io">
+  <meta name="twitter:description" content="Software reference for architecting startup dashboards: five-layer data flow (ingestion, storage, transformation, serving, access control), ELT pipelines, PostgreSQL RLS, tiered architecture from free to enterprise. 6 sources, all cited. Verified 2026-03-13.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.87">
+  <meta name="ai:last_verified" content="2026-03-13">
+  <meta name="ai:domain" content="software/startup-dashboard/startup-dashboard-architecture">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I architect a startup dashboard — data flow between phases, storage, access control, system design?">
+  <meta name="ai:aliases" content="startup metrics dashboard system architecture; analytics dashboard data pipeline design; dashboard backend architecture for startups; real-time metrics infrastructure design">
+  <meta name="ai:raw" content="/api/v1/units/software/startup-dashboard/startup-dashboard-architecture/2026.md">
+  <meta name="ai:token_estimate" content="3200">
+  <meta name="ai:source_count" content="6">
+  <meta name="ai:freshness" content="2026-03-13">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-13">
+  <meta name="ai:inputs_needed" content="data_volume,update_frequency,tech_stack,team_sql_fluency">
+  <meta name="ai:constraints" content="Start with ELT not ETL; RBAC must be enforced at database layer (RLS); Dashboard queries must complete in under 3 seconds; Never expose production database to dashboard tools; Data freshness SLA must be defined per metric">
+  <meta name="ai:skip_this_unit_if" content="Need dashboard UI/UX design &rarr; software/startup-dashboard/executive-command-center-design/2026; Need pre-built dashboard templates &rarr; software/startup-dashboard/dashboard-template-library/2026; Need alert routing rules &rarr; software/startup-dashboard/notification-automation-rules/2026">
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,when_to_use,caveats">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"Startup Dashboard Architecture","headline":"Startup Dashboard Architecture","description":"Software reference for architecting startup dashboards with five-layer data flow, ELT pipelines, PostgreSQL RLS access control, and tiered architecture from free Supabase+Metabase to enterprise Snowflake+Looker.","keywords":["dashboard architecture","data pipeline","ELT","startup metrics","PostgreSQL RLS","system design"],"dateModified":"2026-03-13","datePublished":"2026-03-13","proficiencyLevel":"Expert","dependencies":"PostgreSQL 14+, Supabase or equivalent","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"Startup Dashboard Architecture","description":"System design reference for startup dashboard data infrastructure covering ingestion, storage, transformation, serving, and access control layers with implementation patterns for PostgreSQL, BigQuery, and Snowflake.","keywords":["dashboard architecture","data pipeline","ELT","startup metrics","access control"],"temporalCoverage":"2025/2026","dateModified":"2026-03-13","datePublished":"2026-03-13","license":"https://creativecommons.org/licenses/by-sa/4.0/","creator":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"},"publisher":{"@type":"Organization","name":"knowledgelib.io","url":"https://knowledgelib.io"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://knowledgelib.io/"},{"@type":"ListItem","position":2,"name":"Software","item":"https://knowledgelib.io/software/"},{"@type":"ListItem","position":3,"name":"Startup Dashboard","item":"https://knowledgelib.io/software/startup-dashboard/"},{"@type":"ListItem","position":4,"name":"Startup Dashboard Architecture"}]}</script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I architect a startup dashboard — data flow between phases, storage, access control, system design?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A startup dashboard architecture has five layers — ingestion, storage, transformation, serving, and access control — connected by ELT pipelines that load raw data first and transform in-warehouse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "startup metrics dashboard system architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A startup dashboard architecture has five layers — ingestion, storage, transformation, serving, and access control — connected by ELT pipelines that load raw data first and transform in-warehouse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "analytics dashboard data pipeline design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A startup dashboard architecture has five layers — ingestion, storage, transformation, serving, and access control — connected by ELT pipelines that load raw data first and transform in-warehouse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "dashboard backend architecture for startups",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A startup dashboard architecture has five layers — ingestion, storage, transformation, serving, and access control — connected by ELT pipelines that load raw data first and transform in-warehouse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "real-time metrics infrastructure design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A startup dashboard architecture has five layers — ingestion, storage, transformation, serving, and access control — connected by ELT pipelines that load raw data first and transform in-warehouse."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>Startup Dashboard Architecture</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I architect a startup dashboard — data flow between phases, storage, access control, system design?</h2>
+
+  <aside class="unit-meta" data-card-id="software/startup-dashboard/startup-dashboard-architecture/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.87 out of 1">0.87</span></span>
+    <span><strong>Sources:</strong> 6</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-13</span></span>
+  </aside>
+
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A startup dashboard architecture has five layers &mdash; ingestion, storage, transformation, serving, and access control &mdash; connected by ELT pipelines that load raw data first and transform in-warehouse.</li>
+    <li><strong>Key tool/command</strong>: <code>CREATE MATERIALIZED VIEW dashboard_metrics AS SELECT ...</code> &mdash; pre-aggregate metrics for sub-3s query performance.</li>
+    <li><strong>Watch out for</strong>: Exposing production database directly to BI tools &mdash; use read replicas or a dedicated analytics schema with RLS.</li>
+    <li><strong>Works with</strong>: Supabase/PostgreSQL + Metabase (free), BigQuery + Looker Studio (free), Snowflake + Preset (paid).</li>
+  </ul>
+  </section>
+
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Use ELT not ETL. Load raw data first, transform in the warehouse. [<a href="https://www.getdbt.com/blog/data-integration">src5</a>]</li>
+    <li>Enforce RBAC at the database layer (RLS), not just the application layer. [<a href="https://supabase.com/docs/guides/database/postgres/custom-claims-and-role-based-access-control-rbac">src4</a>]</li>
+    <li>Dashboard queries must complete in under 3 seconds. Pre-aggregate with materialized views.</li>
+    <li>Never expose the production database directly to dashboard tools. [<a href="https://supabase.com/docs/guides/database/metabase">src6</a>]</li>
+    <li>Explicitly define data freshness SLA per metric. [<a href="https://groupbwt.com/glossary/data-architecture/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Layer</th><th scope="col">Purpose</th><th scope="col">Startup Stack (Free)</th><th scope="col">Growth Stack (Paid)</th><th scope="col">Enterprise Stack</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Ingestion</td><td>Pull data from sources</td><td>Supabase webhooks + cron</td><td>Airbyte / Fivetran</td><td>Fivetran + custom connectors</td></tr>
+      <tr><td>Storage</td><td>Raw data warehouse</td><td>PostgreSQL (Supabase)</td><td>BigQuery / Snowflake</td><td>Snowflake + S3 data lake</td></tr>
+      <tr><td>Transformation</td><td>Clean, aggregate, model</td><td>SQL views + pg_cron</td><td>dbt Core</td><td>dbt Cloud + Great Expectations</td></tr>
+      <tr><td>Serving</td><td>Expose to dashboards</td><td>Supabase API + Metabase</td><td>Metabase Cloud / Preset</td><td>Looker / Tableau / custom API</td></tr>
+      <tr><td>Access Control</td><td>RBAC + data isolation</td><td>PostgreSQL RLS</td><td>RLS + application RBAC</td><td>RLS + SSO + audit logging</td></tr>
+      <tr><td>Orchestration</td><td>Schedule and monitor</td><td>pg_cron / GitHub Actions</td><td>Dagster / Prefect</td><td>Airflow / Dagster Cloud</td></tr>
+      <tr><td>Monitoring</td><td>Pipeline health</td><td>Supabase logs + Slack</td><td>Metabase alerts</td><td>DataDog + PagerDuty</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Choose your architecture tier
+├── Data volume &lt; 1M rows AND team has basic SQL?
+│   ├── YES → TIER 1: PostgreSQL-native (Supabase + Metabase)
+│   └── NO ↓
+├── Data volume 1M-100M rows OR need multi-source integration?
+│   ├── YES → TIER 2: Warehouse-based (BigQuery/Snowflake + dbt + Metabase)
+│   └── NO ↓
+├── Data volume &gt; 100M rows OR need real-time streaming?
+│   ├── YES → TIER 3: Full data platform (warehouse + streaming + orchestration)
+│   └── NO ↓
+└── No existing data infrastructure?
+    └── Start with TIER 1, migrate when performance degrades
+
+Data freshness:
+├── Weekly metrics → Batch: nightly/weekly SQL transforms
+├── Daily metrics → Scheduled: hourly/daily dbt runs
+└── Real-time metrics → Streaming: Supabase Realtime / Kafka</code></pre>
+  </section>
+
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Design the Data Model</h3>
+  <p>Separate operational data (transactional) from analytical data (aggregated). Create materialized views for pre-aggregated dashboard metrics with scheduled refresh via pg_cron. [<a href="https://groupbwt.com/glossary/data-architecture/">src1</a>]</p>
+  <pre><code class="language-sql">CREATE MATERIALIZED VIEW daily_metrics AS
+SELECT date_trunc('day', created_at) AS day,
+  event_type, COUNT(*) AS event_count,
+  COUNT(DISTINCT user_id) AS unique_users
+FROM events GROUP BY 1, 2;
+
+SELECT cron.schedule('refresh-daily-metrics',
+  '0 2 * * *', 'REFRESH MATERIALIZED VIEW CONCURRENTLY daily_metrics');</code></pre>
+  <p><strong>Verify</strong>: Schema supports all command center KPIs. Materialized views cover frequent queries.</p>
+
+  <h3>2. Build the Ingestion Layer</h3>
+  <p>Connect external data sources using ELT: load raw data first, transform after. Use webhooks for real-time sources (Stripe), REST API polling for CRM/analytics, and client SDKs for product events. [<a href="https://www.rudderstack.com/blog/data-pipeline-architecture/">src3</a>] [<a href="https://www.getdbt.com/blog/data-integration">src5</a>]</p>
+  <p><strong>Verify</strong>: All data sources connected, raw data landing in staging tables at expected frequency.</p>
+
+  <h3>3. Build the Transformation Layer</h3>
+  <p>Transform raw data into dashboard-ready metrics. Use simple views for real-time low-complexity queries, materialized views for expensive aggregations, and dbt models for complex multi-source business logic. [<a href="https://www.getdbt.com/blog/data-integration">src5</a>]</p>
+  <p><strong>Verify</strong>: All KPIs computable from transformation layer. Query time &lt; 3 seconds.</p>
+
+  <h3>4. Implement Access Control</h3>
+  <p>Enforce data security using PostgreSQL Row Level Security (RLS) with role-based policies. Create separate roles for CEO, department heads, managers, board, and all-hands with appropriate data visibility. [<a href="https://supabase.com/docs/guides/database/postgres/custom-claims-and-role-based-access-control-rbac">src4</a>]</p>
+  <pre><code class="language-sql">ALTER TABLE revenue_details ENABLE ROW LEVEL SECURITY;
+CREATE POLICY dept_isolation ON revenue_details
+  FOR SELECT USING (department = current_setting('app.user_department'));</code></pre>
+  <p><strong>Verify</strong>: Each access tier tested, RLS policies enforced, no data leakage.</p>
+
+  <h3>5. Set Up the Serving Layer</h3>
+  <p>Connect transformation layer to dashboard tools. For free: Supabase + Metabase with a dedicated read-only user. For custom: API endpoints with caching. [<a href="https://supabase.com/docs/guides/database/metabase">src6</a>]</p>
+  <p><strong>Verify</strong>: Dashboard tool connected, all metrics rendering, query performance &lt; 3 seconds.</p>
+
+  <h3>6. Configure Monitoring and Alerting</h3>
+  <p>Monitor data freshness, row count anomalies, materialized view refresh status, query performance, and storage growth. Alert on stale data (&gt; 2x expected interval), count drops (&gt; 50%), and refresh failures. [<a href="https://www.rudderstack.com/blog/data-pipeline-architecture/">src3</a>]</p>
+  <p><strong>Verify</strong>: Monitoring queries running, alert channels configured, test alert sent.</p>
+  </section>
+
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>PostgreSQL: Complete Dashboard Schema</h3>
+  <pre><code class="language-sql">-- Pre-aggregated KPI snapshot for sub-3s queries
+CREATE SCHEMA IF NOT EXISTS analytics;
+CREATE MATERIALIZED VIEW analytics.kpi_snapshot AS
+SELECT CURRENT_DATE AS snapshot_date,
+  (SELECT SUM(amount)/100 FROM subscriptions
+   WHERE status='active') AS mrr,
+  (SELECT COUNT(*) FROM users
+   WHERE created_at &gt;= CURRENT_DATE - 30) AS new_users_30d,
+  (SELECT COUNT(DISTINCT user_id) FROM events
+   WHERE created_at &gt;= CURRENT_DATE - 1) AS dau;
+SELECT cron.schedule('kpi-refresh', '0 * * * *',
+  'REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.kpi_snapshot');</code></pre>
+
+  <h3>JavaScript: Real-Time Dashboard Subscriber</h3>
+  <pre><code class="language-javascript">// Subscribe to real-time metric changes via Supabase
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const channel = supabase
+  .channel('dashboard-metrics')
+  .on('postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'events' },
+    (payload) =&gt; updateDashboard(payload.new))
+  .subscribe();</code></pre>
+  </section>
+
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Querying production database for dashboards</h3>
+  <p>Running analytical queries against the production transactional database. Dashboard queries compete with application queries, degrading both. [<a href="https://supabase.com/docs/guides/database/metabase">src6</a>]</p>
+
+  <h3>Correct: Separate analytics layer</h3>
+  <p>Use read replicas, a dedicated analytics schema, or materialized views. Production handles transactions; analytics handles dashboard queries.</p>
+
+  <h3>Wrong: ETL with premature transformation</h3>
+  <p>Transforming data during extraction before loading. When requirements change, source data is gone and the pipeline must be rebuilt.</p>
+
+  <h3>Correct: ELT — load raw, transform in warehouse</h3>
+  <p>Load raw data first. Transform using SQL views or dbt models. Raw data is always available for new analyses. [<a href="https://www.getdbt.com/blog/data-integration">src5</a>]</p>
+
+  <h3>Wrong: Application-layer-only access control</h3>
+  <p>RBAC only in frontend or API code. Anyone with a database connection bypasses all restrictions.</p>
+
+  <h3>Correct: Database-layer RLS + application RBAC</h3>
+  <p>Enforce RLS at PostgreSQL level. Database prevents unauthorized access even if application is bypassed. [<a href="https://supabase.com/docs/guides/database/postgres/custom-claims-and-role-based-access-control-rbac">src4</a>]</p>
+  </section>
+
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Materialized views not refreshed</strong>: Dashboard shows stale data because refresh cron failed silently. Fix: monitor refresh job status, alert on failure. [<a href="https://www.rudderstack.com/blog/data-pipeline-architecture/">src3</a>]</li>
+    <li><strong>No data freshness indicator</strong>: Users trust numbers without knowing data age. Fix: display "last updated" derived from actual data, not refresh schedule.</li>
+    <li><strong>Over-engineering early</strong>: Full Airflow + Snowflake + dbt for 10-person startup with 100K rows. Fix: start with PostgreSQL views and Metabase. [<a href="https://groupbwt.com/glossary/data-architecture/">src1</a>]</li>
+    <li><strong>Missing data validation</strong>: Dashboard shows impossible values. Fix: add CHECK constraints and validation triggers at database level.</li>
+    <li><strong>Single point of failure</strong>: One pipeline failure takes down the entire dashboard. Fix: separate critical metric pipelines from nice-to-have metrics. [<a href="https://www.rudderstack.com/blog/data-pipeline-architecture/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Designing data infrastructure for a dashboard</td><td>Need dashboard UI/UX design</td><td>executive-command-center-design</td></tr>
+      <tr><td>Setting up data pipelines from SaaS tools</td><td>Need pre-built dashboard templates</td><td>dashboard-template-library</td></tr>
+      <tr><td>Implementing multi-role access control</td><td>Need alert routing rules</td><td>notification-automation-rules</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Start with simplest architecture (Tier 1: PostgreSQL + Metabase) and add complexity only when performance demands it</li>
+    <li>Materialized view refresh rewrites the entire view &mdash; for large datasets, consider incremental materialization</li>
+    <li>Supabase free tier has connection limits (50 concurrent) and storage limits (500MB) that may be insufficient for analytics</li>
+    <li>Real-time dashboards via WebSocket cost more than polling &mdash; use real-time only for metrics that genuinely require it</li>
+  </ul>
+  </section>
+
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/startup-dashboard/executive-command-center-design/2026" data-relationship="related_to">Executive Command Center Design</a>
+    <a href="/software/startup-dashboard/data-integration-architecture/2026" data-relationship="related_to">Data Integration Architecture</a>
+    <a href="/software/startup-dashboard/notification-automation-rules/2026" data-relationship="solves">Notification Automation Rules</a>
+    <a href="/software/startup-dashboard/dashboard-template-library/2026" data-relationship="related_to">Dashboard Template Library</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> &mdash; structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Startup Dashboard<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> &mdash; query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

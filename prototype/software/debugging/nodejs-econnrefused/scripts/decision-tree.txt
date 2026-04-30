@@ -1,0 +1,31 @@
+START
+├── Can you reach the service from the SAME machine (curl/nc)?
+│   ├── NO → Service is not running or port is wrong
+│   │   ├── Check: is the service process running? (ps aux | grep service)
+│   │   │   ├── NOT RUNNING → Start it [src1]
+│   │   │   └── RUNNING → Check which port it's listening on (netstat -tuln) [src2]
+│   │   └── Port conflict? → Another process using the port (lsof -i :PORT)
+│   └── YES → Network/config issue between Node.js and the service ↓
+├── Is Node.js running inside a Docker container?
+│   ├── YES → Are you using "localhost" or "127.0.0.1" as host?
+│   │   ├── YES → Change to Docker service name from docker-compose.yml [src3, src4]
+│   │   └── NO → Check both containers are on the same Docker network [src3]
+│   └── NO ↓
+├── Is Node.js running in Kubernetes?
+│   ├── YES → Use service-name.namespace.svc.cluster.local as host [src3]
+│   └── NO ↓
+├── Does the service bind to 0.0.0.0 or 127.0.0.1?
+│   ├── 127.0.0.1 → Change to 0.0.0.0 if external access needed [src3]
+│   └── 0.0.0.0 ↓
+├── Is there a firewall between Node.js and the service?
+│   ├── YES → Open the port in firewall/security group [src2]
+│   └── NO ↓
+├── Does the error happen only on first connection attempt?
+│   ├── YES → Service still starting. Add retry with backoff [src5]
+│   └── NO ↓
+├── Does the error show ::1 (IPv6) but service listens on 127.0.0.1 (IPv4)?
+│   ├── YES → Force IPv4: host: '127.0.0.1' or autoSelectFamily: false [src1, src6]
+│   └── NO ↓
+└── Does it happen under load?
+    ├── YES → Connection pool exhaustion. Increase max, fix leaks [src7]
+    └── NO → Check environment variables for host/port config

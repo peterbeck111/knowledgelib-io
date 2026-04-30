@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes Reference: Persistent Volume Claims | knowledgelib.io</title>
+  <meta name="description" content="Complete Kubernetes PersistentVolumeClaim reference: dynamic provisioning with StorageClass, access modes (RWO/ROX/RWX/RWOP), volume expansion,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-persistent-volumes/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes Reference: Persistent Volume Claims | knowledgelib.io">
+  <meta property="og:description" content="Complete Kubernetes PersistentVolumeClaim reference: dynamic provisioning with StorageClass, access modes (RWO/ROX/RWX/RWOP), volume expansion, VolumeSnapshots, cloning, StatefulSet volumeClaimTemplates, reclaim policies, and troubleshooting. 8 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-persistent-volumes/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes Reference: Persistent Volume Claims | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Kubernetes PersistentVolumeClaim reference: dynamic provisioning with StorageClass, access modes (RWO/ROX/RWX/RWOP), volume expansion, VolumeSnapshots, cloning, StatefulSet volumeClaimTemplates, reclaim policies, and troubleshooting. 8 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes Persistent Volume Claims">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Kubernetes reference: Persistent Volume Claims">
+  <meta name="ai:aliases" content="Kubernetes PersistentVolumeClaim PVC reference; how to use persistent storage in Kubernetes; Kubernetes PV and PVC explained; k8s StorageClass dynamic provisioning; Kubernetes volume access modes RWO RWX; how to expand a PVC in Kubernetes; Kubernetes VolumeSnapshot and PVC cloning; StatefulSet volumeClaimTemplates">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-persistent-volumes/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="storage_backend,access_pattern,provisioning_model">
+  <meta name="ai:constraints" content="PVC-to-PV binding is one-to-one and exclusive; Volume expansion requires allowVolumeExpansion: true on StorageClass; Recycle reclaim policy is DEPRECATED since K8s 1.22; VolumeSnapshot requires CSI driver snapshot support + snapshot-controller; Never force-delete a PVC while a Pod is writing">
+  <meta name="ai:skip_this_unit_if" content="Running a StatefulSet with per-replica storage and need help with headless services and operators -> software/devops/k8s-statefulset-databases/2026; Using ephemeral storage like emptyDir or configMap -> Kubernetes volumes documentation; Deploying stateless applications -> software/devops/k8s-deployment-service-ingress/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes Reference: Persistent Volume Claims",
+    "headline": "Kubernetes Reference: Persistent Volume Claims",
+    "description": "Complete Kubernetes PersistentVolumeClaim reference covering dynamic provisioning with StorageClass, access modes (RWO, ROX, RWX, RWOP), volume expansion, VolumeSnapshots, PVC cloning, StatefulSet volumeClaimTemplates, reclaim policies, CSI drivers, and troubleshooting common issues.",
+    "keywords": ["Kubernetes", "PersistentVolumeClaim", "PVC", "PersistentVolume", "StorageClass", "CSI", "VolumeSnapshot", "dynamic provisioning", "volume expansion", "StatefulSet"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.26+, CSI driver (for snapshots: snapshot-controller + CRDs)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Persistent Volumes",
+        "url": "https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Dynamic Volume Provisioning",
+        "url": "https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Volume Snapshots",
+        "url": "https://kubernetes.io/docs/concepts/storage/volume-snapshots/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Volume Expansion Now A Stable Feature",
+        "url": "https://kubernetes.io/blog/2022/05/05/volume-expansion-ga/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Change the Reclaim Policy of a PersistentVolume",
+        "url": "https://kubernetes.io/docs/tasks/administer-cluster/change-pv-reclaim-policy/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes CSI Developer Documentation",
+        "url": "https://kubernetes-csi.github.io/docs/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "GKE Persistent Volumes and Provisioning",
+        "url": "https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes"
+      },
+      {
+        "@type": "WebPage",
+        "name": "StatefulSets",
+        "url": "https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes Reference: Persistent Volume Claims",
+    "description": "Structured knowledge unit covering Kubernetes PersistentVolumeClaims, dynamic provisioning, StorageClass, access modes, volume expansion, VolumeSnapshots, PVC cloning, StatefulSet volumeClaimTemplates, and reclaim policies.",
+    "keywords": ["Kubernetes", "PersistentVolumeClaim", "PVC", "StorageClass", "CSI", "VolumeSnapshot"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes"},
+      {"@type": "Organization", "name": "Kubernetes CSI"},
+      {"@type": "Organization", "name": "Google Cloud"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes Persistent Volume Claims" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kubernetes reference: Persistent Volume Claims",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes PersistentVolumeClaim PVC reference",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "how to use persistent storage in Kubernetes",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes PV and PVC explained",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "k8s StorageClass dynamic provisioning",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes volume access modes RWO RWX",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes Reference: Persistent Volume Claims</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Kubernetes reference: Persistent Volume Claims</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-persistent-volumes/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: PersistentVolumeClaims (PVCs) are the standard Kubernetes abstraction for requesting durable block or file storage; pair them with a StorageClass for automatic dynamic provisioning so you never pre-create PVs by hand.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl get pvc -A</code> and <code>kubectl describe pvc &lt;name&gt;</code> to inspect binding status, capacity, and events.</li>
+    <li><strong>Watch out for</strong>: PVCs stuck in <code>Pending</code> -- 90% of the time the cause is a missing or misconfigured StorageClass, an access-mode mismatch, or <code>WaitForFirstConsumer</code> binding with no Pod scheduled yet.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.26+ (all features GA); CSI drivers required for snapshots, cloning, and RWOP access mode.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>PVC-to-PV binding is <strong>one-to-one and exclusive</strong> -- once bound, no other PVC can claim that PV until the original PVC is deleted and the PV is released/recycled. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</li>
+    <li>Volume expansion requires <code>allowVolumeExpansion: true</code> on the StorageClass -- attempting to resize a PVC whose class lacks this flag produces an error. [<a href="https://kubernetes.io/blog/2022/05/05/volume-expansion-ga/">src4</a>]</li>
+    <li><code>ReadWriteOncePod</code> (RWOP) access mode requires Kubernetes 1.29+ and a CSI driver that supports it -- in-tree plugins do not support RWOP. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</li>
+    <li><code>Recycle</code> reclaim policy is <strong>deprecated</strong> since Kubernetes 1.22 -- never use it in new deployments; use <code>Delete</code> or <code>Retain</code> with dynamic provisioning. [<a href="https://kubernetes.io/docs/tasks/administer-cluster/change-pv-reclaim-policy/">src5</a>]</li>
+    <li>VolumeSnapshot requires three cluster-wide components: snapshot CRDs, snapshot-controller, and a CSI driver that implements the snapshot interface. [<a href="https://kubernetes.io/docs/concepts/storage/volume-snapshots/">src3</a>]</li>
+    <li>Never delete a PVC with <code>kubectl delete pvc --force</code> while a Pod is writing -- the <code>kubernetes.io/pvc-protection</code> finalizer exists to prevent data loss. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Resource</th><th scope="col">API Version</th><th scope="col">Key Fields</th><th scope="col">Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>PersistentVolume</code></td><td><code>v1</code></td><td><code>spec.capacity.storage</code>, <code>spec.accessModes</code>, <code>spec.persistentVolumeReclaimPolicy</code>, <code>spec.storageClassName</code></td><td>Cluster-wide storage resource</td></tr>
+      <tr><td><code>PersistentVolumeClaim</code></td><td><code>v1</code></td><td><code>spec.accessModes</code>, <code>spec.resources.requests.storage</code>, <code>spec.storageClassName</code>, <code>spec.selector</code></td><td>Namespace-scoped storage request</td></tr>
+      <tr><td><code>StorageClass</code></td><td><code>storage.k8s.io/v1</code></td><td><code>provisioner</code>, <code>parameters</code>, <code>reclaimPolicy</code>, <code>volumeBindingMode</code>, <code>allowVolumeExpansion</code></td><td>Template for dynamic provisioning</td></tr>
+      <tr><td><code>VolumeSnapshot</code></td><td><code>snapshot.storage.k8s.io/v1</code></td><td><code>spec.source.persistentVolumeClaimName</code>, <code>spec.volumeSnapshotClassName</code></td><td>Point-in-time volume copy</td></tr>
+      <tr><td><code>VolumeSnapshotClass</code></td><td><code>snapshot.storage.k8s.io/v1</code></td><td><code>driver</code>, <code>deletionPolicy</code>, <code>parameters</code></td><td>Snapshot provisioning template</td></tr>
+      <tr><td><code>VolumeSnapshotContent</code></td><td><code>snapshot.storage.k8s.io/v1</code></td><td><code>spec.source.volumeHandle</code>, <code>spec.driver</code>, <code>spec.deletionPolicy</code></td><td>Actual snapshot on storage backend</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Access Mode</th><th scope="col">Short</th><th scope="col">Nodes</th><th scope="col">Pods</th><th scope="col">Typical Use Case</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ReadWriteOnce</code></td><td>RWO</td><td>1 node</td><td>Any pods on that node</td><td>Databases, single-writer apps</td></tr>
+      <tr><td><code>ReadOnlyMany</code></td><td>ROX</td><td>Many nodes</td><td>Many pods (read-only)</td><td>Shared config, static assets</td></tr>
+      <tr><td><code>ReadWriteMany</code></td><td>RWX</td><td>Many nodes</td><td>Many pods (read-write)</td><td>Shared filesystem (NFS, CephFS, EFS)</td></tr>
+      <tr><td><code>ReadWriteOncePod</code></td><td>RWOP</td><td>1 node</td><td>Exactly 1 pod</td><td>Exclusive writer (etcd, single-leader)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Reclaim Policy</th><th scope="col">Behavior After PVC Deletion</th><th scope="col">Default For</th><th scope="col">Recommended Use</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Delete</code></td><td>PV and underlying storage asset deleted</td><td>Dynamic provisioning</td><td>Dev/test, ephemeral workloads</td></tr>
+      <tr><td><code>Retain</code></td><td>PV marked <code>Released</code>, data preserved</td><td>Static provisioning</td><td>Production data, compliance</td></tr>
+      <tr><td><code>Recycle</code> (deprecated)</td><td><code>rm -rf /thevolume/*</code>, PV reused</td><td>Legacy clusters</td><td>Never -- use dynamic provisioning</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Volume Binding Mode</th><th scope="col">When PV is Bound</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Immediate</code></td><td>As soon as PVC is created</td><td>Single-zone clusters, pre-provisioned PVs</td></tr>
+      <tr><td><code>WaitForFirstConsumer</code></td><td>When Pod using PVC is scheduled</td><td>Multi-zone clusters (zone-aware provisioning)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Do you need persistent storage in Kubernetes?
+├── Is the data ephemeral (survives Pod restart but not Pod deletion)?
+│   ├── YES → Use emptyDir volume (not a PVC)
+│   └── NO ↓
+├── Do you need storage that survives Pod deletion and rescheduling?
+│   ├── YES ↓
+│   └── NO → Use emptyDir or configMap/secret volumes
+├── Do multiple Pods on different nodes need read-write access?
+│   ├── YES → Use RWX with NFS/CephFS/EFS StorageClass
+│   └── NO ↓
+├── Does exactly one Pod need exclusive write access?
+│   ├── YES + K8s 1.29+ → Use RWOP access mode
+│   ├── YES + K8s &lt;1.29 → Use RWO access mode
+│   └── NO ↓
+├── Are you running a StatefulSet with per-replica storage?
+│   ├── YES → Use volumeClaimTemplates (see StatefulSet section)
+│   └── NO → Create a standalone PVC and reference in Pod spec
+├── Is your cluster multi-zone?
+│   ├── YES → Set volumeBindingMode: WaitForFirstConsumer
+│   └── NO → Immediate binding is fine
+└── Do you need snapshots or cloning?
+    ├── YES → Verify CSI driver supports snapshots + install snapshot-controller
+    └── NO → Standard PVC workflow</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create a StorageClass for dynamic provisioning</h3>
+  <p>Define a StorageClass that tells Kubernetes which CSI provisioner to use and how volumes should behave. Most managed Kubernetes clusters come with a default StorageClass, but creating explicit ones gives you control over performance tiers and reclaim behavior. [<a href="https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/">src2</a>]</p>
+  <pre><code class="language-yaml">apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd
+provisioner: ebs.csi.aws.com          # AWS EBS CSI driver
+parameters:
+  type: gp3                            # General Purpose SSD
+  fsType: ext4
+reclaimPolicy: Retain                  # Keep data after PVC deletion
+volumeBindingMode: WaitForFirstConsumer # Zone-aware provisioning
+allowVolumeExpansion: true             # Allow PVC resize</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get sc fast-ssd</code> → shows the StorageClass with PROVISIONER and RECLAIMPOLICY columns.</p>
+
+  <h3>2. Create a PersistentVolumeClaim</h3>
+  <p>A PVC requests storage from the cluster. With dynamic provisioning, Kubernetes automatically creates a matching PV. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 20Gi</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get pvc app-data</code> → STATUS should show <code>Bound</code> (or <code>Pending</code> if using <code>WaitForFirstConsumer</code> until a Pod is scheduled).</p>
+
+  <h3>3. Mount the PVC in a Pod</h3>
+  <p>Reference the PVC in the Pod's <code>volumes</code> section and mount it into a container. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  containers:
+    - name: app
+      image: nginx:1.27
+      volumeMounts:
+        - mountPath: /data
+          name: storage
+  volumes:
+    - name: storage
+      persistentVolumeClaim:
+        claimName: app-data</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl exec app -- df -h /data</code> → shows the mounted filesystem with the requested capacity.</p>
+
+  <h3>4. Expand a PVC (online resize)</h3>
+  <p>To increase storage, patch the PVC's <code>spec.resources.requests.storage</code> field. Most CSI drivers support online expansion without Pod restart. [<a href="https://kubernetes.io/blog/2022/05/05/volume-expansion-ga/">src4</a>]</p>
+  <pre><code class="language-bash">kubectl patch pvc app-data -p '{"spec":{"resources":{"requests":{"storage":"50Gi"}}}}'</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get pvc app-data</code> → CAPACITY shows <code>50Gi</code>. Check events: <code>kubectl describe pvc app-data | grep -i resize</code> → shows <code>FileSystemResizeSuccessful</code>.</p>
+
+  <h3>5. Create a VolumeSnapshot</h3>
+  <p>Take a point-in-time snapshot of an existing PVC. Requires snapshot-controller and CSI driver snapshot support. [<a href="https://kubernetes.io/docs/concepts/storage/volume-snapshots/">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: app-data-snap-20260227
+spec:
+  volumeSnapshotClassName: csi-aws-snapclass
+  source:
+    persistentVolumeClaimName: app-data</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get volumesnapshot app-data-snap-20260227</code> → READYTOUSE should show <code>true</code>.</p>
+
+  <h3>6. Restore a PVC from a snapshot</h3>
+  <p>Create a new PVC with the <code>dataSource</code> field pointing to an existing VolumeSnapshot. The new volume is pre-populated with the snapshot data. [<a href="https://kubernetes.io/docs/concepts/storage/volume-snapshots/">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data-restored
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 20Gi
+  dataSource:
+    name: app-data-snap-20260227
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get pvc app-data-restored</code> → STATUS shows <code>Bound</code> and the data matches the snapshot contents.</p>
+
+  <h3>7. Use volumeClaimTemplates in a StatefulSet</h3>
+  <p>For StatefulSets, each replica automatically gets its own PVC via <code>volumeClaimTemplates</code>. PVCs are named <code>{template-name}-{pod-name}</code> (e.g., <code>data-myapp-0</code>). [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src8</a>]</p>
+  <pre><code class="language-yaml">apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  serviceName: myapp
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: myapp:latest
+          volumeMounts:
+            - mountPath: /data
+              name: data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: fast-ssd
+        resources:
+          requests:
+            storage: 10Gi</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get pvc -l app=myapp</code> → shows <code>data-myapp-0</code>, <code>data-myapp-1</code>, <code>data-myapp-2</code>, all <code>Bound</code>.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Static PV with NFS backend</h3>
+  <pre><code class="language-yaml"># Input:  NFS server at 10.0.0.100, export path /exports/data
+# Output: PV available for PVC binding with RWX access
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  nfs:
+    server: 10.0.0.100
+    path: /exports/data</code></pre>
+
+  <h3>YAML: PVC with label selector for static binding</h3>
+  <pre><code class="language-yaml"># Input:  Pre-created PV with label tier=fast
+# Output: PVC bound to a specific PV via selector
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fast-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: ""
+  selector:
+    matchLabels:
+      tier: fast</code></pre>
+
+  <h3>YAML: VolumeSnapshotClass for AWS EBS</h3>
+  <pre><code class="language-yaml"># Input:  AWS EBS CSI driver installed
+# Output: Snapshot class for creating EBS snapshots
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: csi-aws-snapclass
+driver: ebs.csi.aws.com
+deletionPolicy: Retain</code></pre>
+
+  <h3>Bash: Clone a PVC (volume cloning)</h3>
+  <pre><code class="language-bash"># Input:  Existing PVC "source-pvc" in namespace "default"
+# Output: New PVC "clone-pvc" with identical data
+cat &lt;&lt;'EOF' | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clone-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 20Gi
+  dataSource:
+    name: source-pvc
+    kind: PersistentVolumeClaim
+EOF</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Hardcoding storageClassName to empty string unintentionally</h3>
+  <pre><code class="language-yaml"># BAD -- storageClassName: "" disables dynamic provisioning entirely
+# The PVC will never bind unless a matching PV exists with storageClassName: ""
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 10Gi</code></pre>
+
+  <h3>Correct: Omit storageClassName to use cluster default or specify explicitly</h3>
+  <pre><code class="language-yaml"># GOOD -- uses the cluster's default StorageClass for dynamic provisioning
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi</code></pre>
+
+  <h3>Wrong: Using Immediate binding in multi-zone clusters</h3>
+  <pre><code class="language-yaml"># BAD -- PV may be provisioned in zone-a but Pod scheduled in zone-b
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: bad-multizone
+provisioner: ebs.csi.aws.com
+volumeBindingMode: Immediate</code></pre>
+
+  <h3>Correct: Use WaitForFirstConsumer for multi-zone awareness</h3>
+  <pre><code class="language-yaml"># GOOD -- PV is provisioned in the same zone as the scheduled Pod
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: good-multizone
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer</code></pre>
+
+  <h3>Wrong: Expecting PVCs to be deleted when StatefulSet is deleted</h3>
+  <pre><code class="language-bash"># BAD -- deleting a StatefulSet does NOT delete its PVCs
+# Orphaned PVCs accumulate storage cost silently
+kubectl delete statefulset myapp
+# PVCs data-myapp-0, data-myapp-1, data-myapp-2 still exist</code></pre>
+
+  <h3>Correct: Explicitly clean up PVCs after StatefulSet deletion</h3>
+  <pre><code class="language-bash"># GOOD -- delete PVCs explicitly after confirming data is backed up
+kubectl delete statefulset myapp
+kubectl delete pvc -l app=myapp  # Only after verifying backups</code></pre>
+
+  <h3>Wrong: Trying to re-bind a Released PV to a new PVC</h3>
+  <pre><code class="language-yaml"># BAD -- a PV in Released phase still has a claimRef to the old PVC
+# New PVCs will NOT automatically bind to a Released PV</code></pre>
+
+  <h3>Correct: Clear claimRef to make a Retained PV available again</h3>
+  <pre><code class="language-bash"># GOOD -- remove the old claimRef so the PV becomes Available
+kubectl patch pv my-pv -p '{"spec":{"claimRef": null}}'</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>PVC stuck in Pending (no StorageClass)</strong>: The PVC references a <code>storageClassName</code> that does not exist or no default StorageClass is set. Fix: <code>kubectl get sc</code> to list available classes. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</li>
+    <li><strong>PVC stuck in Pending (WaitForFirstConsumer)</strong>: With <code>WaitForFirstConsumer</code> binding mode, the PVC stays <code>Pending</code> until a Pod that uses it is scheduled. This is expected behavior. Fix: Create a Pod that references the PVC. [<a href="https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/">src2</a>]</li>
+    <li><strong>Volume node affinity conflict</strong>: The PV was provisioned in a different zone than where the Pod is scheduled. Fix: Use <code>volumeBindingMode: WaitForFirstConsumer</code>. [<a href="https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes">src7</a>]</li>
+    <li><strong>Cannot resize PVC</strong>: The StorageClass does not have <code>allowVolumeExpansion: true</code>. Fix: Create a new StorageClass with expansion enabled or ask the cluster admin to patch the existing one. [<a href="https://kubernetes.io/blog/2022/05/05/volume-expansion-ga/">src4</a>]</li>
+    <li><strong>Filesystem resize not completing</strong>: After PV expansion, the filesystem resize requires the volume to be mounted by a Pod. Fix: Ensure a Pod using the PVC is running. [<a href="https://kubernetes.io/blog/2022/05/05/volume-expansion-ga/">src4</a>]</li>
+    <li><strong>Orphaned PVCs after StatefulSet scale-down</strong>: Kubernetes does not delete PVCs when a StatefulSet is scaled down. Fix: Manually delete unwanted PVCs. [<a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/">src8</a>]</li>
+    <li><strong>Released PV not binding to new PVC</strong>: A PV with <code>Retain</code> policy has an old <code>claimRef</code>. Fix: <code>kubectl patch pv &lt;name&gt; -p '{"spec":{"claimRef": null}}'</code>. [<a href="https://kubernetes.io/docs/tasks/administer-cluster/change-pv-reclaim-policy/">src5</a>]</li>
+    <li><strong>Snapshot fails with no snapshot controller</strong>: VolumeSnapshot CRDs are installed but the snapshot-controller Deployment is missing. Fix: Install from the <code>external-snapshotter</code> repository. [<a href="https://kubernetes.io/docs/concepts/storage/volume-snapshots/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># List all PVCs across namespaces with capacity and status
+kubectl get pvc -A -o wide
+
+# Describe a specific PVC to see events, conditions, and binding
+kubectl describe pvc app-data -n default
+
+# List all PVs with reclaim policy and status
+kubectl get pv -o custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage,ACCESS:.spec.accessModes[0],RECLAIM:.spec.persistentVolumeReclaimPolicy,STATUS:.status.phase,CLAIM:.spec.claimRef.name,STORAGECLASS:.spec.storageClassName
+
+# Check StorageClasses and their provisioners
+kubectl get sc -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner,RECLAIM:.reclaimPolicy,BINDING:.volumeBindingMode,EXPANSION:.allowVolumeExpansion
+
+# Check which CSI drivers are installed
+kubectl get csidrivers
+
+# Find PVCs in Pending state
+kubectl get pvc -A --field-selector=status.phase=Pending
+
+# Check volume expansion progress
+kubectl describe pvc app-data | grep -A5 "Conditions"
+
+# List VolumeSnapshots and their readiness
+kubectl get volumesnapshot -A
+
+# Check snapshot controller is running
+kubectl get pods -n kube-system -l app=snapshot-controller
+
+# Verify volume is mounted inside a Pod
+kubectl exec app -- df -h /data
+
+# Check PV finalizers (deletion protection)
+kubectl get pv &lt;name&gt; -o jsonpath='{.metadata.finalizers}'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Kubernetes 1.31+</td><td>Current</td><td>PV deletion protection finalizers GA; VolumeAttributesClass beta</td><td>No migration needed from 1.29+</td></tr>
+      <tr><td>Kubernetes 1.29</td><td>Supported</td><td>ReadWriteOncePod (RWOP) GA; SELinuxMount alpha</td><td>RWOP requires CSI driver support</td></tr>
+      <tr><td>Kubernetes 1.27</td><td>Supported</td><td>VolumeSnapshot GA; in-tree to CSI migration complete for major plugins</td><td>Migrate in-tree PVs to CSI</td></tr>
+      <tr><td>Kubernetes 1.24</td><td>EOL</td><td>Volume expansion GA; non-graceful node shutdown alpha</td><td>All expansion features stable</td></tr>
+      <tr><td>Kubernetes 1.22</td><td>EOL</td><td>Recycle reclaim policy deprecated; ephemeral volumes beta</td><td>Replace Recycle with Delete + dynamic provisioning</td></tr>
+      <tr><td>Kubernetes 1.13</td><td>EOL</td><td>CSI 1.0 GA; dynamic provisioning GA</td><td>Upgrade from FlexVolume to CSI drivers</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Application needs data that survives Pod restarts and rescheduling</td><td>Data is temporary and can be regenerated</td><td><code>emptyDir</code> volume</td></tr>
+      <tr><td>Running databases (PostgreSQL, MySQL, MongoDB) on Kubernetes</td><td>Using managed database services (RDS, Cloud SQL)</td><td>Cloud provider's managed DB</td></tr>
+      <tr><td>Need consistent snapshots and cloning for CI/CD test data</td><td>Backing up application-level data (SQL dumps preferred)</td><td><code>pg_dump</code>, <code>mysqldump</code>, <code>mongodump</code></td></tr>
+      <tr><td>Deploying a StatefulSet with per-replica storage</td><td>Running stateless services (APIs, web servers)</td><td>Deployment without PVCs</td></tr>
+      <tr><td>Multi-zone cluster needs zone-aware storage provisioning</td><td>Single-node development clusters (minikube, kind)</td><td>Default StorageClass with Immediate binding</td></tr>
+      <tr><td>Need shared read-write filesystem across Pods (RWX)</td><td>Block storage is sufficient for a single writer</td><td>RWO with block-backed StorageClass</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>Access mode enforcement varies by driver</strong>: The CSI driver, not Kubernetes, enforces access modes. Some drivers accept RWX in the PVC spec but silently provide RWO behavior. Always test concurrent access before relying on RWX in production. [<a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">src1</a>]</li>
+    <li><strong>Volume expansion is one-way only</strong>: You can increase PVC size but <strong>never shrink</strong> it. To reduce capacity, create a new smaller PVC, copy data, and delete the old one. [<a href="https://kubernetes.io/blog/2022/05/05/volume-expansion-ga/">src4</a>]</li>
+    <li><strong>In-tree volume plugins are deprecated</strong>: As of Kubernetes 1.27, in-tree plugins (awsElasticBlockStore, gcePersistentDisk, azureDisk) are replaced by CSI drivers. Existing PVs using in-tree plugins continue to work via the CSI migration shim. [<a href="https://kubernetes-csi.github.io/docs/">src6</a>]</li>
+    <li><strong>StorageClass deletion does not affect existing PVCs</strong>: Deleting a StorageClass does not delete PVs/PVCs created from it. However, new PVCs referencing the deleted class will fail. [<a href="https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/">src2</a>]</li>
+    <li><strong>WaitForFirstConsumer PVCs appear "stuck"</strong>: This is normal behavior -- the PVC intentionally stays Pending until a Pod referencing it is scheduled. Do not interpret this as a failure. [<a href="https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes">src7</a>]</li>
+    <li><strong>Snapshot size may differ from PVC size</strong>: Snapshots capture only written data blocks, not the full allocated capacity. The restored PVC must request at least the original PVC's size. [<a href="https://kubernetes.io/docs/concepts/storage/volume-snapshots/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/k8s-deployment-service-ingress/2026" data-relationship="depends_on">Kubernetes Deployment, Service &amp; Ingress Basics</a>
+    <a href="/software/devops/k8s-statefulset-databases/2026" data-relationship="related_to">Kubernetes StatefulSet for Databases</a>
+    <a href="/software/devops/k8s-hpa/2026" data-relationship="related_to">Kubernetes Horizontal Pod Autoscaler</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

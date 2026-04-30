@@ -1,0 +1,56 @@
+// Input:  None (demonstration of segfault causes)
+// Output: Shows 5 common segfault patterns with correct alternatives
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Pattern 1: NULL pointer dereference
+void null_deref_bad(void) {
+    int *ptr = NULL;
+    *ptr = 42;  // SEGFAULT — dereferencing NULL
+}
+void null_deref_good(void) {
+    int *ptr = malloc(sizeof(int));
+    if (ptr == NULL) { perror("malloc"); return; }
+    *ptr = 42;  // Safe — pointer is valid
+    free(ptr);
+}
+
+// Pattern 2: Array out of bounds
+void bounds_bad(void) {
+    int arr[5] = {0};
+    arr[10] = 42;  // SEGFAULT or silent corruption
+}
+void bounds_good(void) {
+    int arr[5] = {0};
+    int index = 3;
+    if (index >= 0 && index < 5) {
+        arr[index] = 42;  // Safe — bounds checked
+    }
+}
+
+// Pattern 3: Use after free
+void uaf_bad(void) {
+    int *ptr = malloc(sizeof(int));
+    *ptr = 42;
+    free(ptr);
+    printf("%d\n", *ptr);  // SEGFAULT — use after free
+}
+void uaf_good(void) {
+    int *ptr = malloc(sizeof(int));
+    *ptr = 42;
+    printf("%d\n", *ptr);  // Use BEFORE free
+    free(ptr);
+    ptr = NULL;  // Prevent accidental reuse
+}
+
+// Pattern 4: Writing to string literal
+void literal_bad(void) {
+    char *s = "hello";
+    s[0] = 'H';  // SEGFAULT — string literal is read-only
+}
+void literal_good(void) {
+    char s[] = "hello";  // Array copy — mutable
+    s[0] = 'H';  // Safe — writing to stack array
+}

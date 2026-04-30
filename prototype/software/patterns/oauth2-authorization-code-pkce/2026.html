@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>OAuth2 Authorization Code Flow with PKCE | knowledgelib.io</title>
+  <meta name="description" content="Complete implementation guide for OAuth2 Authorization Code flow with PKCE (RFC 7636).">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/oauth2-authorization-code-pkce/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="OAuth2 Authorization Code Flow with PKCE | knowledgelib.io">
+  <meta property="og:description" content="Complete implementation guide for OAuth2 Authorization Code flow with PKCE (RFC 7636). Covers code_verifier/code_challenge generation, S256 method, step-by-step flow for SPAs and mobile apps, code examples in JavaScript, Python, and Node.js, plus 4 anti-patterns and 7 common pitfalls. 8 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/oauth2-authorization-code-pkce/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OAuth2 Authorization Code Flow with PKCE | knowledgelib.io">
+  <meta name="twitter:description" content="Complete implementation guide for OAuth2 Authorization Code flow with PKCE (RFC 7636). Covers code_verifier/code_challenge generation, S256 method, step-by-step flow for SPAs and mobile apps, code examples in JavaScript, Python, and Node.js, plus 4 anti-patterns and 7 common pitfalls. 8 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/oauth2_authorization_code_pkce">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement OAuth2 Authorization Code flow with PKCE?">
+  <meta name="ai:aliases" content="OAuth2 PKCE flow; Authorization Code with PKCE; PKCE implementation; Proof Key for Code Exchange; OAuth2 public client authentication; SPA OAuth2 login flow; mobile app OAuth2 authorization; OAuth 2.1 authorization code flow">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/oauth2-authorization-code-pkce/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="client_type,auth_provider">
+  <meta name="ai:constraints" content="MUST use S256 code_challenge_method; NEVER embed client_secret in public clients; code_verifier MUST be 43-128 chars from cryptographic random; Always include state parameter for CSRF; Redirect URIs MUST be exact-match whitelisted">
+  <meta name="ai:skip_this_unit_if" content="Server-to-server auth with no user interaction -> software/patterns/oauth2-client-credentials/2026; Device with no browser -> software/patterns/oauth2-device-flow/2026; Need to verify user identity only -> software/patterns/openid-connect-oidc/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "OAuth2 Authorization Code Flow with PKCE",
+    "headline": "OAuth2 Authorization Code Flow with PKCE",
+    "description": "Complete implementation guide for OAuth2 Authorization Code flow with PKCE (Proof Key for Code Exchange, RFC 7636). Covers the full flow from code_verifier generation through token exchange, with code examples in JavaScript, Python, and Node.js.",
+    "keywords": ["OAuth2", "PKCE", "Authorization Code", "RFC 7636", "OAuth 2.1", "SPA authentication", "mobile authentication", "code_verifier", "code_challenge", "S256", "public client", "token exchange"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "OAuth2-compatible authorization server (Auth0, Okta, Azure AD, Keycloak, or custom)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "RFC 7636: Proof Key for Code Exchange by OAuth Public Clients",
+        "url": "https://datatracker.ietf.org/doc/html/rfc7636"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Authorization Code Flow with PKCE - Auth0 Docs",
+        "url": "https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Implement Authorization by Grant Type: Authorization Code with PKCE - Okta",
+        "url": "https://developer.okta.com/docs/guides/implement-grant-type/authcodepkce/main/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The OAuth 2.1 Authorization Framework (draft-ietf-oauth-v2-1-14)",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "RFC 9700: Best Current Practice for OAuth 2.0 Security",
+        "url": "https://datatracker.ietf.org/doc/rfc9700/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "OAuth2 Cheat Sheet - OWASP",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/OAuth2_Cheat_Sheet.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PKCE for OAuth 2.0 - OAuth.net",
+        "url": "https://oauth.net/2/pkce/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Microsoft identity platform and OAuth 2.0 authorization code flow",
+        "url": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "OAuth2 Authorization Code Flow with PKCE",
+    "description": "Structured knowledge unit covering OAuth2 Authorization Code flow with PKCE (Proof Key for Code Exchange). Includes flow steps, code examples, anti-patterns, and security best practices.",
+    "keywords": ["OAuth2", "PKCE", "Authorization Code", "RFC 7636", "OAuth 2.1", "authentication", "security"],
+    "temporalCoverage": "2015/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "IETF"},
+      {"@type": "Organization", "name": "Auth0"},
+      {"@type": "Organization", "name": "Okta"},
+      {"@type": "Organization", "name": "OWASP"},
+      {"@type": "Organization", "name": "OAuth.net"},
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "OAuth2 Authorization Code Flow with PKCE" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement OAuth2 Authorization Code flow with PKCE?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OAuth2 PKCE flow",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Authorization Code with PKCE",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "PKCE implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Proof Key for Code Exchange",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "OAuth2 public client authentication",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>OAuth2 Authorization Code Flow with PKCE</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement OAuth2 Authorization Code flow with PKCE?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/oauth2-authorization-code-pkce/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: PKCE (Proof Key for Code Exchange) secures the OAuth2 Authorization Code flow for public clients (SPAs, mobile apps) by binding the authorization request to the token exchange via a cryptographic code verifier/challenge pair, preventing authorization code interception attacks.</li>
+    <li><strong>Key tool/command</strong>: <code>code_verifier</code> + <code>code_challenge = BASE64URL(SHA256(code_verifier))</code></li>
+    <li><strong>Watch out for</strong>: Using <code>plain</code> instead of <code>S256</code> for the code challenge method, or generating the verifier with a non-cryptographic random source.</li>
+    <li><strong>Works with</strong>: Any OAuth2/OIDC provider (Auth0, Okta, Azure AD, Google, Keycloak, custom). Required by OAuth 2.1 for all clients.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>MUST use S256 (SHA-256) code_challenge_method -- <code>plain</code> is insecure and prohibited by OAuth 2.1 [<a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">src4</a>]</li>
+    <li>NEVER embed a client_secret in SPAs, mobile apps, or any public client -- PKCE replaces the need for client secrets [<a href="https://datatracker.ietf.org/doc/html/rfc7636">src1</a>]</li>
+    <li>code_verifier MUST be 43-128 characters from unreserved URI character set [A-Z a-z 0-9 - . _ ~] [<a href="https://datatracker.ietf.org/doc/html/rfc7636">src1</a>]</li>
+    <li>code_verifier MUST come from a cryptographically secure random source -- NOT Math.random() or similar</li>
+    <li>Always include the <code>state</code> parameter for CSRF protection -- PKCE protects against code interception, not CSRF [<a href="https://cheatsheetseries.owasp.org/cheatsheets/OAuth2_Cheat_Sheet.html">src6</a>]</li>
+    <li>Redirect URIs MUST be exact-match whitelisted on the authorization server -- never use wildcards [<a href="https://datatracker.ietf.org/doc/rfc9700/">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Endpoint</th><th scope="col">Key Parameters</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Generate code_verifier</td><td>Client-side</td><td>43-128 chars, cryptographically random</td></tr>
+      <tr><td>2</td><td>Derive code_challenge</td><td>Client-side</td><td><code>BASE64URL(SHA256(code_verifier))</code></td></tr>
+      <tr><td>3</td><td>Authorization request</td><td>GET /authorize</td><td><code>response_type=code</code>, <code>code_challenge</code>, <code>code_challenge_method=S256</code>, <code>state</code>, <code>redirect_uri</code></td></tr>
+      <tr><td>4</td><td>User authenticates</td><td>Authorization server</td><td>User enters credentials, consents</td></tr>
+      <tr><td>5</td><td>Receive authorization code</td><td>Redirect to client</td><td><code>code</code> param in callback URL</td></tr>
+      <tr><td>6</td><td>Exchange code for tokens</td><td>POST /token</td><td><code>grant_type=authorization_code</code>, <code>code</code>, <code>code_verifier</code>, <code>redirect_uri</code></td></tr>
+      <tr><td>7</td><td>Server verifies PKCE</td><td>Authorization server</td><td>Computes <code>BASE64URL(SHA256(code_verifier))</code>, compares to stored challenge</td></tr>
+      <tr><td>8</td><td>Receive tokens</td><td>Client</td><td><code>access_token</code>, <code>refresh_token</code> (optional), <code>id_token</code> (if OIDC)</td></tr>
+      <tr><td>9</td><td>Use access token</td><td>Resource server</td><td><code>Authorization: Bearer {access_token}</code></td></tr>
+      <tr><td>10</td><td>Refresh tokens</td><td>POST /token</td><td><code>grant_type=refresh_token</code>, use refresh token rotation for SPAs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+&#9500;&#9472;&#9472; Is the client a public client (SPA, mobile, desktop, CLI)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Authorization Code + PKCE (this unit)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Is it server-to-server with no user interaction?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Client Credentials flow
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Is it a device without a browser (smart TV, IoT)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Device Authorization flow (RFC 8628)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Is it a server-side web app (confidential client)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Authorization Code + PKCE + client_secret (OAuth 2.1 recommends PKCE for all)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Use Authorization Code + PKCE (safest default for any client type)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Generate a cryptographic code_verifier</h3>
+  <p>Create a random string of 43-128 characters. Generate 32 random bytes and base64url-encode them (yielding 43 characters). [<a href="https://datatracker.ietf.org/doc/html/rfc7636">src1</a>]</p>
+  <pre><code class="language-javascript">// Generate code_verifier (43 chars from 32 random bytes)
+const array = new Uint8Array(32);
+crypto.getRandomValues(array);
+const codeVerifier = btoa(String.fromCharCode(...array))
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/=+$/, '');</code></pre>
+  <p><strong>Verify</strong>: <code>codeVerifier.length</code> &#8594; should be 43, all characters match <code>[A-Za-z0-9\-._~]</code></p>
+
+  <h3>2. Derive the code_challenge using S256</h3>
+  <p>Hash the code_verifier with SHA-256 and base64url-encode the result. [<a href="https://datatracker.ietf.org/doc/html/rfc7636">src1</a>]</p>
+  <pre><code class="language-javascript">// Derive code_challenge = BASE64URL(SHA256(code_verifier))
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+const codeChallenge = await generateCodeChallenge(codeVerifier);</code></pre>
+  <p><strong>Verify</strong>: <code>codeChallenge</code> is a 43-character base64url string, different from codeVerifier</p>
+
+  <h3>3. Build the authorization URL and redirect</h3>
+  <p>Construct the authorization request with PKCE parameters, state, and redirect URI. [<a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce">src2</a>]</p>
+  <pre><code class="language-javascript">// Build authorization URL
+const state = crypto.randomUUID(); // CSRF protection
+sessionStorage.setItem('oauth_state', state);
+sessionStorage.setItem('code_verifier', codeVerifier);
+
+const params = new URLSearchParams({
+  response_type: 'code',
+  client_id: 'YOUR_CLIENT_ID',
+  redirect_uri: 'https://app.example.com/callback',
+  scope: 'openid profile email',
+  state: state,
+  code_challenge: codeChallenge,
+  code_challenge_method: 'S256'
+});
+
+window.location.href = `https://auth.example.com/authorize?${params}`;</code></pre>
+  <p><strong>Verify</strong>: URL contains <code>code_challenge</code> and <code>code_challenge_method=S256</code> parameters</p>
+
+  <h3>4. Handle the callback and extract the authorization code</h3>
+  <p>When the authorization server redirects back, validate the state parameter and extract the code. [<a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce">src2</a>]</p>
+  <pre><code class="language-javascript">// In callback handler (e.g., /callback route)
+const urlParams = new URLSearchParams(window.location.search);
+const code = urlParams.get('code');
+const returnedState = urlParams.get('state');
+
+// Validate state to prevent CSRF
+const savedState = sessionStorage.getItem('oauth_state');
+if (returnedState !== savedState) {
+  throw new Error('State mismatch -- possible CSRF attack');
+}</code></pre>
+  <p><strong>Verify</strong>: <code>code</code> is present and <code>returnedState === savedState</code></p>
+
+  <h3>5. Exchange the authorization code for tokens</h3>
+  <p>Send the code and the original code_verifier to the token endpoint. The server computes SHA256(code_verifier) and compares it to the stored code_challenge. [<a href="https://datatracker.ietf.org/doc/html/rfc7636">src1</a>]</p>
+  <pre><code class="language-javascript">// Exchange code for tokens
+const codeVerifier = sessionStorage.getItem('code_verifier');
+
+const tokenResponse = await fetch('https://auth.example.com/oauth/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: 'YOUR_CLIENT_ID',
+    code: code,
+    redirect_uri: 'https://app.example.com/callback',
+    code_verifier: codeVerifier
+  })
+});
+
+const tokens = await tokenResponse.json();</code></pre>
+  <p><strong>Verify</strong>: Response contains <code>access_token</code>. HTTP 200 status. No <code>invalid_grant</code> error.</p>
+
+  <h3>6. Store tokens securely and clean up</h3>
+  <p>Store tokens appropriately for your platform. For SPAs, use in-memory storage or httpOnly cookies -- never localStorage. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/OAuth2_Cheat_Sheet.html">src6</a>]</p>
+  <pre><code class="language-javascript">// Store tokens in memory (SPA best practice)
+const tokenStore = {
+  accessToken: tokens.access_token,
+  refreshToken: tokens.refresh_token,
+  expiresAt: Date.now() + (tokens.expires_in * 1000)
+};
+
+// Clean up PKCE artifacts
+sessionStorage.removeItem('code_verifier');
+sessionStorage.removeItem('oauth_state');</code></pre>
+  <p><strong>Verify</strong>: <code>sessionStorage</code> no longer contains <code>code_verifier</code> or <code>oauth_state</code></p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>JavaScript/TypeScript: SPA PKCE Helper</h3>
+  <pre><code class="language-javascript">// Input:  Authorization server URLs + client_id
+// Output: Complete PKCE flow utilities
+
+class PKCEClient {
+  constructor(authUrl, tokenUrl, clientId, redirectUri) {
+    this.authUrl = authUrl;
+    this.tokenUrl = tokenUrl;
+    this.clientId = clientId;
+    this.redirectUri = redirectUri;
+  }
+
+  async generateVerifier() {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    return this.base64url(bytes);
+  }
+
+  async generateChallenge(verifier) {
+    const digest = await crypto.subtle.digest(
+      'SHA-256', new TextEncoder().encode(verifier)
+    );
+    return this.base64url(new Uint8Array(digest));
+  }
+
+  base64url(bytes) {
+    return btoa(String.fromCharCode(...bytes))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+}</code></pre>
+
+  <h3>Python: Server-Side PKCE Flow</h3>
+  <pre><code class="language-python"># Input:  auth_url, token_url, client_id
+# Output: PKCE authorization + token exchange
+
+import hashlib, base64, os, secrets, urllib.parse
+import httpx  # pip install httpx&gt;=0.27
+
+def generate_pkce_pair():
+    """Generate code_verifier and code_challenge (S256)."""
+    verifier = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b'=').decode()
+    challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(verifier.encode()).digest()
+    ).rstrip(b'=').decode()
+    return verifier, challenge
+
+def build_auth_url(auth_url, client_id, redirect_uri, scope, challenge):
+    """Build authorization URL with PKCE parameters."""
+    params = urllib.parse.urlencode({
+        'response_type': 'code',
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'scope': scope,
+        'state': secrets.token_urlsafe(32),
+        'code_challenge': challenge,
+        'code_challenge_method': 'S256',
+    })
+    return f"{auth_url}?{params}"
+
+async def exchange_code(token_url, client_id, code, verifier, redirect_uri):
+    """Exchange authorization code for tokens using code_verifier."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(token_url, data={
+            'grant_type': 'authorization_code',
+            'client_id': client_id,
+            'code': code,
+            'code_verifier': verifier,
+            'redirect_uri': redirect_uri,
+        })
+        resp.raise_for_status()
+        return resp.json()</code></pre>
+
+  <h3>Node.js/Express: Backend Callback Handler</h3>
+  <pre><code class="language-javascript">// Input:  Express request with ?code=...&amp;state=...
+// Output: Token response from authorization server
+
+const crypto = require('node:crypto');
+
+function generatePKCE() {
+  const verifier = crypto.randomBytes(32)
+    .toString('base64url'); // Node 16+
+  const challenge = crypto.createHash('sha256')
+    .update(verifier)
+    .digest('base64url');
+  return { verifier, challenge };
+}
+
+// In Express route handler:
+app.get('/callback', async (req, res) =&gt; {
+  const { code, state } = req.query;
+  if (state !== req.session.oauthState) {
+    return res.status(403).send('State mismatch');
+  }
+  const resp = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: CLIENT_ID,
+      code,
+      code_verifier: req.session.codeVerifier,
+      redirect_uri: REDIRECT_URI,
+    }),
+  });
+  const tokens = await resp.json();
+  req.session.accessToken = tokens.access_token;
+  res.redirect('/dashboard');
+});</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using <code>plain</code> code challenge method</h3>
+  <pre><code class="language-javascript">// BAD -- plain method sends code_verifier as code_challenge
+// An attacker who intercepts the authorization request gets the verifier
+const params = new URLSearchParams({
+  code_challenge: codeVerifier,         // verifier sent in the clear
+  code_challenge_method: 'plain'        // no hashing
+});</code></pre>
+
+  <h3>Correct: Using S256 code challenge method</h3>
+  <pre><code class="language-javascript">// GOOD -- S256 hashes the verifier so intercepting the challenge is useless
+const challenge = await generateCodeChallenge(codeVerifier);
+const params = new URLSearchParams({
+  code_challenge: challenge,            // SHA-256 hash, not the verifier
+  code_challenge_method: 'S256'         // always S256
+});</code></pre>
+
+  <h3>Wrong: Using Math.random() for code_verifier</h3>
+  <pre><code class="language-javascript">// BAD -- Math.random() is not cryptographically secure
+// Attackers can predict the sequence
+const verifier = Array.from({length: 43}, () =&gt;
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  [Math.floor(Math.random() * 62)]
+).join('');</code></pre>
+
+  <h3>Correct: Using crypto.getRandomValues()</h3>
+  <pre><code class="language-javascript">// GOOD -- cryptographically secure random bytes
+const bytes = crypto.getRandomValues(new Uint8Array(32));
+const verifier = btoa(String.fromCharCode(...bytes))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');</code></pre>
+
+  <h3>Wrong: Storing tokens in localStorage</h3>
+  <pre><code class="language-javascript">// BAD -- localStorage is accessible to any JS on the page (XSS attack vector)
+localStorage.setItem('access_token', tokens.access_token);
+localStorage.setItem('refresh_token', tokens.refresh_token);</code></pre>
+
+  <h3>Correct: Storing tokens in memory or httpOnly cookies</h3>
+  <pre><code class="language-javascript">// GOOD -- in-memory storage, cleared on page close
+// For persistence, use httpOnly secure cookies set by backend
+let tokenStore = { accessToken: null, refreshToken: null };
+tokenStore.accessToken = tokens.access_token;
+// Or: backend sets httpOnly cookie with SameSite=Strict</code></pre>
+
+  <h3>Wrong: Omitting state parameter</h3>
+  <pre><code class="language-javascript">// BAD -- no state parameter means no CSRF protection
+const params = new URLSearchParams({
+  response_type: 'code',
+  client_id: CLIENT_ID,
+  redirect_uri: REDIRECT_URI,
+  code_challenge: challenge,
+  code_challenge_method: 'S256'
+  // missing: state parameter
+});</code></pre>
+
+  <h3>Correct: Including cryptographic state parameter</h3>
+  <pre><code class="language-javascript">// GOOD -- state parameter prevents CSRF attacks
+const state = crypto.randomUUID();
+sessionStorage.setItem('oauth_state', state);
+const params = new URLSearchParams({
+  response_type: 'code',
+  client_id: CLIENT_ID,
+  redirect_uri: REDIRECT_URI,
+  code_challenge: challenge,
+  code_challenge_method: 'S256',
+  state: state  // verify this on callback
+});</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>code_verifier not stored between redirect</strong>: The verifier generated before redirect must survive the round-trip. If lost, token exchange fails with <code>invalid_grant</code>. Fix: Store verifier in <code>sessionStorage</code> (SPA) or server session before redirect. [<a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce">src2</a>]</li>
+    <li><strong>Incorrect base64url encoding</strong>: Standard base64 uses <code>+</code>, <code>/</code>, and <code>=</code> padding. PKCE requires base64url: <code>+</code> -&gt; <code>-</code>, <code>/</code> -&gt; <code>_</code>, strip <code>=</code>. Fix: Apply <code>.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')</code> after btoa(). [<a href="https://datatracker.ietf.org/doc/html/rfc7636">src1</a>]</li>
+    <li><strong>Redirect URI mismatch</strong>: The redirect_uri in the token request must exactly match the one in the authorization request. Fix: Use the same constant for both requests; no trailing slashes. [<a href="https://developer.okta.com/docs/guides/implement-grant-type/authcodepkce/main/">src3</a>]</li>
+    <li><strong>Missing CORS headers on token endpoint</strong>: SPAs making direct POST to <code>/token</code> may hit CORS errors. Fix: Ensure authorization server allows CORS from your app origin, or proxy through your backend. [<a href="https://cheatsheetseries.owasp.org/cheatsheets/OAuth2_Cheat_Sheet.html">src6</a>]</li>
+    <li><strong>Not using refresh token rotation for SPAs</strong>: Long-lived refresh tokens in SPAs are dangerous if leaked. Fix: Enable refresh token rotation (each use issues a new refresh token and invalidates the old one). [<a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce">src2</a>]</li>
+    <li><strong>PKCE downgrade attack</strong>: An attacker strips the code_challenge from the authorization request. Fix: Configure the authorization server to require PKCE (reject requests without code_challenge). [<a href="https://datatracker.ietf.org/doc/rfc9700/">src5</a>]</li>
+    <li><strong>Using the Implicit flow instead of PKCE</strong>: The Implicit flow (response_type=token) exposes tokens in the URL fragment. Fix: Always use Authorization Code + PKCE; Implicit is deprecated in OAuth 2.1. [<a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test code_verifier generation (Node.js)
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+
+# Verify S256 challenge computation
+echo -n "YOUR_CODE_VERIFIER" | openssl dgst -sha256 -binary | openssl base64 -A | tr '+/' '-_' | tr -d '='
+
+# Test token endpoint manually with curl
+curl -X POST https://auth.example.com/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=authorization_code" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "code=AUTHORIZATION_CODE" \
+  -d "code_verifier=YOUR_CODE_VERIFIER" \
+  -d "redirect_uri=https://app.example.com/callback"
+
+# Decode a JWT access token to inspect claims
+echo "ACCESS_TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | python3 -m json.tool
+
+# Check if authorization server supports PKCE (OpenID Discovery)
+curl -s https://auth.example.com/.well-known/openid-configuration | \
+  python3 -c "import sys,json; d=json.load(sys.stdin); print('PKCE methods:', d.get('code_challenge_methods_supported', 'not advertised'))"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>OAuth 2.1 (draft-14, 2024)</td><td>Draft / De facto standard</td><td>PKCE mandatory for ALL authorization code flows; Implicit flow removed</td><td>Add code_challenge + code_verifier to all existing auth code flows</td></tr>
+      <tr><td>RFC 9700 (2024)</td><td>BCP (Best Current Practice)</td><td>Recommends PKCE for all clients including confidential</td><td>Add PKCE even if you have a client_secret</td></tr>
+      <tr><td>RFC 7636 (2015)</td><td>Standard</td><td>Original PKCE specification</td><td>Baseline implementation; supports S256 and plain methods</td></tr>
+      <tr><td>OAuth 2.0 (RFC 6749, 2012)</td><td>Standard</td><td>PKCE not part of core spec</td><td>PKCE was an extension; Implicit flow was the recommended SPA approach</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Building a SPA (React, Vue, Angular)</td><td>Server-to-server API calls (no user)</td><td>Client Credentials flow (RFC 6749 sec 4.4)</td></tr>
+      <tr><td>Building a mobile app (iOS, Android)</td><td>Device with no browser/keyboard</td><td>Device Authorization flow (RFC 8628)</td></tr>
+      <tr><td>Building a desktop app (Electron)</td><td>You only need user identity, not API access</td><td>OpenID Connect (but OIDC uses PKCE under the hood)</td></tr>
+      <tr><td>Building a server-side web app (OAuth 2.1 recommends it)</td><td>Issuing your own tokens (you are the auth server)</td><td>Build token endpoint with proper PKCE verification</td></tr>
+      <tr><td>Any new OAuth2 implementation (future-proofing for 2.1)</td><td>Simple API key authentication suffices</td><td>API keys with rate limiting</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>OAuth 2.1 is still in draft status (draft-14 as of late 2024), but major providers (Auth0, Okta, Azure AD, Google) already enforce or strongly recommend PKCE for all clients. Treat it as the de facto standard.</li>
+    <li>PKCE protects against authorization code interception only. It does NOT protect against: XSS (use CSP + input sanitization), CSRF (use <code>state</code> parameter), or token leakage from the client (use secure storage).</li>
+    <li>Some older authorization servers may not support PKCE. Check the <code>code_challenge_methods_supported</code> field in the provider's OpenID Discovery document.</li>
+    <li>For SPAs, the current best practice is to use a Backend-for-Frontend (BFF) pattern where tokens are stored server-side in an httpOnly cookie session. PKCE is still used in the BFF's communication with the authorization server.</li>
+    <li>Refresh token rotation is essential for SPAs using PKCE. Without it, a stolen refresh token grants indefinite access. Enable automatic rotation and absolute lifetime limits on the authorization server.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/oauth2-client-credentials/2026" data-relationship="related_to">OAuth2 Client Credentials Flow</a>
+    <a href="/software/patterns/oauth2-device-flow/2026" data-relationship="related_to">OAuth2 Device Authorization Flow</a>
+    <a href="/software/patterns/jwt-implementation/2026" data-relationship="related_to">JWT Token Implementation</a>
+    <a href="/software/patterns/session-management/2026" data-relationship="related_to">Session Management</a>
+    <a href="/software/patterns/sso-saml-oidc/2026" data-relationship="related_to">SSO with SAML/OIDC</a>
+    <a href="/software/patterns/oauth2-implicit-flow/2026" data-relationship="alternative_to">OAuth2 Implicit Flow (deprecated)</a>
+    <a href="/software/patterns/openid-connect-oidc/2026" data-relationship="often_confused_with">OpenID Connect</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

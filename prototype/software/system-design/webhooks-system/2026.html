@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Design a Reliable Webhooks System | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building reliable webhooks: HMAC-SHA256 signing, exponential backoff retries, idempotency, circuit breakers, and dead...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/webhooks-system/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Design a Reliable Webhooks System | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building reliable webhooks: HMAC-SHA256 signing, exponential backoff retries, idempotency, circuit breakers, and dead letter queues. 13-component architecture, 6 code examples, 4 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/webhooks-system/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Design a Reliable Webhooks System | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building reliable webhooks: HMAC-SHA256 signing, exponential backoff retries, idempotency, circuit breakers, and dead letter queues. 13-component architecture, 6 code examples, 4 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/webhooks_system">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a reliable webhooks system?">
+  <meta name="ai:aliases" content="How to build a webhook delivery system; Webhook architecture design patterns; How to send webhooks reliably at scale; Webhook retry and idempotency design">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/webhooks-system/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="scale,ordering,sender_or_receiver">
+  <meta name="ai:constraints" content="Always sign payloads with HMAC-SHA256 or ed25519; Receivers must return 2xx within 5-30 seconds; Design for at-least-once delivery with idempotency keys; Persist events to durable storage before delivery; Use constant-time comparison for signature verification">
+  <meta name="ai:skip_this_unit_if" content="Need to consume webhooks from a third-party API -> Refer to that provider's webhook integration docs; Need real-time bidirectional communication -> software/system-design/websockets-architecture; Need guaranteed ordering of all events -> software/system-design/event-streaming">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Design a Reliable Webhooks System",
+    "headline": "How to Design a Reliable Webhooks System",
+    "description": "Complete system design reference for building reliable webhook delivery infrastructure. Covers HMAC-SHA256 payload signing, exponential backoff retry strategies, idempotency patterns, circuit breakers, dead letter queues, and the Standard Webhooks specification. Includes 13-component architecture table, decision tree by scale, 6 step-by-step implementation guides with Python and Node.js code examples, 4 anti-pattern pairs, and 8 common pitfalls.",
+    "keywords": ["webhooks", "system design", "HMAC-SHA256", "webhook signing", "exponential backoff", "idempotency", "circuit breaker", "dead letter queue", "Standard Webhooks", "webhook retry", "event-driven architecture", "webhook security"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "HTTP, HMAC-SHA256, message queue (SQS/RabbitMQ/Redis), PostgreSQL or similar database",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Receive Stripe events in your webhook endpoint",
+        "url": "https://docs.stripe.com/webhooks"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Standard Webhooks Specification",
+        "url": "https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best Practices for Sending Webhooks",
+        "url": "https://www.svix.com/resources/webhook-best-practices/sending/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Webhook Architecture Design",
+        "url": "https://www.svix.com/blog/webhook-architecture-design/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Webhooks at Scale: Best Practices and Lessons Learned",
+        "url": "https://hookdeck.com/blog/webhooks-at-scale"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Validating webhook deliveries",
+        "url": "https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Webhook Retry Best Practices",
+        "url": "https://hookdeck.com/webhooks/guides/webhook-retry-best-practices"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Design a Reliable Webhooks System",
+    "description": "Structured knowledge unit covering webhook system architecture design patterns including HMAC-SHA256 signing, retry strategies, idempotency, circuit breakers, and the Standard Webhooks specification. Contains 13-component architecture table, implementation code in Python and Node.js, anti-patterns, and diagnostic commands.",
+    "keywords": ["webhooks", "system design", "HMAC-SHA256", "webhook architecture", "idempotency", "retry patterns", "circuit breaker"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Stripe"},
+      {"@type": "Organization", "name": "Standard Webhooks"},
+      {"@type": "Organization", "name": "Svix"},
+      {"@type": "Organization", "name": "Hookdeck"},
+      {"@type": "Organization", "name": "GitHub"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Design a Reliable Webhooks System" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a reliable webhooks system?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A reliable webhooks system requires persistent event storage, HMAC-signed payloads, exponential-backoff retries with jitter, idempotency keys for deduplication, and circuit breakers per endpoint."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to build a webhook delivery system",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A reliable webhooks system requires persistent event storage, HMAC-signed payloads, exponential-backoff retries with jitter, idempotency keys for deduplication, and circuit breakers per endpoint."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Webhook architecture design patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A reliable webhooks system requires persistent event storage, HMAC-signed payloads, exponential-backoff retries with jitter, idempotency keys for deduplication, and circuit breakers per endpoint."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to send webhooks reliably at scale",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A reliable webhooks system requires persistent event storage, HMAC-signed payloads, exponential-backoff retries with jitter, idempotency keys for deduplication, and circuit breakers per endpoint."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Webhook retry and idempotency design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A reliable webhooks system requires persistent event storage, HMAC-signed payloads, exponential-backoff retries with jitter, idempotency keys for deduplication, and circuit breakers per endpoint."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>How to Design a Reliable Webhooks System</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a reliable webhooks system?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/webhooks-system/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A reliable webhooks system requires persistent event storage, HMAC-signed payloads, exponential-backoff retries with jitter, idempotency keys for deduplication, and circuit breakers per endpoint.</li>
+    <li><strong>Key tool/command</strong>: <code>HMAC-SHA256(webhook_secret, msg_id.timestamp.payload)</code> per the Standard Webhooks spec.</li>
+    <li><strong>Watch out for</strong>: Processing webhooks synchronously in the HTTP handler -- this causes timeouts, triggers retries, and creates duplicate processing cascades.</li>
+    <li><strong>Works with</strong>: Any HTTP stack; language-agnostic pattern. Standard Webhooks libraries available for Python, Node.js, Go, Java, Ruby, PHP, Rust, Kotlin.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Always sign payloads with HMAC-SHA256 (or ed25519) using a per-endpoint secret -- unsigned webhooks are spoofable by anyone who knows the URL</li>
+    <li>Receivers must respond with 2xx within 5-30 seconds -- defer all business logic to a background queue</li>
+    <li>Design for at-least-once delivery -- exactly-once is impossible over HTTP; receivers must be idempotent</li>
+    <li>Persist events to durable storage (database or durable queue) before attempting delivery -- in-memory queues lose events on process crash</li>
+    <li>Use constant-time string comparison for HMAC verification -- <code>==</code> enables timing side-channel attacks</li>
+    <li>Enforce a timestamp window (5-10 minutes) on signature verification to prevent replay attacks</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Event Ingestion API</td><td>Accepts event triggers from internal services</td><td>REST API, gRPC, internal SDK</td><td>Horizontal load balancers, rate limiting</td></tr>
+      <tr><td>Event Store</td><td>Persists events durably before dispatch</td><td>PostgreSQL, MySQL, DynamoDB</td><td>Partitioned by tenant, time-based archival</td></tr>
+      <tr><td>Subscription Registry</td><td>Maps events to endpoint URLs + secrets</td><td>PostgreSQL, Redis (cache layer)</td><td>Read replicas, in-memory cache with TTL</td></tr>
+      <tr><td>Dispatcher / Scheduler</td><td>Reads pending events, fans out to delivery workers</td><td>Custom service, Temporal, cron</td><td>Partition by tenant/event-type</td></tr>
+      <tr><td>Delivery Workers</td><td>Execute HTTP POST to subscriber endpoints</td><td>Worker pool, Lambda, Cloud Run</td><td>Auto-scaling worker pool, concurrency limits per endpoint</td></tr>
+      <tr><td>Retry Queue</td><td>Holds failed deliveries for exponential backoff</td><td>SQS, RabbitMQ, Redis sorted sets, PostgreSQL</td><td>Visibility timeout, DLQ after max retries</td></tr>
+      <tr><td>Signature Module</td><td>Signs payloads with HMAC-SHA256 per endpoint secret</td><td>crypto stdlib, Standard Webhooks SDK</td><td>Stateless, scales with workers</td></tr>
+      <tr><td>Idempotency Store</td><td>Tracks processed webhook IDs on receiver side</td><td>Redis (SETNX + TTL), PostgreSQL unique index</td><td>TTL-based cleanup (7-30 days)</td></tr>
+      <tr><td>Dead Letter Queue (DLQ)</td><td>Captures permanently failed deliveries for inspection</td><td>SQS DLQ, database table, S3 archive</td><td>Manual review dashboard, bulk replay</td></tr>
+      <tr><td>Circuit Breaker</td><td>Disables delivery to consistently failing endpoints</td><td>In-memory state machine per endpoint</td><td>Threshold: 5+ consecutive failures, half-open probe every 5 min</td></tr>
+      <tr><td>Monitoring &amp; Alerting</td><td>Tracks delivery rates, latency, failure patterns</td><td>Prometheus + Grafana, Datadog, CloudWatch</td><td>Per-endpoint dashboards, anomaly alerts</td></tr>
+      <tr><td>Rate Limiter</td><td>Prevents overwhelming subscriber endpoints</td><td>Token bucket per endpoint</td><td>Configurable per subscriber (default: 1000/min)</td></tr>
+      <tr><td>Event Log / Audit Trail</td><td>Records all delivery attempts for debugging</td><td>Append-only table, ClickHouse, Elasticsearch</td><td>Time-partitioned, 30-90 day retention</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: Building a webhooks system
+|
++-- Are you the SENDER (provider) or RECEIVER (consumer)?
+|   |
+|   +-- SENDER --&gt;
+|   |   |
+|   |   +-- Expected volume?
+|   |   |   +-- &lt;100 events/sec --&gt; Simple: PostgreSQL + worker thread
+|   |   |   +-- 100-10K events/sec --&gt; Standard: Message queue + worker pool
+|   |   |   +-- &gt;10K events/sec --&gt; Scale: Partitioned queue + auto-scaling workers + circuit breakers
+|   |   |
+|   |   +-- Need strict ordering?
+|   |       +-- YES, per endpoint --&gt; FIFO queue partitioned by endpoint_id
+|   |       +-- NO --&gt; Parallel delivery workers (higher throughput)
+|   |
+|   +-- RECEIVER --&gt;
+|       |
+|       +-- Verify signature (HMAC-SHA256) --&gt; reject if invalid
+|       +-- Check idempotency key --&gt; skip if already processed
+|       +-- Enqueue for async processing --&gt; return 200 immediately
+|       +-- Process from queue --&gt; update state idempotently
+|
++-- Need a managed solution?
+    +-- YES --&gt; Svix, Hookdeck, or cloud provider (AWS EventBridge, Google Eventarc)
+    +-- NO --&gt; Build with the architecture in Quick Reference above</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define event schema and webhook payload format</h3>
+  <p>Adopt the Standard Webhooks specification for interoperability. Every webhook payload needs a unique event ID, a timestamp, an event type, and the event data. [<a href="https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md">src2</a>]</p>
+  <pre><code class="language-json">{
+  "webhook_id": "msg_2Yh8KlR4vQHPMnZx",
+  "type": "invoice.paid",
+  "timestamp": "2026-02-23T12:00:00Z",
+  "data": {
+    "invoice_id": "inv_abc123",
+    "amount": 9900,
+    "currency": "usd"
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Payload is valid JSON, under 20KB, contains <code>webhook_id</code> + <code>type</code> + <code>timestamp</code> + <code>data</code> fields.</p>
+
+  <h3>2. Implement HMAC-SHA256 payload signing</h3>
+  <p>Sign every outbound webhook so receivers can verify authenticity. The signature covers the message ID, timestamp, and body to prevent tampering and replay attacks. [<a href="https://docs.stripe.com/webhooks">src1</a>] [<a href="https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md">src2</a>]</p>
+  <pre><code class="language-python">import hmac, hashlib, time, base64
+
+def sign_webhook(payload_bytes, secret, msg_id):
+    timestamp = str(int(time.time()))
+    to_sign = f"{msg_id}.{timestamp}.{payload_bytes.decode('utf-8')}"
+    signature = hmac.new(
+        base64.b64decode(secret), to_sign.encode("utf-8"), hashlib.sha256
+    ).digest()
+    return {
+        "webhook-id": msg_id,
+        "webhook-timestamp": timestamp,
+        "webhook-signature": f"v1,{base64.b64encode(signature).decode()}"
+    }</code></pre>
+  <p><strong>Verify</strong>: <code>echo -n "msg_id.timestamp.body" | openssl dgst -sha256 -hmac "decoded_secret" -binary | base64</code> matches the signature header value.</p>
+
+  <h3>3. Build the delivery worker with retry logic</h3>
+  <p>The delivery worker sends the HTTP POST with signed headers and retries on failure using exponential backoff with jitter. Cap retries at a total window of ~3 days. [<a href="https://www.svix.com/resources/webhook-best-practices/sending/">src3</a>] [<a href="https://hookdeck.com/webhooks/guides/webhook-retry-best-practices">src7</a>]</p>
+  <pre><code class="language-python">RETRY_SCHEDULE = [0, 5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]
+
+async def deliver_webhook(url, payload, headers, max_retries=10):
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for attempt in range(max_retries):
+            if attempt > 0:
+                delay = RETRY_SCHEDULE[min(attempt, len(RETRY_SCHEDULE) - 1)]
+                await asyncio.sleep(delay + random.uniform(0, delay * 0.1))
+            try:
+                resp = await client.post(url, content=payload, headers=headers)
+                if 200 &lt;= resp.status_code &lt; 300:
+                    return True
+            except httpx.RequestError:
+                pass
+    return False  # Move to DLQ</code></pre>
+  <p><strong>Verify</strong>: Simulate a failing endpoint and confirm retries follow the schedule. After max retries, the event should appear in the dead letter queue.</p>
+
+  <h3>4. Implement receiver-side signature verification</h3>
+  <p>Receivers must verify the HMAC signature before processing any webhook. Reject requests with invalid signatures or stale timestamps. [<a href="https://docs.stripe.com/webhooks">src1</a>] [<a href="https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries">src6</a>]</p>
+  <pre><code class="language-javascript">const crypto = require('crypto');
+
+function verifyWebhook(req, secret, toleranceSec = 300) {
+  const msgId = req.headers['webhook-id'];
+  const timestamp = req.headers['webhook-timestamp'];
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp)) > toleranceSec)
+    throw new Error('Stale timestamp');
+
+  const toSign = `${msgId}.${timestamp}.${req.rawBody}`;
+  const expected = crypto
+    .createHmac('sha256', Buffer.from(secret, 'base64'))
+    .update(toSign).digest('base64');
+
+  const isValid = req.headers['webhook-signature'].split(' ').some(sig =>
+    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig.replace('v1,', '')))
+  );
+  if (!isValid) throw new Error('Invalid signature');
+  return JSON.parse(req.rawBody);
+}</code></pre>
+  <p><strong>Verify</strong>: Send a webhook with a tampered body and confirm it returns 401. Send a valid webhook and confirm it returns 200.</p>
+
+  <h3>5. Add idempotency on the receiver side</h3>
+  <p>Store processed webhook IDs to prevent duplicate processing. Use Redis SETNX with a 7-30 day TTL or a database unique constraint. [<a href="https://hookdeck.com/blog/webhooks-at-scale">src5</a>]</p>
+  <pre><code class="language-python">import redis
+r = redis.Redis()
+
+def process_webhook_idempotently(webhook_id, payload):
+    lock_key = f"webhook:processed:{webhook_id}"
+    if not r.set(lock_key, "1", nx=True, ex=86400 * 14):
+        return False  # Already processed
+    try:
+        handle_event(payload)
+        return True
+    except Exception:
+        r.delete(lock_key)
+        raise</code></pre>
+  <p><strong>Verify</strong>: Send the same webhook ID twice. First call processes; second call returns immediately without re-processing.</p>
+
+  <h3>6. Implement circuit breakers per endpoint</h3>
+  <p>When an endpoint consistently fails, stop sending to avoid wasting resources and triggering alert fatigue. Probe periodically to detect recovery. [<a href="https://www.svix.com/blog/webhook-architecture-design/">src4</a>] [<a href="https://hookdeck.com/blog/webhooks-at-scale">src5</a>]</p>
+  <pre><code class="language-python">class CircuitBreaker:
+    CLOSED, OPEN, HALF_OPEN = "closed", "open", "half_open"
+
+    def __init__(self, failure_threshold=5, recovery_timeout=300):
+        self.state = self.CLOSED
+        self.failure_count = 0
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.last_failure_time = 0
+
+    def can_send(self):
+        if self.state == self.CLOSED: return True
+        if self.state == self.OPEN:
+            if time.time() - self.last_failure_time > self.recovery_timeout:
+                self.state = self.HALF_OPEN
+                return True
+            return False
+        return True  # HALF_OPEN: allow probe</code></pre>
+  <p><strong>Verify</strong>: Trigger 5 consecutive failures for an endpoint. Confirm the circuit opens and no further deliveries are attempted until the recovery timeout.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Webhook Sender with Retry and Signing</h3>
+  <pre><code class="language-python"># Input:  event dict, subscriber endpoint URL, signing secret
+# Output: delivery result (success/failure/dlq)
+
+import hmac, hashlib, base64, time, json, uuid
+import httpx, asyncio, random
+
+RETRY_DELAYS = [0, 5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]
+
+async def send_webhook(event: dict, endpoint_url: str, secret: str) -> str:
+    msg_id = f"msg_{uuid.uuid4().hex[:16]}"
+    payload = json.dumps(event, separators=(",", ":")).encode("utf-8")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for attempt in range(len(RETRY_DELAYS)):
+            if attempt > 0:
+                delay = RETRY_DELAYS[attempt]
+                await asyncio.sleep(delay + random.uniform(0, delay * 0.1))
+            timestamp = str(int(time.time()))
+            to_sign = f"{msg_id}.{timestamp}.{payload.decode()}"
+            sig = hmac.new(
+                base64.b64decode(secret), to_sign.encode(), hashlib.sha256
+            ).digest()
+            headers = {
+                "Content-Type": "application/json",
+                "webhook-id": msg_id,
+                "webhook-timestamp": timestamp,
+                "webhook-signature": f"v1,{base64.b64encode(sig).decode()}",
+            }
+            try:
+                resp = await client.post(endpoint_url, content=payload, headers=headers)
+                if 200 &lt;= resp.status_code &lt; 300: return "delivered"
+                if 400 &lt;= resp.status_code &lt; 500 and resp.status_code not in (408, 429):
+                    return "rejected"
+            except httpx.RequestError:
+                pass
+    return "dlq"</code></pre>
+
+  <h3>Node.js: Webhook Receiver with Signature Verification</h3>
+  <pre><code class="language-javascript">// Input:  incoming HTTP POST with webhook-id, webhook-timestamp, webhook-signature headers
+// Output: 200 OK (accepted) or 401 Unauthorized (invalid signature)
+
+const express = require('express');       // express@4.x
+const crypto = require('crypto');
+const { Queue } = require('bullmq');      // bullmq@5.x
+
+const app = express();
+const webhookQueue = new Queue('webhooks');
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+const TOLERANCE_SEC = 300;
+
+app.use('/webhooks', express.raw({ type: 'application/json' }));
+
+app.post('/webhooks', async (req, res) => {
+  const msgId = req.headers['webhook-id'];
+  const timestamp = req.headers['webhook-timestamp'];
+  const sigHeader = req.headers['webhook-signature'];
+
+  const age = Math.abs(Math.floor(Date.now() / 1000) - parseInt(timestamp));
+  if (age > TOLERANCE_SEC) return res.status(401).json({ error: 'Stale timestamp' });
+
+  const toSign = `${msgId}.${timestamp}.${req.body.toString()}`;
+  const expected = crypto
+    .createHmac('sha256', Buffer.from(WEBHOOK_SECRET, 'base64'))
+    .update(toSign).digest('base64');
+
+  const isValid = sigHeader.split(' ').some(sig => {
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(expected), Buffer.from(sig.replace('v1,', ''))
+      );
+    } catch { return false; }
+  });
+  if (!isValid) return res.status(401).json({ error: 'Invalid signature' });
+
+  await webhookQueue.add('process', {
+    webhookId: msgId,
+    payload: JSON.parse(req.body.toString()),
+  }, { jobId: msgId });
+
+  res.status(200).json({ received: true });
+});
+
+app.listen(3000);</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Synchronous processing in the webhook handler</h3>
+  <pre><code class="language-python"># BAD -- processing in the request handler blocks the response,
+# causing timeouts that trigger retries and duplicate processing
+@app.post("/webhooks")
+def handle_webhook(request):
+    payload = request.json()
+    update_database(payload)          # Slow DB write
+    send_email_notification(payload)  # External API call
+    recalculate_billing(payload)      # CPU-intensive work
+    return {"ok": True}               # Response after 45 seconds -> provider retries</code></pre>
+
+  <h3>Correct: Acknowledge immediately, process asynchronously</h3>
+  <pre><code class="language-python"># GOOD -- return 200 immediately, process via background queue
+@app.post("/webhooks")
+async def handle_webhook(request):
+    payload = request.json()
+    await task_queue.enqueue("process_webhook", payload)  # Sub-millisecond
+    return Response(status_code=200)                       # Instant response</code></pre>
+
+  <h3>Wrong: Verifying signature over parsed JSON</h3>
+  <pre><code class="language-javascript">// BAD -- JSON.parse then JSON.stringify changes whitespace/key order
+app.post('/webhooks', express.json(), (req, res) => {
+  const body = JSON.stringify(req.body);  // Re-serialized, not original bytes!
+  const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+  // This comparison will ALWAYS fail
+});</code></pre>
+
+  <h3>Correct: Verify signature over raw request body</h3>
+  <pre><code class="language-javascript">// GOOD -- capture raw bytes before any parsing
+app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+  const rawBody = req.body.toString();  // Original bytes from sender
+  const sig = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
+    .update(rawBody).digest('base64');
+  // Compare against header using crypto.timingSafeEqual
+});</code></pre>
+
+  <h3>Wrong: Using equality operator for signature comparison</h3>
+  <pre><code class="language-python"># BAD -- string equality is not constant-time; enables timing attacks
+if computed_signature == received_signature:
+    process_webhook(payload)</code></pre>
+
+  <h3>Correct: Use constant-time comparison</h3>
+  <pre><code class="language-python"># GOOD -- hmac.compare_digest is constant-time
+import hmac
+if hmac.compare_digest(computed_signature, received_signature):
+    process_webhook(payload)</code></pre>
+
+  <h3>Wrong: No idempotency handling on the receiver</h3>
+  <pre><code class="language-python"># BAD -- duplicate deliveries charge the customer multiple times
+@app.post("/webhooks")
+def handle(request):
+    event = request.json()
+    charge_customer(event["data"]["customer_id"], event["data"]["amount"])
+    return {"ok": True}  # Processes EVERY delivery, including retries</code></pre>
+
+  <h3>Correct: Deduplicate using webhook ID before processing</h3>
+  <pre><code class="language-python"># GOOD -- check if webhook already processed using the unique event ID
+@app.post("/webhooks")
+def handle(request):
+    event = request.json()
+    webhook_id = request.headers["webhook-id"]
+    if redis.set(f"wh:{webhook_id}", "1", nx=True, ex=86400 * 14):
+        charge_customer(event["data"]["customer_id"], event["data"]["amount"])
+    return {"ok": True}  # Always return 200 to stop retries</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Timeout-triggered retry storms</strong>: Webhook receivers that do heavy processing synchronously cause timeouts (&gt;30s), triggering provider retries. Each retry also times out, creating an exponential cascade. Fix: <code>return 200 immediately, enqueue to background worker</code>. [<a href="https://docs.stripe.com/webhooks">src1</a>]</li>
+    <li><strong>Re-serialized body breaks signatures</strong>: Parsing JSON and re-serializing it changes whitespace, key order, or encoding, producing bytes that don't match the original signed payload. Fix: <code>capture and verify the raw request body bytes, never re-serialize</code>. [<a href="https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries">src6</a>]</li>
+    <li><strong>Missing idempotency on state-changing operations</strong>: At-least-once delivery means duplicates are guaranteed over time. Without deduplication, duplicate payments, notifications, or inventory changes occur. Fix: <code>store webhook_id in Redis (SETNX + TTL) or database unique constraint before processing</code>. [<a href="https://hookdeck.com/blog/webhooks-at-scale">src5</a>]</li>
+    <li><strong>No replay attack protection</strong>: Without timestamp verification, an attacker who captures a valid webhook can replay it indefinitely. Fix: <code>verify webhook-timestamp is within a 5-minute window of current time</code>. [<a href="https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md">src2</a>]</li>
+    <li><strong>Hardcoded secrets in source code</strong>: Webhook signing secrets committed to version control are exposed to anyone with repo access. Fix: <code>use environment variables or secret managers (Vault, AWS Secrets Manager) and rotate secrets periodically</code>. [<a href="https://www.svix.com/resources/webhook-best-practices/sending/">src3</a>]</li>
+    <li><strong>Not handling key rotation gracefully</strong>: Changing the signing secret instantly invalidates all in-flight webhooks. Fix: <code>support multiple signatures in the header during rotation; accept old and new key for a transition period</code>. [<a href="https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md">src2</a>]</li>
+    <li><strong>Ignoring HTTP 410 Gone responses</strong>: Continuing to retry against endpoints that return 410 wastes resources. Fix: <code>treat 410 as a permanent failure, disable the subscription, and notify the subscriber</code>. [<a href="https://www.svix.com/resources/webhook-best-practices/sending/">src3</a>]</li>
+    <li><strong>Unbounded payload sizes</strong>: Sending multi-megabyte webhook payloads causes receiver OOM errors and network timeouts. Fix: <code>keep payloads under 20KB; send a reference ID and let the receiver fetch full data via API</code>. [<a href="https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test webhook endpoint connectivity
+curl -X POST https://your-endpoint.com/webhooks \
+  -H "Content-Type: application/json" \
+  -H "webhook-id: msg_test123" \
+  -H "webhook-timestamp: $(date +%s)" \
+  -d '{"type":"test","data":{}}' -v
+
+# Generate HMAC-SHA256 signature for testing
+echo -n "msg_test123.$(date +%s).{\"type\":\"test\"}" | \
+  openssl dgst -sha256 -hmac "$(echo 'your_base64_secret' | base64 -d)" -binary | base64
+
+# Monitor webhook delivery queue depth (Redis)
+redis-cli LLEN webhook:delivery:queue
+
+# Check dead letter queue size
+redis-cli LLEN webhook:dlq
+
+# Verify webhook receiver is responding quickly
+curl -o /dev/null -s -w "Response time: %{time_total}s\n" \
+  -X POST https://your-endpoint.com/webhooks \
+  -H "Content-Type: application/json" -d '{}'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Standard / Provider</th><th scope="col">Current Version</th><th scope="col">Key Changes</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Standard Webhooks</td><td>v1.0 (2023)</td><td>First formal spec: webhook-id, webhook-timestamp, webhook-signature headers</td><td>Backed by Svix, adopted by Livekit, Clerk, Brex</td></tr>
+      <tr><td>Stripe Webhooks</td><td>v2 (2024)</td><td>Thin events (fetch full object via API), reduced payload sizes</td><td>v1 signatures still supported</td></tr>
+      <tr><td>GitHub Webhooks</td><td>v3 (2023)</td><td>Repository, organization, and app-level webhooks</td><td>Uses X-Hub-Signature-256 header</td></tr>
+      <tr><td>AWS EventBridge</td><td>2023</td><td>Partner event sources, API destinations with OAuth</td><td>Managed alternative to custom webhook infrastructure</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>You need to notify external systems of events in near-real-time</td><td>You need sub-100ms latency guaranteed</td><td>WebSockets or gRPC streaming</td></tr>
+      <tr><td>Subscribers are third-party systems you don't control</td><td>Both systems are within your infrastructure</td><td>Internal message queue (SQS, RabbitMQ, Kafka)</td></tr>
+      <tr><td>Event volume is moderate (&lt;50K events/sec)</td><td>Volume exceeds 100K events/sec sustained</td><td>Event streaming (Kafka, Pulsar) with consumer pull</td></tr>
+      <tr><td>You want a simple HTTP-based integration pattern</td><td>You need guaranteed exactly-once processing</td><td>Transactional outbox + consumer with two-phase commit</td></tr>
+      <tr><td>Subscribers need to process events at their own pace</td><td>You need strict global ordering of all events</td><td>Partitioned log (Kafka) with ordered consumers</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Webhooks provide at-least-once delivery, never exactly-once. Receivers must always implement idempotency regardless of how reliable the sender is.</li>
+    <li>Network partitions, DNS failures, and TLS certificate issues can cause silent delivery failures. Monitor delivery success rates per endpoint and alert on anomalies.</li>
+    <li>The Standard Webhooks specification is gaining adoption but is not yet an IETF RFC. Some providers (Stripe, GitHub) use proprietary header formats. Check your provider's specific documentation.</li>
+    <li>Circuit breakers must be per-endpoint, not global. One failing subscriber should not block delivery to healthy subscribers.</li>
+    <li>Webhook secrets must be unique per subscriber endpoint. Sharing a signing secret across multiple subscribers means compromising one subscriber compromises all of them.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/event-driven-architecture/2026" data-relationship="related_to">Event-Driven Architecture Patterns</a>
+    <a href="/software/system-design/message-queues/2026" data-relationship="related_to">Message Queues Comparison</a>
+    <a href="/software/system-design/async-notifications/2026" data-relationship="solves">Asynchronous Notification Systems</a>
+    <a href="/software/system-design/polling-vs-webhooks/2026" data-relationship="alternative_to">Polling vs Webhooks Trade-offs</a>
+    <a href="/software/system-design/websockets-architecture/2026" data-relationship="often_confused_with">WebSockets for Real-Time Communication</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

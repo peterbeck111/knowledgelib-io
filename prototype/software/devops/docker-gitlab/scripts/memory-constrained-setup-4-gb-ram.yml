@@ -1,0 +1,43 @@
+# docker-compose.yml -- GitLab CE for small/dev servers (4 GB RAM)
+# Disables non-essential services to reduce memory footprint
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.7.1-ce.0
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab.local'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.local'
+
+        # Reduce Puma workers and memory
+        puma['worker_processes'] = 0
+        puma['min_threads'] = 1
+        puma['max_threads'] = 2
+
+        # Reduce Sidekiq concurrency
+        sidekiq['max_concurrency'] = 5
+
+        # Disable monitoring to save ~200 MB
+        prometheus['enable'] = false
+        grafana['enable'] = false
+        alertmanager['enable'] = false
+        node_exporter['enable'] = false
+        redis_exporter['enable'] = false
+        postgres_exporter['enable'] = false
+        gitlab_exporter['enable'] = false
+
+        # Disable Container Registry if not needed
+        registry['enable'] = false
+
+        # Reduce PostgreSQL memory
+        postgresql['shared_buffers'] = '128MB'
+    ports:
+      - '80:80'
+      - '22:22'
+    volumes:
+      - '${GITLAB_HOME}/config:/etc/gitlab'
+      - '${GITLAB_HOME}/logs:/var/log/gitlab'
+      - '${GITLAB_HOME}/data:/var/opt/gitlab'
+    shm_size: '256m'

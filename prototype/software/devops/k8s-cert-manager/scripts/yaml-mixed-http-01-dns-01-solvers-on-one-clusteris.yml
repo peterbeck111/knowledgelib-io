@@ -1,0 +1,28 @@
+# Input:  Cluster with both public-facing and wildcard domains
+# Output: Single ClusterIssuer that routes challenges by domain type
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-mixed
+spec:
+  acme:
+    email: your-email@example.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-mixed-key
+    solvers:
+      # DNS-01 for wildcard domains
+      - selector:
+          dnsNames:
+            - "*.example.com"
+        dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
+      # HTTP-01 for everything else
+      - selector: {}
+        http01:
+          ingress:
+            ingressClassName: nginx

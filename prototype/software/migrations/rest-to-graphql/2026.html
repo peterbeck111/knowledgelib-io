@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Migrate a REST API to GraphQL | knowledgelib.io</title>
+  <meta name="description" content="Complete migration guide from REST API to GraphQL with 15 equivalence mappings, decision tree, 4 multi-language code examples (Node.js, Python...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/migrations/rest-to-graphql/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Migrate a REST API to GraphQL | knowledgelib.io">
+  <meta property="og:description" content="Complete migration guide from REST API to GraphQL with 15 equivalence mappings, decision tree, 4 multi-language code examples (Node.js, Python Strawberry, Ariadne, Apollo Connectors), and 5 anti-pattern pairs. Covers Apollo Server 5, Apollo Connectors (GA 2025), Strawberry 0.303+. 9 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/migrations/rest-to-graphql/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-17">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Migrate a REST API to GraphQL | knowledgelib.io">
+  <meta name="twitter:description" content="Complete migration guide from REST API to GraphQL with 15 equivalence mappings, decision tree, 4 multi-language code examples (Node.js, Python Strawberry, Ariadne, Apollo Connectors), and 5 anti-pattern pairs. Covers Apollo Server 5, Apollo Connectors (GA 2025), Strawberry 0.303+. 9 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/migrations/rest_to_graphql">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I migrate a REST API to GraphQL?">
+  <meta name="ai:aliases" content="REST to GraphQL migration guide; convert REST API to GraphQL; replace REST endpoints with GraphQL; wrap REST API in GraphQL layer; incremental REST to GraphQL migration; Apollo Connectors REST to GraphQL">
+  <meta name="ai:raw" content="/api/v1/units/software/migrations/rest-to-graphql/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="9">
+  <meta name="ai:freshness" content="monthly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="2.0">
+  <meta name="ai:first_published" content="2026-02-17">
+  <meta name="ai:inputs_needed" content="backend_language,client_count,migration_approach">
+  <meta name="ai:constraints" content="Apollo Server 4 EOL 2026-01-26 — use v5+ (Node.js 20+); DataLoader MUST be per-request; Always set maxDepth/maxComplexity limits; GraphQL returns HTTP 200 — reconfigure monitoring; Strawberry requires Python 3.10+; Never auto-generate schema from DB tables">
+  <meta name="ai:skip_this_unit_if" content="Adding GraphQL to microservices (not migrating from REST) → software/patterns/graphql-federation/2026; Need REST API design patterns → software/patterns/rest-api-design/2026; Comparing GraphQL vs REST for new project → software/patterns/api-architecture-comparison/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Migrate a REST API to GraphQL",
+    "headline": "How to Migrate a REST API to GraphQL",
+    "description": "Complete migration guide from REST API to GraphQL covering 15 equivalence mappings, incremental migration strategy using Apollo Server 5 and RESTDataSource, Apollo Connectors declarative approach, DataLoader for N+1 prevention, demand-oriented schema design, and multi-language code examples in Node.js, Python Strawberry, and Ariadne.",
+    "keywords": ["REST to GraphQL", "GraphQL migration", "Apollo Server 5", "Apollo Connectors", "RESTDataSource", "DataLoader", "schema design", "GraphQL resolvers", "Strawberry", "Ariadne", "N+1 problem", "Apollo Federation"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Apollo Server 5.x, Node.js 20+, Python 3.10+, Strawberry 0.303+, Ariadne 0.23+, GraphQL.js 16.11+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Migrating from REST to GraphQL",
+        "url": "https://docs.github.com/en/graphql/guides/migrating-from-rest-to-graphql"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Layering GraphQL on top of REST",
+        "url": "https://www.apollographql.com/blog/backend/layering-graphql-on-top-of-rest/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Handling the N+1 Problem",
+        "url": "https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Migrating from REST to GraphQL",
+        "url": "https://www.thisdot.co/blog/migrating-from-rest-to-graphql"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Demand Oriented Schema Design",
+        "url": "https://www.apollographql.com/docs/technotes/TN0027-demand-oriented-schema-design"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Solving the N+1 Problem for GraphQL through Batching",
+        "url": "https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Using GraphQL with Python - A Complete Guide",
+        "url": "https://www.apollographql.com/blog/graphql/python/complete-api-guide/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Migrating from Apollo Server 4 to Apollo Server 5",
+        "url": "https://www.apollographql.com/docs/apollo-server/migration"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Apollo Connectors for REST APIs",
+        "url": "https://www.apollographql.com/docs/graphos/connectors"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Migrate a REST API to GraphQL",
+    "description": "Structured migration guide from REST API to GraphQL with equivalence mappings, code examples, anti-patterns, decision tree, diagnostic commands, and Apollo Connectors declarative approach. Optimized for AI agent consumption.",
+    "keywords": ["REST", "GraphQL", "migration", "Apollo Server", "Apollo Connectors", "DataLoader", "schema design", "resolvers", "Strawberry", "Ariadne"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "GitHub"},
+      {"@type": "Organization", "name": "Apollo GraphQL"},
+      {"@type": "Organization", "name": "This Dot Labs"},
+      {"@type": "Organization", "name": "Shopify Engineering"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Migrations", "item": "https://knowledgelib.io/software/migrations/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Migrate a REST API to GraphQL" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I migrate a REST API to GraphQL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative for wrapping REST endpoints."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "REST to GraphQL migration guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative for wrapping REST endpoints."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "convert REST API to GraphQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative for wrapping REST endpoints."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "replace REST endpoints with GraphQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative for wrapping REST endpoints."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "wrap REST API in GraphQL layer",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative for wrapping REST endpoints."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "incremental REST to GraphQL migration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative for wrapping REST endpoints."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>How to Migrate a REST API to GraphQL</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I migrate a REST API to GraphQL?</h2>
+
+  <aside class="unit-meta" data-card-id="software/migrations/rest-to-graphql/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 9</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> monthly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Migrate incrementally by layering a GraphQL server on top of existing REST endpoints using resolvers that call your REST API as a data source, then gradually move resolver logic to direct database/service calls once the schema stabilizes. For 2025+, Apollo Connectors offer a declarative zero-code alternative.</li>
+    <li><strong>Key tool/command</strong>: <code>@apollo/datasource-rest</code> (Node.js code-based) or Apollo Connectors <code>@connect</code> directive (declarative) or <code>strawberry</code> / <code>ariadne</code> (Python) to wrap REST endpoints without rewriting backends.</li>
+    <li><strong>Watch out for</strong>: The N+1 problem &mdash; naive resolvers call your REST API once per list item. Use DataLoader to batch and deduplicate requests.</li>
+    <li><strong>Works with</strong>: Apollo Server 5.x (Node.js 20+), Strawberry 0.303+ (Python 3.10+), Ariadne 0.23+, GraphQL.js 16.11+.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Apollo Server 4 reached EOL on 2026-01-26 &mdash; use Apollo Server 5+ for new projects (requires Node.js 20+, <code>graphql</code> &gt;= 16.11.0). [<a href="https://www.apollographql.com/docs/apollo-server/migration">src8</a>]</li>
+    <li>DataLoader instances MUST be created per-request in the context factory &mdash; a global instance caches data across requests, serving stale data to different users. [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one">src3</a>]</li>
+    <li>Always set <code>maxDepth</code> and <code>maxComplexity</code> limits on production GraphQL endpoints &mdash; unbounded query depth enables denial-of-service attacks. [<a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>]</li>
+    <li>GraphQL responses always return HTTP 200 &mdash; monitoring tools that rely on HTTP status codes need reconfiguration to inspect the <code>errors</code> array. [<a href="https://docs.github.com/en/graphql/guides/migrating-from-rest-to-graphql">src1</a>]</li>
+    <li>Strawberry GraphQL requires Python 3.10+ since v0.268.0 (May 2025) &mdash; Python 3.9 support was dropped. [<a href="https://www.apollographql.com/blog/graphql/python/complete-api-guide/">src7</a>]</li>
+    <li>Never auto-generate GraphQL schema from database tables &mdash; this exposes internal column names, foreign keys, and audit fields to API consumers. Design schemas around client data needs. [<a href="https://www.apollographql.com/docs/technotes/TN0027-demand-oriented-schema-design">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">REST Concept</th><th scope="col">GraphQL Equivalent</th><th scope="col">Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>GET /users</code></td><td><code>query { users { id name } }</code></td><td>Single query, client picks fields</td></tr>
+      <tr><td><code>GET /users/123</code></td><td><code>query { user(id: "123") { name email } }</code></td><td>Arguments replace path params</td></tr>
+      <tr><td><code>POST /users</code> with JSON body</td><td><code>mutation { createUser(input: { name: "Alice" }) { id } }</code></td><td>Mutations for writes</td></tr>
+      <tr><td><code>PUT /users/123</code></td><td><code>mutation { updateUser(id: "123", input: {...}) { id } }</code></td><td>Partial updates via input types</td></tr>
+      <tr><td><code>DELETE /users/123</code></td><td><code>mutation { deleteUser(id: "123") { success } }</code></td><td>Return confirmation payload</td></tr>
+      <tr><td>Multiple endpoints for related data</td><td>Nested fields: <code>user { posts { title } }</code></td><td>One query replaces N requests</td></tr>
+      <tr><td>Query string filters <code>?status=active</code></td><td>Field arguments: <code>users(status: ACTIVE)</code></td><td>Enum types for filter values</td></tr>
+      <tr><td>Pagination via <code>?page=2&amp;limit=10</code></td><td>Cursor-based: <code>users(first: 10, after: "cursor")</code></td><td>Relay-style connection pattern</td></tr>
+      <tr><td>HTTP status codes (404, 500)</td><td><code>errors</code> array in response body</td><td>Errors coexist with partial data</td></tr>
+      <tr><td>API versioning <code>/v1/</code>, <code>/v2/</code></td><td>Schema evolution &mdash; deprecate fields</td><td><code>@deprecated(reason: "Use newField")</code></td></tr>
+      <tr><td>Content negotiation (Accept header)</td><td>Field selection in query</td><td>Client requests exactly what it needs</td></tr>
+      <tr><td>HATEOAS links</td><td>Type relationships in schema</td><td><code>User.posts</code> resolves related data</td></tr>
+      <tr><td>Rate limiting per endpoint</td><td>Query complexity analysis</td><td>Limit total cost per query</td></tr>
+      <tr><td>OpenAPI/Swagger spec</td><td>GraphQL SDL schema</td><td>Introspection replaces API docs</td></tr>
+      <tr><td>Webhook callbacks</td><td>Subscriptions</td><td><code>subscription { orderUpdated { id status } }</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+&#9500;&#9472;&#9472; Is the REST API stable with well-documented endpoints?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Layer GraphQL on top using RESTDataSource resolvers
+&#9474;   &#9492;&#9472;&#9472; NO &#8594; Stabilize REST API first, then migrate
+&#9500;&#9472;&#9472; How many clients consume the API?
+&#9474;   &#9500;&#9472;&#9472; ONE (single SPA) &#8594; Migrate client + server together, feature by feature
+&#9474;   &#9492;&#9472;&#9472; MULTIPLE &#8594; Keep REST running, add GraphQL as new endpoint, migrate clients one at a time
+&#9500;&#9472;&#9472; Is over-fetching / under-fetching a real problem?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; GraphQL provides immediate value &#8212; prioritize high-traffic endpoints
+&#9474;   &#9492;&#9472;&#9472; NO &#8594; Consider if migration complexity is worth it
+&#9500;&#9472;&#9472; Do you want a code-based or declarative approach?
+&#9474;   &#9500;&#9472;&#9472; DECLARATIVE &#8594; Apollo Connectors @connect directive (no resolver code, GA Feb 2025)
+&#9474;   &#9492;&#9472;&#9472; CODE-BASED &#8595;
+&#9500;&#9472;&#9472; Are you using microservices?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Apollo Federation v2 or schema stitching to compose a unified graph
+&#9474;   &#9492;&#9472;&#9472; NO (monolith) &#8594; Single GraphQL server with resolvers calling internal services
+&#9500;&#9472;&#9472; Is your backend Node.js or Python?
+&#9474;   &#9500;&#9472;&#9472; NODE.JS &#8594; Apollo Server 5 + @apollo/datasource-rest
+&#9474;   &#9500;&#9472;&#9472; PYTHON &#8594; Strawberry 0.303+ (code-first) or Ariadne 0.23+ (schema-first)
+&#9474;   &#9492;&#9472;&#9472; OTHER &#8594; graphql-java, gqlgen (Go), Hot Chocolate (.NET)
+&#9492;&#9472;&#9472; DEFAULT &#8594; Start with one feature, wrap REST endpoints in resolvers, expand incrementally</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Audit REST endpoints and map to a GraphQL schema</h3>
+  <p>Inventory all REST endpoints, their request/response shapes, and relationships between resources. Design a demand-oriented GraphQL schema based on how clients consume data, not how your backend stores it. [<a href="https://docs.github.com/en/graphql/guides/migrating-from-rest-to-graphql">src1</a>, <a href="https://www.apollographql.com/docs/technotes/TN0027-demand-oriented-schema-design">src5</a>]</p>
+  <pre><code class="language-bash"># List all REST endpoints from an OpenAPI spec
+cat openapi.json | jq '.paths | keys[]'
+
+# Count endpoints by HTTP method
+cat openapi.json | jq '[.paths[][]] | group_by(.operationId) | length'</code></pre>
+  <p><strong>Verify</strong>: The schema draft covers all client use cases. Compare the GraphQL type list against REST resource nouns.</p>
+
+  <h3>2. Set up a GraphQL server that wraps existing REST endpoints</h3>
+  <p>Install a GraphQL server and create resolvers that delegate to your existing REST API. This is the zero-risk starting point &mdash; no backend changes needed. [<a href="https://www.apollographql.com/blog/backend/layering-graphql-on-top-of-rest/">src2</a>, <a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>]</p>
+  <pre><code class="language-javascript">import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { RESTDataSource } from '@apollo/datasource-rest';
+
+class UsersAPI extends RESTDataSource {
+  baseURL = 'https://api.example.com/v1/';
+
+  async getUsers() { return this.get('users'); }
+  async getUser(id) { return this.get(`users/${encodeURIComponent(id)}`); }
+  async getUserPosts(userId) {
+    return this.get(`users/${encodeURIComponent(userId)}/posts`);
+  }
+}
+
+const typeDefs = `#graphql
+  type User { id: ID! name: String! email: String! posts: [Post!]! }
+  type Post { id: ID! title: String! content: String! }
+  type Query { users: [User!]! user(id: ID!): User }
+`;
+
+const resolvers = {
+  Query: {
+    users: (_, __, { dataSources }) =&gt; dataSources.usersAPI.getUsers(),
+    user: (_, { id }, { dataSources }) =&gt; dataSources.usersAPI.getUser(id),
+  },
+  User: {
+    posts: (parent, _, { dataSources }) =&gt;
+      dataSources.usersAPI.getUserPosts(parent.id),
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: <code>curl -X POST http://localhost:4000/ -H 'Content-Type: application/json' -d '{"query":"{ users { id name } }"}'</code> returns data from your REST API.</p>
+
+  <h3>3. Add DataLoader to prevent N+1 queries</h3>
+  <p>Every resolver that fetches related data will cause N+1 requests to your REST API. Add DataLoader to batch and deduplicate. [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one">src3</a>, <a href="https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching">src6</a>]</p>
+  <pre><code class="language-javascript">import DataLoader from 'dataloader';
+
+async function batchUserPosts(userIds) {
+  const results = await fetch(
+    `https://api.example.com/v1/posts?userIds=${userIds.join(',')}`
+  ).then(r =&gt; r.json());
+  return userIds.map(id =&gt; results.filter(post =&gt; post.userId === id));
+}
+
+// Create per-request DataLoader (MUST be per-request, not global)
+function createLoaders() {
+  return { userPosts: new DataLoader(batchUserPosts) };
+}
+
+const resolvers = {
+  User: {
+    posts: (parent, _, { loaders }) =&gt; loaders.userPosts.load(parent.id),
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: Query <code>{ users { id posts { title } } }</code> with 10 users &mdash; should see 2 total REST requests, not 11.</p>
+
+  <h3>4. Implement mutations for write operations</h3>
+  <p>Map REST POST/PUT/DELETE endpoints to GraphQL mutations. Use input types for structured arguments and return the mutated object. [<a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>, <a href="https://www.apollographql.com/docs/technotes/TN0027-demand-oriented-schema-design">src5</a>]</p>
+  <pre><code class="language-javascript">const resolvers = {
+  Mutation: {
+    createUser: async (_, { input }, { dataSources }) =&gt;
+      dataSources.usersAPI.post('users', { body: input }),
+    updateUser: async (_, { id, input }, { dataSources }) =&gt;
+      dataSources.usersAPI.patch(`users/${encodeURIComponent(id)}`, { body: input }),
+    deleteUser: async (_, { id }, { dataSources }) =&gt; {
+      await dataSources.usersAPI.delete(`users/${encodeURIComponent(id)}`);
+      return { success: true, message: `User ${id} deleted` };
+    },
+  },
+};</code></pre>
+  <p><strong>Verify</strong>: Execute a <code>createUser</code> mutation via GraphQL Playground and confirm the REST API received the POST request.</p>
+
+  <h3>5. Migrate clients to use GraphQL queries</h3>
+  <p>Update frontend code to use GraphQL queries instead of REST calls. Start with the highest-traffic pages. [<a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>]</p>
+  <pre><code class="language-javascript">// BEFORE: REST client code
+const user = await fetch('/api/v1/users/123').then(r =&gt; r.json());
+const posts = await fetch('/api/v1/users/123/posts').then(r =&gt; r.json());
+
+// AFTER: GraphQL client code (@apollo/client)
+import { gql, useQuery } from '@apollo/client';
+
+const USER_WITH_POSTS = gql`
+  query UserWithPosts($id: ID!) {
+    user(id: $id) { id name email posts { id title content } }
+  }
+`;
+
+function UserProfile({ userId }) {
+  const { data, loading, error } = useQuery(USER_WITH_POSTS, {
+    variables: { id: userId },
+  });
+  if (loading) return &lt;p&gt;Loading...&lt;/p&gt;;
+  if (error) return &lt;p&gt;Error: {error.message}&lt;/p&gt;;
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;{data.user.name}&lt;/h1&gt;
+      &lt;ul&gt;{data.user.posts.map(p =&gt; &lt;li key={p.id}&gt;{p.title}&lt;/li&gt;)}&lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+  <p><strong>Verify</strong>: Network tab shows a single GraphQL POST replacing multiple REST GET requests.</p>
+
+  <h3>6. Replace REST data sources with direct database calls</h3>
+  <p>Once the GraphQL schema is stable, remove the REST intermediary in resolvers. Call your database or internal services directly for better performance. [<a href="https://www.apollographql.com/blog/backend/layering-graphql-on-top-of-rest/">src2</a>]</p>
+  <pre><code class="language-javascript">// BEFORE: Resolver calls REST API
+users: (_, __, { dataSources }) =&gt; dataSources.usersAPI.getUsers(),
+
+// AFTER: Resolver calls database directly
+import { pool } from './db.js';
+users: async () =&gt; {
+  const { rows } = await pool.query('SELECT id, name, email FROM users');
+  return rows;
+},</code></pre>
+  <p><strong>Verify</strong>: GraphQL responses remain identical. Run integration tests to confirm no regressions.</p>
+
+  <h3>7. Deprecate and retire REST endpoints</h3>
+  <p>Once all clients use GraphQL, deprecate REST endpoints with a sunset timeline. Monitor access logs to confirm zero traffic before removal. [<a href="https://docs.github.com/en/graphql/guides/migrating-from-rest-to-graphql">src1</a>, <a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>]</p>
+  <pre><code class="language-bash"># Check for remaining REST API traffic
+grep 'GET /api/v1/' access.log | wc -l
+
+# Add deprecation headers to REST responses (Express middleware)
+# res.set('Sunset', 'Sat, 01 Jun 2026 00:00:00 GMT');
+# res.set('Deprecation', 'true');</code></pre>
+  <p><strong>Verify</strong>: REST endpoint access count is zero over a 30-day window before removing the code.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js/TypeScript: Complete GraphQL server wrapping a REST API</h3>
+  <pre><code class="language-typescript">// Input:  Existing REST API at https://api.example.com/v1/
+// Output: GraphQL server that proxies and reshapes REST responses
+
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { RESTDataSource } from '@apollo/datasource-rest';
+import DataLoader from 'dataloader';
+
+class ProductsAPI extends RESTDataSource {
+  override baseURL = 'https://api.example.com/v1/';
+
+  async getProducts(category?: string): Promise&lt;Product[]&gt; {
+    const params = category ? { category } : {};
+    return this.get('products', { params });
+  }
+
+  async getProduct(id: string): Promise&lt;Product&gt; {
+    return this.get(`products/${encodeURIComponent(id)}`);
+  }
+
+  async getReviewsByProductIds(ids: string[]): Promise&lt;Review[][]&gt; {
+    const reviews = await this.get('reviews', {
+      params: { productIds: ids.join(',') },
+    });
+    return ids.map(id =&gt; reviews.filter((r: Review) =&gt; r.productId === id));
+  }
+}
+
+const typeDefs = `#graphql
+  type Product {
+    id: ID! name: String! price: Float! category: String!
+    reviews: [Review!]! averageRating: Float
+  }
+  type Review { id: ID! rating: Int! comment: String author: String! }
+  type Query {
+    products(category: String): [Product!]!
+    product(id: ID!): Product
+  }
+  type Mutation {
+    addReview(productId: ID!, rating: Int!, comment: String, author: String!): Review!
+  }
+`;
+
+const resolvers = {
+  Query: {
+    products: (_: unknown, args: { category?: string }, { dataSources }: Context) =&gt;
+      dataSources.productsAPI.getProducts(args.category),
+    product: (_: unknown, { id }: { id: string }, { dataSources }: Context) =&gt;
+      dataSources.productsAPI.getProduct(id),
+  },
+  Product: {
+    reviews: (parent: Product, _: unknown, { loaders }: Context) =&gt;
+      loaders.reviews.load(parent.id),
+    averageRating: async (parent: Product, _: unknown, { loaders }: Context) =&gt; {
+      const reviews = await loaders.reviews.load(parent.id);
+      if (reviews.length === 0) return null;
+      return reviews.reduce((sum: number, r: Review) =&gt; sum + r.rating, 0) / reviews.length;
+    },
+  },
+};</code></pre>
+
+  <h3>Python/Strawberry: Code-first GraphQL wrapping REST endpoints</h3>
+  <pre><code class="language-python"># Input:  Existing Flask REST API
+# Output: Strawberry GraphQL server wrapping the REST endpoints
+
+import strawberry
+import httpx
+from typing import Optional
+
+REST_BASE_URL = "https://api.example.com/v1"
+
+@strawberry.type
+class User:
+    id: strawberry.ID
+    name: str
+    email: str
+
+@strawberry.input
+class CreateUserInput:
+    name: str
+    email: str
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    async def users(self) -&gt; list[User]:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{REST_BASE_URL}/users")
+            resp.raise_for_status()
+            return [User(**u) for u in resp.json()]
+
+    @strawberry.field
+    async def user(self, id: strawberry.ID) -&gt; Optional[User]:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{REST_BASE_URL}/users/{id}")
+            if resp.status_code == 404:
+                return None
+            resp.raise_for_status()
+            return User(**resp.json())
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def create_user(self, input: CreateUserInput) -&gt; User:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{REST_BASE_URL}/users",
+                json={"name": input.name, "email": input.email},
+            )
+            resp.raise_for_status()
+            return User(**resp.json())
+
+schema = strawberry.Schema(query=Query, mutation=Mutation)
+
+# Run with: uvicorn app:app
+from strawberry.fastapi import GraphQLRouter
+from fastapi import FastAPI
+app = FastAPI()
+app.include_router(GraphQLRouter(schema), prefix="/graphql")</code></pre>
+
+  <h3>Python/Ariadne: Schema-first GraphQL wrapping REST</h3>
+  <pre><code class="language-python"># Input:  Existing REST API
+# Output: Ariadne schema-first GraphQL server
+
+from ariadne import QueryType, MutationType, make_executable_schema
+from ariadne.asgi import GraphQL
+import httpx
+
+REST_BASE_URL = "https://api.example.com/v1"
+
+type_defs = """
+    type User { id: ID! name: String! email: String! }
+    type Query { users: [User!]! user(id: ID!): User }
+    type Mutation { createUser(name: String!, email: String!): User! }
+"""
+
+query = QueryType()
+mutation = MutationType()
+
+@query.field("users")
+async def resolve_users(_, info):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{REST_BASE_URL}/users")
+        return resp.json()
+
+@query.field("user")
+async def resolve_user(_, info, id):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{REST_BASE_URL}/users/{id}")
+        if resp.status_code == 404:
+            return None
+        return resp.json()
+
+@mutation.field("createUser")
+async def resolve_create_user(_, info, name, email):
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{REST_BASE_URL}/users", json={"name": name, "email": email}
+        )
+        return resp.json()
+
+schema = make_executable_schema(type_defs, query, mutation)
+app = GraphQL(schema)
+# Run with: uvicorn app:app</code></pre>
+
+  <h3>Apollo Connectors: Declarative REST-to-GraphQL (no resolver code)</h3>
+  <pre><code class="language-graphql"># Input:  Existing REST API with OpenAPI spec
+# Output: GraphQL schema mapped to REST via @connect (GA Feb 2025) [src9]
+# Requires: Apollo GraphOS + Router 2.0
+
+extend schema
+  @link(url: "https://specs.apollo.dev/connect/v0.1",
+        import: ["@connect", "@source"])
+  @source(name: "restAPI",
+          http: { baseURL: "https://api.example.com/v1" })
+
+type Query {
+  users: [User!]!
+    @connect(source: "restAPI", http: { GET: "/users" })
+  user(id: ID!): User
+    @connect(source: "restAPI", http: { GET: "/users/{$args.id}" })
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  posts: [Post!]!
+    @connect(source: "restAPI",
+             http: { GET: "/users/{$this.id}/posts" })
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Mirroring REST endpoint structure in GraphQL schema</h3>
+  <pre><code class="language-graphql">// &#x274C; BAD &#8212; Schema mimics REST URL hierarchy and HTTP verbs
+type Query {
+  getUsers: [User]
+  getUserById(id: ID!): User
+  postUser(name: String!, email: String!): User
+  putUser(id: ID!, name: String): User
+  deleteUser(id: ID!): Boolean
+}</code></pre>
+
+  <h3>Correct: Design schema around client data needs</h3>
+  <pre><code class="language-graphql">// &#x2705; GOOD &#8212; Demand-oriented schema with proper queries/mutations
+type Query {
+  users(filter: UserFilter): [User!]!
+  user(id: ID!): User
+}
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): DeleteResult!
+}</code></pre>
+
+  <h3>Wrong: Creating a new REST call per field resolver (N+1)</h3>
+  <pre><code class="language-javascript">// &#x274C; BAD &#8212; Each user triggers a separate REST call for posts
+const resolvers = {
+  User: {
+    posts: async (parent) =&gt; {
+      // Called N times &#8212; once per user in the list
+      const res = await fetch(`/api/v1/users/${parent.id}/posts`);
+      return res.json();
+    },
+  },
+};</code></pre>
+
+  <h3>Correct: Use DataLoader to batch REST calls</h3>
+  <pre><code class="language-javascript">// &#x2705; GOOD &#8212; All post lookups batched into a single request
+import DataLoader from 'dataloader';
+
+const postLoader = new DataLoader(async (userIds) =&gt; {
+  const res = await fetch(`/api/v1/posts?userIds=${userIds.join(',')}`);
+  const posts = await res.json();
+  return userIds.map(id =&gt; posts.filter(p =&gt; p.userId === id));
+});
+
+const resolvers = {
+  User: { posts: (parent) =&gt; postLoader.load(parent.id) },
+};</code></pre>
+
+  <h3>Wrong: Auto-generating GraphQL schema from database tables</h3>
+  <pre><code class="language-javascript">// &#x274C; BAD &#8212; Exposes internal database structure and column names
+// Auto-generated types include: user_created_at_utc, fk_department_id,
+// is_deleted_flag, internal_audit_notes
+const typeDefs = generateSchemaFromDB(database);</code></pre>
+
+  <h3>Correct: Manually design client-facing schema, map in resolvers</h3>
+  <pre><code class="language-javascript">// &#x2705; GOOD &#8212; Clean client-facing types, resolvers handle mapping
+const typeDefs = `#graphql
+  type User {
+    id: ID!
+    name: String!
+    department: Department!      # Relationship, not FK
+    createdAt: DateTime!         # Clean name, not column name
+  }
+`;
+const resolvers = {
+  User: {
+    department: (user) =&gt; getDepartment(user.fk_department_id),
+    createdAt: (user) =&gt; user.user_created_at_utc,
+  },
+};</code></pre>
+
+  <h3>Wrong: Returning HTTP status codes in GraphQL responses</h3>
+  <pre><code class="language-javascript">// &#x274C; BAD &#8212; Using HTTP semantics inside GraphQL
+const resolvers = {
+  Query: {
+    user: async (_, { id }, { res }) =&gt; {
+      const user = await findUser(id);
+      if (!user) {
+        res.status(404);  // GraphQL always returns HTTP 200
+        return null;
+      }
+      return user;
+    },
+  },
+};</code></pre>
+
+  <h3>Correct: Use GraphQL error handling with extensions</h3>
+  <pre><code class="language-javascript">// &#x2705; GOOD &#8212; GraphQL-native error handling
+import { GraphQLError } from 'graphql';
+
+const resolvers = {
+  Query: {
+    user: async (_, { id }) =&gt; {
+      const user = await findUser(id);
+      if (!user) {
+        throw new GraphQLError('User not found', {
+          extensions: { code: 'NOT_FOUND', argumentName: 'id' },
+        });
+      }
+      return user;
+    },
+  },
+};</code></pre>
+
+  <h3>Wrong: Using Apollo Server 4 in new projects (EOL since Jan 2026)</h3>
+  <pre><code class="language-javascript">// &#x274C; BAD &#8212; Apollo Server 4 is end-of-life as of 2026-01-26
+import { ApolloServer } from '@apollo/server'; // v4
+import { expressMiddleware } from '@apollo/server/express4'; // v4 built-in Express</code></pre>
+
+  <h3>Correct: Use Apollo Server 5 with separate integration packages</h3>
+  <pre><code class="language-javascript">// &#x2705; GOOD &#8212; Apollo Server 5 with explicit framework integration [src8]
+import { ApolloServer } from '@apollo/server'; // v5
+import { expressMiddleware } from '@as-integrations/express4'; // separate package
+// Or for standalone (no longer uses Express internally):
+import { startStandaloneServer } from '@apollo/server/standalone';</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>N+1 query problem</strong>: Naive field resolvers call your REST API once per item in a list, creating N+1 total requests. Fix: Use <code>DataLoader</code> to batch all IDs into a single request. Create a new DataLoader instance per request. [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one">src3</a>, <a href="https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching">src6</a>]</li>
+    <li><strong>Mirroring REST structure in schema</strong>: Copying REST endpoint paths and HTTP verbs into your GraphQL schema defeats the purpose of migration. Fix: Design the schema based on client data consumption patterns (demand-oriented design). [<a href="https://www.apollographql.com/docs/technotes/TN0027-demand-oriented-schema-design">src5</a>]</li>
+    <li><strong>Global DataLoader instances</strong>: DataLoader must be created per-request. A global instance caches data across requests, serving stale data to different users. Fix: Create DataLoader instances in the context factory, not at module level. [<a href="https://www.apollographql.com/docs/graphos/schema-design/guides/handling-n-plus-one">src3</a>]</li>
+    <li><strong>No query complexity limits</strong>: GraphQL queries can request arbitrarily deep nested data, unlike bounded REST endpoints. Fix: Implement query depth limiting and cost analysis using <code>graphql-query-complexity</code> or Apollo's built-in limits. [<a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>]</li>
+    <li><strong>Breaking clients during schema evolution</strong>: Removing fields without deprecation breaks existing queries. Fix: Use <code>@deprecated(reason: "Use newField")</code> directive, monitor usage, remove only after 90+ days of zero usage. [<a href="https://docs.github.com/en/graphql/guides/migrating-from-rest-to-graphql">src1</a>]</li>
+    <li><strong>Authentication gaps</strong>: REST middleware may not automatically apply to GraphQL resolvers. Fix: Implement authentication in the GraphQL context factory, not in individual resolvers. [<a href="https://www.thisdot.co/blog/migrating-from-rest-to-graphql">src4</a>]</li>
+    <li><strong>Over-fetching from REST in resolvers</strong>: Resolvers calling REST endpoints still fetch full responses even when clients request few fields. Fix: Accept this during migration; later replace REST calls with direct database queries selecting only needed columns. [<a href="https://www.apollographql.com/blog/backend/layering-graphql-on-top-of-rest/">src2</a>]</li>
+    <li><strong>Using EOL Apollo Server 4 in new projects</strong>: Apollo Server 4 reached end-of-life on 2026-01-26. Fix: Use Apollo Server 5 (requires Node.js 20+, <code>graphql</code> &gt;= 16.11.0). The upgrade is minimal. [<a href="https://www.apollographql.com/docs/apollo-server/migration">src8</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test GraphQL endpoint with curl
+curl -X POST http://localhost:4000/graphql \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"{ __schema { types { name } } }"}'
+
+# Introspect schema (get full SDL)
+npx graphql-inspector introspect http://localhost:4000/graphql --write schema.graphql
+
+# Check for breaking changes between schema versions
+npx graphql-inspector diff old-schema.graphql new-schema.graphql
+
+# Validate schema against best practices
+npx graphql-schema-linter schema.graphql
+
+# Test query performance
+npx graphql-benchmark --endpoint http://localhost:4000/graphql \
+  --query '{ users { id name posts { title } } }'
+
+# Check Apollo Server version (ensure not on EOL v4)
+npm ls @apollo/server</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Apollo Server 5.x (2025)</td><td>Current</td><td>Express middleware &rarr; <code>@as-integrations/*</code>; Node.js 20+ required</td><td>Replace <code>@apollo/server/express4</code> with <code>@as-integrations/express4</code></td></tr>
+      <tr><td>Apollo Server 4.x (2023)</td><td>EOL (2026-01-26)</td><td>Standalone package, new plugin API</td><td>Upgrade to v5 (minimal changes)</td></tr>
+      <tr><td>Apollo Server 3.x (2021)</td><td>EOL</td><td><code>apollo-datasource-rest</code> &rarr; <code>@apollo/datasource-rest</code></td><td>Skip to v5 directly</td></tr>
+      <tr><td>Apollo Connectors (2025)</td><td>GA</td><td>N/A (new feature)</td><td>Declarative <code>@connect</code> for REST-to-GraphQL</td></tr>
+      <tr><td>Strawberry 0.303+ (2026)</td><td>Current</td><td>Python 3.9 dropped (v0.268.0); CSRF default in Django view</td><td>Require Python 3.10+</td></tr>
+      <tr><td>Strawberry 0.220+ (2024)</td><td>Supported</td><td>Pydantic v2, async by default</td><td>Update type annotations</td></tr>
+      <tr><td>Ariadne 0.23+ (2024)</td><td>Current</td><td>None significant</td><td>&mdash;</td></tr>
+      <tr><td>GraphQL.js 16.x (2022)</td><td>Current</td><td>Pure ESM, graphql-tools v9</td><td>Use ESM imports; required by Apollo Server 5</td></tr>
+      <tr><td>Apollo Client 4.0 (2025)</td><td>Current</td><td>Leaner bundles, TypeScript safety</td><td>Update client-side imports</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multiple clients need different data shapes from the same API</td><td>Simple CRUD API with one client</td><td>Keep REST</td></tr>
+      <tr><td>Mobile + web clients with different bandwidth needs</td><td>File upload is the primary use case</td><td>REST with multipart/form-data</td></tr>
+      <tr><td>Frontend fetches from 3+ REST endpoints per page load</td><td>Backend-to-backend microservice communication</td><td>gRPC or REST</td></tr>
+      <tr><td>You need real-time subscriptions alongside queries</td><td>Simple webhooks suffice for async events</td><td>REST + webhooks</td></tr>
+      <tr><td>API consumers are internal teams you can coordinate with</td><td>Public API with thousands of external consumers</td><td>REST with OpenAPI spec</td></tr>
+      <tr><td>Over-fetching is measurably hurting mobile performance</td><td>All endpoints return &lt;1 KB responses</td><td>REST is fine</td></tr>
+      <tr><td>You want declarative REST orchestration without custom resolvers</td><td>You need fine-grained control over every resolver</td><td>Apollo Connectors vs code-based resolvers</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>GraphQL responses always return HTTP 200 &mdash; errors are in the response body's <code>errors</code> array. Monitoring tools that rely on HTTP status codes need reconfiguration. <strong>Exception</strong>: Apollo Server 5 now returns HTTP 400 for variable coercion errors.</li>
+    <li>Caching is harder with GraphQL because POST requests bypass browser/CDN caches by default. Use persisted queries or GET requests for caching, and implement resolver-level caching with DataLoader or Redis.</li>
+    <li>File uploads require special handling &mdash; the GraphQL spec does not define file upload. Use the <code>graphql-upload</code> package or handle uploads via a separate REST endpoint.</li>
+    <li>Query complexity can cause denial-of-service if unbounded. Always set <code>maxDepth</code> and <code>maxComplexity</code> limits in production.</li>
+    <li>Apollo Server 5 no longer bundles Express &mdash; <code>startStandaloneServer</code> uses Node.js built-in HTTP server. For Express, install <code>@as-integrations/express4</code> or <code>@as-integrations/express5</code> separately.</li>
+    <li>DataLoader batching only works within a single event loop tick &mdash; if your resolver awaits other async work before calling <code>loader.load()</code>, the batch window may close prematurely.</li>
+    <li>Apollo Connectors (<code>@connect</code> directive) require Apollo GraphOS and Router 2.0 &mdash; they are not available in self-hosted open-source Apollo Server alone.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/patterns/rest-api-design/2026" data-relationship="depends_on">REST API Design Patterns</a>
+    <a href="/software/migrations/monolith-to-microservices/2026" data-relationship="related_to">Monolith to Microservices Migration</a>
+    <a href="/software/migrations/javascript-to-typescript/2026" data-relationship="related_to">JavaScript to TypeScript Migration</a>
+    <a href="/software/debugging/database-query-performance/2026" data-relationship="related_to">Database Query Optimization</a>
+    <a href="/software/debugging/graphql-n-plus-one/2026" data-relationship="solves">GraphQL N+1 Query Problem</a>
+    <a href="/software/patterns/grpc-api-design/2026" data-relationship="alternative_to">gRPC API Design</a>
+    <a href="/software/patterns/graphql-federation/2026" data-relationship="often_confused_with">GraphQL Federation</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Migrations<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

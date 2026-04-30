@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Docker Compose: Nginx Reverse Proxy + SSL with | knowledgelib.io</title>
+  <meta name="description" content="Complete Docker Compose reference for Nginx reverse proxy with SSL termination using Let's Encrypt. Covers manual Certbot setup and automated nginx-proxy + acme-companion, with production-grade TLS config, auto-renewal, security headers, and 6 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/docker-nginx-ssl/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Docker Compose: Nginx Reverse Proxy + SSL with | knowledgelib.io">
+  <meta property="og:description" content="Complete Docker Compose reference for Nginx reverse proxy with SSL termination using Let's Encrypt. Covers manual Certbot setup and automated nginx-proxy + acme-companion, with production-grade TLS config, auto-renewal, security headers, and 6 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/docker-nginx-ssl/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Docker Compose: Nginx Reverse Proxy + SSL with | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Docker Compose reference for Nginx reverse proxy with SSL termination using Let's Encrypt. Covers manual Certbot setup and automated nginx-proxy + acme-companion, with production-grade TLS config, auto-renewal, security headers, and 6 anti-patterns. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Docker Nginx SSL">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="Docker Compose reference: Nginx Reverse Proxy + SSL">
+  <meta name="ai:aliases" content="Docker Compose Nginx SSL Let's Encrypt; nginx reverse proxy Docker SSL termination; Docker Compose HTTPS setup with Certbot; nginx-proxy acme-companion Docker setup; automated SSL certificates Docker Nginx; Let's Encrypt Docker Compose auto renewal; Docker Nginx reverse proxy TLS configuration; Docker Compose SSL termination reverse proxy">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/docker-nginx-ssl/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="approach,service_count">
+  <meta name="ai:constraints" content="Port 80 MUST remain open for ACME challenges; NEVER store TLS keys in images or VCS; ssl_protocols MUST be TLSv1.2 TLSv1.3 only; Let's Encrypt rate limits: 50 certs/domain/week; Docker socket mount requires read-only (:ro)">
+  <meta name="ai:skip_this_unit_if" content="Need Kubernetes ingress TLS → software/devops/kubernetes-ingress-tls/2026; Need Traefik reverse proxy → software/devops/traefik-docker-ssl/2026; Need Caddy auto-HTTPS → software/devops/caddy-docker-ssl/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Docker Compose: Nginx Reverse Proxy + SSL with Let's Encrypt",
+    "headline": "Docker Compose: Nginx Reverse Proxy + SSL with Let's Encrypt",
+    "description": "Complete Docker Compose reference for configuring Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion. Includes production SSL configuration, auto-renewal, security headers, and multi-service setups.",
+    "keywords": ["Docker Compose", "Nginx", "reverse proxy", "SSL", "TLS", "Let's Encrypt", "Certbot", "HTTPS", "nginx-proxy", "acme-companion", "SSL termination", "Docker"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Docker Compose v2+, Nginx 1.25+, Certbot 2.x, Let's Encrypt ACME v2",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "NGINX SSL Termination",
+        "url": "https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "acme-companion: Automated ACME SSL certificate generation for nginx-proxy",
+        "url": "https://github.com/nginx-proxy/acme-companion"
+      },
+      {
+        "@type": "WebPage",
+        "name": "letsencrypt-docker-compose: Nginx and Let's Encrypt with Docker Compose",
+        "url": "https://github.com/eugene-khyst/letsencrypt-docker-compose"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Official Nginx Docker Image",
+        "url": "https://hub.docker.com/_/nginx"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Certbot Docker Image",
+        "url": "https://hub.docker.com/r/certbot/certbot"
+      },
+      {
+        "@type": "WebPage",
+        "name": "NGINX TLS 1.3 Hardening: A+ SSL Configuration Guide",
+        "url": "https://www.getpagespeed.com/server-setup/nginx/nginx-tls-1-3-hardening/amp"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Set Up Docker with Nginx as a Reverse Proxy",
+        "url": "https://oneuptime.com/blog/post/2026-01-16-docker-nginx-reverse-proxy/view"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Docker Compose: Nginx Reverse Proxy + SSL with Let's Encrypt",
+    "description": "Structured knowledge unit on configuring Docker Compose with Nginx reverse proxy and automated SSL via Let's Encrypt. Covers manual Certbot and automated nginx-proxy approaches with production TLS hardening.",
+    "keywords": ["Docker Compose", "Nginx", "reverse proxy", "SSL", "TLS", "Let's Encrypt", "Certbot", "HTTPS", "nginx-proxy", "acme-companion"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "NGINX Inc."},
+      {"@type": "Organization", "name": "nginx-proxy project"},
+      {"@type": "Organization", "name": "Docker Inc."},
+      {"@type": "Organization", "name": "Electronic Frontier Foundation"},
+      {"@type": "Organization", "name": "GetPageSpeed"},
+      {"@type": "Organization", "name": "OneUptime"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Docker Compose: Nginx Reverse Proxy + SSL" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Docker Compose reference: Nginx Reverse Proxy + SSL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker Compose Nginx SSL Let's Encrypt",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "nginx reverse proxy Docker SSL termination",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Docker Compose HTTPS setup with Certbot",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "nginx-proxy acme-companion Docker setup",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "automated SSL certificates Docker Nginx",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Docker Compose: Nginx Reverse Proxy + SSL with Let's Encrypt</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">Docker Compose reference: Nginx Reverse Proxy + SSL</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/docker-nginx-ssl/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use Docker Compose to run Nginx as a TLS-terminating reverse proxy with automated Let's Encrypt certificate management via Certbot or nginx-proxy + acme-companion.</li>
+    <li><strong>Key tool/command</strong>: <code>docker compose up -d</code> with Nginx + Certbot services sharing certificate volumes, or <code>nginxproxy/nginx-proxy</code> + <code>nginxproxy/acme-companion</code> for zero-config automated SSL.</li>
+    <li><strong>Watch out for</strong>: Blocking port 80 prevents ACME HTTP-01 challenges -- certificates will fail to issue or renew silently.</li>
+    <li><strong>Works with</strong>: Docker Compose v2+, Nginx 1.25+ (TLSv1.3), Certbot 2.x+, Let's Encrypt ACME v2.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Port 80 MUST remain open and publicly reachable for HTTP-01 ACME challenges -- blocking it prevents certificate issuance and renewal</li>
+    <li>NEVER store TLS private keys in Docker images or version control -- use named volumes or host-mounted secrets</li>
+    <li>ssl_protocols MUST be set to TLSv1.2 TLSv1.3 only -- TLSv1.0 and TLSv1.1 are deprecated and insecure</li>
+    <li>Let's Encrypt rate limits apply: 50 certificates per registered domain per week, 5 duplicate certificates per week</li>
+    <li>Docker socket mounting (/var/run/docker.sock) grants root-equivalent access -- use read-only mount (:ro) and restrict container privileges</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Service Configuration Summary</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Service</th><th scope="col">Image</th><th scope="col">Ports</th><th scope="col">Volumes</th><th scope="col">Key Env</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Nginx (reverse proxy)</td><td><code>nginx:1.27-alpine</code></td><td><code>80:80</code>, <code>443:443</code></td><td><code>./nginx/conf.d:/etc/nginx/conf.d:ro</code>, <code>certs:/etc/letsencrypt:ro</code></td><td>--</td></tr>
+      <tr><td>Certbot</td><td><code>certbot/certbot:v2.11.0</code></td><td>--</td><td><code>certs:/etc/letsencrypt</code>, <code>certbot-www:/var/www/certbot</code></td><td><code>--webroot -w /var/www/certbot</code></td></tr>
+      <tr><td>nginx-proxy (automated)</td><td><code>nginxproxy/nginx-proxy:1.6</code></td><td><code>80:80</code>, <code>443:443</code></td><td><code>certs:/etc/nginx/certs</code>, <code>html:/usr/share/nginx/html</code>, <code>/var/run/docker.sock:/tmp/docker.sock:ro</code></td><td>--</td></tr>
+      <tr><td>acme-companion</td><td><code>nginxproxy/acme-companion:2.4</code></td><td>--</td><td><code>certs:/etc/nginx/certs</code>, <code>html:/usr/share/nginx/html</code>, <code>acme:/etc/acme.sh</code>, <code>/var/run/docker.sock:/var/run/docker.sock:ro</code></td><td><code>DEFAULT_EMAIL=you@example.com</code></td></tr>
+      <tr><td>Upstream app</td><td>any app image</td><td>expose <code>8080</code></td><td>--</td><td><code>VIRTUAL_HOST=app.example.com</code>, <code>LETSENCRYPT_HOST=app.example.com</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>SSL Configuration Directives</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Directive</th><th scope="col">Recommended Value</th><th scope="col">Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ssl_protocols</code></td><td><code>TLSv1.2 TLSv1.3</code></td><td>Allow only modern TLS versions</td></tr>
+      <tr><td><code>ssl_ciphers</code></td><td><code>ECDHE-ECDSA-AES128-GCM-SHA256:...</code></td><td>Strong AEAD ciphers only</td></tr>
+      <tr><td><code>ssl_prefer_server_ciphers</code></td><td><code>off</code></td><td>Let client choose (TLSv1.3 ignores this)</td></tr>
+      <tr><td><code>ssl_session_cache</code></td><td><code>shared:SSL:10m</code></td><td>Cache ~40,000 TLS sessions</td></tr>
+      <tr><td><code>ssl_session_timeout</code></td><td><code>1d</code></td><td>Session ticket lifetime</td></tr>
+      <tr><td><code>ssl_stapling</code></td><td><code>on</code></td><td>OCSP stapling for faster handshakes</td></tr>
+      <tr><td><code>ssl_stapling_verify</code></td><td><code>on</code></td><td>Verify OCSP responses</td></tr>
+      <tr><td><code>Strict-Transport-Security</code></td><td><code>"max-age=63072000" always</code></td><td>HSTS -- 2 year max-age</td></tr>
+      <tr><td><code>X-Content-Type-Options</code></td><td><code>"nosniff" always</code></td><td>Prevent MIME sniffing</td></tr>
+      <tr><td><code>X-Frame-Options</code></td><td><code>"DENY" always</code></td><td>Clickjacking protection</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START: What is your Docker reverse proxy + SSL need?
+&#9500;&#9472;&#9472; Do you have 1-2 backend services with fixed domains?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Approach A: Manual Nginx + Certbot (full control)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Do you frequently add/remove services or have 3+ backends?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use Approach B: nginx-proxy + acme-companion (auto-discovery)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Do you need wildcard certificates?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use DNS-01 challenge with acme-companion
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Are you in local development (no public domain)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use mkcert for local CA + self-signed certs
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; Start with Approach A (manual Nginx + Certbot)</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create project directory structure</h3>
+  <p>Set up the required directories for Nginx configuration, Certbot data, and the Docker Compose file. [<a href="https://github.com/eugene-khyst/letsencrypt-docker-compose">src3</a>]</p>
+  <pre><code class="language-bash">mkdir -p nginx/conf.d certbot/conf certbot/www
+touch docker-compose.yml nginx/conf.d/default.conf</code></pre>
+  <p><strong>Verify</strong>: <code>ls -la nginx/conf.d certbot/</code> &#8594; directories exist</p>
+
+  <h3>2. Write Nginx configuration for SSL termination</h3>
+  <p>Create the Nginx server block handling HTTP-to-HTTPS redirect, SSL termination, and reverse proxying. [<a href="https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/">src1</a>]</p>
+  <pre><code class="language-nginx"># nginx/conf.d/default.conf
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com www.example.com;
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location / { return 301 https://$host$request_uri; }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name example.com www.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+
+    location / {
+        proxy_pass http://app:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+  <p><strong>Verify</strong>: <code>nginx -t</code> inside the container &#8594; <code>syntax is ok</code></p>
+
+  <h3>3. Write Docker Compose file (Approach A: Manual)</h3>
+  <p>Define your app, Nginx reverse proxy, and Certbot services with shared volumes. [<a href="https://github.com/eugene-khyst/letsencrypt-docker-compose">src3</a>]</p>
+  <pre><code class="language-yaml">services:
+  app:
+    image: your-app:latest
+    expose: ["8080"]
+    networks: [internal]
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on: [app]
+    networks: [internal, external]
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:v2.11.0
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h &amp; wait $${!}; done;'"
+
+volumes:
+  certbot-conf:
+  certbot-www:
+
+networks:
+  internal:
+  external:</code></pre>
+  <p><strong>Verify</strong>: <code>docker compose config</code> &#8594; no errors</p>
+
+  <h3>4. Obtain initial SSL certificate</h3>
+  <p>Bootstrap the first certificate before enabling HTTPS in Nginx. [<a href="https://hub.docker.com/r/certbot/certbot">src5</a>]</p>
+  <pre><code class="language-bash"># Start Nginx with HTTP-only config
+docker compose up -d nginx
+
+# Request certificate
+docker compose run --rm certbot certonly \
+  --webroot -w /var/www/certbot \
+  -d example.com -d www.example.com \
+  --email you@example.com --agree-tos --no-eff-email
+
+# Reload Nginx with full SSL config
+docker compose exec nginx nginx -s reload</code></pre>
+  <p><strong>Verify</strong>: <code>curl -I https://example.com</code> &#8594; HTTP/2 200 with HSTS header</p>
+
+  <h3>5. Set up automated renewal</h3>
+  <p>The Certbot container runs renewal every 12 hours. Add Nginx reload after successful renewal. [<a href="https://hub.docker.com/r/certbot/certbot">src5</a>]</p>
+  <pre><code class="language-bash"># The entrypoint in docker-compose.yml already handles renewal
+# To manually test:
+docker compose exec certbot certbot renew --dry-run</code></pre>
+  <p><strong>Verify</strong>: <code>docker compose exec certbot certbot certificates</code> &#8594; shows cert with expiry date</p>
+
+  <h3>6. Alternative: nginx-proxy + acme-companion (Approach B)</h3>
+  <p>For multi-service setups with automatic service discovery. [<a href="https://github.com/nginx-proxy/acme-companion">src2</a>]</p>
+  <pre><code class="language-yaml">services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.6
+    ports: ["80:80", "443:443"]
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: always
+
+  acme-companion:
+    image: nginxproxy/acme-companion:2.4
+    volumes_from: [nginx-proxy]
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      DEFAULT_EMAIL: you@example.com
+    depends_on: [nginx-proxy]
+    restart: always
+
+  webapp:
+    image: your-app:latest
+    expose: ["80"]
+    environment:
+      VIRTUAL_HOST: app.example.com
+      LETSENCRYPT_HOST: app.example.com
+
+volumes:
+  certs:
+  html:
+  acme:</code></pre>
+  <p><strong>Verify</strong>: <code>docker compose up -d &amp;&amp; curl -I https://app.example.com</code> &#8594; valid SSL</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Docker Compose: Production-grade Nginx + Certbot</h3>
+  <p>Full script: <a href="scripts/docker-compose-nginx-certbot.yml">docker-compose-nginx-certbot.yml</a> (48 lines)</p>
+  <pre><code class="language-yaml"># docker-compose.yml -- production Nginx + Certbot
+# Input:  Domain name, upstream app on port 8080
+# Output: TLS-terminated reverse proxy with auto-renewing certs
+services:
+  app:
+    image: your-app:latest
+    expose: ["8080"]
+    networks: [backend]
+# ... (see full script)</code></pre>
+
+  <h3>Nginx Config: SSL Termination with Security Headers</h3>
+  <p>Full script: <a href="scripts/nginx-ssl-termination.conf">nginx-ssl-termination.conf</a> (55 lines)</p>
+  <pre><code class="language-nginx"># nginx/conf.d/default.conf -- SSL termination + reverse proxy
+# Input:  HTTPS on 443, HTTP on 80
+# Output: Proxied requests to upstream with TLS terminated
+server {
+    listen 80;
+    server_name example.com;
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location / { return 301 https://$host$request_uri; }
+}
+# ... (see full script)</code></pre>
+
+  <h3>Bash: Initial Certificate Bootstrapping Script</h3>
+  <p>Full script: <a href="scripts/bootstrap-ssl.sh">bootstrap-ssl.sh</a> (45 lines)</p>
+  <pre><code class="language-bash">#!/usr/bin/env bash
+# Input:  DOMAIN, EMAIL environment variables
+# Output: Valid Let's Encrypt certificate, running Nginx with SSL
+set -euo pipefail
+DOMAIN="${DOMAIN:?Set DOMAIN env var}"
+EMAIL="${EMAIL:?Set EMAIL env var}"
+# ... (see full script)</code></pre>
+
+  <h3>Docker Compose: nginx-proxy + acme-companion Multi-Service</h3>
+  <p>Full script: <a href="scripts/docker-compose-nginx-proxy.yml">docker-compose-nginx-proxy.yml</a> (40 lines)</p>
+  <pre><code class="language-yaml"># docker-compose.yml -- nginx-proxy + acme-companion
+# Input:  VIRTUAL_HOST and LETSENCRYPT_HOST env vars per service
+# Output: Automatic TLS for all proxied containers
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.6
+    ports: ["80:80", "443:443"]
+# ... (see full script)</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Storing certificates in the Docker image</h3>
+  <pre><code class="language-dockerfile"># BAD -- certificates baked into image expire, leak private keys
+FROM nginx:1.27-alpine
+COPY certs/fullchain.pem /etc/nginx/certs/
+COPY certs/privkey.pem /etc/nginx/certs/</code></pre>
+
+  <h3>Correct: Use named volumes for certificate storage</h3>
+  <pre><code class="language-yaml"># GOOD -- certificates managed externally via volumes
+volumes:
+  - certbot-conf:/etc/letsencrypt:ro  # Nginx reads only</code></pre>
+
+  <h3>Wrong: Blocking port 80 entirely</h3>
+  <pre><code class="language-yaml"># BAD -- no port 80 means ACME challenges fail silently
+services:
+  nginx:
+    ports:
+      - "443:443"  # Port 80 missing!</code></pre>
+
+  <h3>Correct: Keep port 80 open with HTTPS redirect</h3>
+  <pre><code class="language-yaml"># GOOD -- port 80 open for ACME + redirect to HTTPS
+services:
+  nginx:
+    ports:
+      - "80:80"    # Required for ACME HTTP-01 challenges
+      - "443:443"</code></pre>
+
+  <h3>Wrong: Using deprecated TLS versions</h3>
+  <pre><code class="language-nginx"># BAD -- TLSv1.0 and TLSv1.1 are vulnerable (POODLE, BEAST)
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;</code></pre>
+
+  <h3>Correct: Modern TLS only</h3>
+  <pre><code class="language-nginx"># GOOD -- only TLSv1.2 and TLSv1.3
+ssl_protocols TLSv1.2 TLSv1.3;</code></pre>
+
+  <h3>Wrong: Writable Docker socket mount</h3>
+  <pre><code class="language-yaml"># BAD -- writable Docker socket = container escape risk
+volumes:
+  - /var/run/docker.sock:/tmp/docker.sock</code></pre>
+
+  <h3>Correct: Read-only Docker socket mount</h3>
+  <pre><code class="language-yaml"># GOOD -- read-only socket limits attack surface
+volumes:
+  - /var/run/docker.sock:/tmp/docker.sock:ro</code></pre>
+
+  <h3>Wrong: No proxy headers forwarded</h3>
+  <pre><code class="language-nginx"># BAD -- upstream sees container IP instead of real client
+location / {
+    proxy_pass http://app:8080;
+}</code></pre>
+
+  <h3>Correct: Forward all relevant proxy headers</h3>
+  <pre><code class="language-nginx"># GOOD -- upstream receives real client IP and protocol
+location / {
+    proxy_pass http://app:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Certificate bootstrap chicken-and-egg</strong>: Nginx refuses to start if certificate files don't exist, but Certbot needs Nginx running for HTTP-01 challenge. Fix: Start with HTTP-only config first or use a self-signed dummy cert. [<a href="https://github.com/eugene-khyst/letsencrypt-docker-compose">src3</a>]</li>
+    <li><strong>Nginx serves stale cert after renewal</strong>: Certbot renews on disk but Nginx has old cert in memory. Fix: Add <code>--deploy-hook "nginx -s reload"</code> to Certbot or run <code>docker compose exec nginx nginx -s reload</code> via cron. [<a href="https://hub.docker.com/r/certbot/certbot">src5</a>]</li>
+    <li><strong>Container DNS resolution failure</strong>: Nginx caches upstream IP at startup. If app container restarts with new IP, traffic goes to old address. Fix: Use <code>resolver 127.0.0.11 valid=30s;</code> with <code>set $upstream http://app:8080; proxy_pass $upstream;</code>. [<a href="https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/">src1</a>]</li>
+    <li><strong>Rate limit exhaustion with production ACME</strong>: Testing burns Let's Encrypt production rate limits (50/domain/week). Fix: Use <code>--staging</code> flag during setup, switch to production with <code>--force-renewal</code> once verified. [<a href="https://hub.docker.com/r/certbot/certbot">src5</a>]</li>
+    <li><strong>Volume permission issues</strong>: Certbot writes as root, Nginx runs as non-root worker. Fix: Named volumes handle this automatically; for host mounts, ensure certificate directory is readable by UID 101. [<a href="https://hub.docker.com/_/nginx">src4</a>]</li>
+    <li><strong>OCSP stapling "no responder" error</strong>: Missing resolver directive prevents Nginx from fetching OCSP status. Fix: Add <code>resolver 1.1.1.1 1.0.0.1 valid=300s; resolver_timeout 5s;</code> with <code>ssl_stapling on;</code>. [<a href="https://www.getpagespeed.com/server-setup/nginx/nginx-tls-1-3-hardening/amp">src6</a>]</li>
+    <li><strong>Certbot webroot path mismatch</strong>: ACME challenge path differs between Nginx and Certbot containers. Fix: Both containers must share the same volume: Nginx at <code>/var/www/certbot:ro</code>, Certbot at <code>/var/www/certbot:rw</code>. [<a href="https://github.com/eugene-khyst/letsencrypt-docker-compose">src3</a>]</li>
+    <li><strong>acme-companion ignores new containers</strong>: Missing Docker socket or environment variables. Fix: Mount <code>/var/run/docker.sock:ro</code> and set both <code>VIRTUAL_HOST</code> and <code>LETSENCRYPT_HOST</code> on proxied containers. [<a href="https://github.com/nginx-proxy/acme-companion">src2</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Test Nginx config syntax
+docker compose exec nginx nginx -t
+
+# Check certificate details and expiry
+docker compose exec nginx openssl x509 -in /etc/letsencrypt/live/example.com/fullchain.pem -noout -dates -subject
+
+# Test SSL from outside
+openssl s_client -connect example.com:443 -servername example.com 2&gt;/dev/null | openssl x509 -noout -dates
+
+# Check TLS version and cipher
+curl -vI https://example.com 2&gt;&amp;1 | grep -E 'SSL connection|TLS'
+
+# List Certbot-managed certificates
+docker compose exec certbot certbot certificates
+
+# Dry-run certificate renewal
+docker compose exec certbot certbot renew --dry-run
+
+# Check Nginx SSL error logs
+docker compose logs nginx 2&gt;&amp;1 | grep -iE 'ssl|cert|tls|error'
+
+# Verify OCSP stapling
+openssl s_client -connect example.com:443 -status 2&gt;/dev/null | grep -A 3 "OCSP Response"
+
+# Test HTTP-to-HTTPS redirect
+curl -I http://example.com 2&gt;&amp;1 | grep -i location
+
+# Verify ACME challenge path
+curl http://example.com/.well-known/acme-challenge/test</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Nginx</td><td>1.27.x (mainline)</td><td>Current</td><td><code>http2 on</code> directive (replaces <code>listen 443 ssl http2</code>)</td></tr>
+      <tr><td>Nginx</td><td>1.25.x</td><td>Stable</td><td>First with HTTP/2 directive change</td></tr>
+      <tr><td>Certbot</td><td>2.11.x</td><td>Current</td><td>ACME v2, Python 3.8+ required</td></tr>
+      <tr><td>Certbot</td><td>1.x</td><td>EOL</td><td>Python 2 support dropped</td></tr>
+      <tr><td>nginx-proxy</td><td>1.6.x</td><td>Current</td><td>Switched to <code>nginxproxy/nginx-proxy</code></td></tr>
+      <tr><td>nginx-proxy</td><td>0.x (jwilder)</td><td>Deprecated</td><td>Old image: <code>jwilder/nginx-proxy</code></td></tr>
+      <tr><td>acme-companion</td><td>2.4.x</td><td>Current</td><td>Replaced <code>letsencrypt-nginx-proxy-companion</code></td></tr>
+      <tr><td>Docker Compose</td><td>v2</td><td>Current</td><td><code>docker compose</code> (plugin, no hyphen)</td></tr>
+      <tr><td>Docker Compose</td><td>v1</td><td>Deprecated</td><td><code>docker-compose</code> (standalone binary)</td></tr>
+      <tr><td>Let's Encrypt</td><td>ACME v2</td><td>Current</td><td>Wildcard via DNS-01 challenge</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Docker Compose with 1+ web services needing HTTPS</td><td>Kubernetes cluster with Ingress controller</td><td>cert-manager + Ingress-nginx in K8s</td></tr>
+      <tr><td>Need free, auto-renewing SSL (Let's Encrypt)</td><td>Internal network with corporate CA</td><td>Mount corporate CA certs directly</td></tr>
+      <tr><td>Self-hosted VPS or dedicated server</td><td>Managed cloud load balancer (AWS ALB, GCP LB)</td><td>Cloud provider's SSL termination</td></tr>
+      <tr><td>Want full control over Nginx configuration</td><td>Prefer zero-config auto-HTTPS</td><td>Caddy server (automatic HTTPS built-in)</td></tr>
+      <tr><td>Multiple domains/services behind one IP</td><td>Single static site with no dynamic backend</td><td>Static hosting with CDN (Cloudflare, Vercel)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Let's Encrypt certificates expire every 90 days -- automated renewal is mandatory, not optional. A missed renewal means downtime.</li>
+    <li>The nginx-proxy approach mounts the Docker socket, which is a security risk. In production, consider a Docker socket proxy (e.g., tecnativa/docker-socket-proxy).</li>
+    <li>HTTP/2 directive syntax changed in Nginx 1.25: use <code>http2 on;</code> as a separate directive instead of <code>listen 443 ssl http2;</code>.</li>
+    <li>Wildcard certificates (<code>*.example.com</code>) require DNS-01 challenges, not HTTP-01. This needs DNS provider configuration.</li>
+    <li>Docker Compose v1 (<code>docker-compose</code>) is deprecated. Use Docker Compose v2 (<code>docker compose</code> as a Docker CLI plugin).</li>
+    <li>HSTS <code>preload</code> is irreversible once submitted to browser preload lists. Start with <code>max-age=300</code> for testing.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/docker-compose-networking/2026" data-relationship="related_to">Docker Compose Networking Guide</a>
+    <a href="/software/devops/nginx-performance-tuning/2026" data-relationship="related_to">Nginx Performance Tuning</a>
+    <a href="/software/devops/traefik-docker-ssl/2026" data-relationship="alternative_to">Traefik Docker SSL Setup</a>
+    <a href="/software/devops/caddy-docker-ssl/2026" data-relationship="alternative_to">Caddy Docker Auto-HTTPS</a>
+    <a href="/software/devops/kubernetes-ingress-tls/2026" data-relationship="often_confused_with">Kubernetes Ingress TLS</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>How to Migrate from SQL Server to PostgreSQL | knowledgelib.io</title>
+  <meta name="description" content="Complete migration guide from SQL Server to PostgreSQL with 18 syntax mappings, data type conversions, pgloader/AWS DMS tooling, T-SQL to PL/pgSQL...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/migrations/sqlserver-to-postgresql/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Migrate from SQL Server to PostgreSQL | knowledgelib.io">
+  <meta property="og:description" content="Complete migration guide from SQL Server to PostgreSQL with 18 syntax mappings, data type conversions, pgloader/AWS DMS tooling, T-SQL to PL/pgSQL conversion, PostgreSQL 17 feature parity updates, and 6 anti-pattern pairs. 8 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/migrations/sqlserver-to-postgresql/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-17">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Migrate from SQL Server to PostgreSQL | knowledgelib.io">
+  <meta name="twitter:description" content="Complete migration guide from SQL Server to PostgreSQL with 18 syntax mappings, data type conversions, pgloader/AWS DMS tooling, T-SQL to PL/pgSQL conversion, PostgreSQL 17 feature parity updates, and 6 anti-pattern pairs. 8 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/migrations/sqlserver_to_postgresql">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I migrate from SQL Server to PostgreSQL?">
+  <meta name="ai:aliases" content="SQL Server to PostgreSQL migration; MSSQL to PostgreSQL; convert SQL Server to Postgres; SQL Server to Postgres guide; T-SQL to PL/pgSQL conversion; migrate database from SQL Server to PostgreSQL; SQL Server to PostgreSQL data type mapping; MSSQL to Postgres stored procedure migration">
+  <meta name="ai:raw" content="/api/v1/units/software/migrations/sqlserver-to-postgresql/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="8">
+  <meta name="ai:freshness" content="quarterly">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="2.0">
+  <meta name="ai:first_published" content="2026-02-17">
+  <meta name="ai:inputs_needed" content="database_size,tsql_complexity,downtime_tolerance">
+  <meta name="ai:constraints" content="Always reset sequences after bulk data import using setval(); PostgreSQL 15+ required for MERGE statement; CLR stored procedures have no PostgreSQL equivalent; Azure Database Migration Service does NOT support SQL Server to PostgreSQL; NVARCHAR UTF-16 maps to TEXT UTF-8 with different length semantics; Never run pgloader against production SQL Server without testing on snapshot first">
+  <meta name="ai:skip_this_unit_if" content="User wants MySQL to PostgreSQL migration → software/migrations/mysql-to-postgresql/2026; User wants Oracle to PostgreSQL → software/migrations/oracle-to-postgresql/2026; User wants to upgrade SQL Server versions → software/debugging/sqlserver-upgrade/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "How to Migrate from SQL Server to PostgreSQL",
+    "headline": "How to Migrate from SQL Server to PostgreSQL",
+    "description": "Complete migration guide from SQL Server to PostgreSQL covering 18 data type and syntax mappings, schema conversion with pgloader/AWS SCT/sqlserver2pgsql, T-SQL to PL/pgSQL stored procedure conversion, application code migration for Python/Node.js/.NET/Java, PostgreSQL 17 feature parity updates (JSON_TABLE, MERGE RETURNING, COPY ON_ERROR), and common anti-patterns. Includes decision tree, multi-language code examples, and diagnostic commands.",
+    "keywords": ["SQL Server to PostgreSQL", "MSSQL to PostgreSQL", "database migration", "T-SQL to PL/pgSQL", "pgloader", "AWS DMS", "schema conversion", "data type mapping", "PostgreSQL migration", "PostgreSQL 17"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "proficiencyLevel": "Expert",
+    "dependencies": "SQL Server 2012-2022, PostgreSQL 13-17, pgloader 3.6+",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Converting from other Databases to PostgreSQL",
+        "url": "https://wiki.postgresql.org/wiki/Converting_from_other_Databases_to_PostgreSQL"
+      },
+      {
+        "@type": "WebPage",
+        "name": "SQL Server to Aurora PostgreSQL Migration Playbook — Data Types",
+        "url": "https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.sql.datatypes.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "MS SQL to Postgres — pgloader 3.6.9 documentation",
+        "url": "https://pgloader.readthedocs.io/en/latest/ref/mssql.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Stored procedures for T-SQL — SQL Server to Aurora PostgreSQL Migration Playbook",
+        "url": "https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.tsql.storedprocedures.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Microsoft SQL Server to PostgreSQL Migration by Ian Harding",
+        "url": "https://wiki.postgresql.org/wiki/Microsoft_SQL_Server_to_PostgreSQL_Migration_by_Ian_Harding"
+      },
+      {
+        "@type": "WebPage",
+        "name": "sqlserver2pgsql — Migration tool to convert SQL Server Database to PostgreSQL",
+        "url": "https://dalibo.github.io/sqlserver2pgsql/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Migrate SQL Server to Amazon Aurora PostgreSQL using best practices",
+        "url": "https://aws.amazon.com/blogs/database/migrate-sql-server-to-amazon-aurora-postgresql-using-best-practices-and-lessons-learned-from-the-field/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PostgreSQL 17 Release Notes",
+        "url": "https://www.postgresql.org/docs/17/release-17.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "How to Migrate from SQL Server to PostgreSQL",
+    "description": "Structured migration guide from SQL Server to PostgreSQL with data type mappings, syntax conversions, migration tool comparisons, T-SQL to PL/pgSQL examples, anti-patterns, decision tree, diagnostic commands, and PostgreSQL 17 feature parity updates. Optimized for AI agent consumption.",
+    "keywords": ["SQL Server", "PostgreSQL", "migration", "database", "T-SQL", "PL/pgSQL", "pgloader", "AWS DMS", "PostgreSQL 17"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-17",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "PostgreSQL Wiki"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "pgloader"},
+      {"@type": "Organization", "name": "Dalibo"},
+      {"@type": "Organization", "name": "PostgreSQL Global Development Group"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Migrations", "item": "https://knowledgelib.io/software/migrations/" },
+      { "@type": "ListItem", "position": 4, "name": "How to Migrate from SQL Server to PostgreSQL" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I migrate from SQL Server to PostgreSQL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL Server to PostgreSQL migration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "MSSQL to PostgreSQL",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "convert SQL Server to Postgres",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "SQL Server to Postgres guide",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "T-SQL to PL/pgSQL conversion",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  
+  <main role="main">
+
+<h1>How to Migrate from SQL Server to PostgreSQL</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I migrate from SQL Server to PostgreSQL?</h2>
+
+  <aside class="unit-meta" data-card-id="software/migrations/sqlserver-to-postgresql/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 8</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> quarterly</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Migrate schema first (convert data types, rewrite T-SQL to PL/pgSQL), then migrate data using pgloader or AWS DMS, and finally update application connection strings and SQL syntax.</li>
+    <li><strong>Key tool/command</strong>: <code>pgloader mssql://user:pass@host/dbname postgresql://user:pass@host/dbname</code></li>
+    <li><strong>Watch out for</strong>: Case sensitivity &mdash; SQL Server is case-insensitive by default for identifiers, PostgreSQL lowercases unquoted identifiers and is case-sensitive for quoted ones.</li>
+    <li><strong>Works with</strong>: SQL Server 2012&ndash;2022, PostgreSQL 13&ndash;17, pgloader 3.6+, AWS DMS, AWS SCT. PostgreSQL 17 recommended for best SQL Server feature parity (JSON_TABLE, full MERGE support).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Always reset sequences after bulk data import using <code>setval()</code> for every SERIAL/IDENTITY column &mdash; skipping this causes duplicate key errors on the next INSERT.</li>
+    <li>PostgreSQL 15+ required for <code>MERGE</code> statement. For PostgreSQL 13&ndash;14, rewrite SQL Server MERGE as <code>INSERT ... ON CONFLICT</code>. PostgreSQL 17 adds <code>WHEN NOT MATCHED BY SOURCE</code> and <code>RETURNING</code> for full MERGE parity.</li>
+    <li>CLR stored procedures (C#/.NET code in SQL Server) have zero PostgreSQL equivalent &mdash; rewrite as PL/pgSQL, PL/Python, or extract logic to the application layer before migration.</li>
+    <li>Azure Database Migration Service does NOT support SQL Server to PostgreSQL migrations &mdash; use AWS DMS/SCT, pgloader, or manual migration.</li>
+    <li>SQL Server <code>NVARCHAR</code> (UTF-16) maps to PostgreSQL <code>TEXT</code> (UTF-8). Character length semantics differ &mdash; always test <code>LEN()</code> vs <code>LENGTH()</code> comparisons and <code>CHECK</code> constraints after migration.</li>
+    <li>Never run pgloader against a production SQL Server without testing on a snapshot first &mdash; pgloader issues full table locks during schema introspection on some SQL Server versions.</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">SQL Server Syntax</th><th scope="col">PostgreSQL Equivalent</th><th scope="col">Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>IDENTITY(1,1)</code></td><td><code>GENERATED ALWAYS AS IDENTITY</code> or <code>SERIAL</code></td><td><code>id INTEGER GENERATED ALWAYS AS IDENTITY</code></td></tr>
+      <tr><td><code>NVARCHAR(MAX)</code></td><td><code>TEXT</code></td><td><code>description TEXT</code></td></tr>
+      <tr><td><code>DATETIME</code> / <code>DATETIME2</code></td><td><code>TIMESTAMP</code> / <code>TIMESTAMPTZ</code></td><td><code>created_at TIMESTAMPTZ DEFAULT NOW()</code></td></tr>
+      <tr><td><code>BIT</code></td><td><code>BOOLEAN</code></td><td><code>is_active BOOLEAN DEFAULT TRUE</code></td></tr>
+      <tr><td><code>UNIQUEIDENTIFIER</code></td><td><code>UUID</code></td><td><code>id UUID DEFAULT gen_random_uuid()</code></td></tr>
+      <tr><td><code>MONEY</code></td><td><code>NUMERIC(19,4)</code></td><td><code>price NUMERIC(19,4)</code></td></tr>
+      <tr><td><code>NTEXT</code> / <code>NCHAR</code></td><td><code>TEXT</code> / <code>CHAR</code></td><td><code>notes TEXT</code></td></tr>
+      <tr><td><code>GETDATE()</code></td><td><code>NOW()</code> or <code>CURRENT_TIMESTAMP</code></td><td><code>SELECT NOW()</code></td></tr>
+      <tr><td><code>ISNULL(expr, alt)</code></td><td><code>COALESCE(expr, alt)</code></td><td><code>COALESCE(name, 'N/A')</code></td></tr>
+      <tr><td><code>TOP N</code></td><td><code>LIMIT N</code></td><td><code>SELECT * FROM t LIMIT 10</code></td></tr>
+      <tr><td><code>SCOPE_IDENTITY()</code></td><td><code>RETURNING id</code> or <code>currval()</code></td><td><code>INSERT INTO t (name) VALUES ('x') RETURNING id</code></td></tr>
+      <tr><td><code>CHARINDEX(sub, str)</code></td><td><code>POSITION(sub IN str)</code></td><td><code>POSITION('abc' IN column_name)</code></td></tr>
+      <tr><td><code>LEN(str)</code></td><td><code>LENGTH(str)</code></td><td><code>LENGTH(column_name)</code></td></tr>
+      <tr><td><code>CONVERT(type, expr)</code></td><td><code>CAST(expr AS type)</code> or <code>::type</code></td><td><code>created_at::DATE</code></td></tr>
+      <tr><td><code>[bracketed identifiers]</code></td><td><code>"quoted identifiers"</code></td><td><code>SELECT "Column Name" FROM "My Table"</code></td></tr>
+      <tr><td><code>DATEADD(day, N, date)</code></td><td><code>date + INTERVAL 'N days'</code></td><td><code>NOW() + INTERVAL '30 days'</code></td></tr>
+      <tr><td><code>DATEDIFF(day, d1, d2)</code></td><td><code>d2 - d1</code> or <code>EXTRACT(EPOCH FROM ...)</code></td><td><code>end_date - start_date</code></td></tr>
+      <tr><td><code>OPENJSON()</code></td><td><code>JSON_TABLE()</code> (PG 17+) or <code>jsonb_to_recordset()</code></td><td><code>SELECT * FROM JSON_TABLE(data, '$.items[*]' ...)</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+&#9500;&#9472;&#9472; Database size &lt; 10 GB and simple schema (few stored procedures)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use pgloader for one-command migration (see Step 3)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Heavy T-SQL stored procedures, triggers, CLR assemblies?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use AWS SCT for schema conversion + manual PL/pgSQL rewrite
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Need near-zero downtime (production migration)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use AWS DMS with CDC (Change Data Capture) for continuous replication
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Migrating to AWS (Aurora PostgreSQL, RDS)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use AWS SCT + DMS combo (schema conversion + data replication)
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9500;&#9472;&#9472; Schema only (data migrated separately)?
+&#9474;   &#9500;&#9472;&#9472; YES &#8594; Use sqlserver2pgsql to generate DDL scripts, then bulk-load data
+&#9474;   &#9492;&#9472;&#9472; NO &#8595;
+&#9492;&#9472;&#9472; DEFAULT &#8594; pgloader for schema + data, then manually convert stored procedures</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Audit the SQL Server database</h3>
+  <p>Inventory all objects that need migration: tables, views, stored procedures, triggers, functions, indexes, constraints, and CLR assemblies. Quantify T-SQL complexity to estimate manual conversion effort. [<a href="https://wiki.postgresql.org/wiki/Microsoft_SQL_Server_to_PostgreSQL_Migration_by_Ian_Harding">src5</a>]</p>
+  <pre><code class="language-sql">-- Count objects by type in SQL Server
+SELECT type_desc, COUNT(*) AS object_count
+FROM sys.objects
+WHERE is_ms_shipped = 0
+GROUP BY type_desc
+ORDER BY object_count DESC;
+
+-- List stored procedures with line counts
+SELECT s.name AS schema_name, p.name AS proc_name,
+       LEN(m.definition) - LEN(REPLACE(m.definition, CHAR(10), '')) AS line_count
+FROM sys.procedures p
+JOIN sys.schemas s ON p.schema_id = s.schema_id
+JOIN sys.sql_modules m ON p.object_id = m.object_id
+ORDER BY line_count DESC;
+
+-- Check database size
+EXEC sp_spaceused;
+
+-- Identify CLR assemblies (these need full rewrite)
+SELECT a.name AS assembly_name, a.permission_set_desc,
+       m.assembly_class, m.assembly_method
+FROM sys.assemblies a
+LEFT JOIN sys.assembly_modules m ON a.assembly_id = m.assembly_id
+WHERE a.is_user_defined = 1;</code></pre>
+  <p><strong>Verify</strong>: Review the object counts &mdash; note the number of stored procedures (these need manual review), CLR assemblies (these need full rewrite), and total database size.</p>
+
+  <h3>2. Convert the schema</h3>
+  <p>Export the SQL Server schema and convert data types, constraints, and indexes to PostgreSQL syntax. Use sqlserver2pgsql or AWS SCT for automated conversion, then review the output. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.sql.datatypes.html">src2</a>, <a href="https://dalibo.github.io/sqlserver2pgsql/">src6</a>]</p>
+  <pre><code class="language-bash"># Option A: sqlserver2pgsql (generates DDL scripts from SQL dump)
+sqlcmd -S localhost -d mydb -E -Q "SET NOCOUNT ON" -o schema_dump.sql
+
+perl sqlserver2pgsql.pl -f schema_dump.sql \
+  -b before_migration.sql \
+  -a after_migration.sql \
+  -u unsure_migration.sql
+
+psql -h pghost -d targetdb -f before_migration.sql
+
+# Option B: AWS SCT (GUI tool)
+# Download AWS Schema Conversion Tool, connect to both databases,
+# review conversion assessment, then apply converted schema</code></pre>
+  <p><strong>Verify</strong>: <code>psql -d targetdb -c "\dt"</code> shows all expected tables. Compare table count with SQL Server.</p>
+
+  <h3>3. Migrate the data</h3>
+  <p>Load data from SQL Server into PostgreSQL. pgloader handles schema + data in a single command, including data type casting and error handling. pgloader can handle up to 3 TB/hour when properly tuned. [<a href="https://pgloader.readthedocs.io/en/latest/ref/mssql.html">src3</a>]</p>
+  <pre><code class="language-bash"># Option A: pgloader (recommended for most migrations)
+pgloader mssql://sa:password@sqlserver-host/sourcedb \
+         postgresql://pguser:pgpass@pg-host/targetdb
+
+# pgloader with a load file for more control
+pgloader migration.load
+# migration.load contents:
+# LOAD DATABASE
+#   FROM mssql://sa:password@sqlserver-host/sourcedb
+#   INTO postgresql://pguser:pgpass@pg-host/targetdb
+# WITH include drop, create tables, create indexes,
+#      reset sequences, downcase identifiers
+# CAST type datetime to timestamptz,
+#      type nvarchar to text,
+#      type money to numeric
+
+# Option B: AWS DMS (for large databases or continuous replication)
+# Create replication instance, source/target endpoints, and migration task
+# Supports CDC for near-zero downtime cutover</code></pre>
+  <p><strong>Verify</strong>: Compare row counts across all tables between SQL Server and PostgreSQL.</p>
+
+  <h3>4. Convert stored procedures and functions</h3>
+  <p>Rewrite T-SQL stored procedures as PL/pgSQL functions. Automated tools handle 60&ndash;80% of cases; the rest needs manual conversion. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.tsql.storedprocedures.html">src4</a>]</p>
+  <pre><code class="language-sql">-- SQL Server T-SQL stored procedure
+CREATE PROCEDURE dbo.GetActiveUsers
+    @MinAge INT = 18,
+    @Status NVARCHAR(20) = 'active'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT u.user_id, u.name, u.email
+    FROM dbo.users u
+    WHERE u.age &gt;= @MinAge AND u.status = @Status
+    ORDER BY u.name;
+END;
+
+-- PostgreSQL PL/pgSQL equivalent
+CREATE OR REPLACE FUNCTION get_active_users(
+    p_min_age INTEGER DEFAULT 18,
+    p_status TEXT DEFAULT 'active'
+)
+RETURNS TABLE(user_id INTEGER, name TEXT, email TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT u.user_id, u.name, u.email
+    FROM users u
+    WHERE u.age &gt;= p_min_age AND u.status = p_status
+    ORDER BY u.name;
+END;
+$$;</code></pre>
+  <p><strong>Verify</strong>: Call each converted function and compare output: <code>SELECT * FROM get_active_users()</code></p>
+
+  <h3>5. Convert T-SQL syntax in application code</h3>
+  <p>Update SQL queries embedded in your application code. Replace SQL Server-specific syntax with PostgreSQL equivalents. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.sql.datatypes.html">src2</a>, <a href="https://wiki.postgresql.org/wiki/Microsoft_SQL_Server_to_PostgreSQL_Migration_by_Ian_Harding">src5</a>]</p>
+  <pre><code class="language-sql">-- SQL Server:
+SELECT TOP 10 u.name, ISNULL(u.nickname, u.name) AS display_name,
+       CONVERT(VARCHAR, u.created_at, 120) AS created_date
+FROM [dbo].[users] u WITH (NOLOCK)
+WHERE u.status = 'active'
+ORDER BY u.created_at DESC;
+
+-- PostgreSQL:
+SELECT u.name, COALESCE(u.nickname, u.name) AS display_name,
+       TO_CHAR(u.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_date
+FROM users u
+WHERE u.status = 'active'
+ORDER BY u.created_at DESC
+LIMIT 10;</code></pre>
+  <p><strong>Verify</strong>: Run your application's test suite against PostgreSQL. Check logs for syntax errors.</p>
+
+  <h3>6. Update connection strings and drivers</h3>
+  <p>Replace SQL Server drivers with PostgreSQL drivers in your application configuration. [<a href="https://wiki.postgresql.org/wiki/Converting_from_other_Databases_to_PostgreSQL">src1</a>]</p>
+  <pre><code class="language-bash"># Node.js: mssql &rarr; pg
+npm uninstall mssql &amp;&amp; npm install pg
+
+# Python: pyodbc &rarr; psycopg
+pip uninstall pyodbc &amp;&amp; pip install psycopg[binary]
+
+# .NET: System.Data.SqlClient &rarr; Npgsql
+dotnet remove package System.Data.SqlClient
+dotnet add package Npgsql
+
+# Java: mssql-jdbc &rarr; postgresql
+# JDBC URL: jdbc:postgresql://host:5432/db</code></pre>
+  <p><strong>Verify</strong>: Application connects successfully. Run <code>SELECT version();</code> through your app to confirm PostgreSQL connectivity.</p>
+
+  <h3>7. Apply indexes and constraints</h3>
+  <p>Run the deferred indexes and constraints after data migration for maximum import speed. [<a href="https://dalibo.github.io/sqlserver2pgsql/">src6</a>]</p>
+  <pre><code class="language-sql">-- Apply indexes
+CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX idx_users_status ON users (status) WHERE status = 'active';
+CREATE UNIQUE INDEX idx_users_username ON users (LOWER(username));
+
+-- Apply foreign key constraints
+ALTER TABLE orders ADD CONSTRAINT fk_orders_users
+    FOREIGN KEY (user_id) REFERENCES users (user_id);
+
+-- Reset sequences after data import (critical!)
+SELECT setval('users_user_id_seq', (SELECT MAX(user_id) FROM users));
+SELECT setval('orders_order_id_seq', (SELECT MAX(order_id) FROM orders));</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT indexname FROM pg_indexes WHERE schemaname = 'public';</code> lists all expected indexes.</p>
+
+  <h3>8. Validate and run parallel operations</h3>
+  <p>After migration, run both databases in parallel during a validation period. Compare query results and performance before final cutover. [<a href="https://aws.amazon.com/blogs/database/migrate-sql-server-to-amazon-aurora-postgresql-using-best-practices-and-lessons-learned-from-the-field/">src7</a>]</p>
+  <pre><code class="language-bash"># Compare row counts between databases
+psql -d pgdb -t -A -c "SELECT COUNT(*) FROM users WHERE status='active'" &gt; pg_count.txt
+sqlcmd -S sqlhost -d mydb -h -1 -Q "SELECT COUNT(*) FROM users WHERE status='active'" &gt; mssql_count.txt
+diff pg_count.txt mssql_count.txt
+
+# Performance baseline comparison
+psql -d pgdb -c "EXPLAIN ANALYZE SELECT * FROM orders WHERE created_at &gt; NOW() - INTERVAL '30 days';"</code></pre>
+  <p><strong>Verify</strong>: All critical query results match. PostgreSQL query performance is within acceptable range of SQL Server baseline.</p>
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python/psycopg: Migrating a SQL Server data access layer to PostgreSQL</h3>
+  <p>Full script: <a href="scripts/python-psycopg-migrating-a-sql-server-data-access-.py">python-psycopg-migrating-a-sql-server-data-access-.py</a> (47 lines)</p>
+  <pre><code class="language-python"># Input:  Python app using pyodbc for SQL Server
+# Output: Same app using psycopg for PostgreSQL
+
+import psycopg
+from contextlib import contextmanager
+
+DATABASE_URL = "postgresql://pguser:pgpass@pghost:5432/mydb"
+
+@contextmanager
+def get_connection():
+    conn = psycopg.connect(DATABASE_URL)
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()</code></pre>
+
+  <h3>Node.js/pg: Converting Express routes from mssql to pg</h3>
+  <p>Full script: <a href="scripts/node-js-pg-converting-express-routes-from-mssql-to.js">node-js-pg-converting-express-routes-from-mssql-to.js</a> (57 lines)</p>
+  <pre><code class="language-javascript">// Input:  Express app using mssql package for SQL Server
+// Output: Same routes using pg package for PostgreSQL
+
+import pg from 'pg';
+const { Pool } = pg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});</code></pre>
+
+  <h3>SQL: Common T-SQL to PL/pgSQL conversions</h3>
+  <p>Full script: <a href="scripts/sql-common-t-sql-to-pl-pgsql-conversions.sql">sql-common-t-sql-to-pl-pgsql-conversions.sql</a> (54 lines)</p>
+  <pre><code class="language-sql">-- Input:  T-SQL patterns commonly found in SQL Server applications
+-- Output: PostgreSQL PL/pgSQL equivalents
+-- 1. Temporary tables: # prefix &rarr; CREATE TEMP TABLE
+CREATE TEMP TABLE temp_users AS
+SELECT * FROM users WHERE active = TRUE;
+
+-- 2. String concatenation: + &rarr; ||
+SELECT first_name || ' ' || last_name AS full_name FROM users;</code></pre>
+
+  <h3>C#/.NET: Migrating from SqlClient to Npgsql</h3>
+  <pre><code class="language-csharp">// Input:  .NET app using System.Data.SqlClient
+// Output: Same app using Npgsql for PostgreSQL
+using Npgsql;
+
+// BEFORE: var conn = new SqlConnection("Server=sqlhost;Database=mydb;...");
+// AFTER:
+await using var conn = new NpgsqlConnection(
+    "Host=pghost;Database=mydb;Username=pguser;Password=pgpass");
+await conn.OpenAsync();
+
+// @param &rarr; $1 positional, or use NpgsqlParameter
+await using var cmd = new NpgsqlCommand(
+    "SELECT * FROM users WHERE status = $1 LIMIT $2", conn);
+cmd.Parameters.AddWithValue(NpgsqlTypes.NpgsqlDbType.Text, "active");
+cmd.Parameters.AddWithValue(NpgsqlTypes.NpgsqlDbType.Integer, 10);
+await using var reader = await cmd.ExecuteReaderAsync();</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using square brackets for identifiers in PostgreSQL</h3>
+  <pre><code class="language-sql">-- &#x274C; BAD &mdash; SQL Server bracket syntax doesn't work in PostgreSQL
+SELECT [user_id], [first name], [Order Date]
+FROM [dbo].[users]
+WHERE [status] = 'active';</code></pre>
+
+  <h3>Correct: Use double quotes or lowercase unquoted identifiers</h3>
+  <pre><code class="language-sql">-- &#x2705; GOOD &mdash; PostgreSQL uses double quotes; prefer lowercase unquoted
+SELECT user_id, "first name", "Order Date"
+FROM users
+WHERE status = 'active';
+
+-- BEST &mdash; rename columns to avoid quoting entirely
+ALTER TABLE users RENAME COLUMN "first name" TO first_name;</code></pre>
+
+  <h3>Wrong: Using TOP N instead of LIMIT</h3>
+  <pre><code class="language-sql">-- &#x274C; BAD &mdash; TOP is SQL Server syntax, not supported in PostgreSQL
+SELECT TOP 10 * FROM orders ORDER BY created_at DESC;</code></pre>
+
+  <h3>Correct: Use LIMIT for row limiting</h3>
+  <pre><code class="language-sql">-- &#x2705; GOOD &mdash; PostgreSQL uses LIMIT (or FETCH FIRST per SQL standard)
+SELECT * FROM orders ORDER BY created_at DESC LIMIT 10;</code></pre>
+
+  <h3>Wrong: Using ISNULL() for null coalescing</h3>
+  <pre><code class="language-sql">-- &#x274C; BAD &mdash; ISNULL is SQL Server-specific
+SELECT ISNULL(nickname, name) AS display_name FROM users;</code></pre>
+
+  <h3>Correct: Use COALESCE (ANSI SQL standard)</h3>
+  <pre><code class="language-sql">-- &#x2705; GOOD &mdash; COALESCE is ANSI SQL, portable across all databases
+SELECT COALESCE(nickname, name) AS display_name FROM users;</code></pre>
+
+  <h3>Wrong: Using NOLOCK hints in PostgreSQL</h3>
+  <pre><code class="language-sql">-- &#x274C; BAD &mdash; Table hints like NOLOCK are SQL Server-specific
+SELECT * FROM orders WITH (NOLOCK) WHERE status = 'pending';</code></pre>
+
+  <h3>Correct: Rely on PostgreSQL's MVCC (no dirty reads by default)</h3>
+  <pre><code class="language-sql">-- &#x2705; GOOD &mdash; PostgreSQL MVCC means readers never block writers
+SELECT * FROM orders WHERE status = 'pending';
+-- No hint needed &mdash; READ COMMITTED prevents dirty reads</code></pre>
+
+  <h3>Wrong: Using += for string concatenation or GETDATE()</h3>
+  <pre><code class="language-sql">-- &#x274C; BAD &mdash; SQL Server string concatenation and date functions
+DECLARE @fullname NVARCHAR(200);
+SET @fullname = @first + ' ' + @last;
+SELECT * FROM events WHERE event_date &gt; GETDATE();</code></pre>
+
+  <h3>Correct: Use || for concatenation and NOW() for current time</h3>
+  <pre><code class="language-sql">-- &#x2705; GOOD &mdash; PostgreSQL standard syntax
+-- In PL/pgSQL:
+DECLARE v_fullname TEXT;
+BEGIN
+    v_fullname := v_first || ' ' || v_last;
+END;
+
+-- In queries:
+SELECT * FROM events WHERE event_date &gt; NOW();</code></pre>
+
+  <h3>Wrong: Using OPENJSON() in PostgreSQL (pre-17)</h3>
+  <pre><code class="language-sql">-- &#x274C; BAD &mdash; OPENJSON is SQL Server-specific; JSON_TABLE requires PG 17+
+SELECT * FROM OPENJSON(@json_data);</code></pre>
+
+  <h3>Correct: Use jsonb functions or JSON_TABLE (PG 17+)</h3>
+  <pre><code class="language-sql">-- &#x2705; GOOD (PG 13+) &mdash; Use jsonb_to_recordset for JSON array to table
+SELECT * FROM jsonb_to_recordset('[{"id":1,"name":"Alice"}]'::jsonb)
+    AS t(id int, name text);
+
+-- &#x2705; GOOD (PG 17+) &mdash; SQL/JSON JSON_TABLE for full OPENJSON parity
+SELECT * FROM JSON_TABLE(
+    '{"users":[{"id":1,"name":"Alice"}]}'::jsonb,
+    '$.users[*]' COLUMNS (id int, name text)
+);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Case sensitivity mismatch</strong>: SQL Server is case-insensitive for identifiers by default; PostgreSQL lowercases unquoted identifiers and is case-sensitive for quoted ones. Fix: Use <code>downcase identifiers</code> in pgloader, or <code>CITEXT</code> extension for case-insensitive text columns. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.sql.datatypes.html">src2</a>]</li>
+    <li><strong>BIT vs BOOLEAN</strong>: SQL Server <code>BIT</code> stores 0/1, PostgreSQL <code>BOOLEAN</code> uses true/false. Inserting <code>1</code> into a BOOLEAN column fails. Fix: Cast during migration: <code>CASE WHEN bit_col = 1 THEN TRUE ELSE FALSE END</code>. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.sql.datatypes.html">src2</a>]</li>
+    <li><strong>IDENTITY vs SERIAL sequence ownership</strong>: After bulk data import, PostgreSQL sequences are not auto-advanced. Fix: Run <code>SELECT setval('table_column_seq', (SELECT MAX(column) FROM table))</code> for every serial/identity column. [<a href="https://pgloader.readthedocs.io/en/latest/ref/mssql.html">src3</a>]</li>
+    <li><strong>Stored procedure return semantics</strong>: T-SQL procedures implicitly return result sets from the last SELECT; PL/pgSQL requires explicit <code>RETURNS TABLE</code> or <code>RETURNS SETOF</code> declarations. Fix: Rewrite procedures as functions with <code>RETURN QUERY SELECT ...</code>. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.tsql.storedprocedures.html">src4</a>]</li>
+    <li><strong>Transaction isolation differences</strong>: SQL Server uses row locking by default; PostgreSQL uses MVCC. <code>WITH (NOLOCK)</code> hints must be removed. Fix: Remove all table hints; rely on PostgreSQL MVCC for non-blocking reads. [<a href="https://wiki.postgresql.org/wiki/Microsoft_SQL_Server_to_PostgreSQL_Migration_by_Ian_Harding">src5</a>]</li>
+    <li><strong>String concatenation with NULL</strong>: In both SQL Server and PostgreSQL, <code>'hello' || NULL</code> returns <code>NULL</code>. Fix: Use <code>CONCAT()</code> or <code>COALESCE()</code> for null-safe concatenation. [<a href="https://wiki.postgresql.org/wiki/Converting_from_other_Databases_to_PostgreSQL">src1</a>]</li>
+    <li><strong>Schema-qualified object names</strong>: SQL Server uses <code>dbo.tablename</code>, PostgreSQL uses <code>public.tablename</code>. Fix: Map <code>dbo</code> to <code>public</code> in your migration tool. [<a href="https://aws.amazon.com/blogs/database/migrate-sql-server-to-amazon-aurora-postgresql-using-best-practices-and-lessons-learned-from-the-field/">src7</a>]</li>
+    <li><strong>Date arithmetic syntax</strong>: SQL Server uses <code>DATEADD(unit, N, date)</code> and <code>DATEDIFF()</code>. PostgreSQL uses interval arithmetic: <code>date + INTERVAL 'N days'</code>. Fix: Replace all DATEADD/DATEDIFF calls with PostgreSQL interval syntax. [<a href="https://docs.aws.amazon.com/dms/latest/sql-server-to-aurora-postgresql-migration-playbook/chap-sql-server-aurora-pg.sql.datatypes.html">src2</a>]</li>
+    <li><strong>COPY ON_ERROR (PG 17+)</strong>: PostgreSQL 17 added <code>ON_ERROR ignore</code> to COPY, allowing skip of malformed rows. On PG 13&ndash;16, a single bad row aborts the entire COPY. Fix: Pre-validate data or use pgloader which handles errors natively. [<a href="https://www.postgresql.org/docs/17/release-17.html">src8</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check PostgreSQL version and connection
+psql -c "SELECT version();"
+
+# Compare table counts between SQL Server and PostgreSQL
+# SQL Server:
+sqlcmd -S sqlhost -d mydb -Q "SELECT COUNT(*) FROM information_schema.tables WHERE table_type='BASE TABLE'"
+# PostgreSQL:
+psql -d mydb -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'"
+
+# Compare row counts for all tables
+psql -d mydb -c "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY relname;"
+
+# Check for sequence drift after migration
+psql -d mydb -c "SELECT sequencename, last_value FROM pg_sequences WHERE schemaname = 'public';"
+
+# Verify foreign key constraints
+psql -d mydb -c "SELECT conname, conrelid::regclass, confrelid::regclass FROM pg_constraint WHERE contype = 'f';"
+
+# Check for missing indexes (high seq_scan, low idx_scan)
+psql -d mydb -c "SELECT relname, seq_scan, idx_scan FROM pg_stat_user_tables WHERE seq_scan &gt; 1000 AND idx_scan &lt; 10 ORDER BY seq_scan DESC;"
+
+# Test application driver connection
+python -c "import psycopg; print(psycopg.connect('postgresql://user:pass@host/db').execute('SELECT 1').fetchone())"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Key Features for Migration</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL 17 (2024)</td><td>Current</td><td>JSON_TABLE, MERGE RETURNING, WHEN NOT MATCHED BY SOURCE, COPY ON_ERROR ignore, incremental backup</td><td>Best migration target &mdash; closest SQL Server feature parity</td></tr>
+      <tr><td>PostgreSQL 16 (2023)</td><td>Supported</td><td>Logical replication from standby, improved COPY perf</td><td>Good target; improved bulk load performance</td></tr>
+      <tr><td>PostgreSQL 15 (2022)</td><td>Supported</td><td>MERGE statement added, SECURITY INVOKER views</td><td>SQL Server MERGE can be ported directly</td></tr>
+      <tr><td>PostgreSQL 14 (2021)</td><td>Maintenance</td><td>Multirange types, RETURNING improvements</td><td><code>RETURNING</code> improvements help IDENTITY migration</td></tr>
+      <tr><td>PostgreSQL 13 (2020)</td><td>EOL Nov 2025</td><td>Parallel vacuum, deduplicated B-tree</td><td>No longer supported &mdash; upgrade to 16+</td></tr>
+      <tr><td>SQL Server 2022</td><td>Current</td><td>Ledger tables, enhanced query store</td><td>Latest source &mdash; full DMS/pgloader support</td></tr>
+      <tr><td>SQL Server 2019</td><td>Mainstream</td><td>UTF-8 collation support</td><td>UTF-8 collation simplifies text migration</td></tr>
+      <tr><td>SQL Server 2016&ndash;2017</td><td>Extended</td><td>JSON support, graph tables</td><td>JSON columns should migrate to JSONB</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Moving to open-source to reduce licensing costs (60&ndash;90% savings)</td><td>You rely on SQL Server-specific features (SSRS, SSAS, SSIS)</td><td>Keep SQL Server or migrate BI tools separately</td></tr>
+      <tr><td>Cloud migration to AWS/GCP (Aurora PostgreSQL, Cloud SQL)</td><td>Database is &lt; 100 MB and rarely changes</td><td>Export to SQLite or CSV</td></tr>
+      <tr><td>Need advanced features (JSONB, full-text search, PostGIS)</td><td>Team has no PostgreSQL experience and tight deadline</td><td>Azure SQL Managed Instance (lift-and-shift)</td></tr>
+      <tr><td>Application uses standard SQL with minimal T-SQL</td><td>Hundreds of complex stored procedures with CLR assemblies</td><td>Hybrid: migrate tables, keep proc logic in app layer</td></tr>
+      <tr><td>Linux/container deployment</td><td>Windows-only infrastructure with no plans to change</td><td>SQL Server on Linux or Azure SQL</td></tr>
+      <tr><td>Need JSON_TABLE, advanced partitioning, or extensions</td><td>Regulatory requirement to use specific vendor DB</td><td>Stay on SQL Server or evaluate alternatives</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>PostgreSQL <code>IDENTITY</code> columns (recommended over <code>SERIAL</code>) require PostgreSQL 10+. Always reset sequences after bulk data import using <code>setval()</code>.</li>
+    <li>T-SQL <code>@@IDENTITY</code> and <code>SCOPE_IDENTITY()</code> have no direct equivalent &mdash; use <code>INSERT ... RETURNING id</code> or <code>currval('sequence_name')</code> instead.</li>
+    <li>SQL Server's <code>MERGE</code> statement is fully supported only in PostgreSQL 17+ (with <code>WHEN NOT MATCHED BY SOURCE</code> and <code>RETURNING</code>). PostgreSQL 15&ndash;16 support basic MERGE. For earlier versions, use <code>INSERT ... ON CONFLICT</code>.</li>
+    <li>PostgreSQL does not support cross-database queries (<code>USE database</code>). Each connection targets one database. Use schemas or foreign data wrappers for cross-database access.</li>
+    <li>CLR stored procedures (C#/.NET code in SQL Server) have no PostgreSQL equivalent. Rewrite as PL/pgSQL, PL/Python, or move logic to the application layer.</li>
+    <li>SQL Server's <code>NVARCHAR</code> (UTF-16) maps to <code>TEXT</code> (UTF-8) in PostgreSQL. Character length semantics differ &mdash; test string length validations after migration.</li>
+    <li>PostgreSQL 17's <code>COPY ... ON_ERROR ignore</code> option finally matches SQL Server's ability to skip bad rows during bulk import &mdash; use PG 17+ for the smoothest data migration experience.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/migrations/mysql-to-postgresql/2026" data-relationship="related_to">MySQL to PostgreSQL Migration</a>
+    <a href="/software/migrations/oracle-to-postgresql/2026" data-relationship="alternative_to">Oracle to PostgreSQL Migration</a>
+    <a href="/software/migrations/mongodb-to-postgresql/2026" data-relationship="often_confused_with">MongoDB to PostgreSQL Migration</a>
+    <a href="/software/debugging/postgresql-performance/2026" data-relationship="related_to">PostgreSQL Performance Tuning</a>
+    <a href="/software/patterns/database-migration-testing/2026" data-relationship="solves">Database Migration Testing Strategies</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Migrations<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Bulk Processing Patterns for ERP Integration | knowledgelib.io</title>
+  <meta name="description" content="Cross-system bulk processing patterns for Salesforce, NetSuite, SAP, D365, Oracle ERP — chunking strategies, parallel processing, concurrency limits,...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/bulk-processing-patterns/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Bulk Processing Patterns for ERP Integration | AI Knowledge Library">
+  <meta property="og:description" content="Cross-system bulk processing patterns for Salesforce, NetSuite, SAP, D365, Oracle ERP — chunking strategies, parallel processing, concurrency limits, and per-ERP optimal batch sizes. 7 sources, all cited.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/bulk-processing-patterns/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:modified_time" content="2026-03-07">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bulk Processing Patterns for ERP Integration | AI Knowledge Library">
+  <meta name="twitter:description" content="Cross-system bulk processing patterns for Salesforce, NetSuite, SAP, D365, Oracle ERP — chunking strategies, parallel processing, concurrency limits, and per-ERP optimal batch sizes.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.86">
+  <meta name="ai:last_verified" content="2026-03-07">
+  <meta name="ai:domain" content="business/erp-integration/bulk-processing-patterns">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What are the best chunking and parallel processing strategies for bulk ERP integration?">
+  <meta name="ai:aliases" content="ERP bulk data processing chunking strategies across Salesforce SAP NetSuite D365 Oracle; How to chunk and parallelize large ERP data loads; Optimal batch sizes and concurrency limits for bulk ERP imports; Bulk API chunking patterns for enterprise integrations">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/bulk-processing-patterns/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-03-07">
+  <meta name="ai:temporal_status" content="volatile">
+  <meta name="ai:change_sensitivity" content="high">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-07">
+  <meta name="ai:systems" content="Salesforce (API v62.0); Oracle NetSuite (2024.2); SAP S/4HANA (2408); Microsoft Dynamics 365 (10.0.40 PU64); Oracle ERP Cloud (26A)">
+  <meta name="ai:inputs_needed" content="erp_system,data_volume,direction">
+  <meta name="ai:constraints" content="Salesforce Bulk API 2.0: max 150 MB per file, 100M records/24h, 25 concurrent jobs; NetSuite REST: 1 record per request, 15-55 concurrent threads; SAP OData: 1,000 changesets per $batch; D365: 30-min sync timeout; Oracle FBDI: 250 MB/ZIP, 100K records/import, 5 concurrent">
+  <meta name="ai:skip_this_unit_if" content="Real-time individual record sync needed -> business/erp-integration/batch-vs-realtime-integration/2026; Single ERP API reference needed -> business/erp-integration/{system}-rest-api-capabilities/2026">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Bulk Processing Patterns for ERP Integration — Chunking & Parallel Processing Strategies",
+    "headline": "Bulk Processing Patterns for ERP Integration — Chunking & Parallel Processing Strategies",
+    "description": "Cross-system architecture pattern covering chunking strategies, parallel processing, concurrency limits, and error handling for bulk data operations across Salesforce, NetSuite, SAP S/4HANA, Dynamics 365, and Oracle ERP Cloud.",
+    "keywords": ["ERP integration", "bulk processing", "chunking", "parallel processing", "Salesforce Bulk API", "NetSuite CSV import", "SAP OData batch", "D365 DMF", "Oracle FBDI"],
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Salesforce API v62.0, NetSuite 2024.2, SAP S/4HANA 2408, D365 F&O 10.0.40, Oracle ERP Cloud 26A",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Bulk API 2.0 and Bulk API Developer Guide — Limits",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "PK Chunking — Bulk API 2.0 Developer Guide",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/async_api_headers_enable_pk_chunking.htm"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Optimizing High-Volume NetSuite REST API Integrations",
+        "url": "https://www.houseblend.io/articles/netsuite-rest-api-high-volume-integrations"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Recurring Integrations — Dynamics 365 Finance & Operations",
+        "url": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/recurring-integrations"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Data Import Options and Guidelines for Fusion Applications Suite",
+        "url": "https://www.ateam-oracle.com/data-import-options-and-guidelines-for-fusion-applications-suite"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Import file-based data to Oracle Fusion Cloud ERP",
+        "url": "https://docs.oracle.com/en/solutions/import-data-for-enterprise-resource-planning/index.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "General Guidelines for Data Loads — Salesforce Bulk API",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_planning_guidelines.htm"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Bulk Processing Patterns for ERP Integration — Chunking & Parallel Processing Strategies",
+    "description": "Cross-system ERP bulk processing reference: optimal chunk sizes, concurrency limits, parallel processing strategies, and error handling for Salesforce, NetSuite, SAP, D365, and Oracle ERP Cloud.",
+    "keywords": ["ERP integration", "bulk processing", "chunking strategies", "parallel processing", "API rate limits"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-07",
+    "datePublished": "2026-03-07",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Salesforce"},
+      {"@type": "Organization", "name": "Oracle"},
+      {"@type": "Organization", "name": "SAP"},
+      {"@type": "Organization", "name": "Microsoft"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Bulk Processing Patterns" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are the best chunking and parallel processing strategies for bulk ERP integration?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Break datasets into 1,000-10,000 record chunks (system-dependent), process with rate-limit-aware parallelism, and implement per-chunk error handling — never send everything in one giant batch."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ERP bulk data processing chunking strategies across Salesforce SAP NetSuite D365 Oracle",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Break datasets into 1,000-10,000 record chunks (system-dependent), process with rate-limit-aware parallelism, and implement per-chunk error handling — never send everything in one giant batch."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to chunk and parallelize large ERP data loads",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Break datasets into 1,000-10,000 record chunks (system-dependent), process with rate-limit-aware parallelism, and implement per-chunk error handling — never send everything in one giant batch."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Optimal batch sizes and concurrency limits for bulk ERP imports",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Break datasets into 1,000-10,000 record chunks (system-dependent), process with rate-limit-aware parallelism, and implement per-chunk error handling — never send everything in one giant batch."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Bulk API chunking patterns for enterprise integrations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Break datasets into 1,000-10,000 record chunks (system-dependent), process with rate-limit-aware parallelism, and implement per-chunk error handling — never send everything in one giant batch."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Bulk Processing Patterns for ERP Integration — Chunking &amp; Parallel Processing Strategies</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What are the best chunking and parallel processing strategies for bulk ERP integration?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/bulk-processing-patterns/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Salesforce, NetSuite, SAP S/4HANA, D365 F&amp;O, Oracle ERP Cloud</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.86 out of 1">0.86</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-07</span></span>
+    <span><strong>Freshness:</strong> 2026-03-07</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Break datasets into 1,000-10,000 record chunks (system-dependent), process with rate-limit-aware parallelism, and implement per-chunk error handling — never send everything in one giant batch.</li>
+    <li><strong>Key limit</strong>: Each ERP has hard ceiling limits — Salesforce 150 MB/file and 100M records/24h; NetSuite 15-55 concurrent threads; D365 30-min sync timeout; Oracle FBDI 250 MB/ZIP and 100K records/import.</li>
+    <li><strong>Watch out for</strong>: Partial success handling — Salesforce Bulk API reports per-record success/failure, but NetSuite CSV Import and Oracle FBDI fail entire batches on any validation error.</li>
+    <li><strong>Best for</strong>: Any integration moving &gt; 2,000 records per operation — data migration, nightly syncs, master data distribution, large transaction loads.</li>
+    <li><strong>Authentication</strong>: Use service-to-service OAuth flows (JWT for Salesforce, TBA for NetSuite, Entra ID for D365, OAuth 2.0 for Oracle).</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>This is a cross-system architecture pattern card covering bulk data processing strategies across the five most widely integrated ERP platforms. It compares native bulk APIs, chunking approaches, concurrency models, and error handling at the bulk operation level.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">Bulk API Surface</th><th scope="col">Direction Covered</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>CRM / Platform</td><td>Bulk API 2.0 (CSV over REST)</td><td>Inbound + Outbound</td></tr>
+      <tr><td>Oracle NetSuite</td><td>ERP / Financials</td><td>SuiteTalk REST, CSV Import, SuiteQL</td><td>Inbound + Outbound</td></tr>
+      <tr><td>SAP S/4HANA</td><td>ERP / Manufacturing</td><td>OData $batch, BAPI, LSMW, LTMC</td><td>Inbound + Outbound</td></tr>
+      <tr><td>Microsoft D365 F&amp;O</td><td>ERP / Finance</td><td>DMF Recurring Integration, OData batch</td><td>Inbound + Outbound</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>ERP / Financials</td><td>FBDI + ESS, REST</td><td>Inbound + Outbound</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Bulk API</th><th scope="col">Protocol</th><th scope="col">Max Records/Request</th><th scope="col">Max File Size</th><th scope="col">Concurrency Limit</th><th scope="col">Async?</th><th scope="col">Partial Success?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Bulk API 2.0</td><td>REST/CSV</td><td>150M records/job</td><td>150 MB/file</td><td>25 concurrent jobs</td><td>Yes</td><td>Yes (per-record)</td></tr>
+      <tr><td>NetSuite</td><td>CSV Import</td><td>UI/Scheduled</td><td>100K+ per file</td><td>No hard limit</td><td>5 queues (multi-thread)</td><td>Yes</td><td>No (entire batch)</td></tr>
+      <tr><td>NetSuite</td><td>SuiteTalk REST</td><td>REST/JSON</td><td>1 record/request</td><td>104 MB response</td><td>15-55 concurrent</td><td>Optional</td><td>N/A</td></tr>
+      <tr><td>SAP S/4HANA</td><td>OData $batch</td><td>REST/JSON</td><td>1,000 changesets</td><td>50 MB</td><td>Shared dialog processes</td><td>Yes (async mode)</td><td>Yes (per-changeset)</td></tr>
+      <tr><td>SAP S/4HANA</td><td>LSMW/LTMC</td><td>Batch input</td><td>No hard limit</td><td>File-dependent</td><td>1 session/project</td><td>Yes</td><td>Partial (error log)</td></tr>
+      <tr><td>D365 F&amp;O</td><td>DMF Recurring</td><td>REST/Package</td><td>Package-dependent</td><td>No documented limit</td><td>Configurable (Batch Concurrency Control)</td><td>Yes</td><td>Yes (per-record in log)</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>FBDI</td><td>REST/ZIP(CSV)</td><td>100,000 per import</td><td>250 MB/ZIP</td><td>5 concurrent imports</td><td>Yes (ESS jobs)</td><td>No (entire import)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Request Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Max file size per upload</td><td>150 MB</td><td>Split larger datasets into multiple files</td></tr>
+      <tr><td>Salesforce</td><td>Internal batch size</td><td>10,000 records</td><td>Auto-created; each takes up to 10 min</td></tr>
+      <tr><td>Salesforce</td><td>PK Chunking default</td><td>250,000 records</td><td>Configurable via Sforce-PK-Chunking header</td></tr>
+      <tr><td>NetSuite</td><td>Records per REST request</td><td>1</td><td>Use CSV Import for true bulk ops</td></tr>
+      <tr><td>NetSuite</td><td>Max response payload</td><td>104 MB</td><td>Paginate queries exceeding this</td></tr>
+      <tr><td>SAP</td><td>Changesets per $batch</td><td>1,000</td><td>Split across multiple $batch calls</td></tr>
+      <tr><td>D365</td><td>Sync mode timeout</td><td>30 minutes</td><td>Use batch mode for longer operations</td></tr>
+      <tr><td>Oracle FBDI</td><td>Records per import</td><td>100,000</td><td>Split into multiple FBDI submissions</td></tr>
+      <tr><td>Oracle FBDI</td><td>ZIP file size</td><td>250 MB</td><td>Individual CSV within ZIP can be up to 1 GB</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Rolling / Daily Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Limit Type</th><th scope="col">Value</th><th scope="col">Window</th><th scope="col">Edition Differences</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Total records via Bulk API</td><td>100,000,000</td><td>24h rolling</td><td>Same across editions</td></tr>
+      <tr><td>Salesforce</td><td>Bulk API batches</td><td>15,000</td><td>24h rolling</td><td>Shared across editions</td></tr>
+      <tr><td>NetSuite</td><td>Concurrent threads</td><td>15-55</td><td>Per-moment</td><td>SuiteCloud Plus adds 10/license</td></tr>
+      <tr><td>SAP</td><td>OData requests</td><td>Fair-use throttling</td><td>Depends on sizing</td><td>On-prem: hardware; Cloud: quota</td></tr>
+      <tr><td>D365</td><td>API calls</td><td>Priority-based throttling</td><td>Per-minute</td><td>Based on license count</td></tr>
+      <tr><td>Oracle FBDI</td><td>Concurrent imports</td><td>5</td><td>Per-moment</td><td>Same across editions</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Recommended Flow</th><th scope="col">Token Lifetime</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>OAuth 2.0 JWT Bearer</td><td>2h (session timeout)</td><td>New JWT per bulk job; never use username-password</td></tr>
+      <tr><td>NetSuite</td><td>Token-Based Auth (TBA)</td><td>Until revoked</td><td>Create dedicated integration user</td></tr>
+      <tr><td>SAP S/4HANA</td><td>OAuth 2.0 Client Credentials</td><td>Configurable (12h default)</td><td>Basic auth deprecated</td></tr>
+      <tr><td>D365 F&amp;O</td><td>Microsoft Entra ID (OAuth 2.0)</td><td>1h access token</td><td>Client credentials flow</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>OAuth 2.0</td><td>Session-based</td><td>Via Oracle IDCS</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li>Salesforce bulk jobs inherit the API user's governor limits — a dedicated integration user prevents limit sharing with interactive users [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>]</li>
+    <li>NetSuite TBA tokens are tied to specific integration records — rotating tokens requires updating all connected middleware [<a href="https://www.houseblend.io/articles/netsuite-rest-api-high-volume-integrations">src3</a>]</li>
+    <li>D365 recurring integration jobs require the Entra ID app ID to be registered in the data project — mismatched app IDs silently reject submissions [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/recurring-integrations">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Salesforce Bulk API 2.0 auto-creates internal 10K-record batches from your uploaded file — you cannot control internal batch boundaries, only the file you upload</li>
+    <li>NetSuite has no native bulk upsert API — CSV Import or individual REST calls with external IDs are the only options for idempotent bulk writes</li>
+    <li>SAP OData $batch is transactional per changeset — a single failing record in a changeset rolls back the entire changeset</li>
+    <li>D365 DMF parallel package import must be explicitly enabled (Data Management &gt; Framework Parameters &gt; Enhanced Parallel Package Import)</li>
+    <li>Oracle FBDI rejects the entire import on any data validation error — there is no partial success mode</li>
+    <li>Cross-system: running bulk jobs during business hours competes with interactive users for API quota</li>
+  </ul>
+  </section>
+
+  <!-- Integration Pattern Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START — User needs to bulk-load data into an ERP system
+├── How many records per batch cycle?
+│   ├── &lt; 2,000 records
+│   │   └── Use standard REST API with composite/batch requests
+│   ├── 2,000 – 100,000 records
+│   │   ├── Salesforce → Bulk API 2.0 single job
+│   │   ├── NetSuite → CSV Import (multi-thread with SuiteCloud Plus)
+│   │   ├── SAP → OData $batch (1,000 changesets/request)
+│   │   ├── D365 → DMF Recurring Integration (single package)
+│   │   └── Oracle → FBDI single ZIP + ESS job
+│   ├── 100,000 – 1,000,000 records
+│   │   ├── Salesforce → Bulk API 2.0 with file chunking (10-15 MB files)
+│   │   ├── NetSuite → CSV Import with queue distribution (queues 1-5)
+│   │   ├── SAP → LTMC / BAPI batch processing
+│   │   ├── D365 → DMF + Enhanced Parallel Package Import
+│   │   └── Oracle → Multiple FBDI submissions (≤100K per import, ≤5 concurrent)
+│   └── &gt; 1,000,000 records
+│       ├── Salesforce → Bulk API 2.0 with job queuing (max 25 concurrent)
+│       ├── NetSuite → Staged CSV Import + message queue orchestration
+│       ├── SAP → LSMW / LTMC with parallel sessions
+│       ├── D365 → Multiple DMF packages with batch concurrency control
+│       └── Oracle → Sequential FBDI batches (respect 5-concurrent limit)
+├── Chunking strategy?
+│   ├── Fixed-size chunks → Simplest; use when records are independent
+│   ├── Adaptive chunks → Adjust based on response times and error rates
+│   └── Dependency-aware chunks → Group parent/child records together
+├── Error tolerance?
+│   ├── Zero-loss → Per-chunk retry + dead letter queue + idempotency keys
+│   └── Best-effort → Log failures, skip, continue
+└── Performance priority?
+    ├── Throughput → Maximize parallelism up to concurrency limit
+    └── Reliability → Reduce parallelism, increase retry budget</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference — Cross-System Bulk Processing Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">NetSuite</th><th scope="col">SAP S/4HANA</th><th scope="col">D365 F&amp;O</th><th scope="col">Oracle ERP Cloud</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Primary Bulk API</strong></td><td>Bulk API 2.0</td><td>CSV Import</td><td>LTMC / OData $batch</td><td>DMF Recurring Integration</td><td>FBDI + ESS</td></tr>
+      <tr><td><strong>Max records/job</strong></td><td>150M/file</td><td>100K+ (practical)</td><td>999/BDC; unlimited LSMW</td><td>Package-dependent</td><td>100,000/import</td></tr>
+      <tr><td><strong>Max file size</strong></td><td>150 MB</td><td>No hard limit</td><td>File-dependent</td><td>No documented limit</td><td>250 MB ZIP</td></tr>
+      <tr><td><strong>Max concurrent jobs</strong></td><td>25</td><td>5 queues</td><td>Session-limited</td><td>Configurable</td><td>5 imports</td></tr>
+      <tr><td><strong>Optimal chunk size</strong></td><td>10K-50K records/file</td><td>5K-25K records/CSV</td><td>500-1K changesets</td><td>10K-50K records/pkg</td><td>25K-50K records/FBDI</td></tr>
+      <tr><td><strong>Partial success</strong></td><td>Yes (per-record)</td><td>No (entire batch)</td><td>Yes (per-changeset)</td><td>Yes (per-record in log)</td><td>No (entire import)</td></tr>
+      <tr><td><strong>Built-in retry</strong></td><td>Yes (10 retries)</td><td>No</td><td>No</td><td>Yes (PU64+)</td><td>No</td></tr>
+      <tr><td><strong>Typical throughput</strong></td><td>~3K-5K rec/sec</td><td>~3 rec/sec (REST); ~500/sec (CSV)</td><td>~200-1K rec/sec</td><td>~500-2K rec/sec</td><td>~300-1K rec/sec</td></tr>
+      <tr><td><strong>Async processing</strong></td><td>Yes</td><td>Yes (CSV Import)</td><td>Yes (async OData)</td><td>Yes (batch mode)</td><td>Yes (ESS)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step Integration Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Assess data volume and select chunking strategy</h3>
+  <p>Determine total record count, record dependencies, and target ERP's limits. Choose fixed-size, adaptive, or dependency-aware chunking. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_planning_guidelines.htm">src7</a>]</p>
+  <ul>
+    <li><strong>Fixed-size chunks</strong>: Split into equal segments (e.g., 10K records). Best for independent records.</li>
+    <li><strong>Adaptive chunks</strong>: Adjust size based on processing time and error rates. Reduce if error rate &gt; 5%.</li>
+    <li><strong>Dependency-aware chunks</strong>: Group parent/child records (e.g., Account + Contacts). Prevents referential integrity failures.</li>
+  </ul>
+  <p><strong>Verify</strong>: <code>chunk_count = ceil(total_records / chunk_size)</code> → expected: reasonable chunk count for target ERP</p>
+
+  <h3>2. Implement chunk generation with dependency awareness</h3>
+  <p>Split source data into chunks that respect parent-child relationships. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_planning_guidelines.htm">src7</a>]</p>
+  <pre><code class="language-python">def chunk_with_dependencies(records, chunk_size=10000):
+    """Split records into chunks preserving parent-child groups."""
+    groups = {}
+    for record in records:
+        parent_id = record.get('parent_id')
+        if parent_id:
+            groups.setdefault(parent_id, []).append(record)
+        else:
+            groups.setdefault(record['id'], [])
+            groups[record['id']].insert(0, record)
+
+    chunks, current_chunk, current_size = [], [], 0
+    for group_id, group_records in groups.items():
+        group_size = len(group_records)
+        if current_size + group_size > chunk_size and current_chunk:
+            chunks.append(current_chunk)
+            current_chunk, current_size = [], 0
+        current_chunk.extend(group_records)
+        current_size += group_size
+    if current_chunk:
+        chunks.append(current_chunk)
+    return chunks</code></pre>
+
+  <h3>3. Implement rate-limit-aware parallel processing</h3>
+  <p>Process chunks in parallel while respecting concurrency limits. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>, <a href="https://www.houseblend.io/articles/netsuite-rest-api-high-volume-integrations">src3</a>]</p>
+  <pre><code class="language-python">import asyncio
+from asyncio import Semaphore
+
+ERP_CONCURRENCY = {
+    'salesforce': 10, 'netsuite': 10, 'sap': 5, 'd365': 8, 'oracle_fbdi': 3,
+}
+
+async def process_chunks_parallel(chunks, erp_type, process_fn):
+    semaphore = Semaphore(ERP_CONCURRENCY.get(erp_type, 5))
+    async def process_with_limit(idx, chunk):
+        async with semaphore:
+            try:
+                result = await process_fn(chunk)
+                return {'chunk': idx, 'status': 'success', 'result': result}
+            except RateLimitError as e:
+                await asyncio.sleep(e.retry_after or 2 ** idx)
+                result = await process_fn(chunk)
+                return {'chunk': idx, 'status': 'success', 'result': result}
+            except Exception as e:
+                return {'chunk': idx, 'status': 'failed', 'error': str(e)}
+    return await asyncio.gather(*[process_with_limit(i, c) for i, c in enumerate(chunks)])</code></pre>
+
+  <h3>4. Handle partial failures per ERP</h3>
+  <p>Each ERP handles partial success differently. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>, <a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/recurring-integrations">src4</a>, <a href="https://docs.oracle.com/en/solutions/import-data-for-enterprise-resource-planning/index.html">src6</a>]</p>
+  <pre><code class="language-python">def handle_partial_failures(results, erp_type):
+    if erp_type == 'salesforce':
+        # Per-record success/failure — retry only failed records
+        return [r for r in results if r['sf__Error']]
+    elif erp_type == 'netsuite_csv':
+        # Entire batch fails — retry all after fixing data
+        return results['all_records'] if results.get('status') == 'FAILED' else []
+    elif erp_type == 'sap_odata':
+        # Per-changeset — retry failed changesets only
+        return [cs for cs in results['changesets'] if cs['status'] >= 400]
+    elif erp_type == 'd365':
+        # Check execution errors via API
+        return results.get('execution_errors', [])
+    elif erp_type == 'oracle_fbdi':
+        # Entire import fails — fix data and resubmit
+        return results['all_records'] if results.get('status') == 'ERROR' else []</code></pre>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Salesforce Bulk API 2.0 Job with Chunking</h3>
+  <pre><code class="language-python"># Input:  Large CSV file (e.g., 500K contact records)
+# Output: Bulk job IDs with success/failure counts per chunk
+
+import requests, time, csv, io
+
+class SalesforceBulkChunker:
+    MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB (leave headroom)
+    POLL_INTERVAL = 10  # seconds
+
+    def __init__(self, instance_url, access_token):
+        self.base_url = f"{instance_url}/services/data/v62.0"
+        self.headers = {'Authorization': f'Bearer {access_token}',
+                        'Content-Type': 'text/csv'}
+
+    def chunk_csv_file(self, filepath, target_size_mb=100):
+        chunks = []
+        with open(filepath, 'r') as f:
+            reader = csv.reader(f)
+            header = next(reader)
+            current_chunk, current_size = [header], 0
+            for row in reader:
+                row_size = len(','.join(row).encode('utf-8'))
+                if current_size + row_size > target_size_mb * 1024 * 1024:
+                    chunks.append(current_chunk)
+                    current_chunk, current_size = [header], 0
+                current_chunk.append(row)
+                current_size += row_size
+            if len(current_chunk) > 1:
+                chunks.append(current_chunk)
+        return chunks
+
+    def submit_job(self, sobject, operation, csv_data):
+        job_resp = requests.post(f"{self.base_url}/jobs/ingest",
+            headers={**self.headers, 'Content-Type': 'application/json'},
+            json={'object': sobject, 'operation': operation,
+                  'contentType': 'CSV', 'lineEnding': 'LF'})
+        job_id = job_resp.json()['id']
+        buf = io.StringIO()
+        csv.writer(buf).writerows(csv_data)
+        requests.put(f"{self.base_url}/jobs/ingest/{job_id}/batches",
+            headers=self.headers, data=buf.getvalue().encode('utf-8'))
+        requests.patch(f"{self.base_url}/jobs/ingest/{job_id}",
+            headers={**self.headers, 'Content-Type': 'application/json'},
+            json={'state': 'UploadComplete'})
+        return job_id</code></pre>
+
+  <h3>Python: Adaptive Chunking with Rate-Limit Backoff</h3>
+  <pre><code class="language-python"># Input:  Records to process, target ERP API
+# Output: All records processed with adaptive chunk sizing
+
+class AdaptiveChunker:
+    def __init__(self, initial_chunk_size=5000, min_chunk=500, max_chunk=50000):
+        self.chunk_size = initial_chunk_size
+        self.min_chunk, self.max_chunk = min_chunk, max_chunk
+        self.success_count = 0
+
+    def adjust_chunk_size(self, response_time_ms, had_errors):
+        if had_errors:
+            self.chunk_size = max(self.min_chunk, self.chunk_size // 2)
+        elif response_time_ms > 30000:
+            self.chunk_size = max(self.min_chunk, int(self.chunk_size * 0.75))
+        elif response_time_ms < 5000:
+            self.success_count += 1
+            if self.success_count >= 3:
+                self.chunk_size = min(self.max_chunk, int(self.chunk_size * 1.25))
+                self.success_count = 0
+        return self.chunk_size</code></pre>
+
+  <h3>cURL: Salesforce Bulk API 2.0 Job Lifecycle</h3>
+  <pre><code class="language-bash"># Step 1: Create ingest job
+curl -X POST https://yourinstance.salesforce.com/services/data/v62.0/jobs/ingest \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"object":"Contact","operation":"upsert","externalIdFieldName":"External_ID__c","contentType":"CSV"}'
+
+# Step 2: Upload CSV chunk
+curl -X PUT https://yourinstance.salesforce.com/services/data/v62.0/jobs/ingest/JOB_ID/batches \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: text/csv" \
+  --data-binary @contacts_chunk_001.csv
+
+# Step 3: Close job to begin processing
+curl -X PATCH https://yourinstance.salesforce.com/services/data/v62.0/jobs/ingest/JOB_ID \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"state":"UploadComplete"}'
+
+# Step 4: Get failed records for retry
+curl https://yourinstance.salesforce.com/services/data/v62.0/jobs/ingest/JOB_ID/failedResults \
+  -H "Authorization: Bearer $ACCESS_TOKEN" -H "Accept: text/csv"</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Chunking Parameter Reference</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Parameter</th><th scope="col">Salesforce</th><th scope="col">NetSuite</th><th scope="col">SAP S/4HANA</th><th scope="col">D365 F&amp;O</th><th scope="col">Oracle FBDI</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Optimal chunk size</strong></td><td>10K-50K records</td><td>5K-25K records</td><td>500-1K changesets</td><td>10K-50K records</td><td>25K-50K records</td></tr>
+      <tr><td><strong>Optimal file size</strong></td><td>10-100 MB</td><td>&lt; 50 MB</td><td>N/A</td><td>Package-dependent</td><td>&lt; 100 MB per CSV</td></tr>
+      <tr><td><strong>Compression</strong></td><td>Not supported</td><td>N/A</td><td>N/A</td><td>ZIP packages</td><td>DEFLATE in ZIP</td></tr>
+      <tr><td><strong>Character encoding</strong></td><td>UTF-8</td><td>UTF-8, no BOM</td><td>UTF-8</td><td>UTF-8</td><td>UTF-8</td></tr>
+      <tr><td><strong>Date format</strong></td><td>ISO 8601</td><td>MM/DD/YYYY or ISO</td><td>ISO 8601</td><td>ISO 8601</td><td>YYYY/MM/DD HH:mm:ss</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li>Salesforce Bulk API 2.0 CSV requires all lookup fields as 18-char IDs — 15-char IDs cause MALFORMED_ID errors [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>]</li>
+    <li>NetSuite CSV Import treats empty strings and "null" differently — empty string clears a field, omitting preserves existing value [<a href="https://www.houseblend.io/articles/netsuite-rest-api-high-volume-integrations">src3</a>]</li>
+    <li>SAP OData $batch with JSON requires Edm.Decimal as strings — numeric precision loss causes rounding errors</li>
+    <li>D365 DMF date fields require ISO 8601 — locale-specific formats are rejected in REST package submission [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/recurring-integrations">src4</a>]</li>
+    <li>Oracle FBDI date columns require YYYY/MM/DD HH:mm:ss — ISO 8601 with 'T' separator is rejected [<a href="https://docs.oracle.com/en/solutions/import-data-for-enterprise-resource-planning/index.html">src6</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling & Failure Points -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Codes</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP</th><th scope="col">Code</th><th scope="col">Meaning</th><th scope="col">Cause</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>UNABLE_TO_LOCK_ROW</td><td>Record locked</td><td>Concurrent update</td><td>Reduce parallelism; add jitter</td></tr>
+      <tr><td>Salesforce</td><td>REQUEST_LIMIT_EXCEEDED</td><td>Daily limit hit</td><td>Too many bulk jobs/24h</td><td>Consolidate into fewer, larger jobs</td></tr>
+      <tr><td>NetSuite</td><td>429</td><td>Rate limit exceeded</td><td>Burst or daily limit</td><td>Exponential backoff; honor Retry-After</td></tr>
+      <tr><td>NetSuite</td><td>CONCURRENT_REQUEST_LIMIT</td><td>Thread limit hit</td><td>Too many parallel requests</td><td>Reduce semaphore count</td></tr>
+      <tr><td>SAP</td><td>501</td><td>$batch not supported</td><td>Endpoint limitation</td><td>Use individual requests or BAPI batch</td></tr>
+      <tr><td>D365</td><td>ProcessedWithErrors</td><td>Partial failure</td><td>Validation errors</td><td>Call GetExecutionErrors API</td></tr>
+      <tr><td>Oracle</td><td>ESS FAILED</td><td>Import validation error</td><td>Data/constraint violation</td><td>Download error report; fix and resubmit</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Salesforce Bulk API silent timeout</strong>: Internal 10K-record batches can timeout; Salesforce retries 10x, then fails the job. Fix: <code>Keep records per file under 100K</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>]</li>
+    <li><strong>NetSuite CSV Import order dependency</strong>: Children may process before parents in multi-threaded mode. Fix: <code>Upload parents first, then children — or disable multi-threading</code>. [<a href="https://www.houseblend.io/articles/netsuite-rest-api-high-volume-integrations">src3</a>]</li>
+    <li><strong>D365 DMF parallel execution collision</strong>: Files arriving faster than processing causes lock contention. Fix: <code>Enable sequential processing of messages in recurring job config</code>. [<a href="https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/recurring-integrations">src4</a>]</li>
+    <li><strong>Oracle FBDI BOM character</strong>: UTF-8 BOM causes FBDI to misread first column header. Fix: <code>Save CSV as UTF-8 without BOM; validate with hex editor</code>. [<a href="https://docs.oracle.com/en/solutions/import-data-for-enterprise-resource-planning/index.html">src6</a>]</li>
+    <li><strong>Cross-system timezone overlap</strong>: Bulk jobs at "midnight" may hit maintenance windows. Fix: <code>Use UTC timestamps; check ERP maintenance calendar</code>.</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Processing all records in a single giant batch</h3>
+  <pre><code class="language-python"># BAD — single-threaded, no chunking, all-or-nothing failure
+def bulk_import_bad(records, api_client):
+    result = api_client.bulk_upload(records)  # Times out at 150K+
+    if result.failed:
+        bulk_import_bad(records, api_client)  # Infinite retry loop</code></pre>
+
+  <h3>Correct: Chunked processing with per-chunk error isolation</h3>
+  <pre><code class="language-python"># GOOD — chunked, parallel, per-chunk error handling
+def bulk_import_good(records, api_client, chunk_size=10000):
+    chunks = [records[i:i+chunk_size] for i in range(0, len(records), chunk_size)]
+    failed_chunks = []
+    for i, chunk in enumerate(chunks):
+        try:
+            result = api_client.bulk_upload(chunk)
+            log_success(i, len(chunk), result.processed)
+        except Exception as e:
+            failed_chunks.append((i, chunk, str(e)))
+    retry_failed_chunks(failed_chunks, api_client)</code></pre>
+
+  <h3>Wrong: Ignoring partial success results</h3>
+  <pre><code class="language-python"># BAD — assumes entire job succeeded or failed
+job = api_client.get_job_status(job_id)
+if job.state == 'JobComplete':
+    print("All done!")  # WRONG — can still have failed records</code></pre>
+
+  <h3>Correct: Checking per-record success/failure</h3>
+  <pre><code class="language-python"># GOOD — inspect individual record results
+job = api_client.get_job_status(job_id)
+if job.state == 'JobComplete' and job.number_records_failed > 0:
+    failures = api_client.get_failed_results(job_id)
+    for record in failures:
+        dead_letter_queue.add(record)  # Route to DLQ</code></pre>
+
+  <h3>Wrong: Maximum parallelism without rate-limit awareness</h3>
+  <pre><code class="language-python"># BAD — fire all chunks simultaneously
+tasks = [api_client.upload(chunk) for chunk in chunks]
+await asyncio.gather(*tasks)  # 500 concurrent → instant 429</code></pre>
+
+  <h3>Correct: Semaphore-controlled parallelism with backoff</h3>
+  <pre><code class="language-python"># GOOD — respect concurrency limits
+sem = asyncio.Semaphore(10)
+async def upload_with_limit(chunk):
+    async with sem:
+        for attempt in range(3):
+            try:
+                return await api_client.upload(chunk)
+            except RateLimitError:
+                await asyncio.sleep(2 ** attempt)
+await asyncio.gather(*[upload_with_limit(c) for c in chunks])</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Chunks too small (&lt; 100 records)</strong>: API overhead per request dominates — same HTTP overhead for 100 records as 10,000. Fix: <code>Start at ERP's recommended minimum and increase until hitting timeout or memory limits</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_planning_guidelines.htm">src7</a>]</li>
+    <li><strong>Chunks too large</strong>: Risk timeout, memory exhaustion, all-or-nothing rollback. Fix: <code>Stay at 50-70% of documented maximum</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>]</li>
+    <li><strong>Not pre-validating data</strong>: Oracle FBDI and NetSuite CSV Import fail entire batches on one bad record. Fix: <code>Validate all records against required fields, types, and picklists before submission</code>. [<a href="https://docs.oracle.com/en/solutions/import-data-for-enterprise-resource-planning/index.html">src6</a>]</li>
+    <li><strong>Running bulk jobs during business hours</strong>: Competes with interactive users for API quota. Fix: <code>Schedule during off-peak hours</code>.</li>
+    <li><strong>No progress tracking</strong>: When a 50-chunk job fails at chunk 37, you must know what succeeded. Fix: <code>Log chunk boundaries in persistent store; implement checkpoint/restart</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_planning_guidelines.htm">src7</a>]</li>
+    <li><strong>Single-threaded bulk processing</strong>: 1M records single-threaded takes hours. Fix: <code>Use concurrent processing up to ERP's concurrency limit (typical 3-8x speedup)</code>. [<a href="https://www.houseblend.io/articles/netsuite-rest-api-high-volume-integrations">src3</a>]</li>
+    <li><strong>Mixing create and update</strong>: Some ERPs require distinct modes. Fix: <code>Use upsert where available; otherwise separate creates and updates into distinct jobs</code>. [<a href="https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/bulk_common_limits.htm">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># === Salesforce: Check Bulk API job status ===
+curl -s "https://$SF_INSTANCE/services/data/v62.0/jobs/ingest/$JOB_ID" \
+  -H "Authorization: Bearer $SF_TOKEN" | jq '{state, numberRecordsProcessed, numberRecordsFailed}'
+
+# === Salesforce: Check remaining API limits ===
+curl -s "https://$SF_INSTANCE/services/data/v62.0/limits" \
+  -H "Authorization: Bearer $SF_TOKEN" | jq '{DailyApiRequests, DailyBulkV2QueryJobs}'
+
+# === D365: Check recurring integration message status ===
+curl -X POST "https://$D365_INSTANCE/data/DataManagementDefinitionGroups/Microsoft.Dynamics.DataEntities.GetMessageStatus" \
+  -H "Authorization: Bearer $D365_TOKEN" -H "Content-Type: application/json" \
+  -d '{"messageId":"MESSAGE_GUID"}'
+
+# === D365: Get execution errors ===
+curl -X POST "https://$D365_INSTANCE/data/DataManagementDefinitionGroups/Microsoft.Dynamics.DataEntities.GetExecutionErrors" \
+  -H "Authorization: Bearer $D365_TOKEN" -H "Content-Type: application/json" \
+  -d '{"executionId":"EXECUTION_ID"}'
+
+# === Oracle FBDI: Check ESS job status ===
+curl -s "https://$ORACLE_INSTANCE/fscmRestApi/resources/latest/erpintegrations?finder=ESSJobStatusFinder" \
+  -H "Authorization: Bearer $ORACLE_TOKEN"</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Bulk API Version</th><th scope="col">Release</th><th scope="col">Key Change</th><th scope="col">Impact on Chunking</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>Bulk API 2.0</td><td>v62.0 (2026-02)</td><td>PK Chunking default raised to 250K</td><td>Larger query chunks possible</td></tr>
+      <tr><td>Salesforce</td><td>Bulk API 2.0</td><td>v56.0 (2022-10)</td><td>Bulk API 2.0 GA</td><td>Simpler chunking — no manual batch mgmt</td></tr>
+      <tr><td>NetSuite</td><td>SuiteTalk REST</td><td>2024.2</td><td>Idempotency key header support</td><td>Safer retries on bulk REST operations</td></tr>
+      <tr><td>SAP</td><td>OData v4</td><td>2408</td><td>Async OData $batch support</td><td>Bulk ops no longer block dialogs</td></tr>
+      <tr><td>D365</td><td>DMF</td><td>PU63 (10.0.38)</td><td>Batch Concurrency Control</td><td>Fine-grained parallel task control</td></tr>
+      <tr><td>D365</td><td>DMF</td><td>PU64 (10.0.40)</td><td>Auto-retry on batch restarts</td><td>Improved reliability for long imports</td></tr>
+      <tr><td>Oracle</td><td>FBDI</td><td>26A</td><td>File size limit increased to 500 MB</td><td>Larger chunks possible</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Data volume &gt; 2,000 records per operation</td><td>Real-time, sub-second latency required</td><td>REST API with composite requests</td></tr>
+      <tr><td>Nightly/scheduled data sync between systems</td><td>Event-driven integration (react to changes)</td><td>CDC / Platform Events / Webhooks</td></tr>
+      <tr><td>Master data distribution across ERPs</td><td>One-time data migration (initial load)</td><td>ETL tools (LTMC, Data Loader, FBDI staging)</td></tr>
+      <tr><td>High-volume transaction processing</td><td>Low-volume, high-frequency updates</td><td>Standard REST/OData API</td></tr>
+      <tr><td>Historical data backfill</td><td>Bidirectional real-time sync</td><td>Dual-write / CDC with conflict resolution</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Salesforce</th><th scope="col">NetSuite</th><th scope="col">SAP S/4HANA</th><th scope="col">D365 F&amp;O</th><th scope="col">Oracle ERP Cloud</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Bulk API maturity</strong></td><td>Excellent</td><td>Limited</td><td>Good</td><td>Good</td><td>Good</td><td>SF most mature</td></tr>
+      <tr><td><strong>Auto-chunking</strong></td><td>Yes (10K)</td><td>No</td><td>No</td><td>No</td><td>No</td><td>SF only</td></tr>
+      <tr><td><strong>Partial success</strong></td><td>Per-record</td><td>No</td><td>Per-changeset</td><td>Per-record (logs)</td><td>No</td><td>SF best</td></tr>
+      <tr><td><strong>Concurrency control</strong></td><td>25 hard cap</td><td>Tier-based</td><td>Resource-based</td><td>Configurable</td><td>5 hard cap</td><td>D365 most flexible</td></tr>
+      <tr><td><strong>Built-in retry</strong></td><td>10 retries</td><td>None</td><td>None</td><td>Auto (PU64+)</td><td>None</td><td></td></tr>
+      <tr><td><strong>Query chunking</strong></td><td>PK Chunking</td><td>Pagination (1K)</td><td>$skip/$top</td><td>$skip/$top</td><td>BICC</td><td>SF most scalable</td></tr>
+      <tr><td><strong>Idempotent bulk ops</strong></td><td>Upsert + ExtID</td><td>External ID</td><td>Not native</td><td>Alternate key</td><td>Not native</td><td></td></tr>
+      <tr><td><strong>Compression</strong></td><td>No</td><td>No</td><td>No</td><td>ZIP</td><td>DEFLATE/ZIP</td><td></td></tr>
+      <tr><td><strong>Async processing</strong></td><td>Native</td><td>Native (CSV)</td><td>Async OData</td><td>Batch mode</td><td>ESS jobs</td><td>All support async</td></tr>
+      <tr><td><strong>Progress API</strong></td><td>Job status</td><td>Task status</td><td>Job log</td><td>GetMessageStatus</td><td>ESS status</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Rate limits and chunk size recommendations are subject to change with each vendor release — always verify against current documentation</li>
+    <li>Throughput benchmarks vary dramatically based on record complexity, custom logic (triggers, workflows), and time of day — figures here are baseline estimates for simple records</li>
+    <li>Edition-specific differences exist for all platforms — Salesforce Developer edition has drastically lower limits (15K API calls/24h); NetSuite tiers determine concurrent threads</li>
+    <li>Sandbox environments have different performance characteristics than production — always load-test with production-representative data volumes</li>
+    <li>Oracle FBDI limits may vary by functional module — procurement, financials, and supply chain may have different per-import record caps</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/erp-bulk-import-comparison/2026" data-relationship="related_to">ERP Bulk Import Comparison</a>
+    <a href="/business/erp-integration/erp-rate-limits-comparison/2026" data-relationship="depends_on">ERP Rate Limits Comparison</a>
+    <a href="/business/erp-integration/batch-vs-realtime-integration/2026" data-relationship="related_to">Batch vs Real-time Integration</a>
+    <a href="/business/erp-integration/error-handling-dead-letter-queues/2026" data-relationship="related_to">Error Handling &amp; Dead Letter Queues</a>
+    <a href="/business/erp-integration/idempotency-erp-integrations/2026" data-relationship="often_confused_with">Idempotency in ERP Integrations</a>
+    <a href="/business/erp-integration/salesforce-bulk-api-capabilities/2026" data-relationship="solves">Salesforce Bulk API Capabilities</a>
+    <a href="/business/erp-integration/dynamics-365-dmf-import-export/2026" data-relationship="solves">D365 DMF Import/Export</a>
+    <a href="/business/erp-integration/change-data-capture-erp/2026" data-relationship="alternative_to">Change Data Capture for ERP</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Idempotency Patterns for APIs and Distributed | knowledgelib.io</title>
+  <meta name="description" content="Complete guide to implementing idempotency in APIs and distributed systems: Idempotency-Key header, database dedup, message queue patterns, with...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/patterns/idempotency-patterns/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Idempotency Patterns for APIs and Distributed | knowledgelib.io">
+  <meta property="og:description" content="Complete guide to implementing idempotency in APIs and distributed systems: Idempotency-Key header, database dedup, message queue patterns, with Node.js/Python/Go examples. 7 sources, all cited. Verified 2026-02-24.">
+  <meta property="og:url" content="https://knowledgelib.io/software/patterns/idempotency-patterns/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-24">
+  <meta property="article:modified_time" content="2026-02-24">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Idempotency Patterns for APIs and Distributed | knowledgelib.io">
+  <meta name="twitter:description" content="Complete guide to implementing idempotency in APIs and distributed systems: Idempotency-Key header, database dedup, message queue patterns, with Node.js/Python/Go examples. 7 sources, all cited. Verified 2026-02-24.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-02-24">
+  <meta name="ai:domain" content="software/patterns/idempotency patterns">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I implement idempotency in APIs and distributed systems?">
+  <meta name="ai:aliases" content="idempotent API design; idempotency key implementation; safe API retry patterns; preventing duplicate operations; Idempotency-Key header; at-least-once idempotent consumer; message deduplication patterns; distributed systems idempotency">
+  <meta name="ai:raw" content="/api/v1/units/software/patterns/idempotency-patterns/2026.md">
+  <meta name="ai:token_estimate" content="3600">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-24">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-24">
+  <meta name="ai:inputs_needed" content="layer, storage, ttl_requirements">
+  <meta name="ai:constraints" content="Idempotency check MUST happen BEFORE mutation; Key+execute MUST be atomic; Keys MUST have TTL; NEVER reuse key with different params; Keys MUST use crypto-random UUIDs">
+  <meta name="ai:skip_this_unit_if" content="Need exactly-once broker delivery -> Message broker documentation; Need DB-level conflict resolution -> software/patterns/sql-upsert/2026; Need concurrent write prevention -> Optimistic concurrency control / ETags">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Idempotency Patterns for APIs and Distributed Systems",
+    "headline": "Idempotency Patterns for APIs and Distributed Systems",
+    "description": "Complete guide to implementing idempotency in APIs and distributed systems, covering Idempotency-Key header middleware, database-backed stores, message queue deduplication (inbox pattern), with production-ready code examples in Node.js, Python, and Go.",
+    "keywords": ["idempotency", "idempotent API", "Idempotency-Key header", "distributed systems", "message deduplication", "at-least-once delivery", "API retry", "idempotent consumer", "inbox pattern"],
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "proficiencyLevel": "Expert",
+    "dependencies": "PostgreSQL or Redis, any HTTP framework (Express, FastAPI, Go net/http)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Designing robust and predictable APIs with idempotency",
+        "url": "https://stripe.com/blog/idempotency"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Implementing Stripe-like Idempotency Keys in Postgres",
+        "url": "https://brandur.org/idempotency-keys"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Idempotent Requests -- Stripe API Reference",
+        "url": "https://docs.stripe.com/api/idempotent_requests"
+      },
+      {
+        "@type": "WebPage",
+        "name": "The Idempotency-Key HTTP Header Field (IETF Draft)",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Idempotent Consumer Pattern",
+        "url": "https://microservices.io/patterns/communication-style/idempotent-consumer.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Idempotency -- AWS Lambda Documentation",
+        "url": "https://docs.aws.amazon.com/lambda/latest/dg/durable-execution-idempotency.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "AWS Lambda Powertools -- Idempotency Utility",
+        "url": "https://docs.aws.amazon.com/powertools/python/latest/utilities/idempotency/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Idempotency Patterns for APIs and Distributed Systems",
+    "description": "Structured reference covering idempotency patterns for APIs and distributed systems: Idempotency-Key header, database unique constraints, optimistic locking, message deduplication, with decision trees and production code examples.",
+    "keywords": ["idempotency", "API patterns", "distributed systems", "message deduplication", "idempotent consumer"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Stripe"},
+      {"@type": "Organization", "name": "IETF HTTPAPI Working Group"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "microservices.io"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "Patterns", "item": "https://knowledgelib.io/software/patterns/" },
+      { "@type": "ListItem", "position": 4, "name": "Idempotency Patterns for APIs and Distributed Systems" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I implement idempotency in APIs and distributed systems?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "idempotent API design",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "idempotency key implementation",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "safe API retry patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "preventing duplicate operations",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Idempotency-Key header",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Idempotency Patterns for APIs and Distributed Systems</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I implement idempotency in APIs and distributed systems?</h2>
+
+  <aside class="unit-meta" data-card-id="software/patterns/idempotency-patterns/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-24</span></span>
+    <span><strong>Freshness:</strong> 2026-02-24</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Combine an idempotency key header with an atomic check-and-execute pattern (DB unique constraint or Redis SETNX) to make any mutating API endpoint safely retryable.</li>
+    <li><strong>Key tool/command</strong>: <code>Idempotency-Key</code> HTTP header + database/Redis store with TTL</li>
+    <li><strong>Watch out for</strong>: Race conditions between the idempotency check and the mutation -- these must be atomic (single transaction or distributed lock).</li>
+    <li><strong>Works with</strong>: Any HTTP API framework, any database (PostgreSQL, MySQL, DynamoDB), Redis, message brokers (Kafka, SQS, RabbitMQ).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Idempotency check MUST happen BEFORE mutation -- checking after write is useless</li>
+    <li>Idempotency key + execute MUST be atomic (single transaction or distributed lock) to prevent race conditions</li>
+    <li>Idempotency keys MUST have a TTL (24h-30d typical) -- unbounded storage causes OOM or table bloat</li>
+    <li>NEVER reuse an idempotency key with different request parameters -- servers must reject with 422</li>
+    <li>Client-generated keys MUST use cryptographically random UUIDs (v4) -- sequential IDs enable guessing attacks</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern</th><th scope="col">Layer</th><th scope="col">Complexity</th><th scope="col">Storage Needed</th><th scope="col">Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Idempotency-Key header</td><td>API</td><td>Medium</td><td>DB or Redis</td><td>POST endpoints (payments, orders)</td></tr>
+      <tr><td>Natural idempotency (PUT/DELETE)</td><td>API</td><td>Low</td><td>None (inherent)</td><td>Resource updates, deletions</td></tr>
+      <tr><td>Database unique constraint</td><td>Database</td><td>Low</td><td>DB index</td><td>Preventing duplicate inserts</td></tr>
+      <tr><td>Optimistic locking (version/ETag)</td><td>Database</td><td>Medium</td><td>Version column</td><td>Concurrent update conflicts</td></tr>
+      <tr><td>Message deduplication (inbox pattern)</td><td>Message queue</td><td>Medium</td><td>DB table</td><td>At-least-once consumers</td></tr>
+      <tr><td>At-least-once + idempotent consumer</td><td>Message queue</td><td>Medium-High</td><td>DB or Redis</td><td>Event-driven microservices</td></tr>
+      <tr><td>Conditional writes (DynamoDB)</td><td>Database</td><td>Low</td><td>Built-in</td><td>Serverless, AWS-native stacks</td></tr>
+      <tr><td>Client-generated resource ID</td><td>API</td><td>Low</td><td>None (resource table)</td><td>Simple CRUD APIs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Is the operation naturally idempotent (GET, PUT with full resource, DELETE)?
+|   |-- YES --> No idempotency mechanism needed; ensure PUT replaces full resource
+|   +-- NO (POST, PATCH, or side-effect-producing operation) |
+|       |-- Is this an API endpoint (HTTP)?
+|       |   |-- YES --> Use Idempotency-Key header pattern
+|       |   |   |-- Is latency critical (&lt;10ms overhead)?
+|       |   |   |   |-- YES --> Use Redis SETNX for idempotency store
+|       |   |   |   +-- NO --> Use database table with unique constraint
+|       |   |   +-- Do you need to store the full response?
+|       |   |       |-- YES --> Store response_code + response_body (Stripe pattern)
+|       |   |       +-- NO --> Store only key + status (lighter)
+|       |   +-- NO (message queue / event consumer)?
+|       |       |-- Does the broker support native dedup (SQS FIFO, Kafka EOS)?
+|       |       |   |-- YES --> Enable broker-level dedup + application-level as defense-in-depth
+|       |       |   +-- NO --> Implement idempotent consumer (inbox pattern with DB)
+|       |       +-- Are messages processed in transactions?
+|       |           |-- YES --> Store message ID in same transaction as business logic
+|       |           +-- NO --> Use separate dedup table with TTL cleanup
++-- DEFAULT --> Add Idempotency-Key header middleware + PostgreSQL store</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create the idempotency key store</h3>
+  <p>Create a database table to track idempotency keys, their status, and cached responses. [<a href="https://brandur.org/idempotency-keys">src2</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE idempotency_keys (
+    id              BIGSERIAL PRIMARY KEY,
+    idempotency_key TEXT NOT NULL,
+    user_id         TEXT NOT NULL,
+    request_method  TEXT NOT NULL,
+    request_path    TEXT NOT NULL,
+    request_hash    TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'started',
+    response_code   INT,
+    response_body   JSONB,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    locked_at       TIMESTAMPTZ,
+    CONSTRAINT uq_idempotency UNIQUE (user_id, idempotency_key)
+);
+CREATE INDEX idx_idempotency_created ON idempotency_keys (created_at);</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM idempotency_keys;</code> --> expected: <code>0</code></p>
+
+  <h3>2. Implement idempotency middleware</h3>
+  <p>Add middleware that intercepts incoming requests, checks for the <code>Idempotency-Key</code> header, and either returns a cached response or proceeds with processing. [<a href="https://stripe.com/blog/idempotency">src1</a>] [<a href="https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/">src4</a>]</p>
+  <pre><code class="language-javascript">async function idempotencyMiddleware(req, res, next) {
+  const key = req.headers['idempotency-key'];
+  if (!key || req.method === 'GET') return next();
+  const hash = crypto.createHash('sha256')
+    .update(JSON.stringify(req.body)).digest('hex');
+  const userId = req.user?.id || req.ip;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(`
+      INSERT INTO idempotency_keys (idempotency_key, user_id, request_method, request_path, request_hash, status)
+      VALUES ($1, $2, $3, $4, $5, 'processing')
+      ON CONFLICT (user_id, idempotency_key) DO UPDATE SET locked_at = now()
+      RETURNING status, response_code, response_body, request_hash
+    `, [key, userId, req.method, req.path, hash]);
+    const existing = rows[0];
+    if (existing.status === 'finished') {
+      if (existing.request_hash !== hash) {
+        await client.query('ROLLBACK');
+        return res.status(422).json({ error: 'Idempotency key reused with different parameters' });
+      }
+      await client.query('COMMIT');
+      return res.status(existing.response_code).json(existing.response_body);
+    }
+    await client.query('COMMIT');
+    next();
+  } catch (err) { await client.query('ROLLBACK'); next(err); }
+  finally { client.release(); }
+}</code></pre>
+  <p><strong>Verify</strong>: Send the same POST twice with the same <code>Idempotency-Key</code> header --> second response is identical with no side effects.</p>
+
+  <h3>3. Add TTL cleanup</h3>
+  <p>Schedule periodic cleanup of expired idempotency keys to prevent table bloat. [<a href="https://docs.stripe.com/api/idempotent_requests">src3</a>]</p>
+  <pre><code class="language-sql">DELETE FROM idempotency_keys WHERE created_at &lt; now() - INTERVAL '24 hours';</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT COUNT(*) FROM idempotency_keys WHERE created_at &lt; now() - INTERVAL '24 hours';</code> --> expected: <code>0</code></p>
+
+  <h3>4. Implement message-level deduplication</h3>
+  <p>For event-driven systems, add an inbox table and check message IDs before processing. [<a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html">src5</a>]</p>
+  <pre><code class="language-sql">CREATE TABLE processed_messages (
+    subscriber_id TEXT NOT NULL,
+    message_id    TEXT NOT NULL,
+    processed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (subscriber_id, message_id)
+);</code></pre>
+  <p><strong>Verify</strong>: Publish the same message twice --> business logic executes exactly once.</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Node.js/Express: Redis-Backed Idempotency Middleware</h3>
+  <pre><code class="language-javascript">// Input:  HTTP request with Idempotency-Key header
+// Output: Cached response on retry, fresh response on first call
+
+const crypto = require('crypto');
+const Redis = require('ioredis');        // ioredis ^5.0.0
+const redis = new Redis(process.env.REDIS_URL);
+const IDEM_TTL = 86400; // 24 hours
+
+async function redisIdempotency(req, res, next) {
+  const key = req.headers['idempotency-key'];
+  if (!key || req.method === 'GET') return next();
+  const hash = crypto.createHash('sha256')
+    .update(JSON.stringify(req.body)).digest('hex');
+  const redisKey = `idem:${req.user?.id || req.ip}:${key}`;
+  const locked = await redis.set(redisKey, JSON.stringify({
+    status: 'processing', hash
+  }), 'EX', IDEM_TTL, 'NX');
+  if (!locked) {
+    const existing = JSON.parse(await redis.get(redisKey));
+    if (existing?.hash !== hash)
+      return res.status(422).json({ error: 'Key reused with different payload' });
+    if (existing?.status === 'finished')
+      return res.status(existing.code).json(existing.body);
+    return res.status(409).json({ error: 'Request is still processing' });
+  }
+  const originalJson = res.json.bind(res);
+  res.json = async (body) => {
+    await redis.set(redisKey, JSON.stringify({
+      status: 'finished', hash, code: res.statusCode, body
+    }), 'EX', IDEM_TTL);
+    return originalJson(body);
+  };
+  next();
+}</code></pre>
+
+  <h3>Python/FastAPI: Database-Backed Idempotency Decorator</h3>
+  <pre><code class="language-python"># Input:  FastAPI request with Idempotency-Key header
+# Output: Cached response on retry, fresh response on first call
+
+import hashlib, json
+from functools import wraps
+from fastapi import Request, HTTPException
+from sqlalchemy import text        # SQLAlchemy ^2.0
+
+def idempotent(func):
+    @wraps(func)
+    async def wrapper(request: Request, *args, **kwargs):
+        key = request.headers.get("Idempotency-Key")
+        if not key:
+            return await func(request, *args, **kwargs)
+        body = await request.body()
+        req_hash = hashlib.sha256(body).hexdigest()
+        user_id = getattr(request.state, "user_id", request.client.host)
+        async with db.begin() as conn:
+            result = await conn.execute(text("""
+                INSERT INTO idempotency_keys
+                    (idempotency_key, user_id, request_method,
+                     request_path, request_hash, status)
+                VALUES (:key, :uid, :method, :path, :hash, 'processing')
+                ON CONFLICT (user_id, idempotency_key)
+                DO UPDATE SET locked_at = now()
+                RETURNING status, response_code, response_body, request_hash
+            """), {"key": key, "uid": user_id, "method": request.method,
+                   "path": request.url.path, "hash": req_hash})
+            row = result.fetchone()
+        if row.status == "finished":
+            if row.request_hash != req_hash:
+                raise HTTPException(422, "Key reused with different params")
+            return json.loads(row.response_body)
+        response = await func(request, *args, **kwargs)
+        async with db.begin() as conn:
+            await conn.execute(text("""
+                UPDATE idempotency_keys SET status='finished',
+                  response_code=:code, response_body=:body
+                WHERE user_id=:uid AND idempotency_key=:key
+            """), {"code": 200, "body": json.dumps(response),
+                   "uid": user_id, "key": key})
+        return response
+    return wrapper</code></pre>
+
+  <h3>Go: Idempotency Middleware with PostgreSQL</h3>
+  <pre><code class="language-go">// Input:  HTTP request with Idempotency-Key header
+// Output: Cached response on replay, fresh response on first call
+
+func IdempotencyMiddleware(db *sql.DB) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            key := r.Header.Get("Idempotency-Key")
+            if key == "" || r.Method == "GET" {
+                next.ServeHTTP(w, r); return
+            }
+            body, _ := io.ReadAll(r.Body)
+            hash := sha256.Sum256(body)
+            hashHex := hex.EncodeToString(hash[:])
+            tx, _ := db.Begin()
+            var status, reqHash string
+            var respCode int; var respBody []byte
+            err := tx.QueryRow(`
+                INSERT INTO idempotency_keys
+                  (idempotency_key, user_id, request_method,
+                   request_path, request_hash, status)
+                VALUES ($1, $2, $3, $4, $5, 'processing')
+                ON CONFLICT (user_id, idempotency_key)
+                DO UPDATE SET locked_at = now()
+                RETURNING status, response_code, response_body, request_hash`,
+                key, r.RemoteAddr, r.Method, r.URL.Path, hashHex,
+            ).Scan(&status, &respCode, &respBody, &reqHash)
+            if err != nil { tx.Rollback(); http.Error(w, "Error", 500); return }
+            tx.Commit()
+            if status == "finished" {
+                if reqHash != hashHex { http.Error(w, "Key reused", 422); return }
+                w.Header().Set("Content-Type", "application/json")
+                w.WriteHeader(respCode); w.Write(respBody); return
+            }
+            next.ServeHTTP(w, r)
+        })
+    }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Checking idempotency AFTER mutation</h3>
+  <pre><code class="language-javascript">// BAD -- mutation happens before dedup check; damage already done
+app.post('/api/orders', async (req, res) => {
+  const order = await db.query('INSERT INTO orders ... RETURNING *');  // side effect!
+  const existing = await db.query(
+    'SELECT * FROM idempotency_keys WHERE key = $1', [req.headers['idempotency-key']]
+  );
+  if (existing.rows.length) return res.json(existing.rows[0].response);
+});</code></pre>
+
+  <h3>Correct: Atomic check-then-execute</h3>
+  <pre><code class="language-javascript">// GOOD -- idempotency check is first, within the same transaction
+app.post('/api/orders', async (req, res) => {
+  const client = await pool.connect();
+  await client.query('BEGIN');
+  const { rows } = await client.query(
+    `INSERT INTO idempotency_keys (...) VALUES (...)
+     ON CONFLICT (...) DO UPDATE SET locked_at = now()
+     RETURNING status, response_code, response_body`, [...]
+  );
+  if (rows[0].status === 'finished') {
+    await client.query('COMMIT');
+    return res.status(rows[0].response_code).json(rows[0].response_body);
+  }
+  const order = await client.query('INSERT INTO orders ... RETURNING *');
+  await client.query('UPDATE idempotency_keys SET status=... WHERE ...');
+  await client.query('COMMIT');
+  res.status(201).json(order.rows[0]);
+});</code></pre>
+
+  <h3>Wrong: No TTL on idempotency keys</h3>
+  <pre><code class="language-javascript">// BAD -- keys accumulate forever, table grows unbounded
+await db.query(
+  `INSERT INTO idempotency_keys (key, response) VALUES ($1, $2)`,
+  [key, response]
+);
+// No cleanup job, no TTL, no partition pruning</code></pre>
+
+  <h3>Correct: TTL with automated cleanup</h3>
+  <pre><code class="language-javascript">// GOOD -- keys expire and are cleaned up
+// Option A: Application-level cleanup (cron)
+cron.schedule('0 * * * *', () =>
+  db.query(`DELETE FROM idempotency_keys WHERE created_at &lt; now() - INTERVAL '24h'`)
+);
+// Option B: Redis with built-in TTL
+await redis.set(`idem:${key}`, response, 'EX', 86400);
+// Option C: DynamoDB with TTL attribute
+await dynamodb.put({ Item: { pk: key, ttl: Math.floor(Date.now()/1000) + 86400 } });</code></pre>
+
+  <h3>Wrong: Non-atomic check-and-execute (race condition)</h3>
+  <pre><code class="language-javascript">// BAD -- race condition: two concurrent requests both pass the check
+const existing = await db.query('SELECT * FROM idempotency_keys WHERE key=$1', [key]);
+if (existing.rows.length > 0) return res.json(existing.rows[0].response);
+// WINDOW: another request can arrive HERE before insert
+await db.query('INSERT INTO idempotency_keys (key) VALUES ($1)', [key]);
+await processPayment(); // Both requests process the payment!</code></pre>
+
+  <h3>Correct: Atomic upsert eliminates race window</h3>
+  <pre><code class="language-javascript">// GOOD -- INSERT ON CONFLICT is atomic; no race window
+const { rows } = await db.query(`
+  INSERT INTO idempotency_keys (idempotency_key, user_id, status)
+  VALUES ($1, $2, 'processing')
+  ON CONFLICT (user_id, idempotency_key) DO UPDATE SET locked_at = now()
+  RETURNING status, response_code, response_body
+`, [key, userId]);</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Client-generated UUIDs without server validation</strong>: Clients can send malformed or predictable keys, enabling replay attacks. Fix: validate key format server-side and enforce max length (255 chars). [<a href="https://docs.stripe.com/api/idempotent_requests">src3</a>]</li>
+    <li><strong>Storing keys without user/client scoping</strong>: One user could replay another user's key. Fix: always use <code>(user_id, idempotency_key)</code> as the composite unique constraint. [<a href="https://brandur.org/idempotency-keys">src2</a>]</li>
+    <li><strong>Returning 200 for in-progress requests</strong>: If a retry arrives while the original is still processing, returning success is wrong. Fix: return <code>409 Conflict</code> with <code>Retry-After</code> header. [<a href="https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/">src4</a>]</li>
+    <li><strong>Not hashing request body for parameter validation</strong>: Allows the same key with different payloads. Fix: store SHA-256 hash of request body and compare on retry; reject with 422 if mismatched. [<a href="https://stripe.com/blog/idempotency">src1</a>]</li>
+    <li><strong>Idempotency at the wrong layer</strong>: Adding API idempotency but calling non-idempotent downstream services. Fix: propagate idempotency keys to downstream APIs. [<a href="https://brandur.org/idempotency-keys">src2</a>]</li>
+    <li><strong>Message dedup relying solely on broker features</strong>: SQS standard queues and Kafka without EOS can still deliver duplicates. Fix: always implement application-level dedup (inbox pattern) as defense in depth. [<a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html">src5</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check idempotency key table size and oldest key
+psql -c "SELECT COUNT(*), MIN(created_at), MAX(created_at) FROM idempotency_keys;"
+
+# Find stuck/orphaned processing keys (older than 5 minutes)
+psql -c "SELECT * FROM idempotency_keys WHERE status = 'processing' AND locked_at &lt; now() - INTERVAL '5 minutes';"
+
+# Check Redis idempotency key count and memory
+redis-cli KEYS "idem:*" | wc -l
+redis-cli INFO memory | grep used_memory_human
+
+# Verify TTL is set on a specific Redis key
+redis-cli TTL "idem:user123:8e03978e-40d5-43e8-bc93-6894a57f9324"
+
+# Check for duplicate processing in message consumer logs
+grep -c "Duplicate message" /var/log/consumer.log</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>POST endpoints that create resources or trigger side effects</td><td>GET requests (already idempotent by definition)</td><td>Standard HTTP caching</td></tr>
+      <tr><td>Payment processing, order creation, money transfers</td><td>PUT requests that replace the full resource</td><td>PUT is naturally idempotent</td></tr>
+      <tr><td>Webhook delivery and retry handling</td><td>Idempotent database operations (e.g., SET value = X)</td><td>Rely on natural idempotency</td></tr>
+      <tr><td>At-least-once message queue consumers</td><td>Real-time streaming with exactly-once broker semantics</td><td>Kafka transactions / SQS FIFO dedup</td></tr>
+      <tr><td>Multi-step distributed workflows (sagas)</td><td>Simple CRUD with no side effects</td><td>Database constraints (UNIQUE, UPSERT)</td></tr>
+      <tr><td>Unreliable network conditions (mobile clients, IoT)</td><td>High-throughput read-heavy APIs</td><td>Read caching / CDN</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>The IETF <code>Idempotency-Key</code> header spec (draft-07) is not yet an RFC -- it is a stable draft but not finalized; follow updates at the IETF HTTPAPI WG</li>
+    <li>Redis-based idempotency loses state on restart if persistence is disabled -- use AOF or RDB persistence, or prefer database-backed storage for critical operations (payments)</li>
+    <li>Idempotency does not equal exactly-once processing -- it provides at-most-once side effects for a given key, but the response may be lost if the connection drops after server-side execution</li>
+    <li>Different cloud providers have different built-in idempotency: AWS Lambda Powertools uses DynamoDB, Azure Functions use Durable Entities, GCP Cloud Functions require manual implementation</li>
+    <li>Composite keys (user_id + idempotency_key) are essential for multi-tenant systems -- without user scoping, one tenant can interfere with another's operations</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/webhooks-system/2026" data-relationship="related_to">Webhook System Design</a>
+    <a href="/software/system-design/message-queue-event-driven/2026" data-relationship="related_to">Message Queue & Event-Driven Architecture</a>
+    <a href="/software/system-design/payment-processing/2026" data-relationship="related_to">Payment Processing System Design</a>
+    <a href="/software/system-design/api-gateway/2026" data-relationship="related_to">API Gateway Design</a>
+    <a href="/software/patterns/sql-upsert/2026" data-relationship="often_confused_with">SQL UPSERT Patterns</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; Patterns<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

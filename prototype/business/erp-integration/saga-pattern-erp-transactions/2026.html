@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Saga Pattern for Distributed Transactions Across | knowledgelib.io</title>
+  <meta name="description" content="Saga pattern for distributed transactions across ERPs — orchestration vs choreography, compensating transactions, pivot transactions, implementation...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/business/erp-integration/saga-pattern-erp-transactions/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Saga Pattern for Distributed Transactions Across | knowledgelib.io">
+  <meta property="og:description" content="Saga pattern for distributed transactions across ERPs — orchestration vs choreography, compensating transactions, pivot transactions, implementation with Temporal and AWS Step Functions. 6 sources, all cited. Verified 2026-03-02.">
+  <meta property="og:url" content="https://knowledgelib.io/business/erp-integration/saga-pattern-erp-transactions/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-03-02">
+  <meta property="article:modified_time" content="2026-03-02">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Saga Pattern for Distributed Transactions Across | knowledgelib.io">
+  <meta name="twitter:description" content="Saga pattern for distributed transactions across ERPs — orchestration vs choreography, compensating transactions, pivot transactions, implementation with Temporal and AWS Step Functions. 6 sources, all cited. Verified 2026-03-02.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="erp_integration">
+  <meta name="ai:confidence" content="0.92">
+  <meta name="ai:last_verified" content="2026-03-02">
+  <meta name="ai:domain" content="business/erp-integration/saga-pattern-erp-transactions">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="What is the Saga pattern for distributed transactions across ERPs - orchestration vs choreography?">
+  <meta name="ai:aliases" content="How do I implement the Saga pattern for cross-ERP transactions?; Orchestration vs choreography for distributed ERP transactions; Compensating transactions in multi-ERP integration; Should I use saga orchestration or choreography for ERP-to-ERP flows?">
+  <meta name="ai:raw" content="/api/v1/units/business/erp-integration/saga-pattern-erp-transactions/2026.md">
+  <meta name="ai:token_estimate" content="4200">
+  <meta name="ai:source_count" content="6">
+  <meta name="ai:freshness" content="evolving">
+  <meta name="ai:temporal_status" content="evolving">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-03-02">
+  <meta name="ai:systems" content="Cross-ERP (Pattern-level); AWS Step Functions (2024); Temporal (1.x)">
+  <meta name="ai:inputs_needed" content="integration_pattern,participant_count,consistency_requirement">
+  <meta name="ai:constraints" content="No ACID isolation — concurrent sagas produce dirty reads; Compensating transactions are semantic inverses not true rollbacks; Orchestrator is single point of failure without HA; Choreography impractical with >5 participants; ERP API rate limits compound across saga steps">
+  <meta name="ai:skip_this_unit_if" content="Need strong ACID within single ERP → Use native ERP transactions; Need specific ERP API capabilities → business/erp-integration/{system}-rest-api/2026; Simple 2-system request-reply → Direct API call with retry + DLQ">
+  <meta name="ai:sections" content="tldr,system_profile,api_surfaces,rate_limits,authentication,constraints,decision_tree,quick_reference,step_by_step,code_examples,data_mapping,error_handling,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,cross_system_comparison,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Saga Pattern for Distributed Transactions Across ERPs",
+    "headline": "Saga Pattern for Distributed Transactions Across ERPs",
+    "description": "Architecture pattern reference for implementing distributed transactions across multiple ERP systems using the Saga pattern. Covers orchestration vs choreography, compensating transactions, pivot transactions, and implementation with Temporal, AWS Step Functions, and Azure Durable Functions.",
+    "keywords": ["saga pattern", "distributed transactions", "ERP integration", "orchestration", "choreography", "compensating transactions", "Temporal", "AWS Step Functions"],
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Multiple ERP systems (Salesforce, SAP, Oracle, NetSuite) + orchestration platform (Temporal, Step Functions, Durable Functions)",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Pattern: Saga",
+        "url": "https://microservices.io/patterns/data/saga.html"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Saga distributed transactions pattern — Azure Architecture Center",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Saga orchestration pattern — AWS Prescriptive Guidance",
+        "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Saga Pattern for Distributed Transactions Across ERPs",
+    "description": "Architecture pattern reference for implementing distributed transactions across multiple ERP systems — orchestration vs choreography comparison, compensating transaction design, implementation with Temporal and AWS Step Functions",
+    "keywords": ["saga pattern", "distributed transactions", "ERP integration", "orchestration", "choreography"],
+    "temporalCoverage": "2024/2026",
+    "dateModified": "2026-03-02",
+    "datePublished": "2026-03-02",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "microservices.io"},
+      {"@type": "Organization", "name": "Microsoft"},
+      {"@type": "Organization", "name": "Amazon Web Services"},
+      {"@type": "Organization", "name": "Temporal Technologies"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Business", "item": "https://knowledgelib.io/business/" },
+      { "@type": "ListItem", "position": 3, "name": "ERP Integration", "item": "https://knowledgelib.io/business/erp-integration/" },
+      { "@type": "ListItem", "position": 4, "name": "Saga Pattern for Distributed Transactions Across ERPs" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the Saga pattern for distributed transactions across ERPs - orchestration vs choreography?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use the Saga pattern when a business transaction spans multiple ERPs (e.g., order-to-cash across Salesforce + SAP + a payment gateway) and you cannot use a traditional two-phase commit. Orchestration is the default choice for ERP integrations; choreography only works for simple 2-3 system flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I implement the Saga pattern for cross-ERP transactions?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use the Saga pattern when a business transaction spans multiple ERPs (e.g., order-to-cash across Salesforce + SAP + a payment gateway) and you cannot use a traditional two-phase commit. Orchestration is the default choice for ERP integrations; choreography only works for simple 2-3 system flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Orchestration vs choreography for distributed ERP transactions",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use the Saga pattern when a business transaction spans multiple ERPs (e.g., order-to-cash across Salesforce + SAP + a payment gateway) and you cannot use a traditional two-phase commit. Orchestration is the default choice for ERP integrations; choreography only works for simple 2-3 system flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Compensating transactions in multi-ERP integration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use the Saga pattern when a business transaction spans multiple ERPs (e.g., order-to-cash across Salesforce + SAP + a payment gateway) and you cannot use a traditional two-phase commit. Orchestration is the default choice for ERP integrations; choreography only works for simple 2-3 system flows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Should I use saga orchestration or choreography for ERP-to-ERP flows?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Use the Saga pattern when a business transaction spans multiple ERPs (e.g., order-to-cash across Salesforce + SAP + a payment gateway) and you cannot use a traditional two-phase commit. Orchestration is the default choice for ERP integrations; choreography only works for simple 2-3 system flows."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit erp-integration">
+
+  
+  <main role="main">
+
+<h1>Saga Pattern for Distributed Transactions Across ERPs</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">What is the Saga pattern for distributed transactions across ERPs - orchestration vs choreography?</h2>
+
+  <aside class="unit-meta" data-card-id="business/erp-integration/saga-pattern-erp-transactions/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> ERP Integration</span>
+    <span><strong>System:</strong> Cross-ERP (Pattern-level)</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.92 out of 1">0.92</span></span>
+    <span><strong>Sources:</strong> 6</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-03-02</span></span>
+    <span><strong>Freshness:</strong> evolving</span>
+  </aside>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Use the Saga pattern when a business transaction spans multiple ERPs (e.g., order-to-cash across Salesforce + SAP + a payment gateway) and you cannot use a traditional two-phase commit. Orchestration is the default choice for ERP integrations; choreography only works for simple 2-3 system flows.</li>
+    <li><strong>Key limit</strong>: Sagas provide eventual consistency, not ACID isolation &mdash; concurrent sagas can produce dirty reads, lost updates, and nonrepeatable reads. Design compensating transactions for every forward step.</li>
+    <li><strong>Watch out for</strong>: Compensating transactions are NOT true rollbacks &mdash; reversing an invoice in SAP or a payment in Stripe creates a new offsetting record, not a deletion. Business stakeholders must approve compensation semantics.</li>
+    <li><strong>Best for</strong>: Long-running, multi-step business processes that cross ERP boundaries &mdash; order-to-cash, procure-to-pay, intercompany settlement, multi-system fulfillment.</li>
+    <li><strong>Authentication</strong>: Each ERP participant authenticates independently &mdash; the saga orchestrator needs valid credentials (OAuth 2.0, API keys, certificates) for every system in the chain.</li>
+  </ul>
+  </section>
+
+  <!-- System Profile -->
+  <section id="system-profile">
+  <h2>System Profile</h2>
+  <p>The Saga pattern is an architecture pattern, not a product. It applies to any distributed transaction that spans multiple ERP systems, middleware platforms, or microservices. This card covers the pattern itself, its two coordination approaches (orchestration and choreography), and practical implementation guidance for cross-ERP business transactions.</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">System</th><th scope="col">Role</th><th scope="col">API Surface</th><th scope="col">Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ERP System A (e.g., Salesforce)</td><td>CRM &mdash; source order/opportunity</td><td>REST API</td><td>Outbound</td></tr>
+      <tr><td>ERP System B (e.g., SAP S/4HANA)</td><td>ERP &mdash; financial posting, inventory</td><td>OData / BAPI</td><td>Inbound</td></tr>
+      <tr><td>Payment Gateway (e.g., Stripe)</td><td>Payment processing</td><td>REST API</td><td>Bidirectional</td></tr>
+      <tr><td>Orchestrator (e.g., Temporal, Step Functions)</td><td>Saga coordinator</td><td>SDK / State Machine</td><td>Orchestrator</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- API Surfaces & Capabilities -->
+  <section id="api-surfaces">
+  <h2>API Surfaces &amp; Capabilities</h2>
+  <p>The Saga pattern does not define a specific API surface &mdash; it defines how multiple API surfaces coordinate. The key capability matrix compares the two coordination approaches:</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Orchestration</th><th scope="col">Choreography</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Coordination</strong></td><td>Central orchestrator sends commands to participants</td><td>Participants publish/subscribe to domain events</td></tr>
+      <tr><td><strong>Complexity ceiling</strong></td><td>Scales to 10+ participants</td><td>Practical limit: 3-5 participants</td></tr>
+      <tr><td><strong>Visibility</strong></td><td>Single place to inspect saga state</td><td>Must aggregate events across all participants</td></tr>
+      <tr><td><strong>Coupling</strong></td><td>Participants coupled to orchestrator</td><td>Participants coupled to event schema</td></tr>
+      <tr><td><strong>Single point of failure</strong></td><td>Yes &mdash; orchestrator (mitigated by HA)</td><td>No &mdash; distributed</td></tr>
+      <tr><td><strong>Cyclic dependencies</strong></td><td>Avoided by design</td><td>Risk of circular event chains</td></tr>
+      <tr><td><strong>Error handling</strong></td><td>Orchestrator triggers compensations</td><td>Each participant handles failure events independently</td></tr>
+      <tr><td><strong>Debugging</strong></td><td>Straightforward &mdash; follow orchestrator logs</td><td>Difficult &mdash; requires distributed tracing</td></tr>
+      <tr><td><strong>Testing</strong></td><td>Test orchestrator + mock participants</td><td>Must run all participants to test end-to-end</td></tr>
+      <tr><td><strong>New participant</strong></td><td>Modify orchestrator workflow</td><td>Add new event listener (verify no side effects)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Rate Limits & Quotas -->
+  <section id="rate-limits">
+  <h2>Rate Limits &amp; Quotas</h2>
+
+  <h3>Per-Saga Limits</h3>
+  <p>Saga throughput is constrained by the slowest participant's API limits. A single business transaction may consume multiple API calls per participant:</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Saga Step</th><th scope="col">Typical API Calls</th><th scope="col">Rate Limit Concern</th><th scope="col">Mitigation</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Create order in CRM</td><td>1-3</td><td>Salesforce: 100K/24h</td><td>Batch via composite API</td></tr>
+      <tr><td>Reserve inventory in ERP</td><td>1-2</td><td>SAP: depends on ICM config</td><td>Use async BAPI for high volume</td></tr>
+      <tr><td>Process payment</td><td>1-2</td><td>Stripe: 100 req/s</td><td>Built-in rate limiting</td></tr>
+      <tr><td>Post financial document</td><td>1-3</td><td>Oracle: throttled per tenant</td><td>Use batch endpoints</td></tr>
+      <tr><td>Compensate on failure</td><td>1 per completed step</td><td>Doubles API consumption</td><td>Budget 2x API calls for failures</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Orchestrator Platform Limits</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Platform</th><th scope="col">Execution Limit</th><th scope="col">State Size</th><th scope="col">Timeout</th><th scope="col">Pricing</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AWS Step Functions (Standard)</td><td>Unlimited duration</td><td>256 KB payload</td><td>1 year max</td><td>$0.025/1K transitions</td></tr>
+      <tr><td>AWS Step Functions (Express)</td><td>5 minutes max</td><td>256 KB payload</td><td>5 minutes</td><td>Per execution + duration</td></tr>
+      <tr><td>Temporal Cloud</td><td>Unlimited duration</td><td>50K events/workflow</td><td>No hard timeout</td><td>Per action</td></tr>
+      <tr><td>Azure Durable Functions</td><td>Unlimited duration</td><td>Storage-backed</td><td>No hard timeout</td><td>Per execution + compute</td></tr>
+      <tr><td>Camunda 8</td><td>Unlimited duration</td><td>1 MB per variable</td><td>Configurable</td><td>Per execution (cloud)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Authentication -->
+  <section id="authentication">
+  <h2>Authentication</h2>
+  <p>Each saga participant authenticates independently. The orchestrator must maintain valid credentials for every system:</p>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">ERP System</th><th scope="col">Auth Flow</th><th scope="col">Token Lifetime</th><th scope="col">Saga Consideration</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Salesforce</td><td>OAuth 2.0 JWT Bearer</td><td>2h (configurable)</td><td>Token may expire mid-saga &mdash; refresh per step</td></tr>
+      <tr><td>SAP S/4HANA</td><td>OAuth 2.0 / Basic Auth</td><td>Session-based</td><td>CSRF token required per write operation</td></tr>
+      <tr><td>Oracle ERP Cloud</td><td>OAuth 2.0 / Basic Auth</td><td>Session-based</td><td>Rate limiting tied to auth identity</td></tr>
+      <tr><td>NetSuite</td><td>Token-Based Auth (TBA)</td><td>No expiry</td><td>Consumer/token key pair &mdash; rotate quarterly</td></tr>
+      <tr><td>Stripe</td><td>API Key (Secret Key)</td><td>No expiry</td><td>Use restricted keys with minimal permissions</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentication Gotchas</h3>
+  <ul>
+    <li><strong>Token expiry mid-saga</strong>: Long-running sagas can outlive access tokens. Refresh tokens before each step, not at saga start. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Credential scope</strong>: Each saga step may need different permission scopes. Use scoped tokens per step where possible. [<a href="https://temporal.io/blog/mastering-saga-patterns-for-distributed-transactions-in-microservices">src4</a>]</li>
+    <li><strong>CSRF tokens</strong>: SAP and some Oracle endpoints require CSRF tokens that expire quickly. Fetch a new one at each write step.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li><strong>No ACID isolation</strong>: Concurrent sagas can produce lost updates, dirty reads, and nonrepeatable reads. Implement application-level countermeasures (semantic locks, commutative updates).</li>
+    <li><strong>Compensating transactions are imperfect</strong>: A compensation is a semantic inverse, not a database rollback. Business logic must define what &ldquo;undo&rdquo; means for each step.</li>
+    <li><strong>Compensation must be idempotent</strong>: If the compensation message is delivered twice, running it again must not cause double-reversal.</li>
+    <li><strong>Pivot transaction is the point of no return</strong>: Once the pivot succeeds, all subsequent steps must be retryable to completion.</li>
+    <li><strong>ERP API rate limits compound</strong>: A 10-step saga consuming 3 API calls per step = 30 calls per transaction. Factor in compensation (failure path doubles consumption).</li>
+    <li><strong>Eventual consistency window</strong>: Between a forward transaction and its compensation, other systems see inconsistent data.</li>
+  </ul>
+  </section>
+
+  <!-- Decision Tree -->
+  <section id="decision-tree">
+  <h2>Integration Pattern Decision Tree</h2>
+  <pre><code>START &mdash; Need distributed transaction across multiple ERPs
+&#9500;&#9472;&#9472; How many systems participate?
+&#9474;   &#9500;&#9472;&#9472; 2 systems, simple request-reply
+&#9474;   &#9474;   &#9492;&#9472;&#9472; SKIP SAGA &mdash; use direct API call + retry + DLQ
+&#9474;   &#9500;&#9472;&#9472; 2-3 systems, linear flow
+&#9474;   &#9474;   &#9500;&#9472;&#9472; Event infrastructure exists? &rarr; Consider CHOREOGRAPHY
+&#9474;   &#9474;   &#9492;&#9472;&#9472; No event infra? &rarr; Use ORCHESTRATION
+&#9474;   &#9492;&#9472;&#9472; 4+ systems or branching/parallel
+&#9474;       &#9492;&#9472;&#9472; Always ORCHESTRATION
+&#9500;&#9472;&#9472; Consistency requirement?
+&#9474;   &#9500;&#9472;&#9472; Strong ACID &rarr; SAGA IS WRONG PATTERN
+&#9474;   &#9500;&#9472;&#9472; Eventual consistency &rarr; Saga fits
+&#9474;   &#9492;&#9472;&#9472; Best-effort &rarr; Saga with relaxed compensation
+&#9500;&#9472;&#9472; Transaction duration?
+&#9474;   &#9500;&#9472;&#9472; &lt; 1s &rarr; Synchronous orchestration
+&#9474;   &#9500;&#9472;&#9472; 1s - 5min &rarr; Step Functions Express or Temporal
+&#9474;   &#9492;&#9472;&#9472; &gt; 5min &rarr; Step Functions Standard, Temporal, Camunda
+&#9492;&#9472;&#9472; Error tolerance?
+    &#9500;&#9472;&#9472; Zero-loss &rarr; Idempotent steps + DLQ + manual review
+    &#9492;&#9472;&#9472; Best-effort &rarr; Retry with exponential backoff + alerting</code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+
+  <h3>Saga Transaction Types</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Transaction Type</th><th scope="col">Description</th><th scope="col">Can Be Undone?</th><th scope="col">ERP Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Compensable</strong></td><td>Forward step that can be semantically reversed</td><td>Yes</td><td>Create sales order in SAP (&rarr; cancel order)</td></tr>
+      <tr><td><strong>Pivot</strong></td><td>Point of no return &mdash; saga must complete after this</td><td>After this: No</td><td>Capture payment (&rarr; cannot un-charge, only refund)</td></tr>
+      <tr><td><strong>Retryable</strong></td><td>Steps after pivot that must eventually succeed</td><td>N/A (must succeed)</td><td>Post revenue recognition, update CRM status</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Orchestration vs Choreography Decision Matrix</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Criterion</th><th scope="col">Choose Orchestration</th><th scope="col">Choose Choreography</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Participant count</strong></td><td>4+ systems</td><td>2-3 systems</td></tr>
+      <tr><td><strong>Workflow complexity</strong></td><td>Branching, parallel, conditional</td><td>Linear, sequential</td></tr>
+      <tr><td><strong>Team structure</strong></td><td>Central integration team</td><td>Independent service teams</td></tr>
+      <tr><td><strong>Debugging needs</strong></td><td>Must trace full transaction</td><td>Per-service debugging sufficient</td></tr>
+      <tr><td><strong>Failure recovery</strong></td><td>Centralized compensation logic</td><td>Distributed compensation logic</td></tr>
+      <tr><td><strong>ERP integrations</strong></td><td>Almost always (ERP APIs are complex)</td><td>Rarely (ERP complexity demands central control)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Compensating Transaction Reference for Common ERP Operations</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Forward Transaction</th><th scope="col">Compensating Transaction</th><th scope="col">System</th><th scope="col">Gotcha</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Create Sales Order</td><td>Cancel Sales Order + release inventory</td><td>SAP S/4HANA</td><td>Cancellation creates a new document</td></tr>
+      <tr><td>Reserve Inventory</td><td>Release Reservation</td><td>Any ERP</td><td>Check if reservation consumed by fulfillment</td></tr>
+      <tr><td>Authorize Payment</td><td>Void Authorization</td><td>Stripe/Gateway</td><td>Void only works before capture</td></tr>
+      <tr><td>Post Accounting Entry</td><td>Post Reversal Entry</td><td>Oracle ERP / SAP</td><td>Reversal is a new journal entry</td></tr>
+      <tr><td>Create Invoice</td><td>Issue Credit Memo</td><td>Any ERP</td><td>Credit memo must reference original invoice</td></tr>
+      <tr><td>Update Customer Record</td><td>Restore Previous Values</td><td>Salesforce</td><td>Requires storing pre-update snapshot</td></tr>
+      <tr><td>Allocate Budget</td><td>Deallocate Budget</td><td>Workday / SAP</td><td>Check if budget consumed by downstream</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Step-by-Step -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Integration Guide</h2>
+
+  <h3>1. Design the saga: identify steps, pivot, and compensations</h3>
+  <p>Map every step in the business transaction. For each step, define the forward transaction, the compensating transaction, and whether it is compensable, pivot, or retryable. [<a href="https://microservices.io/patterns/data/saga.html">src1</a>, <a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/saga">src6</a>]</p>
+  <pre><code>Example: Order-to-Cash Saga
+
+Step 1 (Compensable): Create Sales Order in SAP
+  Forward: POST /sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder
+  Compensate: PATCH with OverallSDProcessStatus = 'C'
+
+Step 2 (Compensable): Reserve Inventory in WMS
+  Forward: POST /api/v1/reservations
+  Compensate: DELETE /api/v1/reservations/{id}
+
+Step 3 (PIVOT): Capture Payment via Stripe
+  Forward: POST /v1/payment_intents/{id}/capture
+  No auto-compensation after this point
+
+Step 4 (Retryable): Post Revenue in Oracle ERP
+Step 5 (Retryable): Update Opportunity in Salesforce</code></pre>
+  <p><strong>Verify</strong>: Review with business stakeholders &mdash; they must agree on what &ldquo;undo&rdquo; means for each step.</p>
+
+  <h3>2. Implement the orchestrator (Temporal TypeScript example)</h3>
+  <p>Choose a workflow engine and implement the saga state machine. [<a href="https://temporal.io/blog/mastering-saga-patterns-for-distributed-transactions-in-microservices">src4</a>]</p>
+  <pre><code class="language-typescript">// saga-orchestrator.ts &mdash; Temporal Workflow
+import { proxyActivities, ApplicationFailure } from '@temporalio/workflow';
+
+const { createSalesOrder, cancelSalesOrder, reserveInventory,
+  releaseInventory, capturePayment, postRevenue, updateCrm
+} = proxyActivities({ startToCloseTimeout: '30s',
+  retry: { maximumAttempts: 3, backoffCoefficient: 2 } });
+
+export async function orderToCashSaga(order) {
+  const compensations = [];
+  try {
+    const so = await createSalesOrder(order);
+    compensations.push(() =&gt; cancelSalesOrder(so.id));
+
+    const res = await reserveInventory(order.items);
+    compensations.push(() =&gt; releaseInventory(res.id));
+
+    await capturePayment(order.paymentIntentId); // PIVOT
+
+    await postRevenue(so.id, order.amount);      // Retryable
+    await updateCrm(order.opportunityId);         // Retryable
+
+    return { status: 'completed', salesOrderId: so.id };
+  } catch (error) {
+    for (const comp of compensations.reverse()) {
+      await comp();
+    }
+    return { status: 'compensated', error: String(error) };
+  }
+}</code></pre>
+  <p><strong>Verify</strong>: Deploy workflow &rarr; trigger with test order &rarr; confirm all steps execute or compensate.</p>
+
+  <h3>3. Implement idempotent participants</h3>
+  <p>Each saga participant must be idempotent. Use idempotency keys derived from the workflow execution ID. [<a href="https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga">src2</a>, <a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</p>
+  <pre><code class="language-typescript">export async function createSalesOrder(order) {
+  const idempotencyKey = `saga-${workflowId}-create-so`;
+  const existing = await sapClient.get(
+    `/A_SalesOrder?$filter=YY1_IdempotencyKey eq '${idempotencyKey}'`);
+  if (existing.d.results.length &gt; 0) return existing.d.results[0];
+
+  return (await sapClient.post('/A_SalesOrder', {
+    SalesOrderType: 'OR', SoldToParty: order.customerId,
+    YY1_IdempotencyKey: idempotencyKey,
+    to_Item: order.items.map(i =&gt; ({
+      Material: i.sku, RequestedQuantity: i.quantity }))
+  })).d;
+}</code></pre>
+  <p><strong>Verify</strong>: Call twice with same workflow ID &rarr; confirm only one sales order exists.</p>
+
+  <h3>4. Implement compensation with pre-update snapshots</h3>
+  <p>For update steps, store previous state for compensation. [<a href="https://microservices.io/patterns/data/saga.html">src1</a>]</p>
+  <pre><code class="language-typescript">export async function updateCrmStatus(oppId, newStatus) {
+  const current = await sfClient.get(`/Opportunity/${oppId}?fields=StageName`);
+  const previousStatus = current.StageName;
+  await sfClient.patch(`/Opportunity/${oppId}`, { StageName: newStatus });
+  return { previousStatus };
+}
+
+export async function revertCrmStatus(oppId, previousStatus) {
+  await sfClient.patch(`/Opportunity/${oppId}`, { StageName: previousStatus });
+}</code></pre>
+  <p><strong>Verify</strong>: Update opportunity &rarr; trigger compensation &rarr; confirm StageName reverted.</p>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Saga Orchestrator with Temporal</h3>
+  <pre><code class="language-python"># Input:  Order details (customer_id, items, payment_intent_id)
+# Output: Saga result (completed or compensated)
+
+from temporalio import workflow, activity
+from dataclasses import dataclass
+
+@workflow.defn
+class OrderToCashSaga:
+    @workflow.run
+    async def run(self, order):
+        compensations = []
+        try:
+            so = await workflow.execute_activity(
+                create_sales_order, order, start_to_close_timeout=timedelta(seconds=30))
+            compensations.append(lambda: workflow.execute_activity(
+                cancel_sales_order, so["id"], start_to_close_timeout=timedelta(seconds=30)))
+
+            res = await workflow.execute_activity(
+                reserve_inventory, order.items, start_to_close_timeout=timedelta(seconds=30))
+            compensations.append(lambda: workflow.execute_activity(
+                release_inventory, res["id"], start_to_close_timeout=timedelta(seconds=30)))
+
+            await workflow.execute_activity(capture_payment, order.payment_intent_id,
+                start_to_close_timeout=timedelta(seconds=30))  # PIVOT
+
+            await workflow.execute_activity(post_revenue, so["id"],
+                retry_policy=RetryPolicy(maximum_attempts=10))  # Retryable
+            return {"status": "completed", "sales_order_id": so["id"]}
+        except Exception as e:
+            for comp in reversed(compensations):
+                await comp()
+            return {"status": "compensated", "error": str(e)}</code></pre>
+
+  <h3>JavaScript/Node.js: AWS Step Functions Definition</h3>
+  <pre><code class="language-javascript">// Input:  Order event from API Gateway
+// Output: Step Functions execution ARN + saga result
+
+const sagaDefinition = {
+  StartAt: "CreateSalesOrder",
+  States: {
+    CreateSalesOrder: {
+      Type: "Task", Resource: "arn:aws:lambda:...:createSalesOrder",
+      ResultPath: "$.salesOrder", Next: "ReserveInventory",
+      Catch: [{ ErrorEquals: ["States.ALL"], Next: "SagaFailed" }]
+    },
+    ReserveInventory: {
+      Type: "Task", Resource: "arn:aws:lambda:...:reserveInventory",
+      Next: "CapturePayment",
+      Catch: [{ ErrorEquals: ["States.ALL"], Next: "CancelSalesOrder" }]
+    },
+    CapturePayment: { // PIVOT
+      Type: "Task", Resource: "arn:aws:lambda:...:capturePayment",
+      Next: "PostRevenue",
+      Catch: [{ ErrorEquals: ["States.ALL"], Next: "ReleaseInventory" }]
+    },
+    PostRevenue: { // Retryable
+      Type: "Task", Resource: "arn:aws:lambda:...:postRevenue",
+      Retry: [{ ErrorEquals: ["States.ALL"], MaxAttempts: 5, BackoffRate: 2 }],
+      Next: "UpdateCRM"
+    },
+    UpdateCRM: { Type: "Task", Retry: [...], End: true },
+    // Compensation chain (reverse order)
+    ReleaseInventory: { Type: "Task", Next: "CancelSalesOrder" },
+    CancelSalesOrder: { Type: "Task", Next: "SagaFailed" },
+    SagaFailed: { Type: "Fail", Error: "SagaCompensated" }
+  }
+};</code></pre>
+
+  <h3>cURL: Testing a Saga Step (SAP Sales Order Creation)</h3>
+  <pre><code class="language-bash"># Input:  SAP OAuth token, order payload
+# Output: Sales order ID or error
+
+# Fetch CSRF token (required for SAP write operations)
+curl -s -X GET "https://my-sap.s4hana.cloud/sap/opu/odata/sap/API_SALES_ORDER_SRV/" \
+  -H "Authorization: Bearer $SAP_TOKEN" -H "x-csrf-token: fetch" -D - -o /dev/null
+
+# Create Sales Order
+curl -X POST "https://my-sap.s4hana.cloud/.../A_SalesOrder" \
+  -H "Authorization: Bearer $SAP_TOKEN" -H "x-csrf-token: $CSRF_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"SalesOrderType":"OR","SoldToParty":"CUST001",
+       "to_Item":[{"Material":"MAT001","RequestedQuantity":"10"}]}'
+# Expected: 201 Created with SalesOrder number</code></pre>
+  </section>
+
+  <!-- Data Mapping -->
+  <section id="data-mapping">
+  <h2>Data Mapping</h2>
+
+  <h3>Saga State Mapping Across Systems</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Saga State</th><th scope="col">Salesforce (CRM)</th><th scope="col">SAP S/4HANA</th><th scope="col">Stripe</th><th scope="col">Orchestrator</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Initiated</strong></td><td>Opp: Negotiation</td><td>No record</td><td>PI: created</td><td>RUNNING</td></tr>
+      <tr><td><strong>Order Created</strong></td><td>Opp: Negotiation</td><td>SO: Open</td><td>PI: created</td><td>Step 1: COMPLETE</td></tr>
+      <tr><td><strong>Inventory Reserved</strong></td><td>Opp: Negotiation</td><td>SO + Reservation</td><td>PI: created</td><td>Step 2: COMPLETE</td></tr>
+      <tr><td><strong>Payment Captured</strong></td><td>Opp: Closed Won</td><td>SO: Open</td><td>PI: succeeded</td><td>PIVOT PASSED</td></tr>
+      <tr><td><strong>Completed</strong></td><td>Opp: Closed Won</td><td>SO: Completed</td><td>PI: succeeded</td><td>COMPLETED</td></tr>
+      <tr><td><strong>Compensating</strong></td><td>Opp: reverted</td><td>SO: Cancelled</td><td>PI: canceled</td><td>COMPENSATING</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Data Type Gotchas</h3>
+  <ul>
+    <li><strong>Currency precision</strong>: Stripe uses smallest unit (cents). SAP uses full unit with decimal. Normalize before passing between systems. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Date/time zones</strong>: Salesforce stores UTC. SAP depends on user profile. Oracle uses server timezone. Normalize to UTC at orchestrator level. [<a href="https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga">src2</a>]</li>
+    <li><strong>ID formats</strong>: SAP = 10-digit numeric. Salesforce = 18-char alphanumeric. Stripe = prefixed strings (pi_xxx). Maintain cross-reference map. [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Status enums</strong>: &ldquo;Cancelled&rdquo; in Salesforce is not the same field as &ldquo;Cancelled&rdquo; in SAP. Map each system's status vocabulary.</li>
+  </ul>
+  </section>
+
+  <!-- Error Handling -->
+  <section id="error-handling">
+  <h2>Error Handling &amp; Failure Points</h2>
+
+  <h3>Common Error Scenarios</h3>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Scenario</th><th scope="col">Impact</th><th scope="col">Detection</th><th scope="col">Resolution</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Orchestrator crashes mid-saga</td><td>Saga hangs in partial state</td><td>Heartbeat timeout</td><td>Durable workflow engine auto-resumes</td></tr>
+      <tr><td>ERP API timeout (no response)</td><td>Unknown state</td><td>Timeout threshold</td><td>Read-before-write: query for idempotency key</td></tr>
+      <tr><td>Compensation fails</td><td>Inconsistent state</td><td>Compensation error handler</td><td>Dead letter queue + manual intervention</td></tr>
+      <tr><td>Rate limit exceeded (429)</td><td>Step cannot execute</td><td>HTTP 429 response</td><td>Exponential backoff, max 5 retries</td></tr>
+      <tr><td>Concurrent saga conflict</td><td>Lost update or dirty read</td><td>409/412 response</td><td>Semantic lock or reread-and-retry</td></tr>
+      <tr><td>Network partition</td><td>Participant may have executed</td><td>Timeout + no response</td><td>Idempotent retry</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Failure Points in Production</h3>
+  <ul>
+    <li><strong>Compensation timeout cascade</strong>: One slow compensation causes subsequent compensations to time out. Fix: <code>Set independent timeouts for each compensation step.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Saga state persistence loss</strong>: In-memory orchestrators lose state on crash. Fix: <code>Use durable state persistence (Temporal, Step Functions).</code> [<a href="https://temporal.io/blog/mastering-saga-patterns-for-distributed-transactions-in-microservices">src4</a>]</li>
+    <li><strong>ERP maintenance windows</strong>: Scheduled downtime fails sagas mid-flight. Fix: <code>Circuit breaker + queue pending sagas, resume after window.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Idempotency key collision</strong>: Different sagas share an idempotency key. Fix: <code>Include workflow execution ID + step name in key.</code> [<a href="https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga">src2</a>]</li>
+    <li><strong>Compensation ordering violation</strong>: Out-of-order compensations cause data integrity issues. Fix: <code>Always compensate in strict reverse order.</code> [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/saga">src6</a>]</li>
+    <li><strong>Stale auth tokens</strong>: Token fetched at saga start expires mid-saga. Fix: <code>Fetch fresh auth tokens before each ERP API call.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using 2PC across ERP APIs</h3>
+  <pre><code>// BAD &mdash; 2PC requires all participants to hold locks simultaneously
+// ERP APIs do not support distributed lock coordination
+BEGIN DISTRIBUTED TRANSACTION
+  Lock row in Salesforce (not possible via REST API)
+  Lock row in SAP (not possible via OData API)
+COMMIT ALL</code></pre>
+
+  <h3>Correct: Use Saga with compensating transactions</h3>
+  <pre><code>// GOOD &mdash; each step commits independently; compensations handle failure
+Step 1: Create order in SAP (committed)
+Step 2: Reserve inventory (committed)
+Step 3: Capture payment (PIVOT)
+  If Step 2 fails: compensate Step 1 (cancel order)</code></pre>
+
+  <h3>Wrong: Fire-and-forget without compensation design</h3>
+  <pre><code class="language-javascript">// BAD &mdash; no compensation, no idempotency, no error handling
+async function processOrder(order) {
+  await createSapOrder(order);    // succeeds, but...
+  await reserveInventory(order);  // succeeds, but...
+  await capturePayment(order);    // FAILS &mdash; SAP order orphaned
+}</code></pre>
+
+  <h3>Correct: Every forward step has a compensation partner</h3>
+  <pre><code class="language-javascript">// GOOD &mdash; compensation stack ensures cleanup
+async function processOrderSaga(order) {
+  const compensations = [];
+  try {
+    const so = await createSapOrder(order);
+    compensations.push(() =&gt; cancelSapOrder(so.id));
+    const res = await reserveInventory(order);
+    compensations.push(() =&gt; releaseInventory(res.id));
+    await capturePayment(order); // PIVOT
+    await postRevenue(so.id);    // Retryable
+  } catch (error) {
+    for (const comp of compensations.reverse()) await comp();
+    throw error;
+  }
+}</code></pre>
+
+  <h3>Wrong: Choreography with 6+ ERP participants</h3>
+  <pre><code>// BAD &mdash; invisible dependency web across 7 services
+OrderService emits OrderCreated
+InventoryService emits InventoryReserved
+PaymentService emits PaymentCaptured
+... 4 more services listening to each other
+// Debug: "Why did this fail?" = trace 7 event streams</code></pre>
+
+  <h3>Correct: Orchestration for complex multi-ERP flows</h3>
+  <pre><code>// GOOD &mdash; single orchestrator, all state in one place
+Orchestrator: createOrder(SAP) -> reserveInventory(WMS) ->
+  capturePayment(Stripe) -> postRevenue(Oracle) -> updateCRM(SF)
+// Debug: check one orchestrator execution log</code></pre>
+  </section>
+
+  <!-- Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Treating compensation as rollback</strong>: Compensations create new records (credit memos, refunds). Fix: <code>Document compensation behavior; get business sign-off.</code> [<a href="https://microservices.io/patterns/data/saga.html">src1</a>]</li>
+    <li><strong>Missing idempotency</strong>: Network retries cause duplicates. Fix: <code>Use idempotency keys from workflow ID + step name.</code> [<a href="https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga">src2</a>]</li>
+    <li><strong>Ignoring ERP API rate limits</strong>: 10-step saga = 20-30 API calls at scale. Fix: <code>Calculate worst-case API consumption; set concurrency limits.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Ignoring eventual consistency window</strong>: Other systems see intermediate state. Fix: <code>Use semantic locks (status flags like "pending_confirmation").</code> [<a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/saga">src6</a>]</li>
+    <li><strong>Hardcoding saga timeout</strong>: Different ERPs have wildly different response times. Fix: <code>Set per-step timeouts based on each ERP's SLA.</code> [<a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-orchestration.html">src3</a>]</li>
+    <li><strong>Not testing compensation path</strong>: Teams only test the happy path. Fix: <code>Chaos testing &mdash; inject failures at each step, verify full compensation.</code> [<a href="https://temporal.io/blog/mastering-saga-patterns-for-distributed-transactions-in-microservices">src4</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Temporal workflow status
+tctl workflow describe --workflow_id "order-saga-12345"
+
+# List running sagas in Temporal
+tctl workflow list --query "WorkflowType='OrderToCashSaga' AND ExecutionStatus='Running'"
+
+# Check AWS Step Functions execution
+aws stepfunctions describe-execution \
+  --execution-arn "arn:aws:states:...:execution:OrderSaga:exec-001"
+
+# List failed sagas in Step Functions (last 24h)
+aws stepfunctions list-executions \
+  --state-machine-arn "arn:aws:states:...:stateMachine:OrderSaga" \
+  --status-filter "FAILED" --max-results 50
+
+# Check Salesforce API usage
+curl -s "https://yourorg.my.salesforce.com/services/data/v62.0/limits" \
+  -H "Authorization: Bearer $SF_TOKEN" | jq '.DailyApiRequests'
+
+# Monitor Stripe payment intent (verify saga pivot)
+curl -s "https://api.stripe.com/v1/payment_intents/pi_xxx" \
+  -u "$STRIPE_SECRET_KEY:" | jq '{status, amount, currency}'</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Pattern / Platform</th><th scope="col">Version</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Key Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Saga pattern (original paper)</td><td>Garcia-Molina &amp; Salem</td><td>1987</td><td>Foundational</td><td>Original long-lived transaction concept</td></tr>
+      <tr><td>Microservices adaptation</td><td>Chris Richardson</td><td>2018</td><td>Current reference</td><td>Orchestration/choreography for microservices</td></tr>
+      <tr><td>AWS Step Functions</td><td>Standard &amp; Express</td><td>2024</td><td>GA</td><td>Map state for parallel saga steps</td></tr>
+      <tr><td>Temporal</td><td>1.x</td><td>2024-2025</td><td>GA</td><td>Durable execution, auto-retry, versioning</td></tr>
+      <tr><td>Azure Durable Functions</td><td>v4</td><td>2024</td><td>GA</td><td>Sub-orchestrations for nested sagas</td></tr>
+      <tr><td>Camunda 8</td><td>8.5+</td><td>2024</td><td>GA</td><td>Improved BPMN compensation events</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Transaction spans 3+ ERP systems</td><td>Transaction fits within single ERP/database</td><td>Native ERP transaction</td></tr>
+      <tr><td>Eventual consistency acceptable</td><td>Strong ACID required across all systems</td><td>Two-phase commit (rare for ERP APIs)</td></tr>
+      <tr><td>Steps take seconds to minutes</td><td>Sub-millisecond in-memory operations</td><td>Local transaction + outbox pattern</td></tr>
+      <tr><td>Human approval steps involved</td><td>All steps instantaneous and reversible</td><td>Simple retry with DLQ</td></tr>
+      <tr><td>Multiple teams own participants</td><td>Single team owns all systems</td><td>Direct orchestration without saga</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Cross-System Comparison -->
+  <section id="cross-system-comparison">
+  <h2>Cross-System Comparison</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Capability</th><th scope="col">Saga (Orchestration)</th><th scope="col">Saga (Choreography)</th><th scope="col">Two-Phase Commit</th><th scope="col">Outbox + Eventual</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Consistency</strong></td><td>Eventual</td><td>Eventual</td><td>Strong (ACID)</td><td>Eventual</td></tr>
+      <tr><td><strong>Coupling</strong></td><td>To orchestrator</td><td>To event schema</td><td>To coordinator</td><td>To message broker</td></tr>
+      <tr><td><strong>Scalability</strong></td><td>High</td><td>High</td><td>Low (locks)</td><td>High</td></tr>
+      <tr><td><strong>ERP API compatible</strong></td><td>Yes</td><td>Yes</td><td>No</td><td>Yes (single-system)</td></tr>
+      <tr><td><strong>Multi-ERP</strong></td><td>Primary use case</td><td>Possible but hard</td><td>Not viable</td><td>No</td></tr>
+      <tr><td><strong>Failure recovery</strong></td><td>Auto compensation</td><td>Distributed compensation</td><td>Auto rollback</td><td>Retry + idempotency</td></tr>
+      <tr><td><strong>Debugging</strong></td><td>Good</td><td>Poor</td><td>Good</td><td>Medium</td></tr>
+      <tr><td><strong>Latency overhead</strong></td><td>Medium</td><td>Low</td><td>High</td><td>Low</td></tr>
+      <tr><td><strong>Tooling</strong></td><td>Temporal, Step Functions</td><td>Kafka, EventBridge</td><td>Database-native</td><td>Debezium, Outbox libs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li><strong>Compensation is a business decision</strong>: What &ldquo;undo&rdquo; means for each step must be defined by stakeholders, not technologists alone.</li>
+    <li><strong>Eventual consistency is visible to users</strong>: Between steps, the system is in intermediate state. Use semantic status flags to communicate saga progress.</li>
+    <li><strong>Complexity compounds with participants</strong>: Each new participant adds forward + compensation steps. Split large processes into smaller independent sagas.</li>
+    <li><strong>Platform lock-in risk</strong>: Choosing Step Functions, Durable Functions, or Temporal creates dependency for critical transactions. The pattern is portable; the implementation is not.</li>
+    <li><strong>ERP API changes break sagas</strong>: When an ERP vendor changes API behavior, saga steps may fail. Pin API versions and monitor deprecation notices.</li>
+    <li><strong>Architecture-level guidance</strong>: This card describes the pattern; implementation varies by platform, ERP, and language. Consult specific ERP API docs for production use.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/business/erp-integration/event-driven-erp-integration/2026" data-relationship="related_to">Event-driven ERP integration patterns</a>
+    <a href="/business/erp-integration/order-to-cash-erp-integration/2026" data-relationship="solves">Order-to-cash cross-ERP integration</a>
+    <a href="/business/erp-integration/procure-to-pay-erp-integration/2026" data-relationship="solves">Procure-to-pay cross-ERP integration</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Business &middot; ERP Integration<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Kubernetes RBAC Configuration Reference | knowledgelib.io</title>
+  <meta name="description" content="Complete Kubernetes RBAC reference covering Role, ClusterRole, RoleBinding, ClusterRoleBinding configuration with production-ready YAML, least-privilege...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/devops/k8s-rbac/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kubernetes RBAC Configuration Reference | knowledgelib.io">
+  <meta property="og:description" content="Complete Kubernetes RBAC reference covering Role, ClusterRole, RoleBinding, ClusterRoleBinding configuration with production-ready YAML, least-privilege patterns, aggregated ClusterRoles, ServiceAccount hardening, 5 anti-patterns, and diagnostic commands. 7 sources, all cited. Verified 2026-02-27.">
+  <meta property="og:url" content="https://knowledgelib.io/software/devops/k8s-rbac/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-27">
+  <meta property="article:modified_time" content="2026-02-27">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes RBAC Configuration Reference | knowledgelib.io">
+  <meta name="twitter:description" content="Complete Kubernetes RBAC reference covering Role, ClusterRole, RoleBinding, ClusterRoleBinding configuration with production-ready YAML, least-privilege patterns, aggregated ClusterRoles, ServiceAccount hardening, 5 anti-patterns, and diagnostic commands. 7 sources, all cited. Verified 2026-02-27.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.94">
+  <meta name="ai:last_verified" content="2026-02-27">
+  <meta name="ai:domain" content="software/devops/Kubernetes RBAC Configuration">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I configure Kubernetes RBAC (Role-Based Access Control)?">
+  <meta name="ai:aliases" content="Kubernetes RBAC configuration; k8s Role ClusterRole RoleBinding ClusterRoleBinding; Kubernetes RBAC least privilege best practices; kubectl RBAC setup ServiceAccount permissions; Kubernetes role-based access control YAML; k8s RBAC security hardening; Kubernetes RBAC aggregated ClusterRoles; Kubernetes ServiceAccount RBAC binding">
+  <meta name="ai:raw" content="/api/v1/units/software/devops/k8s-rbac/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-27">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-27">
+  <meta name="ai:inputs_needed" content="scope,subject_type,permission_level">
+  <meta name="ai:constraints" content="RBAC is additive-only (no deny rules); roleRef is immutable after creation; Never add users to system:masters group; escalate/bind verbs allow privilege escalation; create on pods implicitly grants Secret/ConfigMap access; Prefer RoleBindings over ClusterRoleBindings">
+  <meta name="ai:skip_this_unit_if" content="Need NetworkPolicy (network-level control) -> software/devops/k8s-network-policy/2026; Need Pod Security Admission -> software/devops/k8s-pod-security-admission/2026; Need OPA/Gatekeeper -> software/devops/k8s-opa-gatekeeper/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Kubernetes RBAC Configuration Reference",
+    "headline": "Kubernetes RBAC Configuration Reference",
+    "description": "Complete reference for Kubernetes Role-Based Access Control (RBAC) covering Role, ClusterRole, RoleBinding, ClusterRoleBinding with production-ready YAML manifests, least-privilege patterns, aggregated ClusterRoles, ServiceAccount hardening, anti-patterns, and diagnostic commands.",
+    "keywords": ["Kubernetes", "RBAC", "Role", "ClusterRole", "RoleBinding", "ClusterRoleBinding", "ServiceAccount", "kubectl", "least privilege", "access control", "security", "k8s", "YAML"],
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Kubernetes 1.8+ (RBAC GA), kubectl",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Using RBAC Authorization",
+        "url": "https://kubernetes.io/docs/reference/access-authn-authz/rbac/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Role Based Access Control Good Practices",
+        "url": "https://kubernetes.io/docs/concepts/security/rbac-good-practices/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Best practices for GKE RBAC",
+        "url": "https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes RBAC Best Practices -- From Basic to Advanced",
+        "url": "https://www.wiz.io/academy/container-security/kubernetes-rbac-best-practices"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Privilege Escalation with Kubernetes RBAC Misconfigurations",
+        "url": "https://medium.com/@esrakyhn/privilege-escalation-with-kubernetes-rbac-misconfigurations-8add491d99f7"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Using RBAC, Generally Available in Kubernetes v1.8",
+        "url": "https://kubernetes.io/blog/2017/10/using-rbac-generally-available-18/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kubernetes RBAC: A Step-by-Step Guide for Securing Your Cluster",
+        "url": "https://trilio.io/kubernetes-best-practices/kubernetes-rbac/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Kubernetes RBAC Configuration Reference",
+    "description": "Structured reference for Kubernetes RBAC covering all four API objects (Role, ClusterRole, RoleBinding, ClusterRoleBinding), all verbs, default ClusterRoles, aggregation, least-privilege patterns, and security hardening.",
+    "keywords": ["Kubernetes", "RBAC", "Role", "ClusterRole", "RoleBinding", "ClusterRoleBinding", "ServiceAccount", "access control", "security"],
+    "temporalCoverage": "2017/2026",
+    "dateModified": "2026-02-27",
+    "datePublished": "2026-02-27",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Kubernetes Project"},
+      {"@type": "Organization", "name": "Google Cloud"},
+      {"@type": "Organization", "name": "Wiz"},
+      {"@type": "Organization", "name": "Trilio"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "DevOps", "item": "https://knowledgelib.io/software/devops/" },
+      { "@type": "ListItem", "position": 4, "name": "Kubernetes RBAC Configuration" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I configure Kubernetes RBAC (Role-Based Access Control)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes RBAC configuration",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "k8s Role ClusterRole RoleBinding ClusterRoleBinding",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes RBAC least privilege best practices",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "kubectl RBAC setup ServiceAccount permissions",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kubernetes role-based access control YAML",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2"></head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Kubernetes RBAC Configuration Reference</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I configure Kubernetes RBAC (Role-Based Access Control)?</h2>
+
+  <aside class="unit-meta" data-card-id="software/devops/k8s-rbac/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.94 out of 1">0.94</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-27</span></span>
+    <span><strong>Freshness:</strong> 2026-02-27</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: Kubernetes RBAC controls API access through four objects -- Role, ClusterRole, RoleBinding, and ClusterRoleBinding -- using additive-only allow rules with no deny capability.</li>
+    <li><strong>Key tool/command</strong>: <code>kubectl auth can-i &lt;verb&gt; &lt;resource&gt; --as=&lt;user&gt; [--namespace=&lt;ns&gt;]</code></li>
+    <li><strong>Watch out for</strong>: Wildcard permissions (<code>*</code>) in verbs or resources grant access to all current AND future resources, including secrets and admission webhooks.</li>
+    <li><strong>Works with</strong>: Kubernetes 1.8+ (RBAC GA since v1.8; <code>rbac.authorization.k8s.io/v1</code> is the only supported API version in modern clusters).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>RBAC is additive-only -- there are NO deny rules; all rules grant access, and access not explicitly granted is denied by default [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</li>
+    <li><code>roleRef</code> in RoleBinding/ClusterRoleBinding is IMMUTABLE after creation -- delete and recreate the binding to change the referenced role [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</li>
+    <li>Never add users to the <code>system:masters</code> group -- it bypasses ALL RBAC authorization checks and cannot be restricted [<a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">src2</a>]</li>
+    <li>The <code>escalate</code> and <code>bind</code> verbs allow privilege escalation -- restrict these to cluster administrators only [<a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">src2</a>]</li>
+    <li>Granting <code>create</code> on pods/deployments implicitly grants access to any Secret, ConfigMap, or ServiceAccount mountable in that namespace [<a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">src2</a>]</li>
+    <li>ClusterRoleBindings grant permissions cluster-wide -- prefer namespace-scoped RoleBindings unless cluster-wide access is genuinely required [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Resource</th><th scope="col">Scope</th><th scope="col">Purpose</th><th scope="col">API Group</th><th scope="col">Key Fields</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Role</code></td><td>Namespace</td><td>Define permissions within a single namespace</td><td><code>rbac.authorization.k8s.io/v1</code></td><td><code>rules[].apiGroups</code>, <code>resources</code>, <code>verbs</code></td></tr>
+      <tr><td><code>ClusterRole</code></td><td>Cluster</td><td>Define cluster-wide or cross-namespace permissions</td><td><code>rbac.authorization.k8s.io/v1</code></td><td><code>rules[]</code>, <code>aggregationRule</code></td></tr>
+      <tr><td><code>RoleBinding</code></td><td>Namespace</td><td>Bind Role or ClusterRole to subjects in one namespace</td><td><code>rbac.authorization.k8s.io/v1</code></td><td><code>subjects[]</code>, <code>roleRef</code> (immutable)</td></tr>
+      <tr><td><code>ClusterRoleBinding</code></td><td>Cluster</td><td>Bind ClusterRole to subjects cluster-wide</td><td><code>rbac.authorization.k8s.io/v1</code></td><td><code>subjects[]</code>, <code>roleRef</code> (immutable)</td></tr>
+      <tr><td><code>ServiceAccount</code></td><td>Namespace</td><td>Identity for pods; bound to Roles via RoleBinding</td><td><code>v1</code></td><td><code>automountServiceAccountToken</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Verb</th><th scope="col">Type</th><th scope="col">Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>get</code></td><td>Read</td><td>Retrieve a single resource by name</td></tr>
+      <tr><td><code>list</code></td><td>Read</td><td>List all resources of a type (exposes secret values!)</td></tr>
+      <tr><td><code>watch</code></td><td>Read</td><td>Stream changes to resources (exposes secret values!)</td></tr>
+      <tr><td><code>create</code></td><td>Write</td><td>Create a new resource</td></tr>
+      <tr><td><code>update</code></td><td>Write</td><td>Replace an entire resource</td></tr>
+      <tr><td><code>patch</code></td><td>Write</td><td>Modify specific fields of a resource</td></tr>
+      <tr><td><code>delete</code></td><td>Write</td><td>Delete a single resource</td></tr>
+      <tr><td><code>deletecollection</code></td><td>Write</td><td>Delete all resources of a type</td></tr>
+      <tr><td><code>escalate</code></td><td>Dangerous</td><td>Modify RBAC rules beyond your own permissions</td></tr>
+      <tr><td><code>bind</code></td><td>Dangerous</td><td>Create bindings to roles with higher permissions</td></tr>
+      <tr><td><code>impersonate</code></td><td>Dangerous</td><td>Act as another user, group, or service account</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Default ClusterRole</th><th scope="col">Permissions</th><th scope="col">Use Case</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>cluster-admin</code></td><td>Full access to ALL resources</td><td>Emergency break-glass only</td></tr>
+      <tr><td><code>admin</code></td><td>Full access within a namespace (no ResourceQuota/Namespace)</td><td>Namespace administrators</td></tr>
+      <tr><td><code>edit</code></td><td>Read/write most resources (no Roles/RoleBindings)</td><td>Developers deploying workloads</td></tr>
+      <tr><td><code>view</code></td><td>Read-only most resources (no Secrets)</td><td>Auditors, read-only dashboards</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+├── Need cluster-wide access to non-namespaced resources (nodes, namespaces, PVs)?
+│   ├── YES → Use ClusterRole + ClusterRoleBinding
+│   └── NO ↓
+├── Need the same permissions across multiple namespaces?
+│   ├── YES → Define a ClusterRole + RoleBinding per namespace
+│   └── NO ↓
+├── Need permissions in a single namespace only?
+│   ├── YES → Use Role + RoleBinding (most secure, preferred)
+│   └── NO ↓
+├── Need to extend a built-in role (admin/edit/view)?
+│   ├── YES → Use aggregated ClusterRole with matching labels
+│   └── NO ↓
+├── Subject is a pod/workload?
+│   ├── YES → Create dedicated ServiceAccount + Role + RoleBinding
+│   │         Set automountServiceAccountToken: false on SA
+│   └── NO ↓
+├── Subject is a human user?
+│   ├── YES → Bind to Group (not individual User) for manageability
+│   └── NO ↓
+└── DEFAULT → Start with the built-in "view" ClusterRole; add permissions incrementally</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Create a ServiceAccount for your workload</h3>
+  <p>Every application should have its own ServiceAccount rather than using the <code>default</code> ServiceAccount. Disable automatic token mounting unless the pod needs Kubernetes API access. [<a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">src2</a>] [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp-sa
+  namespace: production
+automountServiceAccountToken: false</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get sa myapp-sa -n production</code> → should show the ServiceAccount</p>
+
+  <h3>2. Define a Role with minimum required permissions</h3>
+  <p>Specify exact <code>apiGroups</code>, <code>resources</code>, and <code>verbs</code>. Use <code>resourceNames</code> to restrict access to specific objects when possible. Never use wildcards. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>] [<a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">src2</a>]</p>
+  <pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: myapp-role
+  namespace: production
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["myapp-config"]
+  verbs: ["get", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl describe role myapp-role -n production</code> → should show the rules</p>
+
+  <h3>3. Bind the Role to the ServiceAccount</h3>
+  <p>Create a RoleBinding that connects the ServiceAccount to the Role. The <code>roleRef</code> is immutable -- to change the role reference, delete and recreate the binding. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</p>
+  <pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: myapp-binding
+  namespace: production
+subjects:
+- kind: ServiceAccount
+  name: myapp-sa
+  namespace: production
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: myapp-role</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl auth can-i get configmaps --as=system:serviceaccount:production:myapp-sa -n production</code> → <code>yes</code></p>
+
+  <h3>4. Assign the ServiceAccount to your Pod/Deployment</h3>
+  <p>Reference the ServiceAccount in your pod spec. If the pod does need API access, set <code>automountServiceAccountToken: true</code> in the pod spec. [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac">src3</a>]</p>
+  <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      serviceAccountName: myapp-sa
+      automountServiceAccountToken: true
+      containers:
+      - name: myapp
+        image: myapp:1.2.3</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get pods -n production -o jsonpath='{.items[0].spec.serviceAccountName}'</code> → <code>myapp-sa</code></p>
+
+  <h3>5. Test permissions with kubectl auth can-i</h3>
+  <p>Always verify both positive (allowed) and negative (denied) access after configuring RBAC. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</p>
+  <pre><code class="language-bash"># Should succeed (allowed by the Role)
+kubectl auth can-i get configmaps --as=system:serviceaccount:production:myapp-sa -n production
+# Should fail (not granted)
+kubectl auth can-i create deployments --as=system:serviceaccount:production:myapp-sa -n production
+# Check all permissions for a subject
+kubectl auth can-i --list --as=system:serviceaccount:production:myapp-sa -n production</code></pre>
+  <p><strong>Verify</strong>: Positive tests return <code>yes</code>, negative tests return <code>no</code></p>
+
+  <h3>6. Apply all manifests with kubectl auth reconcile</h3>
+  <p>Use <code>kubectl auth reconcile</code> for idempotent RBAC application, especially in CI/CD pipelines. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</p>
+  <pre><code class="language-bash">kubectl auth reconcile -f rbac-manifests/ --dry-run=server
+kubectl auth reconcile -f rbac-manifests/</code></pre>
+  <p><strong>Verify</strong>: <code>kubectl get role,rolebinding -n production</code> → should list all created objects</p>
+  </section>
+
+  <!-- Code Examples -- multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>YAML: Namespace-scoped developer Role + RoleBinding</h3>
+  <pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+  namespace: development
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["pods/log", "pods/exec"]
+  verbs: ["get", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developer-binding
+  namespace: development
+subjects:
+- kind: Group
+  name: dev-team
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: developer</code></pre>
+
+  <h3>YAML: ClusterRole with aggregation for monitoring</h3>
+  <pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metrics-reader
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]</code></pre>
+
+  <h3>YAML: CI/CD ServiceAccount with scoped deployment permissions</h3>
+  <pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cicd-deployer
+  namespace: staging
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployer
+  namespace: staging
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: ["apps"]
+  resources: ["deployments/rollback"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cicd-deployer-binding
+  namespace: staging
+subjects:
+- kind: ServiceAccount
+  name: cicd-deployer
+  namespace: staging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployer</code></pre>
+
+  <h3>YAML: Read-only ClusterRole for auditors across all namespaces</h3>
+  <pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: auditor
+rules:
+- apiGroups: ["", "apps", "batch", "networking.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: auditor-binding
+subjects:
+- kind: Group
+  name: security-auditors
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: auditor</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -- wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using wildcards for verbs and resources</h3>
+  <pre><code class="language-yaml"># BAD -- grants ALL permissions on ALL resources, including secrets,
+# admission webhooks, and any future resources added to the cluster
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: super-user
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]</code></pre>
+
+  <h3>Correct: Explicit verbs and resources</h3>
+  <pre><code class="language-yaml"># GOOD -- grants only the specific permissions needed
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-manager
+  namespace: production
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]</code></pre>
+
+  <h3>Wrong: Binding cluster-admin to a ServiceAccount</h3>
+  <pre><code class="language-yaml"># BAD -- if any pod using this SA is compromised, the attacker has
+# full cluster-admin access to the entire cluster
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: app-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: production
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin</code></pre>
+
+  <h3>Correct: Dedicated ServiceAccount with scoped Role</h3>
+  <pre><code class="language-yaml"># GOOD -- dedicated SA with minimum permissions, namespace-scoped
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp-sa
+  namespace: production
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: myapp-binding
+  namespace: production
+subjects:
+- kind: ServiceAccount
+  name: myapp-sa
+  namespace: production
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: myapp-role</code></pre>
+
+  <h3>Wrong: Using the default ServiceAccount</h3>
+  <pre><code class="language-yaml"># BAD -- the default SA is shared by all pods in the namespace;
+# any RBAC granted to it applies to every pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest</code></pre>
+
+  <h3>Correct: Dedicated ServiceAccount per workload</h3>
+  <pre><code class="language-yaml"># GOOD -- each workload has its own SA with tailored permissions
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    spec:
+      serviceAccountName: myapp-sa
+      automountServiceAccountToken: true
+      containers:
+      - name: myapp
+        image: myapp:1.2.3</code></pre>
+
+  <h3>Wrong: Granting list/watch on secrets cluster-wide</h3>
+  <pre><code class="language-yaml"># BAD -- list and watch on secrets exposes ALL secret values
+# in plaintext, not just metadata
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-viewer
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]</code></pre>
+
+  <h3>Correct: Scope secret access to specific names and namespaces</h3>
+  <pre><code class="language-yaml"># GOOD -- access only specific secrets in one namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-secret-reader
+  namespace: production
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["myapp-tls", "myapp-db-credentials"]
+  verbs: ["get"]</code></pre>
+
+  <h3>Wrong: Granting escalate or bind verbs to non-admins</h3>
+  <pre><code class="language-yaml"># BAD -- allows the subject to grant themselves any permission,
+# effectively making them a cluster-admin
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rbac-manager
+rules:
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "clusterroles"]
+  verbs: ["get", "list", "create", "update", "patch", "escalate"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["rolebindings", "clusterrolebindings"]
+  verbs: ["get", "list", "create", "update", "patch", "bind"]</code></pre>
+
+  <h3>Correct: Restrict RBAC management to cluster admins</h3>
+  <pre><code class="language-yaml"># GOOD -- only cluster-admin (via break-glass) should modify RBAC objects
+# Regular users should request RBAC changes through GitOps/PR workflow
+# Do NOT create custom roles with escalate/bind verbs</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>RoleBinding vs ClusterRoleBinding confusion</strong>: A ClusterRole bound via RoleBinding is scoped to the RoleBinding's namespace. A ClusterRole bound via ClusterRoleBinding grants cluster-wide access. The same ClusterRole behaves differently depending on the binding type. Fix: Always use RoleBinding unless cluster-wide access is explicitly needed. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</li>
+    <li><strong>list/watch exposes secret values</strong>: Many assume <code>list</code> and <code>watch</code> on secrets only show metadata. In reality, they return full secret data in plaintext. Fix: Never grant <code>list</code>/<code>watch</code> on secrets; use <code>get</code> with <code>resourceNames</code> for specific secrets only. [<a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">src2</a>]</li>
+    <li><strong>Forgetting automountServiceAccountToken</strong>: By default, Kubernetes mounts a service account token into every pod, even if the pod never calls the API. Fix: Set <code>automountServiceAccountToken: false</code> on the ServiceAccount and only enable it in the pod spec for pods that need it. [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac">src3</a>]</li>
+    <li><strong>Token reuse after RBAC changes</strong>: Kubernetes API tokens are validated at request time, not issuance time. However, TokenReview results may be cached by webhook authenticators. Fix: After revoking RBAC, also delete the ServiceAccount or its token secrets to immediately invalidate access. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</li>
+    <li><strong>system:authenticated includes everyone with a Google/OIDC account</strong>: On managed clusters (GKE, EKS), binding to <code>system:authenticated</code> grants access to anyone with a valid identity token, including external users. Fix: Never bind roles to <code>system:authenticated</code> or <code>system:unauthenticated</code>. [<a href="https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac">src3</a>]</li>
+    <li><strong>Aggregated ClusterRole unintended expansion</strong>: Adding a label like <code>rbac.authorization.k8s.io/aggregate-to-admin: "true"</code> to a ClusterRole automatically merges its rules into the built-in <code>admin</code> role for all namespace admins. Fix: Audit aggregation labels carefully and test with <code>kubectl auth can-i</code>. [<a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check if a specific user/SA can perform an action
+kubectl auth can-i get pods --as=jane -n production
+
+# Check if a ServiceAccount can perform an action
+kubectl auth can-i create deployments --as=system:serviceaccount:staging:cicd-deployer -n staging
+
+# List all permissions for a subject in a namespace
+kubectl auth can-i --list --as=system:serviceaccount:production:myapp-sa -n production
+
+# List all Roles and RoleBindings in a namespace
+kubectl get roles,rolebindings -n production
+
+# List all ClusterRoles and ClusterRoleBindings
+kubectl get clusterroles,clusterrolebindings
+
+# Describe a specific Role to see its rules
+kubectl describe role myapp-role -n production
+
+# Find all bindings referencing cluster-admin
+kubectl get clusterrolebindings -o json | jq '.items[] | select(.roleRef.name=="cluster-admin") | .metadata.name'
+
+# Audit: find all subjects with cluster-admin access
+kubectl get clusterrolebindings -o json | jq '.items[] | select(.roleRef.name=="cluster-admin") | {name: .metadata.name, subjects: .subjects}'
+
+# Dry-run RBAC reconciliation (safe for CI/CD)
+kubectl auth reconcile -f rbac-manifests/ --dry-run=server
+
+# Check which API groups/resources are available
+kubectl api-resources --verbs=list -o wide</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Breaking Changes</th><th scope="col">Migration Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>K8s 1.32+</td><td>Current</td><td>No RBAC-specific changes</td><td>--</td></tr>
+      <tr><td>K8s 1.30</td><td>Current</td><td>ValidatingAdmissionPolicy GA -- supplements RBAC</td><td>Use VAP for complex admission rules beyond RBAC</td></tr>
+      <tr><td>K8s 1.24</td><td>Supported</td><td>BoundServiceAccountTokenVolume GA; auto secret-based tokens removed</td><td>Tokens now auto-rotated via TokenRequest API</td></tr>
+      <tr><td>K8s 1.22</td><td>Minimum recommended</td><td><code>rbac.authorization.k8s.io/v1beta1</code> REMOVED</td><td>Update all manifests to <code>rbac.authorization.k8s.io/v1</code></td></tr>
+      <tr><td>K8s 1.8</td><td>Historical</td><td>RBAC promoted to GA (<code>rbac.authorization.k8s.io/v1</code>)</td><td>--</td></tr>
+      <tr><td>K8s 1.6</td><td>Historical (EOL)</td><td>RBAC introduced as beta</td><td>--</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Controlling who can access which Kubernetes API resources</td><td>Need network-level traffic control between pods</td><td>NetworkPolicy</td></tr>
+      <tr><td>Restricting ServiceAccount permissions for workloads</td><td>Need to enforce pod security constraints (no privileged, no hostPath)</td><td>Pod Security Admission / Pod Security Standards</td></tr>
+      <tr><td>Granting namespace-scoped developer access</td><td>Need complex conditional policies (e.g., "allow only images from approved registries")</td><td>OPA/Gatekeeper or ValidatingAdmissionPolicy</td></tr>
+      <tr><td>Setting up CI/CD pipeline access to deploy</td><td>Need to restrict API access based on source IP or time of day</td><td>Admission webhooks or API server audit policies</td></tr>
+      <tr><td>Auditor read-only access across namespaces</td><td>Need data-level encryption or secret management</td><td>External secrets management (Vault, AWS Secrets Manager)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>RBAC permissions are additive-only -- you cannot write a "deny" rule. To revoke access, you must remove the granting RoleBinding/ClusterRoleBinding.</li>
+    <li>On managed Kubernetes (GKE, EKS, AKS), the cloud provider may inject additional ClusterRoleBindings. Review these regularly and do not assume the only RBAC in your cluster is what you defined.</li>
+    <li>The <code>system:masters</code> group is hardcoded in the Kubernetes API server and bypasses all RBAC checks. There is no way to restrict a user in this group through RBAC.</li>
+    <li>Secret-based ServiceAccount tokens (pre-1.24) are long-lived and never expire. On clusters upgraded from older versions, audit for and remove legacy token secrets.</li>
+    <li>Kubernetes RBAC does not support field-level access control -- you cannot grant access to only specific fields of a resource.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/devops/k8s-deployment-service-ingress/2026" data-relationship="related_to">Kubernetes Deployment + Service + Ingress</a>
+    <a href="/software/debugging/kubernetes-crashloopbackoff/2026" data-relationship="related_to">Kubernetes CrashLoopBackOff Debugging</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; DevOps<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

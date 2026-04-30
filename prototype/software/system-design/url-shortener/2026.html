@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>URL Shortener System Design at Scale | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for building a URL shortener at scale. Covers base62 encoding, Redis caching, database sharding, analytics pipeline, and...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/url-shortener/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="URL Shortener System Design at Scale | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for building a URL shortener at scale. Covers base62 encoding, Redis caching, database sharding, analytics pipeline, and distributed ID generation. 12 component architecture, code examples in Python and Node.js. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/url-shortener/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="URL Shortener System Design at Scale | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for building a URL shortener at scale. Covers base62 encoding, Redis caching, database sharding, analytics pipeline, and distributed ID generation. 12 component architecture, code examples in Python and Node.js. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.93">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/url_shortener">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a URL shortener at scale?">
+  <meta name="ai:aliases" content="How to build a URL shortening service like Bitly or TinyURL?; URL shortener system design interview; Scalable short link service architecture; Design a URL shortener with billions of links">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/url-shortener/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="low">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="expected_scale,analytics_required,custom_aliases">
+  <meta name="ai:constraints" content="Short codes must be 6-7 chars base62 for billions of URLs; Read-to-write ratio ~100:1 optimize read path first; Never use HTTP 301 if you need click analytics; URL validation and malware scanning at write time not redirect time; Cache invalidation must propagate to all edge nodes">
+  <meta name="ai:skip_this_unit_if" content="Need paste/content-sharing service (Pastebin) -> software/system-design/pastebin/2026; Need CDN/content delivery architecture -> software/system-design/cdn-design/2026">
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Agent-specific: tells agents which sections exist so they can request partial content -->
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,when_to_use,caveats">
+
+  <!-- TechArticle structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "URL Shortener System Design at Scale",
+    "headline": "URL Shortener System Design at Scale",
+    "description": "Complete system design reference for building a URL shortener at scale. Covers component architecture (12 components), base62 encoding, Redis caching, database sharding, Kafka analytics pipeline, distributed ID generation, anti-patterns, and code examples in Python and Node.js.",
+    "keywords": ["URL shortener", "system design", "base62 encoding", "Redis caching", "database sharding", "Bitly architecture", "distributed ID generation", "Kafka analytics", "scalable redirect service"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Redis, Cassandra/DynamoDB/PostgreSQL, Kafka, Python or Node.js or Go",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "URL Shortening System Design",
+        "url": "https://systemdesign.one/url-shortening-system-design/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design a URL Shortener — System Design Interview",
+        "url": "https://blog.algomaster.io/p/design-a-url-shortener"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Design a URL Shortener Service",
+        "url": "https://www.designgurus.io/blog/url-shortening"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Design a URL Shortener Like Bit.ly",
+        "url": "https://www.hellointerview.com/learn/system-design/problem-breakdowns/bitly"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Building a Scalable URL Shortener with Distributed Caching Using Redis",
+        "url": "https://www.freecodecamp.org/news/build-a-scalable-url-shortener-with-distributed-caching-using-redis/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "URL Shortener System Design — GeeksforGeeks",
+        "url": "https://www.geeksforgeeks.org/system-design-url-shortening-service/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "System Design Deep Dive: Designing a URL Shortener with Base62",
+        "url": "https://designgurus.substack.com/p/system-design-deep-dive-designing"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "URL Shortener System Design at Scale",
+    "description": "Structured knowledge unit covering URL shortener system design: 12-component architecture table, base62 encoding, Redis caching strategies, database sharding, Kafka analytics pipeline, distributed ID generation, anti-patterns, and code examples in Python and Node.js.",
+    "keywords": ["URL shortener", "system design", "base62 encoding", "Redis caching", "database sharding", "scalable architecture"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "systemdesign.one"},
+      {"@type": "Organization", "name": "AlgoMaster"},
+      {"@type": "Organization", "name": "Design Gurus"},
+      {"@type": "Organization", "name": "Hello Interview"},
+      {"@type": "Organization", "name": "freeCodeCamp"},
+      {"@type": "Organization", "name": "GeeksforGeeks"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "URL Shortener System Design at Scale" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a URL shortener at scale?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A URL shortener maps long URLs to short 6-7 character codes using base62 encoding over unique IDs, stores mappings in a NoSQL database, and uses multi-layer caching (CDN + Redis) to serve redirects at <50ms latency with a 100:1 read-to-write ratio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to build a URL shortening service like Bitly or TinyURL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A URL shortener maps long URLs to short 6-7 character codes using base62 encoding over unique IDs, stores mappings in a NoSQL database, and uses multi-layer caching (CDN + Redis) to serve redirects at <50ms latency with a 100:1 read-to-write ratio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "URL shortener system design interview",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A URL shortener maps long URLs to short 6-7 character codes using base62 encoding over unique IDs, stores mappings in a NoSQL database, and uses multi-layer caching (CDN + Redis) to serve redirects at <50ms latency with a 100:1 read-to-write ratio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Scalable short link service architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A URL shortener maps long URLs to short 6-7 character codes using base62 encoding over unique IDs, stores mappings in a NoSQL database, and uses multi-layer caching (CDN + Redis) to serve redirects at <50ms latency with a 100:1 read-to-write ratio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Design a URL shortener with billions of links",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A URL shortener maps long URLs to short 6-7 character codes using base62 encoding over unique IDs, stores mappings in a NoSQL database, and uses multi-layer caching (CDN + Redis) to serve redirects at <50ms latency with a 100:1 read-to-write ratio."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT — for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>URL Shortener System Design at Scale</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a URL shortener at scale?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/url-shortener/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.93 out of 1">0.93</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR — agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A URL shortener maps long URLs to short 6-7 character codes using base62 encoding over unique IDs, stores mappings in a NoSQL database, and uses multi-layer caching (CDN + Redis) to serve redirects at &lt;50ms latency with a 100:1 read-to-write ratio.</li>
+    <li><strong>Key tool/command</strong>: <code>base62_encode(unique_id)</code> to generate short codes; Redis for caching hot redirects</li>
+    <li><strong>Watch out for</strong>: Using HTTP 301 (permanent redirect) when you need analytics — browsers cache 301s permanently, so your server never sees repeat clicks.</li>
+    <li><strong>Works with</strong>: Any language/stack. Core components: load balancer, app servers, Redis/Memcached, Cassandra/DynamoDB/PostgreSQL, Kafka for analytics.</li>
+  </ul>
+  </section>
+
+  <!-- Constraints — agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Short codes must be at least 6-7 characters in base62 to support billions of unique URLs (62^7 = 3.5 trillion combinations)</li>
+    <li>Read-to-write ratio is approximately 100:1; the redirect (read) path must be optimized first</li>
+    <li>Never use HTTP 301 (permanent redirect) if you need click analytics — browsers cache 301s and skip your server on subsequent visits</li>
+    <li>URL validation and malware scanning (e.g., Google Safe Browsing API) must happen at write time, not redirect time, to avoid adding latency to redirects</li>
+    <li>Cache invalidation must propagate to all edge/cache nodes when a short URL is deleted, updated, or expires</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference — the core lookup table (system design component architecture) -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Load Balancer</td><td>Distributes traffic across app servers</td><td>AWS ALB, Nginx, HAProxy</td><td>Geo-DNS routing + multiple LBs per region</td></tr>
+      <tr><td>API Gateway</td><td>Rate limiting, auth, request routing</td><td>Kong, AWS API Gateway</td><td>Horizontal scaling behind LB</td></tr>
+      <tr><td>URL Creation Service</td><td>Accepts long URLs, generates short codes</td><td>Go, Java, Node.js</td><td>Stateless; scale horizontally</td></tr>
+      <tr><td>Redirect Service</td><td>Resolves short code to long URL, returns 302</td><td>Go, Rust (low latency)</td><td>Separate from write path; scale independently</td></tr>
+      <tr><td>ID Generator</td><td>Produces globally unique IDs for base62 encoding</td><td>Snowflake, Zookeeper counter ranges</td><td>Pre-allocate ID ranges per node to avoid coordination</td></tr>
+      <tr><td>Cache Layer</td><td>Stores hot short-to-long URL mappings</td><td>Redis Cluster, Memcached</td><td>LRU eviction; 20% of URLs serve 80% of traffic</td></tr>
+      <tr><td>Primary Database</td><td>Persistent URL mapping storage</td><td>Cassandra, DynamoDB, PostgreSQL</td><td>Hash-based sharding on short_code</td></tr>
+      <tr><td>CDN / Edge Cache</td><td>Caches redirects at edge locations</td><td>Cloudflare, CloudFront</td><td>Cache 302 responses with short TTL (5-60 min)</td></tr>
+      <tr><td>Analytics Pipeline</td><td>Captures click events asynchronously</td><td>Kafka + Flink/Spark, ClickHouse</td><td>Decouple from redirect path; process in batches</td></tr>
+      <tr><td>Cleanup Service</td><td>Removes expired URLs</td><td>Cron job / background worker</td><td>Runs during low-traffic windows; lazy deletion on access</td></tr>
+      <tr><td>Abuse Prevention</td><td>Rate limiting, malware scanning</td><td>Redis (token bucket), Google Safe Browsing</td><td>Per-IP and per-API-key rate limits</td></tr>
+      <tr><td>Monitoring</td><td>System health, latency tracking</td><td>Prometheus + Grafana, Datadog</td><td>Alert on p99 redirect latency &gt; 100ms</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree — structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Expected write volume?
+|   |-- &lt;1K URLs/day (hobby/internal)?
+|   |   |-- Use single PostgreSQL instance + in-memory cache
+|   |   |-- Auto-increment ID + base62 encode
+|   |   +-- Single server is sufficient
+|   |-- 1K-100K URLs/day (startup)?
+|   |   |-- Use PostgreSQL with read replicas + Redis cache
+|   |   |-- Snowflake-style ID generator (single node)
+|   |   +-- 2-4 app server instances behind load balancer
+|   |-- 100K-10M URLs/day (mid-scale)?
+|   |   |-- Use Cassandra/DynamoDB + Redis Cluster
+|   |   |-- Distributed ID generator (Zookeeper counter ranges)
+|   |   |-- Separate read/write services
+|   |   +-- CDN for edge caching of popular redirects
+|   +-- &gt;10M URLs/day (Bitly-scale)?
+|       |-- Use Cassandra with multi-DC replication + Redis Cluster
+|       |-- Pre-generated key pools (KGS) with range allocation
+|       |-- Geo-distributed deployment
+|       |-- Kafka analytics pipeline with ClickHouse
+|       +-- Dedicated abuse prevention and rate limiting layer
+|
+|-- Need analytics?
+|   |-- YES -&gt; Use HTTP 302 + async Kafka pipeline
+|   +-- NO  -&gt; Use HTTP 301 for better client-side caching
+|
++-- Need custom aliases?
+    |-- YES -&gt; Separate alias table; validate uniqueness + reserved words
+    +-- NO  -&gt; Auto-generated base62 codes only</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define capacity requirements</h3>
+  <p>Estimate write and read QPS, storage, and bandwidth based on expected traffic. [<a href="https://systemdesign.one/url-shortening-system-design/">src1</a>]</p>
+  <pre><code>Given: 100M URLs created per month
+Write QPS: 100M / (30 * 24 * 3600) = ~40 writes/sec
+Read QPS:  40 * 100 = ~4,000 reads/sec (100:1 ratio)
+Peak:      10x average = 400 writes/sec, 40,000 reads/sec
+
+Storage per URL: ~500 bytes (short_code + long_url + metadata)
+Annual storage:  100M * 12 * 500 bytes = ~600 GB/year
+5-year storage:  ~3 TB (before replication)
+
+Cache (80-20 rule): 20% of daily reads * avg URL size
+  = 0.2 * (4000 * 86400) * 500 bytes = ~34 GB</code></pre>
+  <p><strong>Verify</strong>: Confirm your peak QPS estimate accounts for viral spikes (10-50x normal traffic).</p>
+
+  <h3>2. Design the database schema</h3>
+  <p>Choose a key-value-friendly schema optimized for short_code lookups. [<a href="https://blog.algomaster.io/p/design-a-url-shortener">src2</a>]</p>
+  <pre><code class="language-sql">-- Primary URL mappings (or use NoSQL equivalent)
+CREATE TABLE url_mappings (
+    short_code  VARCHAR(7) PRIMARY KEY,
+    long_url    TEXT NOT NULL,
+    created_at  TIMESTAMP DEFAULT NOW(),
+    expires_at  TIMESTAMP,
+    user_id     BIGINT,
+    click_count BIGINT DEFAULT 0
+);
+
+-- Index for deduplication (optional)
+CREATE INDEX idx_long_url ON url_mappings (long_url);
+
+-- Analytics events (or use Kafka -&gt; ClickHouse)
+CREATE TABLE click_events (
+    event_id    BIGINT PRIMARY KEY,
+    short_code  VARCHAR(7),
+    clicked_at  TIMESTAMP,
+    referrer    TEXT,
+    user_agent  TEXT,
+    country     VARCHAR(2),
+    ip_hash     VARCHAR(64)
+);</code></pre>
+  <p><strong>Verify</strong>: Ensure <code>short_code</code> is the primary key / partition key for O(1) lookups.</p>
+
+  <h3>3. Implement short code generation</h3>
+  <p>Use a unique ID generator + base62 encoding for collision-free codes. [<a href="https://designgurus.substack.com/p/system-design-deep-dive-designing">src7</a>]</p>
+  <pre><code class="language-python">import string
+
+ALPHABET = string.digits + string.ascii_lowercase + string.ascii_uppercase
+
+def base62_encode(num: int) -&gt; str:
+    if num == 0:
+        return ALPHABET[0]
+    result = []
+    while num &gt; 0:
+        num, remainder = divmod(num, 62)
+        result.append(ALPHABET[remainder])
+    return ''.join(reversed(result))
+
+# Example: unique_id=123456789 -&gt; short_code="8M0kX"
+print(base62_encode(123456789))</code></pre>
+  <p><strong>Verify</strong>: <code>base62_decode(base62_encode(n)) == n</code> for any positive integer <code>n</code>.</p>
+
+  <h3>4. Set up caching with Redis</h3>
+  <p>Cache frequently accessed URL mappings to serve redirects from memory. [<a href="https://www.freecodecamp.org/news/build-a-scalable-url-shortener-with-distributed-caching-using-redis/">src5</a>]</p>
+  <pre><code class="language-python">import redis
+
+r = redis.Redis(host='redis-cluster', port=6379, decode_responses=True)
+CACHE_TTL = 3600  # 1 hour
+
+def get_long_url(short_code: str) -&gt; str | None:
+    cached = r.get(f"url:{short_code}")
+    if cached:
+        return cached
+    long_url = db_lookup(short_code)
+    if long_url:
+        r.setex(f"url:{short_code}", CACHE_TTL, long_url)
+    return long_url</code></pre>
+  <p><strong>Verify</strong>: Monitor cache hit ratio — target &gt;90%. <code>redis-cli INFO stats | grep hit_rate</code></p>
+
+  <h3>5. Build the redirect service</h3>
+  <p>Handle incoming short URL requests and issue HTTP 302 redirects. [<a href="https://systemdesign.one/url-shortening-system-design/">src1</a>]</p>
+  <pre><code class="language-python">from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+
+app = FastAPI()
+
+@app.get("/{short_code}")
+async def redirect(short_code: str):
+    long_url = get_long_url(short_code)
+    if not long_url:
+        raise HTTPException(status_code=404, detail="Not found")
+    publish_click_event(short_code, request)
+    return RedirectResponse(url=long_url, status_code=302)</code></pre>
+  <p><strong>Verify</strong>: <code>curl -I https://short.url/abc123</code> returns <code>HTTP/1.1 302</code> with <code>Location:</code> header.</p>
+
+  <h3>6. Add analytics pipeline</h3>
+  <p>Decouple analytics from the redirect path using a message queue. [<a href="https://systemdesign.one/url-shortening-system-design/">src1</a>]</p>
+  <pre><code class="language-python">from kafka import KafkaProducer
+import json
+
+producer = KafkaProducer(
+    bootstrap_servers='kafka:9092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
+def publish_click_event(short_code, request):
+    event = {
+        "short_code": short_code,
+        "timestamp": datetime.utcnow().isoformat(),
+        "referrer": request.headers.get("referer", ""),
+        "user_agent": request.headers.get("user-agent", ""),
+        "ip_country": geoip_lookup(request.client.host),
+    }
+    producer.send("click-events", value=event)</code></pre>
+  <p><strong>Verify</strong>: Check Kafka consumer lag: <code>kafka-consumer-groups.sh --describe --group analytics-consumer</code></p>
+
+  </section>
+
+  <!-- Code Examples — multi-language, tested, copy-pasteable -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: Base62 Encoding with Snowflake ID Generation</h3>
+  <pre><code class="language-python"># Input:  None (generates unique IDs internally)
+# Output: Collision-free 6-7 character short codes
+
+import string, time, threading
+
+ALPHABET = string.digits + string.ascii_lowercase + string.ascii_uppercase
+
+def base62_encode(num: int) -&gt; str:
+    if num == 0:
+        return ALPHABET[0]
+    result = []
+    while num &gt; 0:
+        num, remainder = divmod(num, 62)
+        result.append(ALPHABET[remainder])
+    return ''.join(reversed(result))
+
+class SnowflakeIDGenerator:
+    """64-bit IDs: timestamp(41) + node_id(10) + sequence(12)"""
+    def __init__(self, node_id: int):
+        self.node_id = node_id &amp; 0x3FF
+        self.sequence = 0
+        self.last_ts = 0
+        self.lock = threading.Lock()
+        self.epoch = 1577836800000  # 2020-01-01
+
+    def next_id(self) -&gt; int:
+        with self.lock:
+            ts = int(time.time() * 1000) - self.epoch
+            if ts == self.last_ts:
+                self.sequence = (self.sequence + 1) &amp; 0xFFF
+                if self.sequence == 0:
+                    while ts &lt;= self.last_ts:
+                        ts = int(time.time() * 1000) - self.epoch
+            else:
+                self.sequence = 0
+            self.last_ts = ts
+            return (ts &lt;&lt; 22) | (self.node_id &lt;&lt; 12) | self.sequence
+
+gen = SnowflakeIDGenerator(node_id=1)
+short_code = base62_encode(gen.next_id())</code></pre>
+
+  <h3>Node.js: Redirect Service with Redis Caching</h3>
+  <pre><code class="language-javascript">// Input:  HTTP GET request with short code in URL path
+// Output: HTTP 302 redirect to original long URL
+
+const express = require('express');
+const Redis = require('ioredis');
+const { Kafka } = require('kafkajs');
+
+const app = express();
+const redis = new Redis({ host: 'redis-cluster', port: 6379 });
+const kafka = new Kafka({ brokers: ['kafka:9092'] });
+const producer = kafka.producer();
+const CACHE_TTL = 3600;
+
+app.get('/:shortCode', async (req, res) =&gt; {
+    const { shortCode } = req.params;
+    let longUrl = await redis.get(`url:${shortCode}`);
+    if (!longUrl) {
+        const row = await db.query(
+            'SELECT long_url FROM url_mappings WHERE short_code = $1',
+            [shortCode]
+        );
+        if (!row) return res.status(404).json({ error: 'Not found' });
+        longUrl = row.long_url;
+        await redis.setex(`url:${shortCode}`, CACHE_TTL, longUrl);
+    }
+    producer.send({
+        topic: 'click-events',
+        messages: [{ value: JSON.stringify({
+            short_code: shortCode,
+            timestamp: new Date().toISOString(),
+            referrer: req.headers.referer || '',
+            user_agent: req.headers['user-agent'] || '',
+        })}],
+    }).catch(err =&gt; console.error('Kafka error:', err));
+    return res.redirect(302, longUrl);
+});
+
+app.listen(3000);</code></pre>
+  </section>
+
+  <!-- Anti-Patterns — wrong vs right code -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Using MD5/SHA hash of the URL and truncating</h3>
+  <pre><code class="language-python"># BAD -- truncated hashes cause collisions at scale
+import hashlib, base64
+
+def shorten(long_url):
+    md5 = hashlib.md5(long_url.encode()).digest()
+    return base64.urlsafe_b64encode(md5[:6]).decode()[:7]
+    # At ~10M URLs, collision probability exceeds 1%</code></pre>
+
+  <h3>Correct: Use a unique ID generator + base62</h3>
+  <pre><code class="language-python"># GOOD -- unique IDs guarantee zero collisions
+def shorten(long_url, id_generator, db):
+    unique_id = id_generator.next_id()
+    short_code = base62_encode(unique_id)
+    db.insert(short_code, long_url)
+    return short_code</code></pre>
+
+  <h3>Wrong: Checking the database on every redirect</h3>
+  <pre><code class="language-python"># BAD -- every redirect hits the database
+@app.get("/{code}")
+async def redirect(code: str):
+    row = await db.query("SELECT long_url FROM urls WHERE code = $1", [code])
+    return RedirectResponse(url=row.long_url, status_code=302)
+    # At 40K reads/sec, the database becomes the bottleneck</code></pre>
+
+  <h3>Correct: Cache-aside pattern with Redis</h3>
+  <pre><code class="language-python"># GOOD -- cache handles &gt;90% of reads
+@app.get("/{code}")
+async def redirect(code: str):
+    long_url = await redis.get(f"url:{code}")
+    if not long_url:
+        row = await db.query("...", [code])
+        if row:
+            await redis.setex(f"url:{code}", 3600, row.long_url)
+        long_url = row.long_url if row else None
+    return RedirectResponse(url=long_url, status_code=302)</code></pre>
+
+  <h3>Wrong: Using HTTP 301 when you need analytics</h3>
+  <pre><code class="language-python"># BAD -- 301 means browser caches the redirect permanently
+return RedirectResponse(url=long_url, status_code=301)
+# Browser goes directly to long URL on subsequent clicks
+# Your analytics data is incomplete and misleading</code></pre>
+
+  <h3>Correct: Use HTTP 302 for trackable redirects</h3>
+  <pre><code class="language-python"># GOOD -- 302 means browser asks your server every time
+return RedirectResponse(url=long_url, status_code=302)
+# Every click passes through your server for full analytics
+# Offset higher load with CDN caching (short TTL)</code></pre>
+
+  <h3>Wrong: Synchronous analytics in the redirect path</h3>
+  <pre><code class="language-python"># BAD -- analytics write blocks the redirect response
+@app.get("/{code}")
+async def redirect(code: str):
+    long_url = get_long_url(code)
+    await db.execute("INSERT INTO clicks ...", [code, datetime.now()])
+    await db.execute("UPDATE urls SET click_count = click_count + 1 ...", [code])
+    return RedirectResponse(url=long_url, status_code=302)</code></pre>
+
+  <h3>Correct: Async analytics via message queue</h3>
+  <pre><code class="language-python"># GOOD -- fire-and-forget to Kafka, redirect returns immediately
+@app.get("/{code}")
+async def redirect(code: str):
+    long_url = get_long_url(code)
+    kafka_producer.send("click-events", {"code": code, "ts": time.time()})
+    return RedirectResponse(url=long_url, status_code=302)</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Hash collision at scale</strong>: MD5/SHA truncation causes collisions once you exceed millions of URLs. Fix: use a unique ID generator (Snowflake, Zookeeper counter ranges) + base62 encoding. [<a href="https://blog.algomaster.io/p/design-a-url-shortener">src2</a>]</li>
+    <li><strong>Single-point-of-failure ID generator</strong>: A single auto-increment counter becomes a bottleneck and SPOF. Fix: distributed ID generation with pre-allocated ranges via Zookeeper. [<a href="https://systemdesign.one/url-shortening-system-design/">src1</a>]</li>
+    <li><strong>Cache stampede on popular URLs</strong>: When a cache entry expires, thousands of simultaneous requests hit the database. Fix: staggered TTLs (TTL + random jitter) or single-flight/request-coalescing pattern. [<a href="https://www.freecodecamp.org/news/build-a-scalable-url-shortener-with-distributed-caching-using-redis/">src5</a>]</li>
+    <li><strong>No expiration/cleanup strategy</strong>: Orphaned URLs consume storage indefinitely. Fix: set default expiration (2 years), run cleanup during off-peak, and implement lazy deletion on access. [<a href="https://www.designgurus.io/blog/url-shortening">src3</a>]</li>
+    <li><strong>Ignoring abuse vectors</strong>: Short URLs mask phishing/malware destinations. Fix: validate with Google Safe Browsing API at creation time; per-IP and per-API-key rate limiting. [<a href="https://www.geeksforgeeks.org/system-design-url-shortening-service/">src6</a>]</li>
+    <li><strong>Predictable short codes</strong>: Sequential base62 codes let attackers enumerate all URLs. Fix: reversible bit-shuffle or XOR cipher on the ID before encoding. [<a href="https://systemdesign.one/url-shortening-system-design/">src1</a>]</li>
+    <li><strong>Not separating read and write paths</strong>: A redirect traffic spike degrades URL creation. Fix: separate microservices for creation vs. redirect with independent scaling. [<a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/bitly">src4</a>]</li>
+    <li><strong>302 redirect without CDN caching</strong>: Every redirect hits origin servers. Fix: <code>Cache-Control: public, max-age=300</code> on 302 responses for CDN edge caching. [<a href="https://systemdesign.one/url-shortening-system-design/">src1</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Redis cache hit rate
+redis-cli INFO stats | grep -E "keyspace_hits|keyspace_misses"
+
+# Monitor redirect latency (p50, p95, p99)
+curl -w "time_total: %{time_total}s\n" -o /dev/null -s https://short.url/abc123
+
+# Check Kafka consumer lag for analytics pipeline
+kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+  --describe --group analytics-consumer
+
+# Verify database connection pool usage
+SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
+
+# Check URL mapping count and storage size
+SELECT count(*) AS total_urls,
+       pg_size_pretty(pg_total_relation_size('url_mappings')) AS storage
+FROM url_mappings;</code></pre>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Sharing long URLs in space-constrained contexts (SMS, tweets, QR codes)</td><td>URLs are already short or internal-only</td><td>Direct links with no shortening</td></tr>
+      <tr><td>You need click analytics (geo, referrer, device, time)</td><td>Privacy regulations prohibit redirect tracking</td><td>Direct links with server-side analytics</td></tr>
+      <tr><td>Marketing campaigns requiring branded short domains</td><td>You need content hosting/sharing (not just redirects)</td><td>Pastebin or object storage service</td></tr>
+      <tr><td>QR code generation (shorter URLs = simpler QR patterns)</td><td>URL mappings change frequently (write-heavy)</td><td>Feature flag service or API gateway routing</td></tr>
+      <tr><td>A/B testing via dynamic redirect targets</td><td>You only need vanity domains without analytics</td><td>DNS CNAME record or reverse proxy</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Base62 encoding of sequential IDs produces predictable short codes; attackers can enumerate URLs by incrementing. Apply a reversible bit-shuffle, XOR cipher, or use pre-generated random key pools to mitigate.</li>
+    <li>HTTP 301 vs 302 is the single most consequential architectural decision: 301 reduces server load but makes analytics impossible; 302 enables full analytics but increases origin traffic. CDN edge caching with short TTLs (5-60 min) is the standard compromise.</li>
+    <li>At Bitly-scale (billions of redirects/day), the analytics pipeline (Kafka -&gt; Flink/Spark -&gt; ClickHouse) often costs more to operate than the redirect infrastructure itself. Budget accordingly.</li>
+    <li>URL shorteners are frequently abused for phishing. Integrating Google Safe Browsing or similar malware detection at URL creation time is not optional for any public-facing service.</li>
+    <li>Database choice matters less than caching strategy. PostgreSQL, Cassandra, and DynamoDB all work at scale when 90%+ of reads are served from Redis/Memcached.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/rate-limiter/2026" data-relationship="related_to">Rate Limiter System Design</a>
+    <a href="/software/patterns/consistent-hashing/2026" data-relationship="related_to">Consistent Hashing</a>
+    <a href="/software/system-design/distributed-id-generation/2026" data-relationship="related_to">Distributed ID Generation</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> — structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> — query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>

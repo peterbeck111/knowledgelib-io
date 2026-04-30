@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SEO essentials -->
+  <title>Real-Time Analytics Dashboard System Design | knowledgelib.io</title>
+  <meta name="description" content="Complete system design guide for real-time analytics dashboards: component architecture with 12 layers, pre-aggregation patterns with ClickHouse...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowledgelib.io/software/system-design/realtime-dashboard/2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Real-Time Analytics Dashboard System Design | knowledgelib.io">
+  <meta property="og:description" content="Complete system design guide for real-time analytics dashboards: component architecture with 12 layers, pre-aggregation patterns with ClickHouse materialized views, WebSocket/SSE push delivery, decision trees for scale, and 4 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta property="og:url" content="https://knowledgelib.io/software/system-design/realtime-dashboard/2026">
+  <meta property="og:site_name" content="knowledgelib.io">
+  <meta property="og:image" content="https://knowledgelib.io/images/og-default.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:published_time" content="2026-02-23">
+  <meta property="article:modified_time" content="2026-02-23">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Real-Time Analytics Dashboard System Design | knowledgelib.io">
+  <meta name="twitter:description" content="Complete system design guide for real-time analytics dashboards: component architecture with 12 layers, pre-aggregation patterns with ClickHouse materialized views, WebSocket/SSE push delivery, decision trees for scale, and 4 anti-patterns. 7 sources, all cited. Verified 2026-02-23.">
+  <meta name="twitter:image" content="https://knowledgelib.io/images/og-default.png">
+
+  <!-- AI discovery hints -->
+  <meta name="ai:type" content="knowledge_unit">
+  <meta name="ai:entity_type" content="software_reference">
+  <meta name="ai:confidence" content="0.90">
+  <meta name="ai:last_verified" content="2026-02-23">
+  <meta name="ai:domain" content="software/system-design/realtime_dashboard">
+  <meta name="ai:jurisdiction" content="global">
+  <meta name="ai:canonical_question" content="How do I design a real-time analytics dashboard?">
+  <meta name="ai:aliases" content="How to build a live metrics dashboard at scale?; Real-time dashboard system design architecture; Streaming analytics dashboard design patterns; How to design a real-time monitoring dashboard system?">
+  <meta name="ai:raw" content="/api/v1/units/software/system-design/realtime-dashboard/2026.md">
+  <meta name="ai:token_estimate" content="3800">
+  <meta name="ai:source_count" content="7">
+  <meta name="ai:freshness" content="2026-02-23">
+  <meta name="ai:temporal_status" content="stable">
+  <meta name="ai:change_sensitivity" content="medium">
+  <meta name="ai:version" content="1.0">
+  <meta name="ai:first_published" content="2026-02-23">
+  <meta name="ai:inputs_needed" content="update_frequency, concurrent_viewers, data_volume">
+  <meta name="ai:constraints" content="Choose push vs pull based on update frequency; Pre-aggregate for >10K concurrent viewers; Never query raw event tables from dashboard; WebSocket ~50KB memory per connection; Time-partition all time-series data">
+  <meta name="ai:skip_this_unit_if" content="Need batch analytics warehouse -> software/system-design/data-warehouse/2026; Need log aggregation system -> software/system-design/log-aggregation/2026">
+  <meta name="ai:sections" content="tldr,constraints,quick_reference,decision_tree,step_by_step,code_examples,anti_patterns,pitfalls,diagnostic_commands,version_compat,when_to_use,caveats">
+
+
+
+
+
+  <!-- Universal Commerce Protocol — agent-readiness signals (auto-generated) -->
+  <meta name="commerce:protocol" content="schema.org-offer; ucp">
+  <meta name="commerce:agent-ready" content="true">
+  <meta name="commerce:checkout-via" content="none">
+  <meta name="commerce:offers-count" content="0">
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Real-Time Analytics Dashboard System Design",
+    "headline": "Real-Time Analytics Dashboard System Design",
+    "description": "Complete system design guide for building real-time analytics dashboards at scale. Covers event ingestion (Kafka/Kinesis), pre-aggregation (ClickHouse materialized views, Druid rollup), OLAP storage, WebSocket/SSE push delivery, and operational patterns for sub-second to near-real-time dashboards.",
+    "keywords": ["real-time analytics", "dashboard system design", "ClickHouse", "Apache Druid", "Kafka", "WebSocket", "SSE", "materialized views", "stream processing", "OLAP", "Grafana", "Flink"],
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "proficiencyLevel": "Expert",
+    "dependencies": "Apache Kafka 3.6+, ClickHouse 24.x+, Apache Flink 1.19+, WebSocket RFC 6455",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "citation": [
+      {
+        "@type": "WebPage",
+        "name": "Introduction to Apache Druid",
+        "url": "https://druid.apache.org/docs/latest/design/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How to Use ClickHouse Materialized Views for Real-Time Aggregations",
+        "url": "https://oneuptime.com/blog/post/2026-01-21-clickhouse-materialized-views/view"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Set up Grafana Live",
+        "url": "https://grafana.com/docs/grafana/latest/setup-grafana/set-up-grafana-live/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Build Real-Time Apache Kafka Dashboards That Drive Action",
+        "url": "https://www.confluent.io/blog/build-real-time-kafka-dashboards/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Server-Sent Events vs WebSockets: Key Differences and Use Cases",
+        "url": "https://ably.com/blog/websockets-vs-sse"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Kappa Architecture is Mainstream Replacing Lambda",
+        "url": "https://www.kai-waehner.de/blog/2021/09/23/real-time-kappa-architecture-mainstream-replacing-batch-lambda/"
+      },
+      {
+        "@type": "WebPage",
+        "name": "How would you design a real-time analytics dashboard system?",
+        "url": "https://www.designgurus.io/answers/detail/how-would-you-design-a-real-time-analytics-dashboard-system-handling-live-metrics-and-updates"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Dataset structured data (for Google Dataset Search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Real-Time Analytics Dashboard System Design",
+    "description": "Structured knowledge unit covering real-time analytics dashboard architecture: 12-component reference table, decision trees for scale (sub-second to periodic), pre-aggregation patterns (ClickHouse materialized views, Druid rollup), WebSocket/SSE push delivery, anti-patterns, and diagnostic commands.",
+    "keywords": ["real-time analytics", "dashboard system design", "ClickHouse", "Apache Druid", "Kafka", "WebSocket", "stream processing"],
+    "temporalCoverage": "2020/2026",
+    "dateModified": "2026-02-23",
+    "datePublished": "2026-02-23",
+    "sourceOrganization": [
+      {"@type": "Organization", "name": "Apache Druid"},
+      {"@type": "Organization", "name": "ClickHouse / OneUptime"},
+      {"@type": "Organization", "name": "Grafana Labs"},
+      {"@type": "Organization", "name": "Confluent"},
+      {"@type": "Organization", "name": "Ably"},
+      {"@type": "Organization", "name": "Kai Waehner"},
+      {"@type": "Organization", "name": "Design Gurus"}
+    ],
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "creator": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "knowledgelib.io",
+      "url": "https://knowledgelib.io"
+    }
+  }
+  </script>
+
+  <!-- Breadcrumb structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://knowledgelib.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Software", "item": "https://knowledgelib.io/software/" },
+      { "@type": "ListItem", "position": 3, "name": "System Design", "item": "https://knowledgelib.io/software/system-design/" },
+      { "@type": "ListItem", "position": 4, "name": "Real-Time Analytics Dashboard" }
+    ]
+  }
+  </script>
+
+  <!-- FAQPage structured data — canonical question + aliases (auto-generated) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I design a real-time analytics dashboard?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A real-time analytics dashboard ingests events through a streaming platform (Kafka/Kinesis), pre-aggregates them into time-windowed rollups via a stream processor (Flink/ClickHouse materialized views), stores results in a low-latency OLAP database (Druid/ClickHouse/TimescaleDB), and pushes updates to clients via WebSocket or SSE connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to build a live metrics dashboard at scale?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A real-time analytics dashboard ingests events through a streaming platform (Kafka/Kinesis), pre-aggregates them into time-windowed rollups via a stream processor (Flink/ClickHouse materialized views), stores results in a low-latency OLAP database (Druid/ClickHouse/TimescaleDB), and pushes updates to clients via WebSocket or SSE connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Real-time dashboard system design architecture",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A real-time analytics dashboard ingests events through a streaming platform (Kafka/Kinesis), pre-aggregates them into time-windowed rollups via a stream processor (Flink/ClickHouse materialized views), stores results in a low-latency OLAP database (Druid/ClickHouse/TimescaleDB), and pushes updates to clients via WebSocket or SSE connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Streaming analytics dashboard design patterns",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A real-time analytics dashboard ingests events through a streaming platform (Kafka/Kinesis), pre-aggregates them into time-windowed rollups via a stream processor (Flink/ClickHouse materialized views), stores results in a low-latency OLAP database (Druid/ClickHouse/TimescaleDB), and pushes updates to clients via WebSocket or SSE connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to design a real-time monitoring dashboard system?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "- Bottom line: A real-time analytics dashboard ingests events through a streaming platform (Kafka/Kinesis), pre-aggregates them into time-windowed rollups via a stream processor (Flink/ClickHouse materialized views), stores results in a low-latency OLAP database (Druid/ClickHouse/TimescaleDB), and pushes updates to clients via WebSocket or SSE connections."
+        }
+      }
+    ]
+  }
+  </script>
+
+
+
+
+
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="preload" href="/css/style.css?v=2" as="style">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body class="knowledge-unit software-reference">
+
+  <!-- RENDERED HTML CONTENT -- for humans and search engines.
+       AI agents should use the ai:raw meta tag to fetch the .md file. -->
+
+  
+  <main role="main">
+
+<h1>Real-Time Analytics Dashboard System Design</h1>
+
+  <h2 id="canonical-question-heading" class="canonical-question">How do I design a real-time analytics dashboard?</h2>
+
+  <aside class="unit-meta" data-card-id="software/system-design/realtime-dashboard/2026" aria-label="Knowledge unit metadata">
+    <span><strong>Type:</strong> Software Reference</span>
+    <span><strong>Confidence:</strong> <span class="confidence-badge" aria-label="Confidence score 0.90 out of 1">0.90</span></span>
+    <span><strong>Sources:</strong> 7</span>
+    <span><strong>Verified:</strong> <span id="verified-date">2026-02-23</span></span>
+    <span><strong>Freshness:</strong> 2026-02-23</span>
+  </aside>
+
+  <!-- TL;DR -- agents: parse this section for a quick answer -->
+  <section id="tldr">
+  <h2>TL;DR</h2>
+  <ul>
+    <li><strong>Bottom line</strong>: A real-time analytics dashboard ingests events through a streaming platform (Kafka/Kinesis), pre-aggregates them into time-windowed rollups via a stream processor (Flink/ClickHouse materialized views), stores results in a low-latency OLAP database (Druid/ClickHouse/TimescaleDB), and pushes updates to clients via WebSocket or SSE connections.</li>
+    <li><strong>Key tool/command</strong>: <code>CREATE MATERIALIZED VIEW mv_metrics ENGINE = AggregatingMergeTree() AS SELECT ...</code></li>
+    <li><strong>Watch out for</strong>: Querying raw event tables directly from the dashboard -- at scale this creates unbounded query latency and competes with ingestion for I/O.</li>
+    <li><strong>Works with</strong>: Any language/stack. Core: Kafka/Kinesis (ingestion), Flink/ksqlDB (processing), ClickHouse/Druid/TimescaleDB (storage), Grafana/custom UI (visualization), WebSocket/SSE (delivery).</li>
+  </ul>
+  </section>
+
+  <!-- Constraints -- agents: read before recommending any action -->
+  <section id="constraints">
+  <h2>Constraints</h2>
+  <ul>
+    <li>Choose push (WebSocket/SSE) vs pull (polling) based on update frequency: push for &gt;1 update/sec, polling for &lt;1 update/min</li>
+    <li>Pre-aggregate metrics at ingestion time for dashboards with &gt;10K concurrent viewers; live queries cannot sustain that fanout</li>
+    <li>Never query raw event tables directly from the dashboard; always use materialized views or pre-aggregated rollup tables</li>
+    <li>WebSocket connections consume ~50KB memory each; budget for max_connections * 50KB per server node</li>
+    <li>Time-series data must be stored with time-based partitioning; unpartitioned tables degrade to full scans beyond 100M rows</li>
+  </ul>
+  </section>
+
+  <!-- Quick Reference -- the core lookup table -->
+  <section id="quick-reference">
+  <h2>Quick Reference</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">Role</th><th scope="col">Technology Options</th><th scope="col">Scaling Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Event Ingestion</td><td>Receives raw events from producers</td><td>Apache Kafka, Amazon Kinesis, Apache Pulsar</td><td>Partition by event key; add partitions for throughput</td></tr>
+      <tr><td>Stream Processor</td><td>Transforms, filters, and windows events</td><td>Apache Flink, ksqlDB, Kafka Streams, Spark Structured Streaming</td><td>Parallel task slots per partition; checkpoint to durable storage</td></tr>
+      <tr><td>Pre-Aggregation Layer</td><td>Computes rollups at ingest time</td><td>ClickHouse Materialized Views, Druid rollup, Flink windowed aggregations</td><td>Write to AggregatingMergeTree or SummingMergeTree target tables</td></tr>
+      <tr><td>OLAP Storage</td><td>Serves low-latency analytical queries</td><td>ClickHouse, Apache Druid, TimescaleDB, Apache Pinot</td><td>Column-oriented storage; horizontal sharding by time range</td></tr>
+      <tr><td>Query Cache</td><td>Caches frequently requested dashboard queries</td><td>Redis, Memcached</td><td>TTL = dashboard refresh interval; invalidate on new data window</td></tr>
+      <tr><td>Push Delivery</td><td>Streams updates to connected clients</td><td>WebSocket (Socket.IO, ws), Server-Sent Events (SSE)</td><td>Horizontal via sticky sessions + Redis PubSub fan-out</td></tr>
+      <tr><td>API Gateway</td><td>Rate limiting, auth, request routing</td><td>Kong, AWS API Gateway, Nginx</td><td>Per-client rate limits; separate read/write paths</td></tr>
+      <tr><td>Dashboard Frontend</td><td>Renders charts, tables, and metrics</td><td>Grafana, Apache Superset, custom React/D3.js</td><td>CDN for static assets; lazy-load panels not in viewport</td></tr>
+      <tr><td>Time-Series Index</td><td>Partitions data by time for fast range queries</td><td>Native time partitioning (ClickHouse, TimescaleDB)</td><td>Auto-drop or archive partitions older than retention window</td></tr>
+      <tr><td>Alerting Engine</td><td>Fires alerts when metrics cross thresholds</td><td>Grafana Alerting, PagerDuty, custom Flink CEP</td><td>Decouple from dashboard; process alert rules on stream processor</td></tr>
+      <tr><td>Backfill Pipeline</td><td>Replays historical data for corrections</td><td>Kafka replay from offset, batch re-ingestion</td><td>Run during off-peak; separate compute from real-time pipeline</td></tr>
+      <tr><td>Monitoring &amp; Observability</td><td>Tracks pipeline health: lag, throughput, errors</td><td>Prometheus + Grafana, Datadog</td><td>Alert on consumer lag &gt;30s and ingestion error rate &gt;0.1%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Decision Tree -- structured decision logic -->
+  <section id="decision-tree">
+  <h2>Decision Tree</h2>
+  <pre><code>START
+|-- Dashboard update frequency?
+|   |-- Sub-second (&lt;1s latency)?
+|   |   |-- Use WebSocket push + in-memory pre-aggregation (Flink stateful operators)
+|   |   |-- Storage: ClickHouse or Druid with real-time ingestion
+|   |   +-- Avoid: materialized views with sync lag; use Flink direct-to-sink
+|   |-- Near-real-time (1-30s)?
+|   |   |-- Use SSE or WebSocket + ClickHouse materialized views
+|   |   |-- Batch micro-aggregations in 5-10s tumbling windows
+|   |   +-- This covers 80% of dashboard use cases
+|   +-- Periodic (1-5 min)?
+|       |-- Use polling API + query cache (Redis, 60s TTL)
+|       |-- Pre-aggregate with scheduled ClickHouse materialized views
+|       +-- Simplest architecture; start here unless requirements demand faster
+|
+|-- Concurrent viewers?
+|   |-- &lt;100 viewers?
+|   |   +-- Direct DB queries OK; single OLAP node sufficient
+|   |-- 100-10K viewers?
+|   |   |-- Pre-aggregate + cache; fan out via WebSocket with Redis PubSub
+|   |   +-- 2-4 WebSocket server nodes behind load balancer
+|   +-- &gt;10K viewers?
+|       |-- CDN-cached SSE streams or broadcast via pub/sub (Redis/NATS)
+|       |-- Never let viewers trigger individual DB queries
+|       +-- Compute once, broadcast N times
+|
++-- Data volume?
+    |-- &lt;10K events/sec?
+    |   +-- Single ClickHouse node or TimescaleDB; Kafka optional
+    |-- 10K-1M events/sec?
+    |   +-- Kafka (3+ brokers) -&gt; Flink -&gt; ClickHouse cluster (3+ nodes)
+    +-- &gt;1M events/sec?
+        |-- Kafka cluster (6+ brokers, partitioned by key)
+        |-- Flink cluster with RocksDB state backend
+        |-- ClickHouse cluster with distributed tables
+        +-- Druid with deep storage on S3 for historical queries</code></pre>
+  </section>
+
+  <!-- Step-by-Step Guide -->
+  <section id="step-by-step">
+  <h2>Step-by-Step Guide</h2>
+
+  <h3>1. Define metrics and SLAs</h3>
+  <p>Identify which metrics the dashboard must display and their latency requirements. Separate metrics into tiers: Tier 1 (sub-second), Tier 2 (near-real-time), Tier 3 (periodic). [<a href="https://www.designgurus.io/answers/detail/how-would-you-design-a-real-time-analytics-dashboard-system-handling-live-metrics-and-updates">src7</a>]</p>
+  <pre><code>Metric inventory example:
+- requests_per_second    -&gt; Tier 1 (sub-second)    -&gt; WebSocket push
+- error_rate_5min        -&gt; Tier 2 (near-real-time) -&gt; SSE, 5s refresh
+- revenue_today          -&gt; Tier 2 (near-real-time) -&gt; SSE, 10s refresh
+- daily_active_users     -&gt; Tier 3 (periodic)       -&gt; API poll, 5min cache
+- p99_latency_1h         -&gt; Tier 2 (near-real-time) -&gt; SSE, 30s refresh</code></pre>
+  <p><strong>Verify</strong>: Every metric has a defined SLA (latency target) and delivery mechanism.</p>
+
+  <h3>2. Set up the event ingestion pipeline</h3>
+  <p>Deploy Kafka as the central event bus. Producers emit structured events with timestamps. [<a href="https://www.confluent.io/blog/build-real-time-kafka-dashboards/">src4</a>]</p>
+  <pre><code class="language-bash"># Create Kafka topic with sufficient partitions for throughput
+kafka-topics.sh --create \
+  --bootstrap-server kafka:9092 \
+  --topic raw-events \
+  --partitions 12 \
+  --replication-factor 3 \
+  --config retention.ms=604800000  # 7 days retention</code></pre>
+  <p><strong>Verify</strong>: <code>kafka-consumer-groups.sh --describe --group dashboard-consumer</code> shows partitions assigned and lag near zero.</p>
+
+  <h3>3. Build pre-aggregation with materialized views</h3>
+  <p>Create materialized views in ClickHouse that compute rollups at insert time, not query time. [<a href="https://oneuptime.com/blog/post/2026-01-21-clickhouse-materialized-views/view">src2</a>]</p>
+  <pre><code class="language-sql">-- Source table: raw events
+CREATE TABLE raw_events (
+    event_id     UInt64,
+    event_type   LowCardinality(String),
+    user_id      UInt64,
+    value        Float64,
+    ts           DateTime64(3),
+    region       LowCardinality(String)
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMMDD(ts)
+ORDER BY (event_type, ts);
+
+-- Materialized view: 1-minute aggregations
+CREATE MATERIALIZED VIEW mv_metrics_1min
+ENGINE = AggregatingMergeTree()
+PARTITION BY toYYYYMMDD(window_start)
+ORDER BY (event_type, region, window_start)
+AS SELECT
+    event_type, region,
+    toStartOfMinute(ts) AS window_start,
+    countState()        AS event_count,
+    sumState(value)     AS value_sum,
+    avgState(value)     AS value_avg
+FROM raw_events
+GROUP BY event_type, region, window_start;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT count() FROM mv_metrics_1min</code> grows as data is inserted. Query latency should be &lt;100ms.</p>
+
+  <h3>4. Implement the WebSocket push service</h3>
+  <p>Build a server that subscribes to aggregated results and pushes updates to connected dashboard clients. [<a href="https://grafana.com/docs/grafana/latest/setup-grafana/set-up-grafana-live/">src3</a>] [<a href="https://ably.com/blog/websockets-vs-sse">src5</a>]</p>
+  <pre><code class="language-javascript">const WebSocket = require('ws');         // ws@8.16
+const Redis = require('ioredis');        // ioredis@5.3
+const wss = new WebSocket.Server({ port: 8080 });
+const redisSub = new Redis({ host: 'redis', port: 6379 });
+const subscriptions = new Map();
+
+wss.on('connection', (ws) =&gt; {
+    ws.on('message', (msg) =&gt; {
+        const { action, metric } = JSON.parse(msg);
+        if (action === 'subscribe') {
+            if (!subscriptions.has(metric)) subscriptions.set(metric, new Set());
+            subscriptions.get(metric).add(ws);
+        }
+    });
+    ws.on('close', () =&gt; {
+        for (const subs of subscriptions.values()) subs.delete(ws);
+    });
+});
+
+redisSub.subscribe('metric-updates');
+redisSub.on('message', (channel, message) =&gt; {
+    const update = JSON.parse(message);
+    const clients = subscriptions.get(update.metric) || new Set();
+    const payload = JSON.stringify(update);
+    for (const ws of clients) {
+        if (ws.readyState === WebSocket.OPEN) ws.send(payload);
+    }
+});</code></pre>
+  <p><strong>Verify</strong>: Connect a WebSocket client, subscribe to a metric, and publish a test message to Redis. The client should receive it within &lt;50ms.</p>
+
+  <h3>5. Configure the dashboard frontend</h3>
+  <p>Connect the frontend to the WebSocket server and render updates incrementally. [<a href="https://grafana.com/docs/grafana/latest/setup-grafana/set-up-grafana-live/">src3</a>]</p>
+  <pre><code class="language-javascript">function useRealtimeMetric(metricKey) {
+    const [data, setData] = React.useState([]);
+    React.useEffect(() =&gt; {
+        const ws = new WebSocket('wss://dashboard-api.example.com/ws');
+        ws.onopen = () =&gt; ws.send(JSON.stringify({ action: 'subscribe', metric: metricKey }));
+        ws.onmessage = (e) =&gt; {
+            const update = JSON.parse(e.data);
+            setData(prev =&gt; [...prev, update].slice(-300));
+        };
+        ws.onclose = () =&gt; setTimeout(() =&gt; {/* reconnect with backoff */}, 2000);
+        return () =&gt; ws.close();
+    }, [metricKey]);
+    return data;
+}</code></pre>
+  <p><strong>Verify</strong>: Open the dashboard in two browsers; both should display the same live data within 1 second of each other.</p>
+
+  <h3>6. Set up retention and partition management</h3>
+  <p>Automate old partition removal to keep query performance stable. [<a href="https://druid.apache.org/docs/latest/design/">src1</a>]</p>
+  <pre><code class="language-sql">-- ClickHouse: TTL-based automatic retention
+ALTER TABLE raw_events MODIFY TTL ts + INTERVAL 90 DAY DELETE;
+ALTER TABLE mv_metrics_1min MODIFY TTL window_start + INTERVAL 365 DAY DELETE;</code></pre>
+  <p><strong>Verify</strong>: <code>SELECT partition, rows FROM system.parts WHERE table = 'raw_events'</code> shows no partitions older than the retention window.</p>
+
+  </section>
+
+  <!-- Code Examples -->
+  <section id="code-examples">
+  <h2>Code Examples</h2>
+
+  <h3>Python: WebSocket Dashboard Client with Auto-Reconnect</h3>
+  <pre><code class="language-python"># Input:  WebSocket URL and metric key to subscribe to
+# Output: Prints real-time metric updates to stdout
+
+import asyncio, json
+import websockets  # websockets@12.0
+
+async def subscribe_metric(ws_url: str, metric: str):
+    while True:
+        try:
+            async with websockets.connect(ws_url) as ws:
+                await ws.send(json.dumps({"action": "subscribe", "metric": metric}))
+                async for message in ws:
+                    update = json.loads(message)
+                    print(f"[{update['timestamp']}] {metric}: {update['value']}")
+        except websockets.ConnectionClosed:
+            print("Connection lost, reconnecting in 2s...")
+            await asyncio.sleep(2)
+
+asyncio.run(subscribe_metric("wss://dashboard-api.example.com/ws", "requests_per_second"))</code></pre>
+
+  <h3>SQL: ClickHouse Materialized View Refresh Pattern</h3>
+  <pre><code class="language-sql">-- Input:  Continuous inserts into raw_events table
+-- Output: Pre-aggregated 1-minute windows, queryable in &lt;50ms
+
+INSERT INTO raw_events VALUES
+    (1, 'page_view', 42, 1.0, now(), 'us-east'),
+    (2, 'purchase',  42, 99.99, now(), 'us-east');
+
+-- Query the materialized view (auto-updated on insert)
+SELECT event_type, countMerge(event_count) AS cnt,
+       avgMerge(value_avg) AS avg_val
+FROM mv_metrics_1min
+WHERE window_start &gt;= now() - INTERVAL 5 MINUTE
+GROUP BY event_type;</code></pre>
+
+  <h3>Go: SSE Server for Dashboard Updates</h3>
+  <pre><code class="language-go">// Input:  HTTP request to /events?metric=requests_per_second
+// Output: Server-Sent Events stream with real-time metric updates
+
+func sseHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "text/event-stream")
+    w.Header().Set("Cache-Control", "no-cache")
+    flusher, _ := w.(http.Flusher)
+    metric := r.URL.Query().Get("metric")
+    ticker := time.NewTicker(5 * time.Second)
+    defer ticker.Stop()
+    for {
+        select {
+        case &lt;-ticker.C:
+            value := queryLatestMetric(metric)
+            fmt.Fprintf(w, "data: {\"metric\":\"%s\",\"value\":%.2f}\n\n", metric, value)
+            flusher.Flush()
+        case &lt;-r.Context().Done():
+            return
+        }
+    }
+}</code></pre>
+  </section>
+
+  <!-- Anti-Patterns -->
+  <section id="anti-patterns">
+  <h2>Anti-Patterns</h2>
+
+  <h3>Wrong: Querying raw events directly from the dashboard</h3>
+  <pre><code class="language-sql">-- BAD -- every dashboard refresh runs a full scan on billions of rows
+SELECT event_type, COUNT(*) AS cnt, AVG(value) AS avg_val
+FROM raw_events WHERE ts &gt;= now() - INTERVAL 1 HOUR
+GROUP BY event_type;
+-- At 1M events/sec, this table has 3.6B rows/hour
+-- 100 concurrent viewers = 100 parallel full scans = cluster death</code></pre>
+
+  <h3>Correct: Query pre-aggregated materialized views</h3>
+  <pre><code class="language-sql">-- GOOD -- queries a compact rollup table, not raw events
+SELECT event_type, countMerge(event_count) AS cnt,
+       avgMerge(value_avg) AS avg_val
+FROM mv_metrics_1min
+WHERE window_start &gt;= now() - INTERVAL 1 HOUR GROUP BY event_type;
+-- Reads ~60 rows instead of 3.6B. Sub-100ms response.</code></pre>
+
+  <h3>Wrong: Polling the database on every client refresh</h3>
+  <pre><code class="language-javascript">// BAD -- every dashboard client polls the API, which queries the DB
+setInterval(async () =&gt; {
+    const res = await fetch('/api/metrics?range=1h');
+    updateChart(await res.json());
+}, 1000);
+// 1000 clients * 1 req/sec = 1000 DB queries/sec</code></pre>
+
+  <h3>Correct: Compute once, push to all clients via WebSocket/SSE</h3>
+  <pre><code class="language-javascript">// GOOD -- server computes once, broadcasts to all subscribers
+const ws = new WebSocket('wss://dashboard-api.example.com/ws');
+ws.onopen = () =&gt; ws.send(JSON.stringify({ action: 'subscribe', metric: 'rps' }));
+ws.onmessage = (e) =&gt; updateChart(JSON.parse(e.data));
+// DB load: 1 query/5s instead of 1000 queries/sec</code></pre>
+
+  <h3>Wrong: Storing all metrics in a single unpartitioned table</h3>
+  <pre><code class="language-sql">-- BAD -- no partitioning means full table scan for time-range queries
+CREATE TABLE metrics (
+    id BIGINT PRIMARY KEY, metric_name VARCHAR(255),
+    value DOUBLE, recorded_at TIMESTAMP
+);
+-- After 6 months: billions of rows, no partition pruning</code></pre>
+
+  <h3>Correct: Partition by time range</h3>
+  <pre><code class="language-sql">-- GOOD -- ClickHouse: automatic time-based partitioning
+CREATE TABLE metrics (
+    metric_name LowCardinality(String),
+    value Float64, recorded_at DateTime64(3)
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMMDD(recorded_at)
+ORDER BY (metric_name, recorded_at);
+-- Queries only touch relevant partitions; old ones drop instantly</code></pre>
+
+  <h3>Wrong: Synchronous processing in the ingestion path</h3>
+  <pre><code class="language-python"># BAD -- blocking processing delays event ingestion
+def handle_event(event):
+    save_to_database(event)           # 5-10ms
+    compute_aggregation(event)         # 20-50ms
+    notify_all_dashboards(event)       # 10-100ms
+    # Total: 40-180ms per event = massive backlog at scale</code></pre>
+
+  <h3>Correct: Async pipeline with decoupled stages</h3>
+  <pre><code class="language-python"># GOOD -- each stage runs independently via message queues
+def handle_event(event):
+    kafka_producer.send('raw-events', event)  # &lt;1ms, non-blocking
+    # Flink reads raw-events -&gt; aggregations -&gt; ClickHouse
+    # Separate service pushes to WebSocket clients
+    # Each stage scales independently</code></pre>
+  </section>
+
+  <!-- Common Pitfalls -->
+  <section id="pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul>
+    <li><strong>Consumer lag snowball</strong>: If the stream processor falls behind, lag compounds and dashboards show stale data. Fix: alert on consumer lag; auto-scale Flink task managers when lag exceeds 30 seconds. [<a href="https://www.confluent.io/blog/build-real-time-kafka-dashboards/">src4</a>]</li>
+    <li><strong>Materialized view sync delay</strong>: Large batches create visible lag in ClickHouse materialized views. Fix: tune <code>max_insert_block_size</code>; use smaller, more frequent batches (10K rows/1s vs 100K/10s). [<a href="https://oneuptime.com/blog/post/2026-01-21-clickhouse-materialized-views/view">src2</a>]</li>
+    <li><strong>WebSocket connection storms</strong>: Server restart causes all clients to reconnect simultaneously. Fix: exponential backoff with jitter on the client (<code>delay = min(base * 2^attempt, max_delay) + random(0, jitter)</code>). [<a href="https://ably.com/blog/websockets-vs-sse">src5</a>]</li>
+    <li><strong>High-cardinality group-by explosion</strong>: Grouping by user_id in materialized views creates millions of buckets. Fix: pre-aggregate only by low-cardinality dimensions; handle high-cardinality via on-demand OLAP with LIMIT. [<a href="https://druid.apache.org/docs/latest/design/">src1</a>]</li>
+    <li><strong>No backpressure handling</strong>: Downstream slowdowns cause unbounded queue growth and OOM. Fix: configure <code>max.poll.records</code> and Flink checkpointing for natural backpressure. [<a href="https://www.confluent.io/blog/build-real-time-kafka-dashboards/">src4</a>]</li>
+    <li><strong>Dashboard query amplification</strong>: 20 panels = 20 queries per refresh. Fix: batch-fetch all panel data in a single API call or deduplicate identical time-range queries. [<a href="https://www.designgurus.io/answers/detail/how-would-you-design-a-real-time-analytics-dashboard-system-handling-live-metrics-and-updates">src7</a>]</li>
+    <li><strong>Timezone-naive aggregation</strong>: <code>toStartOfDay()</code> without timezone produces wrong results globally. Fix: store UTC; apply timezone at the display layer. [<a href="https://oneuptime.com/blog/post/2026-01-21-clickhouse-materialized-views/view">src2</a>]</li>
+    <li><strong>Missing data gap handling</strong>: Charts show misleading interpolation during outages. Fix: emit heartbeat events; render gaps as breaks, not smooth lines. [<a href="https://grafana.com/docs/grafana/latest/setup-grafana/set-up-grafana-live/">src3</a>]</li>
+  </ul>
+  </section>
+
+  <!-- Diagnostic Commands -->
+  <section id="diagnostic-commands">
+  <h2>Diagnostic Commands</h2>
+  <pre><code class="language-bash"># Check Kafka consumer lag for the dashboard pipeline
+kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+  --describe --group dashboard-aggregator
+
+# Monitor ClickHouse query performance
+clickhouse-client --query "SELECT query_duration_ms, read_rows, result_rows \
+  FROM system.query_log WHERE type = 'QueryFinish' \
+  ORDER BY event_time DESC LIMIT 20"
+
+# Check materialized view status
+clickhouse-client --query "SELECT database, table, engine, total_rows \
+  FROM system.tables WHERE engine LIKE '%MergeTree%'"
+
+# Monitor WebSocket connection count
+curl -s http://dashboard-ws:8080/healthz | jq '.active_connections'
+
+# Check partition sizes and retention compliance
+clickhouse-client --query "SELECT partition, table, rows, \
+  formatReadableSize(bytes_on_disk) AS size \
+  FROM system.parts WHERE table = 'raw_events' ORDER BY partition DESC LIMIT 20"
+
+# Verify Redis PubSub fan-out is working
+redis-cli PUBSUB NUMSUB metric-updates</code></pre>
+  </section>
+
+  <!-- Version Compatibility -->
+  <section id="version-compat">
+  <h2>Version History &amp; Compatibility</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Technology</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Apache Kafka</td><td>3.6-3.8</td><td>Current</td><td>KRaft mode (no Zookeeper) production-ready since 3.6</td></tr>
+      <tr><td>ClickHouse</td><td>24.x-25.x</td><td>Current</td><td>Materialized views with AggregatingMergeTree stable since 22.x</td></tr>
+      <tr><td>Apache Druid</td><td>30.x</td><td>Current</td><td>Multi-stage query engine since 28.0</td></tr>
+      <tr><td>Apache Flink</td><td>1.19-1.20</td><td>Current</td><td>Unified batch/stream; state backend improvements in 1.19</td></tr>
+      <tr><td>Grafana</td><td>11.x</td><td>Current</td><td>Grafana Live (WebSocket push) stable since 8.0; HA requires Redis</td></tr>
+      <tr><td>TimescaleDB</td><td>2.15+</td><td>Current</td><td>Continuous aggregates stable since 2.0</td></tr>
+      <tr><td>WebSocket API</td><td>RFC 6455</td><td>Stable</td><td>Universal browser support; HTTP/2 compatible</td></tr>
+      <tr><td>Server-Sent Events</td><td>W3C spec</td><td>Stable</td><td>Native browser support; auto-reconnect built-in</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- When to Use / When Not to Use -->
+  <section id="when-to-use">
+  <h2>When to Use / When Not to Use</h2>
+  <div class="table-wrap">
+  <table aria-label="Reference table">
+    <thead>
+      <tr><th scope="col">Use When</th><th scope="col">Don't Use When</th><th scope="col">Use Instead</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Metrics must update in &lt;30 seconds for operational decisions</td><td>Reports are generated once per day or week</td><td>Traditional data warehouse (Snowflake, BigQuery)</td></tr>
+      <tr><td>Monitoring live systems (error rates, throughput, latency)</td><td>Historical analysis over months/years of data</td><td>Batch analytics with scheduled queries</td></tr>
+      <tr><td>Thousands of concurrent viewers need the same live data</td><td>Each user needs a unique, complex ad-hoc query</td><td>OLAP query engine with per-user caching</td></tr>
+      <tr><td>Event-driven architecture already produces a Kafka/Kinesis stream</td><td>Data arrives in batch files (CSV uploads, ETL dumps)</td><td>Batch ingestion pipeline + scheduled dashboard refresh</td></tr>
+      <tr><td>Alerting on metric thresholds must fire within seconds</td><td>Accuracy matters more than speed (financial reconciliation)</td><td>Double-entry batch pipeline with reconciliation step</td></tr>
+    </tbody>
+  </table>
+  </div>
+  </section>
+
+  <!-- Important Caveats -->
+  <section id="caveats">
+  <h2>Important Caveats</h2>
+  <ul>
+    <li>Lambda architecture (separate batch + stream layers) provides more accurate historical data but doubles operational complexity. Kappa architecture (stream-only) is simpler but struggles with complex historical reprocessing. Most production dashboards use a hybrid: Kappa for real-time + periodic batch correction jobs.</li>
+    <li>ClickHouse materialized views are trigger-based (fire on INSERT); they do not handle UPDATE or DELETE automatically. If your source data requires corrections, use a ReplacingMergeTree source table and rebuild affected materialized view partitions.</li>
+    <li>Grafana Live supports 100 concurrent WebSocket connections per instance by default; for &gt;100 viewers, deploy Grafana in HA mode with Redis as the Live HA engine.</li>
+    <li>Pre-aggregation at ingest time trades query flexibility for speed. Adding a new metric dimension requires rebuilding materialized views and replaying historical data from Kafka. Plan Kafka retention accordingly (7-30 days for replay).</li>
+    <li>Server-Sent Events (SSE) are unidirectional (server-to-client) and work over standard HTTP. For dashboards that only display data, SSE is simpler than WebSocket and supports automatic reconnection natively.</li>
+  </ul>
+  </section>
+
+  <!-- Related Units -->
+  <nav class="related-links" aria-label="Related knowledge units">
+    <h2>Related Units</h2>
+    <a href="/software/system-design/url-shortener/2026" data-relationship="related_to">URL Shortener System Design</a>
+    <a href="/software/system-design/social-media-feed/2026" data-relationship="related_to">Social Media Feed System Design</a>
+    <a href="/software/system-design/log-aggregation/2026" data-relationship="often_confused_with">Log Aggregation System Design</a>
+  </nav>
+
+  </main>
+
+<footer role="contentinfo" aria-label="Site footer">
+  <strong><a href="/">AI Knowledge Library</a></strong> -- structured, cited knowledge units for AI agents and researchers.<br>
+  Browse: Software &middot; System Design<br>
+  <a href="/about">About</a> &middot; <a href="/methodology">Methodology</a> &middot; <a href="/api">API Access</a> &middot; <a href="/catalog.json">Full Catalog</a><br>
+  For programmatic access, use our <a href="/api">API</a> or <a href="/api#mcp">MCP server</a> -- query all knowledge units at $0.10/request.<br>
+  Content licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Sources cited inline. <a href="/methodology">Verification methodology</a>.
+</footer>
+
+<script>window.__KL={supabaseUrl:"https://qkinqevfhachlykmwnzs.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraW5xZXZmaGFjaGx5a213bnpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjY1NjksImV4cCI6MjA4NjI0MjU2OX0.BjcAgFaiNJb9-JCWH8h2Z6-0RJwzL3UxOP2WhmRe_u8"};</script>
+<script src="/js/verified-date.js"></script>
+<script src="/js/card-links.js"></script>
+</body>
+</html>
